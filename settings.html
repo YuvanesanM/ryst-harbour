@@ -149,6 +149,20 @@
   .sub-setup{font-size:12px;color:var(--muted)}
   .sub-tier ul{margin:4px 0 6px 18px;padding:0;font-size:13px;color:var(--ink)}
   .sub-tier .btn{margin-top:auto}
+  .web-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:10px}
+  .web-ph{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+  .web-ph img{width:100%;height:100px;object-fit:cover;display:block;background:var(--panel2)}
+  .web-ph .cap{border:0;border-top:1px solid var(--line);border-radius:0;font-size:12.5px;padding:7px 9px}
+  .web-ph .acts{display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:var(--panel2);font-size:11px;color:var(--muted)}
+  .web-ph .acts button{background:none;border:1px solid var(--line);border-radius:6px;width:26px;height:24px;padding:0;font-size:13px;color:var(--ink)}
+  .web-ph .acts button:disabled{opacity:.35}
+  .web-ph.cover{border-color:var(--accent)}
+  .web-links{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .web-links .ical-copy input{font-size:12.5px}
+  .web-pub{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:12px;background:var(--panel2);margin-bottom:16px;font-size:13.5px}
+  .web-pub b{flex:1}
+  .web-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:680px){ .web-2{grid-template-columns:1fr} }
 </style>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -176,6 +190,7 @@
     <button type="button" class="tab-btn active" data-tab="villa">Villa &amp; Business</button>
     <button type="button" class="tab-btn" data-tab="ota">OTA Sync</button>
     <button type="button" class="tab-btn" data-tab="whatsapp">WhatsApp Templates</button>
+    <button type="button" class="tab-btn" id="tabWebBtn" data-tab="website" style="display:none">Website</button>
     <button type="button" class="tab-btn" id="tabUserBtn" data-tab="users" style="display:none">User Access</button>
   </div>
 
@@ -432,6 +447,52 @@
     </div>
   </div>
 
+  <div class="tab-panel" data-panel="website" id="websiteSection" style="display:none">
+    <p class="gh-mini">Your booking website</p>
+    <p class="sd" style="margin-top:-4px">A page for your villa where guests see photos, pick dates, get the exact price and book — no OTA commission. Your name, address, WhatsApp, rates and calendar come from the other tabs; this tab adds the photos and words.</p>
+    <div id="webLoading" class="sd">Loading…</div>
+    <div id="webBody" hidden>
+      <div class="web-pub">
+        <b id="webPubText">Not published — only you can see the preview.</b>
+        <label class="chk-toggle"><input type="checkbox" id="webPublished"> Published</label>
+      </div>
+      <div class="web-links" id="webLinks"></div>
+
+      <p class="gh-mini">Photos</p>
+      <p class="sd" style="margin-top:-4px">The first photo is the big cover picture. Up to 24; large photos are resized before upload.</p>
+      <div class="web-photos" id="webPhotos"></div>
+      <div class="rc-foot" style="margin-top:0;margin-bottom:22px">
+        <label class="rc-add" style="cursor:pointer">+ Add photos<input type="file" id="webPhotoIn" accept="image/*" multiple hidden></label>
+      </div>
+
+      <p class="gh-mini">Words</p>
+      <label class="f"><span>Headline</span><input class="t" id="webHeadline" maxlength="120" placeholder="e.g. Wake up to the sea, twenty minutes from the city"></label>
+      <label class="f"><span>About the villa</span><textarea class="t" id="webIntro" maxlength="3000" placeholder="Rooms, pool, what's nearby, who it suits…"></textarea></label>
+      <label class="f"><span>Highlights — one per line</span><textarea class="t" id="webHighlights" placeholder="Private pool&#10;4 bedrooms&#10;Beach access"></textarea></label>
+      <div class="web-2">
+        <label class="f"><span>Check-in time</span><input class="t" id="webCheckin" maxlength="20" placeholder="3:00 PM"></label>
+        <label class="f"><span>Check-out time</span><input class="t" id="webCheckout" maxlength="20" placeholder="11:00 AM"></label>
+      </div>
+      <label class="f"><span>House rules — one per line</span><textarea class="t" id="webRules" placeholder="No parties after 10 pm&#10;No pets"></textarea></label>
+      <label class="f"><span>Cancellation policy</span><textarea class="t" id="webCancel" maxlength="2000" placeholder="e.g. Full refund up to 7 days before check-in; 50% after that."></textarea></label>
+
+      <p class="gh-mini">Booking &amp; look</p>
+      <label class="chk-toggle" style="margin-bottom:6px"><input type="checkbox" id="webPay"> Let guests pay the advance online (Razorpay)</label>
+      <p class="sd" id="webPayNote" style="margin:0 0 14px"></p>
+      <label class="f" style="max-width:220px"><span>Accent colour</span><input class="t" type="color" id="webAccent" style="height:40px;padding:4px"></label>
+
+      <p class="gh-mini">Your own domain (optional)</p>
+      <label class="f"><span>Domain</span><input class="t" id="webDomain" maxlength="100" placeholder="book.yourvilla.com" autocapitalize="off" spellcheck="false"></label>
+      <p class="sd" id="webDomainHelp" style="margin-top:-6px"></p>
+
+      <p class="user-err" id="webErr"></p>
+      <div class="rc-foot">
+        <button class="btn primary" id="webSave">Save website</button>
+        <a class="btn" id="webPreview" target="_blank" rel="noopener">Preview ↗</a>
+      </div>
+    </div>
+  </div>
+
   <div class="tab-panel" data-panel="users" id="userAccessSection" style="display:none">
     <p class="gh-mini">User access</p>
     <p class="sd" style="margin-bottom:12px">Who can sign in, their role, and who's admin (can delete quotes, invoices and reimbursed expenses, and manage this list). Admin-only section.</p>
@@ -684,6 +745,8 @@ function hasModule(mod){
   // a failure loading one shouldn't block or hide the other.
   if(IS_ADMIN){
     document.getElementById('tabUserBtn').style.display = '';
+    // RYST 109A's own site is stay.ryst.in; other villas get a website here.
+    if((window.RYST_VILLA || 'ryst-109a') !== 'ryst-109a') document.getElementById('tabWebBtn').style.display = '';
     loadUserAccess();
   }
   loadWaTemplates();
@@ -716,6 +779,10 @@ async function renderOnboarding(d){
     { done: false, text: 'Give your OTAs your calendar export link (so they block your bookings)', tab: 'ota' },
     { done: !!(conn && conn.interakt && conn.razorpay && conn.interakt.connected && conn.razorpay.connected), text: 'Optional: connect your WhatsApp (Interakt) and Razorpay accounts', tab: 'users' },
   ];
+  if(isNewVilla && localStorage.getItem('ryst_user_admin') === 'true'){
+    let site = null; try{ const r = await fetch(PROXY_URL+'/website',{headers:{'X-Token':proxyToken}}); if(r.ok) site = (await r.json()).site; }catch(e){}
+    steps.splice(4, 0, { done: !!(site && site.published), text: 'Add photos and publish your booking website', tab: 'website' });
+  }
   const list = document.getElementById('onbList');
   list.innerHTML = steps.map((s,i)=>`<li class="${s.done?'done':''}"><span class="ck">${s.done?'✓':i+1}</span><span>${esc(s.text)}</span><button type="button" data-go="${s.tab}">${s.done?'Review':'Open'}</button></li>`).join('');
   list.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
@@ -735,6 +802,7 @@ function switchTab(tab){
   // tab-panel, just shown/hidden alongside whichever of those two is active.
   document.getElementById('stayGroupSave').style.display = (tab==='villa'||tab==='ota') ? '' : 'none';
   document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
+  if(tab==='website' && !webLoaded) loadWebsite();
 }
 document.getElementById('cfgTabs').addEventListener('click', e=>{
   const btn = e.target.closest('[data-tab]');
@@ -1117,7 +1185,7 @@ document.getElementById('storCopyBtn').addEventListener('click', e => {
 // ── Subscription (billed villas, admins) ──
 const inr = n => '₹' + Number(n||0).toLocaleString('en-IN');
 const fmtDay = iso => iso ? new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : '';
-const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking site (coming soon)', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST invoices (coming soon)', prioritySupport:'Priority support' };
+const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST invoices (coming soon)', prioritySupport:'Priority support' };
 let subCycle = 'annual';
 async function subLoad(){
   let d; try{ d = await storCall('GET','/billing'); }catch(e){ return; }
@@ -1773,6 +1841,103 @@ async function saveStay(){
   renderStayCoupons();
 }
 document.getElementById("staySave").addEventListener("click",saveStay);
+
+/* ---------- WEBSITE ---------- */
+/* The villa's public booking page (served by the proxy at villas.ryst.in/<villa>
+   or the villa's own domain). Photos go up as resized JPEG data URLs; the
+   server stores them and sends back their permanent links. */
+let webLoaded = false, webPhotos = [], webInfo = null;
+const $w = id => document.getElementById(id);
+const lines = v => String(v||'').split('\n').map(x=>x.trim()).filter(Boolean);
+function webCopyRow(label, url){
+  return `<div><div class="sd" style="margin:0 0 3px">${esc(label)}</div><div class="ical-copy"><input class="t" readonly value="${esc(url)}"><button type="button" class="btn" data-copy="${esc(url)}">Copy</button><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">Open</a></div></div>`;
+}
+function renderWebLinks(){
+  const L = (webInfo && webInfo.links) || {}, pub = $w('webPublished').checked;
+  $w('webPubText').textContent = pub ? 'Published — guests can find and book your villa.' : 'Not published — only you can see the preview.';
+  $w('webPreview').href = L.preview || '#';
+  const rows = [];
+  if(L.villas) rows.push(webCopyRow('Your website link', L.villas));
+  if(L.custom) rows.push(webCopyRow('On your own domain (once DNS is set up)', L.custom));
+  $w('webLinks').innerHTML = pub ? rows.join('') : '';
+  $w('webLinks').querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',()=>{ navigator.clipboard.writeText(b.dataset.copy).then(()=>toast('Link copied')).catch(()=>toast('Copy failed — select the link instead')); }));
+}
+function renderWebPhotos(){
+  const box = $w('webPhotos');
+  box.innerHTML = webPhotos.map((p,i)=>`<div class="web-ph${i===0?' cover':''}"><img src="${esc(p.url)}" alt=""><input class="t cap" data-cap="${i}" maxlength="120" placeholder="Caption" value="${esc(p.caption||'')}"><div class="acts"><button type="button" data-mv="${i}" data-d="-1" ${i===0?'disabled':''} aria-label="Move left">‹</button><span>${i===0?'Cover':'#'+(i+1)}</span><button type="button" data-mv="${i}" data-d="1" ${i===webPhotos.length-1?'disabled':''} aria-label="Move right">›</button><button type="button" data-rm="${i}" aria-label="Remove">×</button></div></div>`).join('')
+    || '<p class="sd" style="margin:0">No photos yet — add a few of the pool, rooms and view.</p>';
+  box.querySelectorAll('[data-cap]').forEach(el=>el.addEventListener('input',()=>{ webPhotos[+el.dataset.cap].caption = el.value; }));
+  box.querySelectorAll('[data-mv]').forEach(b=>b.addEventListener('click',()=>{ const i=+b.dataset.mv, j=i+(+b.dataset.d); [webPhotos[i],webPhotos[j]]=[webPhotos[j],webPhotos[i]]; renderWebPhotos(); }));
+  box.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{ webPhotos.splice(+b.dataset.rm,1); renderWebPhotos(); }));
+}
+function resizePhoto(file){
+  return new Promise((resolve, reject)=>{
+    // Read as a data: URL — this page's CSP allows data: images, not blob:.
+    const fr = new FileReader(), img = new Image(), fail = ()=>reject(new Error('Could not read ' + file.name));
+    img.onload = ()=>{
+      const max = 1600, k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = fail; fr.onerror = fail;
+    fr.onload = ()=>{ img.src = fr.result; };
+    fr.readAsDataURL(file);
+  });
+}
+$w('webPhotoIn').addEventListener('change', async e=>{
+  const files = Array.from(e.target.files||[]); e.target.value = '';
+  const room = 24 - webPhotos.length;
+  if(files.length > room) toast(room > 0 ? `Only ${room} more photo${room===1?'':'s'} fit — 24 at most` : '24 photos at most — remove some first');
+  for(const f of files.slice(0, Math.max(0, room))){
+    try{ webPhotos.push({ url: await resizePhoto(f), caption: '' }); renderWebPhotos(); }catch(err){ toast(err.message); }
+  }
+});
+function fillWebsite(d){
+  webInfo = d; const w = d.site || {};
+  $w('webPublished').checked = !!w.published;
+  $w('webHeadline').value = w.headline||''; $w('webIntro').value = w.intro||'';
+  $w('webHighlights').value = (w.highlights||[]).join('\n'); $w('webRules').value = (w.rules||[]).join('\n');
+  $w('webCheckin').value = w.checkinTime||''; $w('webCheckout').value = w.checkoutTime||'';
+  $w('webCancel').value = w.cancellation||''; $w('webPay').checked = w.onlinePayment !== false;
+  $w('webAccent').value = w.accent || '#1f6f5c'; $w('webDomain').value = w.customDomain||'';
+  webPhotos = (w.photos||[]).map(p=>({ url:p.url, caption:p.caption||'' }));
+  $w('webPayNote').innerHTML = d.razorpayReady
+    ? 'Your Razorpay account is connected — payments go straight to you.'
+    : 'Razorpay isn\'t connected yet, so guests send a booking request and you confirm on WhatsApp. Connect it under <b>User Access → Connections</b> to take payments online.';
+  const host = d.serverHost || 'data.ryst.in';
+  $w('webDomainHelp').innerHTML = `At your domain provider, add a <b>CNAME</b> record for your domain pointing to <code>${esc(host)}</code>. Then WhatsApp RYST Harbour support on <b>8608008608</b> to switch it on — the secure certificate is set up for you.`;
+  renderWebPhotos(); renderWebLinks();
+}
+async function loadWebsite(){
+  webLoaded = true;
+  try{
+    const res = await fetch(PROXY_URL+'/website',{headers:{'X-Token':proxyToken},cache:'no-store'});
+    const d = await res.json();
+    if(!res.ok) throw new Error(d.error || ('HTTP '+res.status));
+    fillWebsite(d); $w('webLoading').hidden = true; $w('webBody').hidden = false;
+  }catch(e){ webLoaded = false; $w('webLoading').textContent = 'Could not load the website settings — ' + e.message; }
+}
+$w('webPublished').addEventListener('change', renderWebLinks);
+$w('webSave').addEventListener('click', async ()=>{
+  const btn = $w('webSave'); $w('webErr').textContent = '';
+  const body = {
+    published: $w('webPublished').checked, headline: $w('webHeadline').value, intro: $w('webIntro').value,
+    highlights: lines($w('webHighlights').value), rules: lines($w('webRules').value),
+    checkinTime: $w('webCheckin').value, checkoutTime: $w('webCheckout').value, cancellation: $w('webCancel').value,
+    onlinePayment: $w('webPay').checked, accent: $w('webAccent').value, customDomain: $w('webDomain').value.trim(),
+    photos: webPhotos.map(p=>({ url:p.url, caption:p.caption })),
+  };
+  if(body.published && !webPhotos.length && !confirm('Publish without any photos? Guests book far more when they can see the villa.')) return;
+  btn.disabled = true; btn.textContent = webPhotos.some(p=>p.url.startsWith('data:')) ? 'Uploading photos…' : 'Saving…';
+  try{
+    const res = await fetch(PROXY_URL+'/website',{method:'PUT',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error || ('HTTP '+res.status));
+    fillWebsite(d); toast(body.published ? 'Website saved and live' : 'Website saved');
+  }catch(e){ $w('webErr').textContent = 'Not saved — ' + e.message; }
+  finally{ btn.disabled = false; btn.textContent = 'Save website'; }
+});
 
 /* ---------- TOAST ---------- */
 function toast(msg){
