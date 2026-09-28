@@ -123,28 +123,6 @@
   .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
 
-  /* ---- PIN GATE ---- */
-  .pin-overlay{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
-  .pin-overlay[hidden]{display:none}
-  .pin-card{width:min(320px,100%);text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
-  .pin-card.shake{animation:pinShake .4s}
-  @keyframes pinShake{
-    10%,90%{transform:translateX(-2px)} 20%,80%{transform:translateX(4px)}
-    30%,50%,70%{transform:translateX(-8px)} 40%,60%{transform:translateX(8px)}
-  }
-  .pin-lock{font-size:32px;margin-bottom:4px}
-  .pin-card h1{font-size:19px;font-weight:600;margin:0}
-  .pin-sub{color:var(--muted);font-size:12.5px;margin:0 0 4px;max-width:260px}
-  .pin-dots{display:flex;gap:14px;margin:8px 0}
-  .pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);background:transparent;transition:.15s}
-  .pin-dot.filled{background:var(--accent);border-color:var(--accent)}
-  .pin-err{color:var(--danger);font-size:12px;min-height:16px;margin-bottom:2px}
-  .pin-keys{display:grid;grid-template-columns:repeat(3,64px);gap:12px;margin-top:6px}
-  .pin-keys button{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:20px;font-weight:600;transition:.15s}
-  .pin-keys button:hover{border-color:var(--accent);color:var(--accent-d)}
-  .pin-keys button:active{background:var(--accent-soft)}
-  .pin-keys button.pin-blank{visibility:hidden;pointer-events:none}
-  .pin-keys button.pin-back{font-size:18px}
 
   @media(max-width:680px){
     .cfg-body{padding:20px 14px 60px}
@@ -167,25 +145,6 @@
 </head>
 <body>
 
-<div class="pin-overlay" id="pinOverlay" hidden>
-  <div class="pin-card" id="pinCard">
-    <div class="pin-lock">🔒</div>
-    <h1>Enter PIN</h1>
-    <p class="pin-sub">Enter the PIN to edit the rate card &amp; settings</p>
-    <div class="pin-dots" id="pinDots">
-      <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-    </div>
-    <div class="pin-err" id="pinErr">&nbsp;</div>
-    <div class="pin-keys" id="pinKeys">
-      <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
-      <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
-      <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
-      <button type="button" class="pin-blank" tabindex="-1" disabled></button>
-      <button type="button" data-k="0">0</button>
-      <button type="button" class="pin-back" id="pinBack" aria-label="Backspace">⌫</button>
-    </div>
-  </div>
-</div>
 
 <header class="bar">
   <img class="hdr-logo" src="/assets/stay-logo.webp" data-prop-src="logoUrl" alt="RYST 109A" data-prop-alt="name">
@@ -637,8 +596,6 @@ function hasModule(mod){
   // PAN and rate card on the server.
   const hasCache = !!localStorage.getItem(K_STAY);
   loadStayPanel();
-  // The keypad PIN is RYST 109A's; other villas rely on their sign-in alone.
-  if((!window.RYST_VILLA || window.RYST_VILLA==='ryst-109a') && localStorage.getItem('ryst_demo')!=='1') initPinGate();
 
   const loader = document.getElementById('loader'), msgEl = document.getElementById('loaderMsg'), retryBtn = document.getElementById('loaderRetry');
   const saveBtn = document.getElementById('staySave');
@@ -749,57 +706,6 @@ document.getElementById('cfgTabs').addEventListener('click', e=>{
   const btn = e.target.closest('[data-tab]');
   if(btn) switchTab(btn.dataset.tab);
 });
-
-/* ---------- PIN GATE ----------
-   A quick keypad lock in front of this page, not a real access boundary —
-   the actual security boundary is the Google sign-in + owner-role check
-   above. This just stops someone picking up an already-signed-in device
-   from casually opening rates/bank details. */
-function initPinGate(){
-  const RATE_PIN = '1991';
-  let entered = '';
-  const overlay = document.getElementById('pinOverlay');
-  const card    = document.getElementById('pinCard');
-  const errEl   = document.getElementById('pinErr');
-  const dots    = document.querySelectorAll('#pinDots .pin-dot');
-
-  overlay.hidden = false;
-
-  function renderDots(){
-    dots.forEach((d,i)=> d.classList.toggle('filled', i < entered.length));
-  }
-  function checkPin(){
-    if(entered === RATE_PIN){
-      overlay.hidden = true;
-    } else {
-      errEl.textContent = 'Incorrect PIN';
-      card.classList.add('shake');
-      setTimeout(()=>{ card.classList.remove('shake'); entered=''; renderDots(); }, 350);
-    }
-  }
-  function press(k){
-    if(entered.length >= 4) return;
-    errEl.textContent = '';
-    entered += k;
-    renderDots();
-    if(entered.length === 4) setTimeout(checkPin, 80);
-  }
-  function backspace(){
-    entered = entered.slice(0,-1);
-    errEl.textContent = '';
-    renderDots();
-  }
-
-  document.getElementById('pinKeys').querySelectorAll('[data-k]').forEach(b=>{
-    b.addEventListener('click', ()=> press(b.dataset.k));
-  });
-  document.getElementById('pinBack').addEventListener('click', backspace);
-  document.addEventListener('keydown', e=>{
-    if(overlay.hidden) return;
-    if(/^[0-9]$/.test(e.key)) press(e.key);
-    else if(e.key === 'Backspace') backspace();
-  });
-}
 
 /* ---------- LOAD ---------- */
 async function loadStayPanel(){

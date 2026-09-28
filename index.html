@@ -45,7 +45,11 @@
   .steps li{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 52px;position:relative;font-size:14.5px}
   .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:16px;top:13px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center}
   footer{padding:32px 16px 40px;color:var(--muted2);font-size:13px}
-  footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;border-top:1px solid var(--line);padding-top:18px}
+  footer .wrap{display:flex;gap:16px 32px;flex-wrap:wrap;justify-content:space-between;border-top:1px solid var(--line);padding-top:18px;line-height:1.6}
+  footer strong{color:var(--muted);font-weight:600}
+  footer a{color:var(--accent-d)}
+  footer .contact{text-align:right}
+  @media (max-width:560px){ footer .contact{text-align:left} }
 </style>
 </head>
 <body>
@@ -77,7 +81,7 @@
     <section class="how" id="how">
       <h2>How to join</h2>
       <ol class="steps">
-        <li>Ask for an invite. It's made for the Google account you'll use.</li>
+        <li>Ask for an invite on <a href="tel:+918608008608">+91 86080 08608</a>. It's made for the Google account you'll use.</li>
         <li>Open the invite link, name your villa and continue with Google.</li>
         <li>Add your details, rates, team and OTA calendars from the checklist in Settings.</li>
       </ol>
@@ -87,9 +91,16 @@
 
 <footer>
   <div class="wrap">
-    <span>RYST Harbour</span>
-    <span>From the team behind <a href="https://stay.ryst.in">RYST 109A</a></span>
+    <div class="legal">
+      <p><strong>RYST Harbour</strong> is managed by Dreamour Multiventures.</p>
+      <p>RYST is a trademark of Dreamour Multiventures. © <span id="yr">2026</span> Dreamour Multiventures. All rights reserved.</p>
+    </div>
+    <div class="contact">
+      <p>Contact: <a href="tel:+918608008608">+91 86080 08608</a></p>
+      <p>From the team behind <a href="https://stay.ryst.in">RYST 109A</a></p>
+    </div>
   </div>
 </footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
 </body>
 </html>
