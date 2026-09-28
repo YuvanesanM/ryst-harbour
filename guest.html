@@ -961,7 +961,7 @@ function renderHome(){
           ${b.guests ? `<div class="bc-cell"><span class="bc-label">Guests</span><span class="bc-value">${esc(String(b.guests))}</span></div>` : ''}
         </div>
         <div class="bc-pills">
-          <button type="button" class="bc-id pdf-link" id="homePdfBtn">🔖 ${esc(b.no)} · View PDF ↓</button>
+          <button type="button" class="bc-id pdf-link" id="homePdfBtn">🔖 ${esc(b.no)} · ${b.gstInvoice && (b.type||'invoice')!=='quote' ? 'Tax invoice' : 'View PDF'} ↓</button>
           <div class="bc-id ${tripStatus.cls}">${esc(tripStatus.label)}</div>
           ${checkinNudgePill(b)}
         </div>
@@ -1046,7 +1046,7 @@ function renderQuoteReview(){
         <div class="bc-cell"><span class="bc-label">Check-out</span><span class="bc-value">${fmtDateShort(b.checkout)}</span></div>
         ${b.guests ? `<div class="bc-cell"><span class="bc-label">Guests</span><span class="bc-value">${esc(String(b.guests))}</span></div>` : ''}
       </div>
-      <div class="bc-pills"><button type="button" class="bc-id pdf-link" id="qrPdfBtn">🔖 ${esc(b.no)} · View PDF ↓</button></div>
+      <div class="bc-pills"><button type="button" class="bc-id pdf-link" id="qrPdfBtn">🔖 ${esc(b.no)} · ${b.gstInvoice && (b.type||'invoice')!=='quote' ? 'Tax invoice' : 'View PDF'} ↓</button></div>
     </div>`;
   $('#qrPdfBtn').addEventListener('click', () => viewQuotePdf(b));
 
@@ -1421,10 +1421,27 @@ function viewReceipt(o){
 // invention, it's what the owner has actually configured in Settings.
 const numDoc = n => Math.round(Number(n)||0).toLocaleString('en-IN');
 const IG_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>';
+// Amount in words, Indian numbering (crore / lakh / thousand) — for the
+// GST tax invoice, same wording stay.html prints.
+const W1 = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+const W10 = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+function w99(n){ return n<20 ? W1[n] : W10[Math.floor(n/10)] + (n%10 ? ' '+W1[n%10] : ''); }
+function w999(n){ const h=Math.floor(n/100), r=n%100; return (h ? W1[h]+' Hundred'+(r?' ':'') : '') + (r ? w99(r) : ''); }
+function rupeesInWords(amount){
+  const rupees=Math.floor(amount+1e-9), paise=Math.round((amount-rupees)*100);
+  let n=rupees; const parts=[];
+  const cr=Math.floor(n/1e7); n%=1e7; const lk=Math.floor(n/1e5); n%=1e5; const th=Math.floor(n/1e3); n%=1e3;
+  if(cr) parts.push(w999(cr)+' Crore'); if(lk) parts.push(w99(lk)+' Lakh'); if(th) parts.push(w99(th)+' Thousand'); if(n) parts.push(w999(n));
+  return 'Rupees ' + (parts.join(' ') || 'Zero') + (paise ? ' and ' + w99(paise) + ' Paise' : '') + ' Only';
+}
 function viewQuotePdf(b){
   b = b || (me && me.stay); if(!b) return;
   const biz = (me && me.business) || {};
   const isInv = (b.type||'invoice') !== 'quote';
+  // A GST tax invoice the villa issued — printed from its own snapshot.
+  const gi = isInv && b.gstInvoice ? b.gstInvoice : null;
+  const pct = r => String(Math.round(r*100)/100);
+  const moneyD = n => '₹' + (Number(n)||0).toLocaleString('en-IN',{maximumFractionDigits:2});
   const fmtDateD = iso => { if(!iso) return '—'; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
   const nights = (() => {
     if(!b.checkin || !b.checkout) return 0;
@@ -1432,7 +1449,7 @@ function viewQuotePdf(b){
     const n = Math.round((c-a)/86400000);
     return n>0 ? n : 0;
   })();
-  const items = Array.isArray(b.items) ? b.items : [];
+  const items = gi ? gi.lines : (Array.isArray(b.items) ? b.items : []);
   const subtotal = items.reduce((s,it)=> s + (Number(it.rate)||0)*(Number(it.qty)||0), 0);
   const grand = Math.max(0, subtotal - (Number(b.discount)||0));
   const rows = items.length ? items.map(it => `<tr>
@@ -1441,7 +1458,13 @@ function viewQuotePdf(b){
       <td class="amt">${numDoc(it.rate)}</td>
       <td class="amt">${numDoc((Number(it.rate)||0)*(Number(it.qty)||0))}</td></tr>`).join('')
     : `<tr><td colspan="4" style="color:#aaa">—</td></tr>`;
-  const tfoot = `
+  const tfoot = gi ? `
+    <tr class="sub"><td colspan="3">SUBTOTAL</td><td class="amt">${moneyD(gi.subtotal)}</td></tr>
+    ${gi.discount>0 ? `<tr><td colspan="3" style="color:#6a7a76;font-weight:500">DISCOUNT</td><td class="amt" style="color:#6a7a76">− ${moneyD(gi.discount)}</td></tr>` : ''}
+    <tr><td colspan="3" style="color:#4c5c58;font-weight:500">TAXABLE VALUE</td><td class="amt" style="color:#4c5c58">${moneyD(gi.taxable)}</td></tr>
+    <tr><td colspan="3" style="color:#4c5c58;font-weight:500">CGST @ ${pct(gi.rate/2)}%</td><td class="amt" style="color:#4c5c58">${moneyD(gi.cgst)}</td></tr>
+    <tr><td colspan="3" style="color:#4c5c58;font-weight:500">SGST @ ${pct(gi.rate/2)}%</td><td class="amt" style="color:#4c5c58">${moneyD(gi.sgst)}</td></tr>
+    <tr class="grand"><td colspan="3">TOTAL (INCL. GST)</td><td class="amt">${moneyD(gi.total)}</td></tr>` : `
     <tr class="sub"><td colspan="3">SUBTOTAL</td><td class="amt">₹${numDoc(subtotal)}</td></tr>
     ${b.discount>0 ? `<tr><td colspan="3" style="color:#6a7a76;font-weight:500">DISCOUNT</td><td class="amt" style="color:#6a7a76">− ₹${numDoc(b.discount)}</td></tr>` : ''}
     <tr class="grand"><td colspan="3">GRAND TOTAL</td><td class="amt">₹${numDoc(grand)}</td></tr>`;
@@ -1459,28 +1482,33 @@ function viewQuotePdf(b){
         <div class="d-co">
           ${PROPERTY.mapLink ? `<a href="${esc(PROPERTY.mapLink)}" target="_blank" rel="noopener" class="addr-link">${esc(String(biz.company||'')).replace(/\n/g,'<br>')}</a>` : `<span class="addr-link">${esc(String(biz.company||'')).replace(/\n/g,'<br>')}</span>`}
           ${PROPERTY.instagram ? `<a href="${esc(PROPERTY.instagramUrl)}" target="_blank" rel="noopener" class="co-ig">${IG_ICON_SVG}${esc(PROPERTY.instagramHandle)}</a>` : ''}
+          ${gi ? `<div style="font-size:11.5px;font-weight:600;margin-top:6px;color:#2c3633">GSTIN: ${esc(gi.supplier.gstin)}${gi.supplier.legalName ? ' · '+esc(gi.supplier.legalName) : ''}</div>` : ''}
         </div>
       </div>
 
-      <div class="d-title">${isInv ? 'INVOICE' : 'QUOTATION'}</div>
+      <div class="d-title">${gi ? 'TAX INVOICE' : isInv ? 'INVOICE' : 'QUOTATION'}</div>
 
       <div class="d-panels">
         <div class="panel">
           <div class="panel-h">BILL TO</div>
-          <div class="kv"><span>Guest Name</span><b>${esc(b.guest||'—')}</b></div>
+          <div class="kv"><span>Guest Name</span><b>${esc((gi && gi.buyer.name) || b.guest || '—')}</b></div>
           <div class="kv"><span>Email ID</span><b>${esc(b.email||'—')}</b></div>
           <div class="kv"><span>Phone</span><b>${esc(b.phone||'—')}</b></div>
           <div class="kv"><span>No. of Guests</span><b>${esc(b.guests ? String(b.guests) : '—')}</b></div>
+          ${gi && gi.buyer.gstin ? `<div class="kv"><span>GSTIN</span><b>${esc(gi.buyer.gstin)}</b></div>` : ''}
+          ${gi && gi.buyer.address ? `<div class="kv"><span>Address</span><b>${esc(gi.buyer.address)}</b></div>` : ''}
         </div>
         <div class="panel">
           <div class="panel-h">STAY DETAILS</div>
-          <div class="kv"><span>${isInv?'Invoice':'Quote'} No</span><b>${esc(b.no)}</b></div>
-          <div class="kv"><span>${isInv?'Invoice':'Quote'} Date</span><b>${fmtDateD(b.date)}</b></div>
-          <div class="kv"><span>Booking Ref</span><b>${esc(b.ref||'—')}</b></div>
+          <div class="kv"><span>${gi?'Tax Invoice':isInv?'Invoice':'Quote'} No</span><b>${esc(gi ? gi.no : b.no)}</b></div>
+          <div class="kv"><span>${isInv?'Invoice':'Quote'} Date</span><b>${fmtDateD(gi ? gi.date : b.date)}</b></div>
+          <div class="kv"><span>Booking Ref</span><b>${esc(gi ? b.no : (b.ref||'—'))}</b></div>
           <div class="kv"><span>Check-in</span><b>${fmtDateD(b.checkin)}</b></div>
           <div class="kv"><span>Check-out</span><b>${fmtDateD(b.checkout)}</b></div>
           <div class="kv"><span>No. of Nights</span><b>${nights ? nights+' Night'+(nights>1?'s':'') : '—'}</b></div>
           <div class="kv"><span>Payment Mode</span><b>${esc(b.mode||'—')}</b></div>
+          ${gi && gi.placeOfSupply ? `<div class="kv"><span>Place of Supply</span><b>${esc(gi.placeOfSupply.name)} (${esc(gi.placeOfSupply.code)})</b></div>` : ''}
+          ${gi ? `<div class="kv"><span>SAC</span><b>${esc(gi.sac)}</b></div>` : ''}
         </div>
       </div>
 
@@ -1490,6 +1518,7 @@ function viewQuotePdf(b){
           <tbody>${rows}</tbody>
           <tfoot>${tfoot}</tfoot>
         </table>
+        ${gi ? `<div style="font-size:12px;font-weight:600;color:#2c3633;margin-top:8px">Amount in words: ${esc(rupeesInWords(gi.total))}</div>` : ''}
         <div class="d-side">
           <div class="side-box"><div class="sb-l">Booking Advance Received</div><div class="sb-v">₹${numDoc(b.advance)}</div></div>
           <div class="side-box"><div class="sb-l">Security Deposit <small>(refundable, collected separately)</small></div><div class="sb-v">₹${numDoc(b.deposit)}</div></div>
@@ -1510,12 +1539,12 @@ function viewQuotePdf(b){
 
       <div class="d-terms">
         <div class="pb-h">TERMS &amp; CONDITIONS</div>
-        <ol>${(biz.terms||[]).map(t=>`<li>${esc(t)}</li>`).join('')}</ol>
+        <ol>${(biz.terms||[]).filter(t=>!gi || !/not (registered|by a GST-registered)|GST has not been charged/i.test(t)).map(t=>`<li>${esc(t)}</li>`).join('')}</ol>
       </div>
 
       <div class="d-decl">
         <div class="pb-h">DECLARATION</div>
-        <div class="decl">${esc(biz.declaration||'')}</div>
+        <div class="decl">${esc(gi ? `Prices include GST. The taxable value is the total less CGST @ ${pct(gi.rate/2)}% and SGST @ ${pct(gi.rate/2)}%. SAC ${gi.sac} — accommodation services. Place of supply: ${gi.placeOfSupply ? gi.placeOfSupply.name : ''}. Tax payable on reverse charge: No. Original for recipient.` : (biz.declaration||''))}</div>
       </div>
 
       <div class="d-sign-row">
