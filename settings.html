@@ -473,6 +473,23 @@
       <button class="btn primary" id="userSave" disabled>Save user access</button>
     </div>
 
+    <p class="gh-mini" style="margin-top:28px">Connections</p>
+    <p class="sd" style="margin-bottom:12px">Your own WhatsApp Business (Interakt) and Razorpay accounts: guest messages go out from your number, and guest payments go straight to your Razorpay account. Keys are stored encrypted and are never shown again after saving.</p>
+    <div class="sync-results" id="connStatus" style="margin-bottom:12px"><div class="sync-result"><span>Connections</span><span>Loading…</span></div></div>
+    <div id="connForm" hidden>
+      <label class="f" style="margin-bottom:8px"><span>Interakt API key</span><input class="t" id="connInterakt" type="password" autocomplete="off" spellcheck="false" placeholder="Interakt → Settings → Developer Setting → Secret key"></label>
+      <label class="f" style="margin-bottom:8px"><span>Razorpay Key ID</span><input class="t" id="connRzpId" autocomplete="off" spellcheck="false" autocapitalize="none" placeholder="rzp_live_…"></label>
+      <label class="f" style="margin-bottom:8px"><span>Razorpay Key Secret</span><input class="t" id="connRzpSecret" type="password" autocomplete="off" spellcheck="false" placeholder="Razorpay → Account &amp; Settings → API keys"></label>
+      <label class="f" style="margin-bottom:8px"><span>Razorpay webhook secret</span><input class="t" id="connRzpWh" type="password" autocomplete="off" spellcheck="false" placeholder="The secret you type when adding the webhook below"></label>
+      <p class="wa-hint" style="margin:0 0 10px">Leave a box empty to keep what's saved.</p>
+      <div class="rc-foot" style="margin-top:0;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <button class="btn primary" id="connSave">Save connections</button>
+        <button class="btn" id="connDropInterakt">Disconnect WhatsApp</button>
+        <button class="btn" id="connDropRzp">Disconnect Razorpay</button>
+      </div>
+    </div>
+    <div id="connHooks" style="margin-bottom:22px"></div>
+
     <div id="platformOnly">
     <p class="gh-mini" style="margin-top:28px">Data storage</p>
     <p class="sd" style="margin-bottom:12px">Where bookings, cash, inventory and settings are kept — moving from GitHub to the Supabase database. <b>Copy to Supabase</b> copies every data file across and checks each one arrived identical; <b>Compare</b> only checks. Neither changes where the app reads and saves — that's the <code>STORAGE_BACKEND</code> setting on Render.</p>
@@ -694,9 +711,10 @@ async function renderOnboarding(d){
   let hidden = false; try{ hidden = localStorage.getItem(HIDE_KEY) === '1'; }catch(e){}
   if(!(welcome || (isNewVilla && !hidden))) return;
   const p = (d && d.property) || {};
-  let team = null;
+  let team = null, conn = null;
   if(localStorage.getItem('ryst_user_admin') === 'true'){
     try{ const r = await fetch(PROXY_URL+'/users',{headers:{'X-Token':proxyToken}}); const u = await r.json(); team = Array.isArray(u.users) ? u.users.length : null; }catch(e){}
+    try{ const r = await fetch(PROXY_URL+'/villa/connections',{headers:{'X-Token':proxyToken}}); if(r.ok) conn = await r.json(); }catch(e){}
   }
   const rates = Array.isArray(d && d.rates) && d.rates.some(r => Number(r.rate) > 0);
   const steps = [
@@ -705,6 +723,7 @@ async function renderOnboarding(d){
     { done: team != null && team > 1, text: 'Add your caretaker and managers', tab: 'users' },
     { done: Array.isArray(d && d.icalFeeds) && d.icalFeeds.length > 0, text: 'Connect your Airbnb / Booking.com calendars', tab: 'ota' },
     { done: false, text: 'Give your OTAs your calendar export link (so they block your bookings)', tab: 'ota' },
+    { done: !!(conn && conn.interakt.connected && conn.razorpay.connected), text: 'Optional: connect your WhatsApp (Interakt) and Razorpay accounts', tab: 'users' },
   ];
   const list = document.getElementById('onbList');
   list.innerHTML = steps.map((s,i)=>`<li class="${s.done?'done':''}"><span class="ck">${s.done?'✓':i+1}</span><span>${esc(s.text)}</span><button type="button" data-go="${s.tab}">${s.done?'Review':'Open'}</button></li>`).join('');
@@ -1154,6 +1173,56 @@ document.getElementById('storCopyBtn').addEventListener('click', e => {
   if(!confirm('Copy every data file from GitHub to Supabase?\n\nThis overwrites what is in Supabase with the current GitHub copy. The app keeps reading and saving where it does now.')) return;
   storRun(e.currentTarget, 'Copying…', async ()=> storFileRows(await storCall('POST','/admin/storage/copy')));
 });
+
+// ── Connections (this villa's own Interakt + Razorpay) ──
+function connRender(d){
+  const st=document.getElementById('connStatus');
+  const row=(label,ok,text)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(label)}</span><span>${esc(text)}</span></div>`;
+  st.innerHTML = row('WhatsApp (Interakt)', d.interakt.connected, d.interakt.connected ? 'Connected ✓ (key '+d.interakt.keyHint+')' : 'Not connected — guest messages go out as Telegram nudges for staff to send')
+    + row('Razorpay', d.razorpay.connected, d.razorpay.connected ? 'Connected ✓ ('+d.razorpay.keyId+', '+(d.razorpay.mode==='live'?'live':'test mode')+')'+(d.razorpay.hasWebhookSecret?'':' — add the webhook secret too') : 'Not connected — online payment links are off')
+    + (d.unreadable && d.unreadable.length ? row('Saved keys', false, "Some saved keys can't be read any more — enter them again") : '')
+    + (d.managedByServer ? '<div class="sync-result"><span>Where the keys live</span><span>This villa\'s keys are set in the server\'s settings (Render)</span></div>' : '');
+  document.getElementById('connForm').hidden = !!d.managedByServer;
+  const hook=(title,url,how,id)=>`<div class="sync-result"><span>${esc(title)}</span><span style="text-align:right">${how}</span></div><input class="t" readonly value="${esc(url)}" id="${id}" style="margin:6px 0 4px"><div class="rc-foot" style="margin-top:0;margin-bottom:10px"><button type="button" class="btn" data-copy="${id}">Copy</button></div>`;
+  document.getElementById('connHooks').innerHTML =
+    hook('Interakt webhook', d.webhooks.interakt, 'Interakt → Developer Setting → Webhook URL (for delivery and read ticks)', 'connHookI')
+    + hook('Razorpay webhook', d.webhooks.razorpay, 'Razorpay → Webhooks → Add: events payment.captured and payment_link.paid, with the webhook secret above', 'connHookR');
+  document.querySelectorAll('#connHooks [data-copy]').forEach(b=>b.addEventListener('click', async ()=>{
+    const v=document.getElementById(b.dataset.copy).value;
+    try{ await navigator.clipboard.writeText(v); toast('Copied'); }catch(e){ document.getElementById(b.dataset.copy).select(); toast('Select and copy it'); }
+  }));
+}
+async function connLoad(){
+  try{ connRender(await storCall('GET','/villa/connections')); }
+  catch(e){ document.getElementById('connStatus').innerHTML=`<div class="sync-result err"><span>Connections</span><span>${esc(e.message)}</span></div>`; }
+}
+async function connPut(body, btn, busy){
+  const orig=btn.textContent; btn.disabled=true; btn.textContent=busy;
+  try{
+    const res=await fetch(PROXY_URL+'/villa/connections',{ method:'PUT', headers:{'X-Token':proxyToken,'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('Error '+res.status));
+    ['connInterakt','connRzpId','connRzpSecret','connRzpWh'].forEach(id=>document.getElementById(id).value='');
+    connRender(d); toast('Saved');
+  }catch(e){ toast(e.message); }
+  finally{ btn.disabled=false; btn.textContent=orig; }
+}
+document.getElementById('connSave').addEventListener('click', e=>{
+  const body={}, map={connInterakt:'interaktApiKey',connRzpId:'razorpayKeyId',connRzpSecret:'razorpayKeySecret',connRzpWh:'razorpayWebhookSecret'};
+  Object.keys(map).forEach(id=>{ const v=document.getElementById(id).value.trim(); if(v) body[map[id]]=v; });
+  if(!Object.keys(body).length){ toast('Paste at least one key first'); return; }
+  connPut(body, e.currentTarget, 'Saving…');
+});
+document.getElementById('connDropInterakt').addEventListener('click', e=>{
+  if(!confirm('Disconnect WhatsApp (Interakt)? Guest messages will go back to Telegram nudges for staff to send.')) return;
+  connPut({ interaktApiKey:'' }, e.currentTarget, 'Disconnecting…');
+});
+document.getElementById('connDropRzp').addEventListener('click', e=>{
+  if(!confirm('Disconnect Razorpay? Online payment links stop working until you connect again.')) return;
+  connPut({ razorpayKeyId:'', razorpayKeySecret:'', razorpayWebhookSecret:'' }, e.currentTarget, 'Disconnecting…');
+});
+if(localStorage.getItem('ryst_demo')!=='1' && localStorage.getItem('ryst_user_admin')==='true') connLoad();
 
 // ── Villas (platform owner = an admin of the original villa) ──
 function tokenVilla(){
