@@ -137,6 +137,18 @@
   .onb-list li.done .ck{background:var(--accent, #3d9b69);border-color:var(--accent, #3d9b69);color:#fff}
   .onb-list li.done span{color:var(--muted)}
   .onb-list button{margin-left:auto;background:none;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink);white-space:nowrap}
+  .sub-cycle{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
+  .sub-cycle button{background:var(--panel);border:0;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer;color:var(--muted)}
+  .sub-cycle button.on{background:var(--accent, #3d9b69);color:#fff}
+  .sub-tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;width:100%}
+  .sub-tier{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
+  .sub-tier.pop{border:1.5px solid var(--accent, #3d9b69)}
+  .sub-badge{position:absolute;top:-9px;right:12px;background:var(--accent, #3d9b69);color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.4px;padding:2px 8px;border-radius:20px;text-transform:uppercase}
+  .sub-price{font-size:20px;font-weight:700}
+  .sub-price small{font-size:12px;font-weight:500;color:var(--muted)}
+  .sub-setup{font-size:12px;color:var(--muted)}
+  .sub-tier ul{margin:4px 0 6px 18px;padding:0;font-size:13px;color:var(--ink)}
+  .sub-tier .btn{margin-top:auto}
 </style>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -473,11 +485,14 @@
     <div class="sync-results" id="photoResults" style="margin-bottom:22px"></div>
 
     <p class="gh-mini" style="margin-top:28px">Billing settings</p>
-    <p class="sd" style="margin-bottom:12px">What villas pay for RYST Harbour. Invoices and payments are in the name of the business below, through the Razorpay account set on Render (HARBOUR_RAZORPAY_KEY_ID, _KEY_SECRET, _WEBHOOK_SECRET). A new price makes a new Razorpay plan; existing subscribers keep theirs.</p>
+    <p class="sd" style="margin-bottom:12px">What villas pay for RYST Harbour, per villa. Payments and invoices are in the name of the business below, through the Razorpay account set on Render (HARBOUR_RAZORPAY_KEY_ID, _KEY_SECRET, _WEBHOOK_SECRET). A new price makes a new Razorpay plan for new subscribers; existing subscribers keep theirs.</p>
     <div class="sync-results" id="billCfgStatus" style="margin-bottom:10px"></div>
-    <label class="f" style="margin-bottom:8px"><span>Monthly price (₹)</span><input class="t" id="billMonthly" type="number" min="0" step="1" inputmode="numeric" placeholder="0 = not offered"></label>
-    <label class="f" style="margin-bottom:8px"><span>Annual price (₹)</span><input class="t" id="billAnnual" type="number" min="0" step="1" inputmode="numeric" placeholder="0 = not offered"></label>
-    <label class="f" style="margin-bottom:8px"><span>Prices</span><select class="t" id="billGstMode"><option value="incl">Include GST</option><option value="excl">Exclude GST (+ GST at checkout)</option></select></label>
+    <div id="billTiers"></div>
+    <label class="f" style="margin-bottom:8px"><span>Prices</span><select class="t" id="billGstMode"><option value="excl">Exclude GST (GST added at checkout)</option><option value="incl">Include GST</option></select></label>
+    <label class="f" style="margin-bottom:8px"><span>GST (%)</span><input class="t" id="billGstPct" type="number" min="0" max="28" step="1" inputmode="numeric"></label>
+    <label class="f" style="margin-bottom:8px"><span>Annual price = monthly × (months)</span><input class="t" id="billAnnualMonths" type="number" min="1" max="12" step="1" inputmode="numeric"></label>
+    <label class="f" style="margin-bottom:8px"><span>Minimum term (months)</span><input class="t" id="billMinTerm" type="number" min="0" max="36" step="1" inputmode="numeric"></label>
+    <label class="f" style="margin-bottom:8px"><span>Notice to cancel (days)</span><input class="t" id="billNotice" type="number" min="0" max="180" step="1" inputmode="numeric"></label>
     <label class="f" style="margin-bottom:8px"><span>Free trial (days)</span><input class="t" id="billTrial" type="number" min="1" max="365" step="1" inputmode="numeric"></label>
     <label class="f" style="margin-bottom:8px"><span>Grace after trial end / missed payment (days)</span><input class="t" id="billGrace" type="number" min="0" max="60" step="1" inputmode="numeric"></label>
     <label class="f" style="margin-bottom:8px"><span>Business name on invoices</span><input class="t" id="billBiz" maxlength="120"></label>
@@ -699,7 +714,7 @@ async function renderOnboarding(d){
     { done: team != null && team > 1, text: 'Add your caretaker and managers', tab: 'users' },
     { done: Array.isArray(d && d.icalFeeds) && d.icalFeeds.length > 0, text: 'Connect your Airbnb / Booking.com calendars', tab: 'ota' },
     { done: false, text: 'Give your OTAs your calendar export link (so they block your bookings)', tab: 'ota' },
-    { done: !!(conn && conn.interakt.connected && conn.razorpay.connected), text: 'Optional: connect your WhatsApp (Interakt) and Razorpay accounts', tab: 'users' },
+    { done: !!(conn && conn.interakt && conn.razorpay && conn.interakt.connected && conn.razorpay.connected), text: 'Optional: connect your WhatsApp (Interakt) and Razorpay accounts', tab: 'users' },
   ];
   const list = document.getElementById('onbList');
   list.innerHTML = steps.map((s,i)=>`<li class="${s.done?'done':''}"><span class="ck">${s.done?'✓':i+1}</span><span>${esc(s.text)}</span><button type="button" data-go="${s.tab}">${s.done?'Review':'Open'}</button></li>`).join('');
@@ -1102,6 +1117,8 @@ document.getElementById('storCopyBtn').addEventListener('click', e => {
 // ── Subscription (billed villas, admins) ──
 const inr = n => '₹' + Number(n||0).toLocaleString('en-IN');
 const fmtDay = iso => iso ? new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : '';
+const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking site (coming soon)', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST invoices (coming soon)', prioritySupport:'Priority support' };
+let subCycle = 'annual';
 async function subLoad(){
   let d; try{ d = await storCall('GET','/billing'); }catch(e){ return; }
   if(!d || !d.billed) return;
@@ -1109,29 +1126,41 @@ async function subLoad(){
   document.getElementById('subBiz').textContent = d.businessName || 'Dreamour Multiventures';
   const s = d.state || {}, row=(l,ok,t)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(l)}</span><span>${esc(t)}</span></div>`;
   const days = n => n===1 ? '1 day' : n+' days';
-  const label = { trial: s.daysLeft!=null ? `Free trial — ${days(s.daysLeft)} left (until ${fmtDay(s.trialEndsAt)})` : 'Free trial',
-    active: s.paidUntil ? `Active — paid up to ${fmtDay(s.paidUntil)}${s.plan?' ('+s.plan+')':''}` : 'Active',
+  const tierName = k => ((d.plans||[]).find(p=>p.key===k)||{}).name || k;
+  const label = { trial: s.daysLeft!=null ? `Free trial, every feature included — ${days(s.daysLeft)} left (until ${fmtDay(s.trialEndsAt)})` : 'Free trial',
+    active: `${tierName(s.tier)} plan${s.paidUntil ? ' — paid up to '+fmtDay(s.paidUntil) : ''}`,
     grace: `Payment due — ${days(s.daysLeft||0)} left before this villa becomes read-only`,
     lapsed: 'Read-only — the subscription has lapsed. Choose a plan to unlock.' }[s.effective] || s.effective || '—';
   document.getElementById('subStatus').innerHTML = row('Status', s.effective==='trial'||s.effective==='active', label) + (s.note ? row('Note', true, s.note) : '');
-  const plans = document.getElementById('subPlans');
+  const box = document.getElementById('subPlans');
   const hasSub = s.effective==='active' && s.status==='active';
-  if(!d.canPay){ plans.innerHTML = `<p class="sd" style="margin:0">Online payment isn't switched on yet — to subscribe, call RYST Harbour on <a href="tel:+918608008608">+91 86080 08608</a>.</p>`; return; }
-  const tax = d.pricesIncludeGst ? ' incl. GST' : ' + GST';
-  const btn = (k,t) => d.plans[k].amount>0 ? `<button class="btn${k==='annual'?' primary':''}" data-plan="${k}">${t} · ${inr(d.plans[k].amount)}${tax}</button>` : '';
-  plans.innerHTML = hasSub ? `<p class="sd" style="margin:0">Your plan renews automatically. Payment problems or changes: call <a href="tel:+918608008608">+91 86080 08608</a>.</p>`
-    : btn('monthly','Monthly') + btn('annual','Annual');
-  plans.querySelectorAll('[data-plan]').forEach(b=>b.addEventListener('click', async ()=>{
-    const k=b.dataset.plan;
-    if(!confirm(`Subscribe to the ${k} plan at ${inr(d.plans[k].amount)}${tax}?\n\nYou'll finish on Razorpay's secure page (UPI Autopay or card).`)) return;
-    b.disabled=true; const t=b.textContent; b.textContent='Opening Razorpay…';
-    try{
-      const res=await fetch(PROXY_URL+'/billing/subscribe',{method:'POST',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify({plan:k})});
-      const r=await res.json().catch(()=>({}));
-      if(!res.ok||!r.url) throw new Error(r.error||('Error '+res.status));
-      location.href = r.url;
-    }catch(e){ toast(e.message); b.disabled=false; b.textContent=t; }
-  }));
+  if(hasSub){ box.innerHTML = `<p class="sd" style="margin:0">Your plan renews automatically. To change plan or for help, call <a href="tel:+918608008608">+91 86080 08608</a>.</p>`; return; }
+  const tax = d.pricesIncludeGst ? 'incl. GST' : `+ ${d.gstPercent}% GST`;
+  const render = () => {
+    box.innerHTML = `<div class="sub-cycle"><button type="button" data-cycle="monthly" class="${subCycle==='monthly'?'on':''}">Monthly</button><button type="button" data-cycle="annual" class="${subCycle==='annual'?'on':''}">Annual · ${12-d.annualMonths} months free</button></div>
+      <div class="sub-tiers">${(d.plans||[]).map(p=>{
+        const price = subCycle==='annual' ? p.annual : p.monthly;
+        const setup = s.setupDue && p.setup>0 ? `<div class="sub-setup">+ ${inr(p.setup)} one-time setup (${tax}), with the first payment</div>` : '';
+        return `<div class="sub-tier${p.key==='growth'?' pop':''}">${p.key==='growth'?'<span class="sub-badge">Popular</span>':''}
+          <b>${esc(p.name)}</b><div class="sub-price">${inr(price)}<small> / ${subCycle==='annual'?'year':'month'} ${tax}</small></div>${setup}
+          <ul>${p.features.map(f=>`<li>${esc(FEATURE_LABELS[f]||f)}</li>`).join('')}</ul>
+          <button class="btn${p.key==='growth'?' primary':''}" data-tier="${p.key}" ${d.canPay?'':'disabled'}>Choose ${esc(p.name)}</button></div>`; }).join('')}</div>
+      <p class="wa-hint" style="margin:10px 0 0">Per villa. ${d.minTermMonths ? d.minTermMonths+'-month minimum term, ' : ''}${d.noticeDays ? d.noticeDays+' days’ notice to cancel. ' : ''}Payment gateway and domain fees are paid by you directly.${d.canPay ? '' : ' Online payment isn’t switched on yet — to subscribe, call +91 86080 08608.'}</p>`;
+    box.querySelectorAll('[data-cycle]').forEach(b=>b.addEventListener('click', ()=>{ subCycle=b.dataset.cycle; render(); }));
+    box.querySelectorAll('[data-tier]').forEach(b=>b.addEventListener('click', async ()=>{
+      const p=(d.plans||[]).find(x=>x.key===b.dataset.tier), price=subCycle==='annual'?p.annual:p.monthly;
+      const setupLine = s.setupDue && p.setup>0 ? `\nOne-time setup: ${inr(p.setup)} ${tax}, with the first payment.` : '';
+      if(!confirm(`Subscribe to ${p.name} (${subCycle}) at ${inr(price)} ${tax}?${setupLine}\n\nYou'll finish on Razorpay's secure page (UPI Autopay or card).`)) return;
+      b.disabled=true; const t=b.textContent; b.textContent='Opening Razorpay…';
+      try{
+        const res=await fetch(PROXY_URL+'/billing/subscribe',{method:'POST',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify({tier:p.key,cycle:subCycle})});
+        const r=await res.json().catch(()=>({}));
+        if(!res.ok||!r.url) throw new Error(r.error||('Error '+res.status));
+        location.href = r.url;
+      }catch(e){ toast(e.message); b.disabled=false; b.textContent=t; }
+    }));
+  };
+  render();
 }
 if(localStorage.getItem('ryst_demo')!=='1' && localStorage.getItem('ryst_user_admin')==='true') subLoad();
 // settings.html#subscription (from the billing banner) opens that section.
@@ -1139,6 +1168,7 @@ if(location.hash==='#subscription'){ setTimeout(()=>{ const u=document.querySele
 
 // ── Connections (this villa's own Interakt + Razorpay) ──
 function connRender(d){
+  if(!d || !d.interakt || !d.razorpay || !d.webhooks) return;
   const st=document.getElementById('connStatus');
   const row=(label,ok,text)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(label)}</span><span>${esc(text)}</span></div>`;
   st.innerHTML = row('WhatsApp (Interakt)', d.interakt.connected, d.interakt.connected ? 'Connected ✓ (key '+d.interakt.keyHint+')' : 'Not connected — guest messages go out as Telegram nudges for staff to send')
@@ -1196,7 +1226,9 @@ if(tokenVilla()!=='ryst-109a') document.getElementById('platformOnly').style.dis
 function villaBillText(b){
   if(!b) return 'not billed';
   const d = n => n===1 ? '1 day' : n+' days';
-  return ({ trial: `trial${b.daysLeft!=null?', '+d(b.daysLeft)+' left':''}`, active: `active${b.paidUntil?' to '+fmtDay(b.paidUntil):''}`, grace: `payment due, ${d(b.daysLeft||0)} grace`, lapsed: 'read-only' })[b.effective] || b.effective;
+  const tn = b.trial ? '' : ' · '+(b.tier||'').replace(/^./,c=>c.toUpperCase());
+  const setup = b.setupWaived ? ' · setup waived' : b.setupDue ? '' : ' · setup paid';
+  return (({ trial: `trial${b.daysLeft!=null?', '+d(b.daysLeft)+' left':''}`, active: `active${b.paidUntil?' to '+fmtDay(b.paidUntil):''}`, grace: `payment due, ${d(b.daysLeft||0)} grace`, lapsed: 'read-only' })[b.effective] || b.effective) + tn + setup;
 }
 function villaRows(list){
   if(!list.length) return '<div class="sync-result"><span>Villas</span><span>None yet</span></div>';
@@ -1204,13 +1236,19 @@ function villaRows(list){
     + (v.isDefault ? '' : `<div class="rc-foot" style="margin:4px 0 10px;flex-wrap:wrap;gap:6px">
         <button type="button" class="rc-add" data-bill="extend-trial" data-slug="${esc(v.slug)}">Extend trial</button>
         <button type="button" class="rc-add" data-bill="mark-paid" data-slug="${esc(v.slug)}">Mark paid</button>
+        <button type="button" class="rc-add" data-bill="waive-setup" data-slug="${esc(v.slug)}" data-waive="${v.billing&&v.billing.setupWaived?'0':'1'}">${v.billing&&v.billing.setupWaived?'Charge setup fee':'Waive setup fee'}</button>
         ${v.billing&&v.billing.locked ? `<button type="button" class="rc-add" data-bill="restore" data-slug="${esc(v.slug)}">Unlock</button>` : `<button type="button" class="rc-add" data-bill="read-only" data-slug="${esc(v.slug)}">Make read-only</button>`}
       </div>`)).join('');
 }
 async function villaBill(slug, action){
   const body = { slug, action };
   if(action==='extend-trial'){ const n=prompt('Extend the free trial by how many days?','14'); if(!n) return; body.days=Number(n); }
-  if(action==='mark-paid'){ const n=prompt('Paid for how many months?','1'); if(!n) return; body.months=Number(n); const note=prompt('Note (e.g. "Pilot — paid by bank transfer on 1 Oct")',''); if(note!=null) body.note=note; }
+  if(action==='mark-paid'){
+    const tier=(prompt('Which plan? Type starter, growth or pro','growth')||'').trim().toLowerCase(); if(!tier) return; body.tier=tier;
+    const n=prompt('Paid for how many months?','1'); if(!n) return; body.months=Number(n);
+    body.setupPaid = confirm('Was the one-time setup fee paid too? (OK = yes, Cancel = no)');
+    const note=prompt('Note (e.g. "Founding villa — paid by bank transfer on 1 Oct")',''); if(note!=null) body.note=note; }
+  if(action==='waive-setup'){ body.waive = (document.querySelector(`[data-bill="waive-setup"][data-slug="${slug}"]`)||{dataset:{}}).dataset.waive !== '0'; }
   if(action==='read-only' && !confirm(`Make ${slug} read-only now? Its staff can still view everything but can't change anything until you unlock it.`)) return;
   try{
     const res=await fetch(PROXY_URL+'/platform/villas/billing',{method:'POST',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1223,8 +1261,14 @@ document.getElementById('villaResults').addEventListener('click', e=>{ const b=e
 async function billCfgLoad(){
   try{
     const c=await storCall('GET','/platform/billing');
-    document.getElementById('billMonthly').value=c.monthly.amount||''; document.getElementById('billAnnual').value=c.annual.amount||'';
+    document.getElementById('billTiers').innerHTML = (c.plans||[]).map(p=>`<div class="sync-result"><span><b>${esc(p.name)}</b></span><span>${esc((p.features||[]).map(f=>FEATURE_LABELS[f]||f).join(' · '))}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px">
+        <label class="f" style="margin:0"><span>Monthly (₹)</span><input class="t" type="number" min="0" step="1" inputmode="numeric" data-tier-monthly="${p.key}" value="${p.monthly}"></label>
+        <label class="f" style="margin:0"><span>One-time setup (₹)</span><input class="t" type="number" min="0" step="1" inputmode="numeric" data-tier-setup="${p.key}" value="${p.setup}"></label>
+      </div>`).join('');
     document.getElementById('billGstMode').value=c.pricesIncludeGst?'incl':'excl';
+    document.getElementById('billGstPct').value=c.gstPercent; document.getElementById('billAnnualMonths').value=c.annualMonths;
+    document.getElementById('billMinTerm').value=c.minTermMonths; document.getElementById('billNotice').value=c.noticeDays;
     document.getElementById('billTrial').value=c.trialDays; document.getElementById('billGrace').value=c.graceDays;
     document.getElementById('billBiz').value=c.businessName||''; document.getElementById('billGstin').value=c.gstin||'';
     const row=(l,ok,t)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(l)}</span><span>${esc(t)}</span></div>`;
@@ -1234,9 +1278,12 @@ async function billCfgLoad(){
 }
 document.getElementById('billSave').addEventListener('click', async e=>{
   const b=e.currentTarget, t=b.textContent; b.disabled=true; b.textContent='Saving…';
-  const body={ monthly:{amount:Number(document.getElementById('billMonthly').value)||0}, annual:{amount:Number(document.getElementById('billAnnual').value)||0},
-    pricesIncludeGst: document.getElementById('billGstMode').value==='incl', trialDays:Number(document.getElementById('billTrial').value)||14,
-    graceDays:Number(document.getElementById('billGrace').value)||0, businessName:document.getElementById('billBiz').value.trim(), gstin:document.getElementById('billGstin').value.trim().toUpperCase() };
+  const num = id => Number(document.getElementById(id).value);
+  const tiers={}; document.querySelectorAll('[data-tier-monthly]').forEach(i=>{ tiers[i.dataset.tierMonthly]=Object.assign(tiers[i.dataset.tierMonthly]||{}, {monthly:Number(i.value)||0}); });
+  document.querySelectorAll('[data-tier-setup]').forEach(i=>{ tiers[i.dataset.tierSetup]=Object.assign(tiers[i.dataset.tierSetup]||{}, {setup:Number(i.value)||0}); });
+  const body={ tiers, pricesIncludeGst: document.getElementById('billGstMode').value==='incl', gstPercent:num('billGstPct'), annualMonths:num('billAnnualMonths'),
+    minTermMonths:num('billMinTerm'), noticeDays:num('billNotice'), trialDays:num('billTrial')||14, graceDays:num('billGrace'),
+    businessName:document.getElementById('billBiz').value.trim(), gstin:document.getElementById('billGstin').value.trim().toUpperCase() };
   try{
     const res=await fetch(PROXY_URL+'/platform/billing',{method:'PUT',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await res.json().catch(()=>({}));

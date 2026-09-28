@@ -123,7 +123,12 @@
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
       if (!d || typeof d !== 'object' || !d.name) return;
-      billingBanner(d._billing); delete d._billing;
+      billingBanner(d._billing);
+      if (staff && d._billing && Array.isArray(d._billing.features)) {
+        window.RYST_FEATURES = d._billing.features;
+        try { document.dispatchEvent(new CustomEvent('plan-features', { detail: d._billing.features })); } catch (e) {}
+      }
+      delete d._billing;
       try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {}
       var before = JSON.stringify(P);
       Object.keys(P).forEach(function(k){ delete P[k]; });

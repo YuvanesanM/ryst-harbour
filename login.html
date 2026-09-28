@@ -245,6 +245,12 @@ function showHome(){
 // per-user module access existed has no ryst_user_modules cached yet —
 // fall back to the same legacy default the server assumes for them
 // (petty-cash/inventory/checklist) rather than hiding everything.
+// A villa whose plan doesn't include the caretaker app (Starter) doesn't
+// see the Checklist tile either (property.js reports the plan's features).
+document.addEventListener('plan-features', e=>{
+  const card=document.querySelector('.home-card[data-module="checklist"]');
+  if(card && Array.isArray(e.detail) && !e.detail.includes('caretaker')) card.style.display='none';
+});
 function applyRoleView(){
   const role = localStorage.getItem('ryst_user_role') || 'owner';
   if(role === 'owner'){
