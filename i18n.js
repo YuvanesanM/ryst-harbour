@@ -11,7 +11,13 @@
 (function(){
   var store = {};
   try { store.lang = localStorage.getItem('ryst_lang'); store.role = localStorage.getItem('ryst_user_role'); } catch (e) {}
-  var lang = store.lang === 'ta' || store.lang === 'en' ? store.lang : (store.role === 'caretaker' ? 'ta' : 'en');
+  // <script src="/i18n.js" data-audience="guest"> — a guest page: the first
+  // visit follows the phone's language instead of the staff role, and the
+  // page keeps its own fonts (phones already carry a Tamil fallback font).
+  var guest = !!(document.currentScript && document.currentScript.getAttribute('data-audience') === 'guest');
+  var phoneTamil = false;
+  try { phoneTamil = [].concat(navigator.languages || [], navigator.language || []).some(function(l){ return /^ta\b/i.test(l); }); } catch (e) {}
+  var lang = store.lang === 'ta' || store.lang === 'en' ? store.lang : (guest ? (phoneTamil ? 'ta' : 'en') : (store.role === 'caretaker' ? 'ta' : 'en'));
   window.RYST_LANG = lang;
   window.rystSetLang = function(l){ try { localStorage.setItem('ryst_lang', l); } catch (e) {} location.reload(); };
 
@@ -169,8 +175,50 @@
     'Quantity must be 0 or more.': 'அளவு 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்.', 'Threshold must be 0 or more.': 'வரம்பு 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்.',
     'Item saved': 'பொருள் சேமிக்கப்பட்டது',
     'Checklists saved': 'பட்டியல்கள் சேமிக்கப்பட்டன', 'Check-in and check-out each need at least one item.': 'செக்-இன், செக்-அவுட் ஒவ்வொன்றிலும் குறைந்தது ஒரு பொருள் தேவை.',
-    'At most 60 items per checklist.': 'ஒரு பட்டியலில் அதிகபட்சம் 60 பொருட்கள்.', 'Daily rounds checklist': 'தினசரிச் சுற்றுப் பட்டியல்'
+    'At most 60 items per checklist.': 'ஒரு பட்டியலில் அதிகபட்சம் 60 பொருட்கள்.', 'Daily rounds checklist': 'தினசரிச் சுற்றுப் பட்டியல்',
+
+    // ── guest check-in (checkin.html) ──
+    'Your stay begins here.': 'உங்கள் தங்குதல் இங்கே தொடங்குகிறது.',
+    'Complete your secure check-in in under 2 minutes.': '2 நிமிடங்களுக்குள் பாதுகாப்பான செக்-இன் செய்யுங்கள்.',
+    '🔒 Secure Check-in': '🔒 பாதுகாப்பான செக்-இன்', '⏱ Takes about 2 minutes': '⏱ சுமார் 2 நிமிடங்கள்',
+    'Sign in with Google to find your booking and auto-fill your details.': 'உங்கள் முன்பதிவைக் கண்டறிந்து விவரங்களைத் தானாக நிரப்ப Google மூலம் உள்நுழையவும்.',
+    'Personal Details': 'தனிப்பட்ட விவரங்கள்', 'Full Name': 'முழுப் பெயர்', 'As on your government ID': 'அரசு அடையாள அட்டையில் உள்ளபடி',
+    'Verify Your Identity': 'உங்கள் அடையாளத்தைச் சரிபார்க்கவும்', 'Government ID Type': 'அரசு அடையாள அட்டை வகை',
+    'Aadhaar Card': 'ஆதார் அட்டை', 'Passport': 'பாஸ்போர்ட்', 'Driving Licence': 'ஓட்டுநர் உரிமம்', 'Voter ID': 'வாக்காளர் அடையாள அட்டை',
+    'ID Photo': 'அடையாள அட்டைப் புகைப்படம்',
+    "🔒 Your information is encrypted and securely stored, and used only for verification during your stay — it's never shared with third parties.": '🔒 உங்கள் தகவல்கள் மறையாக்கம் செய்யப்பட்டுப் பாதுகாப்பாகச் சேமிக்கப்படுகின்றன; தங்குதலின்போது சரிபார்ப்புக்கு மட்டுமே பயன்படுத்தப்படும் — மூன்றாம் தரப்பினருடன் ஒருபோதும் பகிரப்படாது.',
+    'Travel Details': 'பயண விவரங்கள்', 'Vehicle Number': 'வாகன எண்', 'If driving': 'காரில் வந்தால்', 'Expected Arrival': 'எதிர்பார்க்கும் வருகை நேரம்',
+    'Additional Information': 'கூடுதல் தகவல்', 'Notes (if any)': 'குறிப்புகள் (இருந்தால்)',
+    "Anything you'd like us to know - special occasion, requests...": 'நாங்கள் தெரிந்துகொள்ள வேண்டியவை — சிறப்பு நிகழ்வு, கோரிக்கைகள்…',
+    'Signature': 'கையொப்பம்', 'Sign using your finger or mouse': 'விரல் அல்லது மவுஸால் கையொப்பமிடுங்கள்',
+    'Signature pad — sign using your finger or mouse': 'கையொப்பப் பலகை — விரல் அல்லது மவுஸால் கையொப்பமிடுங்கள்', 'Clear Signature': 'கையொப்பத்தை அழி',
+    '✓ Government ID required': '✓ அரசு அடையாள அட்டை அவசியம்', '✓ No loud music after 10 PM': '✓ இரவு 10 மணிக்குப் பிறகு உரத்த இசை வேண்டாம்',
+    '✓ Pool usage at your own risk': '✓ நீச்சல் குளத்தை உங்கள் சொந்தப் பொறுப்பில் பயன்படுத்தவும்', '✓ Read Full House Rules': '✓ முழு வீட்டு விதிகளைப் படிக்கவும்',
+    'I confirm the details above are accurate and I have read and agree to the': 'மேலே உள்ள விவரங்கள் சரியானவை என உறுதிசெய்கிறேன்; பின்வருவனவற்றைப் படித்து ஏற்றுக்கொள்கிறேன்:',
+    'House Rules & Terms': 'வீட்டு விதிகள் & நிபந்தனைகள்', 'Submitting…': 'சமர்ப்பிக்கிறது…',
+    "You're all checked in!": 'உங்கள் செக்-இன் முடிந்தது!',
+    "We'll have everything ready for your stay. See you soon at": 'உங்கள் தங்குதலுக்கு எல்லாவற்றையும் தயார் செய்து வைப்போம். விரைவில் சந்திப்போம் —',
+    '🗺️ Explore Nearby': '🗺️ அருகிலுள்ள இடங்கள்', '📍 Get Directions': '📍 வழிகாட்டுதல்', 'Follow': 'பின்தொடர்',
+    'Guest': 'விருந்தினர்', 'Guests': 'விருந்தினர்கள்', 'Loading': 'ஏற்றுகிறது', 'Fetching your booking…': 'உங்கள் முன்பதிவைப் பெறுகிறது…',
+    'Add to Google Wallet': 'Google Wallet-இல் சேர்', 'Balance due:': 'செலுத்த வேண்டிய மீதி:', 'Pay Balance Now': 'மீதியை இப்போது செலுத்துங்கள்',
+    'Preparing payment…': 'கட்டணத்தைத் தயார் செய்கிறது…', 'No balance is currently due.': 'தற்போது செலுத்த வேண்டிய மீதி இல்லை.',
+    'Could not start payment.': 'கட்டணத்தைத் தொடங்க முடியவில்லை.',
+    'Could not start payment — please try again or WhatsApp us.': 'கட்டணத்தைத் தொடங்க முடியவில்லை — மீண்டும் முயற்சிக்கவும் அல்லது WhatsApp-இல் தொடர்புகொள்ளவும்.',
+    'Add a photo of your ID': 'உங்கள் அடையாள அட்டையின் புகைப்படத்தைச் சேர்க்கவும்', '📷 Take Photo': '📷 புகைப்படம் எடு',
+    '🖼 Choose from Gallery': '🖼 கேலரியிலிருந்து தேர்வுசெய்', 'Retake / re-upload': 'மீண்டும் எடு / பதிவேற்று',
+    'Processing your photo…': 'புகைப்படத்தைச் செயலாக்குகிறது…', 'Please choose an image file': 'ஒரு படக் கோப்பைத் தேர்வுசெய்யவும்',
+    'Could not read image': 'படத்தைப் படிக்க முடியவில்லை', 'Could not read file': 'கோப்பைப் படிக்க முடியவில்லை',
+    'Please enter your name.': 'உங்கள் பெயரை உள்ளிடவும்.', 'Please select your ID type.': 'அடையாள அட்டை வகையைத் தேர்வுசெய்யவும்.',
+    'Please add a photo of your ID.': 'அடையாள அட்டையின் புகைப்படத்தைச் சேர்க்கவும்.', 'Please sign above.': 'மேலே கையொப்பமிடவும்.',
+    'Please agree to the House Rules & Terms.': 'வீட்டு விதிகள் & நிபந்தனைகளை ஏற்றுக்கொள்ளவும்.',
+    'The server is taking a while to respond — please try again in a moment.': 'சர்வர் பதிலளிக்கத் தாமதமாகிறது — சிறிது நேரத்தில் மீண்டும் முயற்சிக்கவும்.',
+    'Could not submit — please try again.': 'சமர்ப்பிக்க முடியவில்லை — மீண்டும் முயற்சிக்கவும்.', 'Something went wrong': 'ஏதோ தவறு நடந்தது',
+    'This check-in link has expired or is invalid — please sign in with Google to find your booking.': 'இந்தச் செக்-இன் இணைப்பு காலாவதியானது அல்லது தவறானது — உங்கள் முன்பதிவைக் கண்டறிய Google மூலம் உள்நுழையவும்.',
+    'Verifying…': 'சரிபார்க்கிறது…', 'Could not reach the server — check your connection.': 'சர்வரை அணுக முடியவில்லை — இணைய இணைப்பைச் சரிபார்க்கவும்.',
+    "We couldn't match this Google account to an upcoming booking or staff account. If you have a check-in link from WhatsApp, please use that instead.": 'இந்த Google கணக்கை வரவிருக்கும் முன்பதிவுடன் பொருத்த முடியவில்லை. WhatsApp-இல் வந்த செக்-இன் இணைப்பு இருந்தால் அதைப் பயன்படுத்தவும்.',
+    'Could not load Google Sign-In — check your connection or disable ad blockers.': 'Google உள்நுழைவை ஏற்ற முடியவில்லை — இணைப்பைச் சரிபார்க்கவும் அல்லது விளம்பரத் தடுப்பானை நிறுத்தவும்.'
   };
+  var VILLA_TYPES = { 'beach villa': 'கடற்கரை வில்லா', 'pool villa': 'நீச்சல் குள வில்லா', 'villa': 'வில்லா', 'farm stay': 'பண்ணை வீடு', 'farmhouse': 'பண்ணை வீடு', 'cottage': 'குடில்', 'homestay': 'ஹோம்ஸ்டே' };
 
   var MONTHS = { Jan:'ஜனவரி', Feb:'பிப்ரவரி', Mar:'மார்ச்', Apr:'ஏப்ரல்', May:'மே', Jun:'ஜூன்', Jul:'ஜூலை', Aug:'ஆகஸ்ட்', Sep:'செப்டம்பர்', Oct:'அக்டோபர்', Nov:'நவம்பர்', Dec:'டிசம்பர்' };
   var TYPE = { 'Check-in': 'செக்-இன்', 'Check-out': 'செக்-அவுட்', 'Daily': 'தினசரி' };
@@ -192,6 +240,13 @@
     [/^Could not load (.+?) — (.+)$/, function(m){ return 'ஏற்ற முடியவில்லை — ' + m[2]; }],
     [/^Could not load — (.+)$/, function(m){ return 'ஏற்ற முடியவில்லை — ' + m[1]; }],
     [/^(\d+) open$/, function(m){ return m[1] + ' திறந்தவை'; }],
+    [/^Welcome to (.+)$/, function(m){ return m[1] + '-க்கு வரவேற்கிறோம்'; }],
+    [/^🏠 Private (.+)$/, function(m){ return '🏠 தனியார் ' + (VILLA_TYPES[m[1].toLowerCase()] || m[1]); }],
+    [/^(\d+) guests?$/, function(m){ return m[1] + ' விருந்தினர்' + (m[1] === '1' ? '' : 'கள்'); }],
+    [/^✓ Signed in — matched your booking (.+)\.$/, function(m){ return '✓ உள்நுழைந்தீர்கள் — உங்கள் முன்பதிவு ' + m[1] + ' கண்டறியப்பட்டது.'; }],
+    [/^We'll have everything ready for your stay from (.+) to (.+)\. See you soon!$/, function(m){ return m[1] + ' முதல் ' + m[2] + ' வரையிலான உங்கள் தங்குதலுக்கு எல்லாவற்றையும் தயார் செய்து வைப்போம். விரைவில் சந்திப்போம்!'; }],
+    [/^You're already checked in for your stay from (.+) to (.+)\. See you soon!$/, function(m){ return m[1] + ' முதல் ' + m[2] + ' வரையிலான தங்குதலுக்கு ஏற்கெனவே செக்-இன் செய்துவிட்டீர்கள். விரைவில் சந்திப்போம்!'; }],
+    [/^You're already checked in\. See you soon at (.+)\.$/, function(m){ return 'ஏற்கெனவே செக்-இன் செய்துவிட்டீர்கள். விரைவில் ' + m[1] + '-இல் சந்திப்போம்.'; }],
     [/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)\w* (\d{4})$/, function(m){ return MONTHS[m[1].slice(0,3)] + ' ' + m[2]; }]
   ];
   function T(s){
@@ -208,7 +263,7 @@
   }
 
   document.documentElement.lang = 'ta';
-  try {
+  if (!guest) try {
     var l = document.createElement('link'); l.rel = 'stylesheet';
     l.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap';
     document.head.appendChild(l);
@@ -231,7 +286,9 @@
   }
   var ATTRS = ['placeholder', 'title', 'aria-label'];
   function attrs(el){
-    if (skip(el)) return;
+    // Attributes are translated even on a <textarea> (its placeholder) — only
+    // its typed value, never a text node, must stay as written.
+    if (!el || (el.closest && el.closest('[data-no-i18n]'))) return;
     ATTRS.forEach(function(a){ var v = el.getAttribute(a); if (v && /[A-Za-z]/.test(v)) { var r = T(v.trim()); if (r != null && r !== v) el.setAttribute(a, r); } });
   }
   function walk(root){

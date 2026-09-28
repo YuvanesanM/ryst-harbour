@@ -11,6 +11,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <script src="/villa.js"></script>
 <script src="/property.js"></script>
+<script src="/i18n.js" data-audience="guest"></script>
 <title data-title="Guest Check-in | {name}">Guest Check-in | RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -39,6 +40,7 @@
   }
   .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--sea),var(--sea-mid),var(--sand))}
   .logo{height:44px;display:block;margin:0 auto 22px;object-fit:contain}
+  .lang-toggle{position:absolute;top:16px;right:16px;background:var(--foam);color:var(--sea);border:0;border-radius:999px;padding:7px 13px;font:600 12.5px var(--sans);cursor:pointer}
 
   /* Respect a guest's OS-level reduced-motion preference before anything
      else — every animation below is decorative, never load-bearing. */
@@ -255,6 +257,7 @@
 <body>
 <div class="wrap">
   <div class="card">
+    <button type="button" class="lang-toggle" data-lang-toggle>தமிழ்</button>
     <img class="logo" alt="RYST 109A" data-prop-alt="name" data-prop-src="logoUrl" src="/assets/stay-logo.webp">
     <div id="formView">
       <div class="hero">
@@ -441,11 +444,13 @@ let walletTok = '';
 let walletAppleEnabled = true;
 let walletGoogleEnabled = true;
 
+// Tamil month names when the page is in Tamil (i18n.js sets RYST_LANG).
+const DATE_LOCALE = window.RYST_LANG === 'ta' ? 'ta-IN' : 'en-IN';
 function fmtDate(iso){
   if(!iso) return '';
   const d = new Date(iso+'T00:00:00');
   if(isNaN(d)) return iso;
-  return d.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+  return d.toLocaleDateString(DATE_LOCALE, { day:'numeric', month:'long', year:'numeric' });
 }
 // Short-month variant for the compact check-in/check-out grid in the
 // booking summary card — fmtDate's full "15 August 2026" is right for the
@@ -454,7 +459,7 @@ function fmtDateShort(iso){
   if(!iso) return '';
   const d = new Date(iso+'T00:00:00');
   if(isNaN(d)) return iso;
-  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  return d.toLocaleDateString(DATE_LOCALE, { day:'numeric', month:'short', year:'numeric' });
 }
 
 // Guest count has no on-page control at all now — it's purely derived from
