@@ -1335,7 +1335,8 @@ function villaBillText(b){
 function villaRows(list){
   if(!list.length) return '<div class="sync-result"><span>Villas</span><span>None yet</span></div>';
   return list.map(v=>`<div class="sync-result${v.billing&&v.billing.locked?' err':''}"><span>${esc(v.name)}${v.isDefault?' (this villa)':''}</span><span>${esc(v.slug)} · ${v.bookings} booking${v.bookings===1?'':'s'} · ${v.users} user${v.users===1?'':'s'} · ${esc(villaBillText(v.billing))}${v.billing&&v.billing.note?' · '+esc(v.billing.note):''}</span></div>`
-    + (v.isDefault ? '' : `<div class="rc-foot" style="margin:4px 0 10px;flex-wrap:wrap;gap:6px">
+    + (v.isDefault ? '' : `<div class="villa-ready" data-ready="${esc(v.slug)}" style="font-size:12.5px;color:var(--muted);margin:6px 2px 0;line-height:1.5">Checking setup…</div>
+      <div class="rc-foot" style="margin:4px 0 10px;flex-wrap:wrap;gap:6px">
         <button type="button" class="rc-add" data-bill="extend-trial" data-slug="${esc(v.slug)}">Extend trial</button>
         <button type="button" class="rc-add" data-bill="mark-paid" data-slug="${esc(v.slug)}">Mark paid</button>
         <button type="button" class="rc-add" data-bill="waive-setup" data-slug="${esc(v.slug)}" data-waive="${v.billing&&v.billing.setupWaived?'0':'1'}">${v.billing&&v.billing.setupWaived?'Charge setup fee':'Waive setup fee'}</button>
@@ -1398,7 +1399,20 @@ if(tokenVilla()==='ryst-109a' && localStorage.getItem('ryst_demo')!=='1' && loca
 async function villaList(){
   const out=document.getElementById('villaResults');
   try{ const d=await storCall('GET','/platform/villas'); out.innerHTML=villaRows(d.villas||[]); }
-  catch(e){ out.innerHTML=`<div class="sync-result err"><span>Villas</span><span>${esc(e.message)}</span></div>`; }
+  catch(e){ out.innerHTML=`<div class="sync-result err"><span>Villas</span><span>${esc(e.message)}</span></div>`; return; }
+  // Onboarding progress for each villa ("Live in 7 days").
+  try{
+    const r=await storCall('GET','/platform/villas/readiness');
+    (r.villas||[]).forEach(v=>{
+      const el=out.querySelector(`[data-ready="${CSS.escape(v.slug)}"]`); if(!el) return;
+      const missing=v.steps.filter(s=>!s.done && !s.optional).map(s=>s.label);
+      const extra=v.steps.filter(s=>!s.done && s.optional).map(s=>s.label);
+      const pct=Math.round(v.done/v.total*100);
+      el.innerHTML=`<div style="display:flex;align-items:center;gap:8px"><b style="color:var(--ink)">Setup ${v.done}/${v.total}</b><span style="flex:1;height:6px;border-radius:4px;background:var(--line);overflow:hidden;max-width:180px"><span style="display:block;height:100%;width:${pct}%;background:var(--accent)"></span></span>${missing.length?'':'<span style="color:var(--accent-d);font-weight:600">✓ ready</span>'}</div>`
+        + (missing.length ? `<div>Still to do: ${esc(missing.join(' · '))}</div>` : '')
+        + (extra.length ? `<div style="color:var(--muted2)">Optional: ${esc(extra.join(' · '))}</div>` : '');
+    });
+  }catch(e){ out.querySelectorAll('[data-ready]').forEach(el=>{ el.textContent='Setup progress unavailable — '+e.message; }); }
 }
 document.getElementById('villaListBtn').addEventListener('click', async e=>{
   const b=e.currentTarget, t=b.textContent; b.disabled=true; b.textContent='Loading…';
