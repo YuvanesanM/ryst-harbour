@@ -6,7 +6,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
-<title data-title="Check-in / Check-out Checklist · {name}">Check-in / Check-out Checklist · RYST 109A</title>
+<script src="/i18n.js"></script>
+<title data-title="Villa Checklists · {name}">Villa Checklists · RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,6 +63,9 @@
   .type-badge{font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;text-transform:uppercase;margin-left:8px}
   .type-badge.checkin{background:var(--accent-soft);color:var(--accent-d)}
   .type-badge.checkout{background:var(--qt-soft);color:var(--qt)}
+  .type-badge.daily{background:#e8eef8;color:#3f5f93}
+  .tpl-help{font-size:12px;color:var(--muted);margin-top:-4px}
+  .field textarea.tpl{min-height:150px;font-size:13px;line-height:1.5}
   .due-action{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600}
   .due-action:hover{background:var(--accent-d)}
   .due-action.continue{background:var(--warn)}
@@ -191,11 +195,14 @@
 <div class="wrap">
   <header class="top">
     <img id="logo" alt="RYST" src="/assets/stay-logo.webp" />
-    <div class="ttl">Check-in / Check-out Checklist<small><span data-prop="name">RYST 109A</span> · Villa walkthroughs</small></div>
+    <div class="ttl"><span>Villa Checklists</span><small><span data-prop="name" data-no-i18n>RYST 109A</span> <span>· Walkthroughs &amp; daily rounds</span></small></div>
     <div class="spacer"></div>
     <span id="roleBadge" class="badge owner">Owner</span>
-    <span id="whoami" class="who"></span>
+    <span id="whoami" class="who" data-no-i18n></span>
+    <button class="tbtn" type="button" data-lang-toggle>தமிழ்</button>
     <button class="tbtn" onclick="window.location.href='login.html'">⌂ Home</button>
+    <button class="tbtn" onclick="window.location.href='issues.html'">🛠 Issues</button>
+    <button class="tbtn owner-only" id="btnTemplates">✎ Edit checklists</button>
     <button class="tbtn primary" id="btnStart">＋ Start checklist</button>
   </header>
 
@@ -203,7 +210,7 @@
     <div class="card hero">
       <div class="lbl">Due today</div>
       <div class="val" id="cDue">—</div>
-      <div class="sub">check-ins &amp; check-outs</div>
+      <div class="sub">check-ins, check-outs &amp; rounds</div>
     </div>
     <div class="card warn">
       <div class="lbl">In progress</div>
@@ -229,6 +236,7 @@
       <option value="all">All types</option>
       <option value="checkin">Check-in</option>
       <option value="checkout">Check-out</option>
+      <option value="daily">Daily</option>
     </select>
     <select id="fStatus">
       <option value="all">All statuses</option>
@@ -249,9 +257,10 @@
         <select id="stType">
           <option value="checkin">Check-in</option>
           <option value="checkout">Check-out</option>
+          <option value="daily">Daily rounds</option>
         </select>
       </div>
-      <div class="two">
+      <div class="two" id="stGuestRow">
         <div class="field"><label>Booking no. (optional)</label><input id="stStayNo" placeholder="e.g. INV-2026/012" /></div>
         <div class="field"><label>Guest name</label><input id="stGuest" placeholder="e.g. Priya Sharma" /></div>
       </div>
@@ -291,6 +300,25 @@
   </div>
 </div>
 
+<!-- Edit checklists (owner) -->
+<div class="overlay" id="tplOverlay">
+  <div class="modal">
+    <h3>✎ Edit checklists</h3>
+    <p class="sd">One item per line. Start a line with "Bedroom 1 —" to group it under that room. Changes apply to checklists started from now on.</p>
+    <div class="mbody">
+      <div class="field"><label>Check-in</label><textarea class="tpl" id="tplCheckin" data-no-i18n></textarea></div>
+      <div class="field"><label>Check-out</label><textarea class="tpl" id="tplCheckout" data-no-i18n></textarea></div>
+      <div class="field"><label>Daily rounds</label><textarea class="tpl" id="tplDaily" data-no-i18n></textarea></div>
+      <p class="tpl-help">Tip: caretakers who use Tamil see the built-in items in Tamil. Items you add yourself show exactly as you type them — you can write them in Tamil.</p>
+      <div class="merr" id="tplErr"></div>
+    </div>
+    <div class="mfoot"><span></span><span class="right">
+      <button class="btn" id="tplCancel">Cancel</button>
+      <button class="btn primary" id="tplSave">Save</button>
+    </span></div>
+  </div>
+</div>
+
 <div id="loader">
   <div class="spin" id="loaderSpin"></div>
   <div id="loaderMsg">Loading checklists…</div>
@@ -325,13 +353,15 @@ const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':
 // after local midnight. Read the local calendar fields directly instead.
 const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const fmtDate = iso => { if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; };
+const TYPE_LABEL = { checkin:'Check-in', checkout:'Check-out', daily:'Daily' };
+const runName = r => r.type==='daily' ? 'Daily rounds' : (r.guest||r.stayNo||'Untitled');
 
 $('#roleBadge').textContent = isOwner ? 'Owner' : 'Caretaker';
 $('#roleBadge').className = 'badge ' + (isOwner ? 'owner' : 'caretaker');
 $('#whoami').textContent = localStorage.getItem('ryst_user_email') || '';
 document.body.classList.toggle('caretaker-mode', !isOwner);
 
-let DOC = { templates: { checkin: [], checkout: [] }, runs: [] };
+let DOC = { templates: { checkin: [], checkout: [], daily: [] }, runs: [] };
 let STAYS = []; // best-effort; caretaker-role tokens may not have access
 let FILTERS = { q:'', type:'all', status:'all' };
 
@@ -358,7 +388,7 @@ async function load(){
     if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
     if(!res.ok) throw new Error('Server error ('+res.status+')');
     const data = await res.json().catch(()=>({}));
-    DOC = { templates: data.templates || {checkin:[],checkout:[]}, runs: Array.isArray(data.runs)?data.runs:[] };
+    DOC = { templates: Object.assign({checkin:[],checkout:[],daily:[]}, data.templates||{}), runs: Array.isArray(data.runs)?data.runs:[] };
 
     // /stays is owner-only server-side — a caretaker-role token gets 403.
     // That's fine: the "due today" panel just won't populate for them, and
@@ -394,6 +424,8 @@ async function sendCommand(cmd){
 }
 
 function findRun(stayNo, type){
+  // A daily round belongs to a day, not a booking.
+  if(type === 'daily') return DOC.runs.find(r => r.type === 'daily' && r.date === todayISO());
   return DOC.runs.find(r => r.stayNo === stayNo && r.type === type);
 }
 
@@ -405,6 +437,7 @@ function renderDue(){
     if(s.checkin===today) rows.push({ stayNo:s.no, guest:s.guest, type:'checkin' });
     if(s.checkout===today) rows.push({ stayNo:s.no, guest:s.guest, type:'checkout' });
   });
+  if((DOC.templates.daily||[]).length) rows.push({ stayNo:'', guest:'', type:'daily' });
 
   $('#cDue').textContent = rows.length;
   $('#duePanel').style.display = rows.length ? '' : 'none';
@@ -417,12 +450,12 @@ function renderDue(){
   // HTML-attribute escaping, never get re-parsed as script source.
   $('#dueList').innerHTML = rows.map(r=>{
     const run = findRun(r.stayNo, r.type);
-    const label = r.type==='checkin' ? 'Check-in' : 'Check-out';
+    const label = TYPE_LABEL[r.type];
     let btnLabel = 'Start', btnClass = '';
     if(run){ btnLabel = run.status==='completed' ? 'View' : 'Continue'; btnClass = run.status==='completed' ? 'view' : 'continue'; }
     return `<div class="due-item">
-      <div class="due-main"><span class="due-guest">${esc(r.guest||'—')}</span><span class="type-badge ${r.type}">${label}</span>
-        <div class="due-sub">${esc(r.stayNo)}</div></div>
+      <div class="due-main"><span class="due-guest" ${r.type==='daily'?'':'data-no-i18n'}>${r.type==='daily' ? 'Daily rounds' : esc(r.guest||'—')}</span><span class="type-badge ${r.type}">${label}</span>
+        <div class="due-sub" ${r.type==='daily'?'':'data-no-i18n'}>${r.type==='daily' ? (run ? '' : 'Not done yet today') : esc(r.stayNo)}</div></div>
       <button class="due-action ${btnClass}" data-stayno="${esc(r.stayNo)}" data-type="${esc(r.type)}" data-guest="${esc(r.guest||'')}">${btnLabel}</button>
     </div>`;
   }).join('');
@@ -476,11 +509,11 @@ function render(){
   list.innerHTML = filtered.map(r=>{
     const checked = r.items.filter(i=>i.checked).length;
     const noted = r.items.filter(i=>i.note && i.note.trim()).length;
-    const label = r.type==='checkin' ? 'Check-in' : 'Check-out';
+    const label = TYPE_LABEL[r.type] || r.type;
     return `<div class="run-row" onclick="openRun('${esc(r.id)}')">
       <div class="run-main">
-        <div class="run-title">${esc(r.guest||r.stayNo||'Untitled')} <span class="type-badge ${r.type}">${label}</span></div>
-        <div class="run-sub">${esc(r.stayNo||'—')} · ${fmtDate(r.date)}</div>
+        <div class="run-title"><span ${r.type==='daily'?'':'data-no-i18n'}>${esc(runName(r))}</span> <span class="type-badge ${r.type}">${label}</span></div>
+        <div class="run-sub">${r.type==='daily' ? '' : `<span data-no-i18n>${esc(r.stayNo||'—')}</span> · `}${fmtDate(r.date)}</div>
       </div>
       ${noted ? `<span class="run-flag" title="${noted} item(s) have a note">⚠ ${noted} note${noted===1?'':'s'}</span>` : ''}
       <div class="run-progress">${checked}/${r.items.length} done</div>
@@ -491,20 +524,21 @@ function render(){
 
 /* ---------- START MODAL ---------- */
 function openStartModal(){
-  $('#stType').value = 'checkin';
+  $('#stType').value = 'checkin'; $('#stGuestRow').style.display = '';
   $('#stStayNo').value = ''; $('#stGuest').value = '';
   $('#stDate').value = todayISO();
   $('#stErr').textContent = '';
   $('#startOverlay').classList.add('show');
 }
 function closeStartModal(){ $('#startOverlay').classList.remove('show'); }
+$('#stType').addEventListener('change', ()=>{ $('#stGuestRow').style.display = $('#stType').value==='daily' ? 'none' : ''; });
 $('#btnStart').addEventListener('click', openStartModal);
 $('#stCancel').addEventListener('click', closeStartModal);
 $('#startOverlay').addEventListener('click', e=>{ if(e.target===$('#startOverlay')) closeStartModal(); });
 $('#stSave').addEventListener('click', async () => {
   const type = $('#stType').value;
-  const stayNo = $('#stStayNo').value.trim();
-  const guest = $('#stGuest').value.trim();
+  const stayNo = type==='daily' ? '' : $('#stStayNo').value.trim();
+  const guest = type==='daily' ? '' : $('#stGuest').value.trim();
   const date = $('#stDate').value || todayISO();
   const btn = $('#stSave');
   btn.disabled = true; btn.textContent = 'Starting…';
@@ -653,9 +687,9 @@ function openRun(id){
   if(!run) return;
   currentRunId = id;
   clearTimeout(autosaveTimer); autosaveTimer = null; autosavePending = false;
-  const label = run.type==='checkin' ? 'Check-in' : 'Check-out';
-  $('#runTitle').textContent = `${label} checklist${run.guest?' — '+run.guest:''}`;
-  $('#runSub').textContent = `${run.stayNo||'No booking reference'} · ${fmtDate(run.date)}`;
+  const label = TYPE_LABEL[run.type] || run.type;
+  $('#runTitle').textContent = run.type==='daily' ? `${label} checklist — ${fmtDate(run.date)}` : `${label} checklist${run.guest?' — '+run.guest:''}`;
+  $('#runSub').textContent = run.type==='daily' ? '' : `${run.stayNo||'No booking reference'} · ${fmtDate(run.date)}`;
   $('#runOverallNote').value = run.overallNote || '';
   $('#runErr').textContent = '';
   setSaveStatus('');
@@ -778,11 +812,37 @@ $('#runDelete').addEventListener('click', async () => {
   }catch(e){ showToast(e.message, true); }
 });
 
+/* ---------- EDIT CHECKLISTS (owner) ---------- */
+function openTemplates(){
+  $('#tplCheckin').value = (DOC.templates.checkin||[]).join('\n');
+  $('#tplCheckout').value = (DOC.templates.checkout||[]).join('\n');
+  $('#tplDaily').value = (DOC.templates.daily||[]).join('\n');
+  $('#tplErr').textContent = '';
+  $('#tplOverlay').classList.add('show');
+}
+const tplLines = id => $(id).value.split('\n').map(x=>x.trim()).filter(Boolean);
+$('#btnTemplates').addEventListener('click', openTemplates);
+$('#tplCancel').addEventListener('click', ()=>$('#tplOverlay').classList.remove('show'));
+$('#tplOverlay').addEventListener('click', e=>{ if(e.target===$('#tplOverlay')) $('#tplOverlay').classList.remove('show'); });
+$('#tplSave').addEventListener('click', async ()=>{
+  const checkin = tplLines('#tplCheckin'), checkout = tplLines('#tplCheckout'), daily = tplLines('#tplDaily');
+  if(!checkin.length || !checkout.length){ $('#tplErr').textContent = 'Check-in and check-out each need at least one item.'; return; }
+  if([checkin,checkout,daily].some(l=>l.length>60)){ $('#tplErr').textContent = 'At most 60 items per checklist.'; return; }
+  const b = $('#tplSave'); b.disabled = true;
+  try{
+    const data = await sendCommand({ action:'set-templates', checkin, checkout, daily });
+    if(data===null) return;
+    DOC.templates = Object.assign({checkin:[],checkout:[],daily:[]}, data.templates||{}); DOC.runs = data.runs || DOC.runs;
+    render(); $('#tplOverlay').classList.remove('show'); showToast('Checklists saved');
+  }catch(e){ $('#tplErr').textContent = e.message; }
+  finally{ b.disabled = false; }
+});
+
 $('#fSearch').addEventListener('input', e=>{ FILTERS.q=e.target.value; render(); });
 $('#fType').addEventListener('change', e=>{ FILTERS.type=e.target.value; render(); });
 $('#fStatus').addEventListener('change', e=>{ FILTERS.status=e.target.value; render(); });
 
-document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeStartModal(); closeRunModal(); } });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeStartModal(); closeRunModal(); $('#tplOverlay').classList.remove('show'); } });
 
 load();
 </script>

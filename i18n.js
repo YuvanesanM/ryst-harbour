@@ -1,0 +1,261 @@
+// Tamil for the caretaker's screens (home, checklists, issues, petty cash,
+// inventory). Pages are written in English; when the language is Tamil this
+// swaps every piece of on-screen text it knows — including text a page adds
+// later (lists, toasts, pop-ups) — and leaves anything it doesn't know, such
+// as guest names and amounts, exactly as it is. Values the pages save are
+// never touched: only visible text, placeholders and tooltips change.
+//
+// Language: localStorage.ryst_lang ('ta' | 'en'). Caretakers start in Tamil,
+// everyone else in English. Any element with data-lang-toggle becomes the
+// switch; data-no-i18n keeps an element as written.
+(function(){
+  var store = {};
+  try { store.lang = localStorage.getItem('ryst_lang'); store.role = localStorage.getItem('ryst_user_role'); } catch (e) {}
+  var lang = store.lang === 'ta' || store.lang === 'en' ? store.lang : (store.role === 'caretaker' ? 'ta' : 'en');
+  window.RYST_LANG = lang;
+  window.rystSetLang = function(l){ try { localStorage.setItem('ryst_lang', l); } catch (e) {} location.reload(); };
+
+  function wireToggles(root){
+    (root.querySelectorAll ? root.querySelectorAll('[data-lang-toggle]') : []).forEach(function(b){
+      if (b._langWired) return; b._langWired = true;
+      b.setAttribute('data-no-i18n', '');
+      b.textContent = lang === 'ta' ? 'English' : 'தமிழ்';
+      b.setAttribute('aria-label', lang === 'ta' ? 'Switch to English' : 'தமிழுக்கு மாற்று');
+      b.addEventListener('click', function(){ window.rystSetLang(lang === 'ta' ? 'en' : 'ta'); });
+    });
+  }
+
+  var TA = {
+    // ── shared ──
+    '⌂ Home': '⌂ முகப்பு', 'Home': 'முகப்பு', 'Caretaker': 'பராமரிப்பாளர்', 'Owner': 'உரிமையாளர்', 'Coordinator': 'ஒருங்கிணைப்பாளர்',
+    'Retry': 'மீண்டும் முயற்சி', 'Cancel': 'ரத்து', 'Close': 'மூடு', 'Save': 'சேமி', 'Saving…': 'சேமிக்கிறது…', 'Saved ✓': 'சேமிக்கப்பட்டது ✓',
+    'Edit': 'திருத்து', 'Delete': 'நீக்கு', 'Remove': 'அகற்று', 'Clear': 'அழி', 'Search': 'தேடு', 'All': 'அனைத்தும்', 'Status': 'நிலை',
+    'Date': 'தேதி', 'Note': 'குறிப்பு', 'Amount': 'தொகை', 'Category': 'வகை', 'Month': 'மாதம்', 'Type': 'வகை', 'Start': 'தொடங்கு',
+    'Starting…': 'தொடங்குகிறது…', 'OK': 'சரி', 'Low': 'குறைவு', 'Open': 'திறந்தவை', 'Continue': 'தொடர்', 'View': 'பார்', 'Sending…': 'அனுப்புகிறது…',
+    'Waking up the server… this can take up to a minute.': 'சர்வர் தொடங்குகிறது… ஒரு நிமிடம் வரை ஆகலாம்.',
+    'Waking up the server… up to a minute.': 'சர்வர் தொடங்குகிறது… ஒரு நிமிடம் வரை ஆகலாம்.',
+    'Server timed out — please retry.': 'சர்வர் பதிலளிக்கவில்லை — மீண்டும் முயற்சிக்கவும்.',
+    'Demo mode · sample data, changes are not saved': 'டெமோ பயன்முறை · மாதிரித் தரவு, மாற்றங்கள் சேமிக்கப்படாது',
+    'Exit demo': 'டெமோவிலிருந்து வெளியேறு',
+    'Demo mode — sample data only, changes are not saved. Sign in with your staff account to make changes.': 'டெமோ பயன்முறை — மாதிரித் தரவு மட்டும், மாற்றங்கள் சேமிக்கப்படாது. மாற்றம் செய்ய உங்கள் பணியாளர் கணக்கில் உள்நுழையவும்.',
+
+    // ── home ──
+    'Booking Calendar': 'முன்பதிவு நாட்காட்டி', 'Occupancy, revenue & upcoming stays': 'நிரம்பல், வருவாய் & வரவிருக்கும் தங்கல்கள்',
+    'Stay Quote & Invoice': 'விலைப்புள்ளி & இன்வாய்ஸ்', 'Villa invoices & quotations': 'வில்லா இன்வாய்ஸ்கள் & விலைப்புள்ளிகள்',
+    'Checklists': 'சரிபார்ப்புப் பட்டியல்கள்', 'Check-in, check-out & daily rounds': 'செக்-இன், செக்-அவுட் & தினசரிச் சுற்று',
+    'Issues': 'பிரச்சனைகள்', 'Report a problem & track repairs': 'பிரச்சனையைத் தெரிவி & பழுது நிலையைப் பார்',
+    'Guest Register': 'விருந்தினர் பதிவேடு', 'Upcoming stays, notes & payment status': 'வரவிருக்கும் தங்கல்கள், குறிப்புகள் & கட்டண நிலை',
+    'Guest Feedback': 'விருந்தினர் கருத்து', 'Post-stay reviews & ratings': 'தங்கலுக்குப் பிந்தைய மதிப்புரைகள் & மதிப்பீடுகள்',
+    'Restaurant billing, menu & inventory': 'உணவக பில், மெனு & இருப்பு',
+    'Petty Cash': 'சில்லறைச் செலவு', 'Caretaker expenses & reimbursements': 'பராமரிப்பாளர் செலவுகள் & திருப்பிச் செலுத்துதல்',
+    'Inventory & Restock': 'இருப்பு & மறு நிரப்பல்', 'Consumables & shopping list': 'பயன்பாட்டுப் பொருட்கள் & வாங்க வேண்டிய பட்டியல்',
+    'Profit & Loss': 'லாபம் & நஷ்டம்', 'Revenue vs. petty-cash spend': 'வருவாய் vs சில்லறைச் செலவு',
+    'Rate Card & Settings': 'கட்டண அட்டை & அமைப்புகள்', 'Pricing, bank details & business info': 'விலை, வங்கி விவரங்கள் & வணிகத் தகவல்',
+    '⎋ Log out': '⎋ வெளியேறு', '📲 Install RYST Harbour app': '📲 RYST Harbour செயலியை நிறுவு',
+
+    // ── checklists ──
+    'Villa Checklists': 'வில்லா சரிபார்ப்புப் பட்டியல்கள்', '· Walkthroughs & daily rounds': '· சுற்றுப் பார்வை & தினசரிச் சுற்று',
+    '＋ Start checklist': '＋ சரிபார்ப்பைத் தொடங்கு', 'Start checklist': 'சரிபார்ப்பைத் தொடங்கு', '✎ Edit checklists': '✎ பட்டியல்களைத் திருத்து',
+    '🛠 Issues': '🛠 பிரச்சனைகள்', 'Due today': 'இன்று செய்ய வேண்டியவை', 'check-ins, check-outs & rounds': 'செக்-இன், செக்-அவுட் & சுற்று',
+    'In progress': 'நடந்துகொண்டிருக்கிறது', 'unfinished runs': 'முடிக்கப்படாதவை', 'Completed': 'முடிந்தது', 'this month': 'இந்த மாதம்',
+    'All types': 'அனைத்து வகைகளும்', 'Check-in': 'செக்-இன்', 'Check-out': 'செக்-அவுட்', 'Daily': 'தினசரி', 'Daily rounds': 'தினசரிச் சுற்று',
+    'All statuses': 'அனைத்து நிலைகளும்',
+    'No checklists match — try clearing filters, or start one above.': 'பொருந்தும் பட்டியல் இல்லை — வடிகட்டிகளை அழிக்கவும் அல்லது மேலே புதியதைத் தொடங்கவும்.',
+    'Booking no. (optional)': 'முன்பதிவு எண் (விருப்பம்)', 'Guest name': 'விருந்தினர் பெயர்', 'Checklist': 'சரிபார்ப்புப் பட்டியல்',
+    'Overall note': 'பொதுக் குறிப்பு', 'Save & continue later': 'சேமித்து பிறகு தொடர்', 'Mark complete': 'முடிந்ததாகக் குறி',
+    'Loading checklists…': 'பட்டியல்கள் ஏற்றப்படுகின்றன…', 'Guest name or booking no…': 'விருந்தினர் பெயர் அல்லது முன்பதிவு எண்…',
+    'Anything else worth recording…': 'பதிவு செய்ய வேண்டிய வேறு ஏதேனும்…', 'e.g. Priya Sharma': 'எ.கா. பிரியா',
+    '📝 Add note': '📝 குறிப்பு சேர்', '📝 Edit note': '📝 குறிப்பைத் திருத்து', '📷 Add photo': '📷 புகைப்படம் சேர்', '📷 Change photo': '📷 புகைப்படத்தை மாற்று',
+    'Remove photo': 'புகைப்படத்தை அகற்று', 'Note…': 'குறிப்பு…', 'Unsaved changes…': 'சேமிக்கப்படாத மாற்றங்கள்…',
+    'Checklist marked complete': 'பட்டியல் முடிந்ததாகக் குறிக்கப்பட்டது', 'Progress saved': 'முன்னேற்றம் சேமிக்கப்பட்டது', 'Checklist deleted': 'பட்டியல் நீக்கப்பட்டது',
+    'Delete this checklist run? This cannot be undone.': 'இந்தச் சரிபார்ப்பை நீக்கவா? இதைத் திரும்பப் பெற முடியாது.',
+    'No booking reference': 'முன்பதிவு எண் இல்லை', 'Common Areas & Facilities': 'பொது இடங்கள் & வசதிகள்',
+    'Not done yet today': 'இன்று இன்னும் செய்யவில்லை',
+
+    // default checklist items
+    'Living room set, tissues stocked': 'வரவேற்பறை சீரமைக்கப்பட்டது, டிஷ்யூ வைக்கப்பட்டது',
+    'Dining table set, cutlery & tissues laid, water stocked': 'உணவு மேசை தயார், கரண்டிகள் & டிஷ்யூ வைக்கப்பட்டன, தண்ணீர் வைக்கப்பட்டது',
+    'Fridge stocked with ice cubes & water': 'ஃப்ரிட்ஜில் ஐஸ் கட்டிகள் & தண்ணீர் வைக்கப்பட்டன',
+    'Kitchen clean, appliances working': 'சமையலறை சுத்தம், சாதனங்கள் இயங்குகின்றன',
+    'AC / fans working in all rooms': 'அனைத்து அறைகளிலும் AC / மின்விசிறிகள் இயங்குகின்றன',
+    'Pool & jacuzzi clean and safe': 'நீச்சல் குளம் & ஜக்குஸி சுத்தமாகவும் பாதுகாப்பாகவும் உள்ளன',
+    'Wi-Fi working': 'Wi-Fi இயங்குகிறது',
+    'Recreation hall — all equipment arranged in place': 'பொழுதுபோக்கு அறை — அனைத்து உபகரணங்களும் இடத்தில் அடுக்கப்பட்டன',
+    'Pool deck — pool towels, ashtray cleaned, seating arranged': 'குளக்கரை — குளத் துண்டுகள், சாம்பல் தட்டு சுத்தம், இருக்கைகள் சீரமைப்பு',
+    'Chess Balcony — cleaned and arranged': 'செஸ் பால்கனி — சுத்தம் செய்து சீரமைக்கப்பட்டது',
+    'Lift working': 'லிஃப்ட் இயங்குகிறது',
+    'Powder room — liquid soap & diffuser stocked': 'பவுடர் அறை — திரவ சோப் & டிஃப்யூசர் வைக்கப்பட்டன',
+    'beds made, pillows arranged, fresh linens': 'படுக்கைகள் சீரமைப்பு, தலையணைகள் அடுக்கப்பட்டன, புதிய விரிப்புகள்',
+    'washed cups, kettle tray filled, towels folded, water bottles stocked': 'கோப்பைகள் கழுவப்பட்டன, கெட்டில் தட்டு நிரப்பப்பட்டது, துண்டுகள் மடிக்கப்பட்டன, தண்ணீர் பாட்டில்கள் வைக்கப்பட்டன',
+    'bathroom clean, toiletries & tissue stocked': 'குளியலறை சுத்தம், கழிப்பறைப் பொருட்கள் & டிஷ்யூ வைக்கப்பட்டன',
+    'Checked for damage to furniture, walls or fixtures': 'மரச்சாமான்கள், சுவர்கள், பொருத்துதல்களில் சேதம் உள்ளதா எனப் பார்க்கப்பட்டது',
+    'Checked for missing items (towels, remotes, etc.)': 'காணாமல் போன பொருட்கள் (துண்டுகள், ரிமோட்டுகள் போன்றவை) சரிபார்க்கப்பட்டன',
+    'Linens & towels collected for laundry': 'சலவைக்கு விரிப்புகள் & துண்டுகள் சேகரிக்கப்பட்டன',
+    'Kitchen cleaned, appliances switched off': 'சமையலறை சுத்தம், சாதனங்கள் அணைக்கப்பட்டன',
+    'Trash removed': 'குப்பை அகற்றப்பட்டது',
+    'AC / lights / fans switched off': 'AC / விளக்குகள் / மின்விசிறிகள் அணைக்கப்பட்டன',
+    'Doors & windows locked': 'கதவுகள் & ஜன்னல்கள் பூட்டப்பட்டன',
+    'Pool cleaned if used': 'பயன்படுத்தியிருந்தால் நீச்சல் குளம் சுத்தம் செய்யப்பட்டது',
+    'Lost & found items collected': 'விட்டுச் சென்ற பொருட்கள் சேகரிக்கப்பட்டன',
+    'Pool — skimmed, chlorine and water level checked': 'நீச்சல் குளம் — மேற்பரப்பு சுத்தம், குளோரின் & நீர் மட்டம் சரிபார்ப்பு',
+    'Jacuzzi — clean, water checked': 'ஜக்குஸி — சுத்தம், நீர் சரிபார்ப்பு',
+    'Garden watered, leaves swept': 'தோட்டத்திற்கு நீர் பாய்ச்சப்பட்டது, இலைகள் பெருக்கப்பட்டன',
+    'Common areas swept and mopped': 'பொது இடங்கள் பெருக்கித் துடைக்கப்பட்டன',
+    'Trash taken out': 'குப்பை வெளியே கொண்டு செல்லப்பட்டது',
+    'Water tank and motor checked': 'தண்ணீர்த் தொட்டி & மோட்டார் சரிபார்க்கப்பட்டன',
+    'Power backup (inverter / generator) checked': 'மின் காப்பு (இன்வெர்ட்டர் / ஜெனரேட்டர்) சரிபார்க்கப்பட்டது',
+    'Gates and doors locked at night': 'இரவில் கேட் & கதவுகள் பூட்டப்பட்டன',
+    'Bedrooms — beds made, fresh linens, pillows arranged': 'படுக்கையறைகள் — படுக்கைகள் சீரமைப்பு, புதிய விரிப்புகள், தலையணைகள் அடுக்கப்பட்டன',
+    'Bathrooms — clean, towels, toiletries & tissue stocked': 'குளியலறைகள் — சுத்தம், துண்டுகள், கழிப்பறைப் பொருட்கள் & டிஷ்யூ வைக்கப்பட்டன',
+    'Living and dining areas clean and arranged': 'வரவேற்பறை & உணவருந்தும் இடம் சுத்தமாகவும் சீராகவும் உள்ளன',
+    'Kitchen clean, appliances working, drinking water stocked': 'சமையலறை சுத்தம், சாதனங்கள் இயங்குகின்றன, குடிநீர் வைக்கப்பட்டது',
+    'Fridge clean, ice & water stocked': 'ஃப்ரிட்ஜ் சுத்தம், ஐஸ் & தண்ணீர் வைக்கப்பட்டன',
+    'AC / fans / lights working in all rooms': 'அனைத்து அறைகளிலும் AC / மின்விசிறிகள் / விளக்குகள் இயங்குகின்றன',
+    'Pool clean and safe': 'நீச்சல் குளம் சுத்தமாகவும் பாதுகாப்பாகவும் உள்ளது',
+    'Garden and outdoor seating clean': 'தோட்டம் & வெளிப்புற இருக்கைகள் சுத்தம்',
+    'Welcome kit ready — keys, house rules, Wi-Fi card': 'வரவேற்புப் பொருட்கள் தயார் — சாவிகள், வீட்டு விதிகள், Wi-Fi அட்டை',
+
+    // ── issues ──
+    '· Problems & repairs': '· பிரச்சனைகள் & பழுதுகள்', '＋ Report a problem': '＋ பிரச்சனையைத் தெரிவி', 'Report a problem': 'பிரச்சனையைத் தெரிவி',
+    'waiting to be fixed': 'சரிசெய்யக் காத்திருக்கிறது', 'Urgent': 'அவசரம்', 'need attention now': 'உடனே கவனிக்க வேண்டும்',
+    'Fixed': 'சரிசெய்யப்பட்டது', 'fixed this month': 'இந்த மாதம் சரிசெய்யப்பட்டவை',
+    'What is the problem?': 'என்ன பிரச்சனை?', 'e.g. Bathroom tap leaking': 'எ.கா. குளியலறைக் குழாய் ஒழுகுகிறது',
+    'Where?': 'எங்கே?', 'e.g. Bedroom 2': 'எ.கா. படுக்கையறை 2', 'How urgent?': 'எவ்வளவு அவசரம்?',
+    'Can wait': 'காத்திருக்கலாம்', 'Soon': 'விரைவில்', 'More details (optional)': 'கூடுதல் விவரம் (விருப்பம்)',
+    '📷 Add a photo': '📷 புகைப்படம் சேர்', '📷 Change the photo': '📷 புகைப்படத்தை மாற்று', 'Send report': 'அனுப்பு',
+    'Report sent — the owner has been told': 'அனுப்பப்பட்டது — உரிமையாளருக்குத் தெரிவிக்கப்பட்டது',
+    'Mark fixed': 'சரிசெய்யப்பட்டதாகக் குறி', 'Reopen': 'மீண்டும் திற', 'What was done? (optional)': 'என்ன செய்யப்பட்டது? (விருப்பம்)',
+    'e.g. Replaced the washer': 'எ.கா. வாஷர் மாற்றப்பட்டது',
+    'No open problems. 👍': 'திறந்த பிரச்சனைகள் இல்லை. 👍', 'No fixed problems yet.': 'இதுவரை சரிசெய்யப்பட்டவை இல்லை.',
+    'Please say what the problem is.': 'பிரச்சனை என்ன என்று எழுதவும்.', 'Loading issues…': 'பிரச்சனைகள் ஏற்றப்படுகின்றன…',
+    'Delete this issue? This cannot be undone.': 'இந்தப் பிரச்சனையை நீக்கவா? இதைத் திரும்பப் பெற முடியாது.',
+    'Marked fixed': 'சரிசெய்யப்பட்டதாகக் குறிக்கப்பட்டது', 'Reopened': 'மீண்டும் திறக்கப்பட்டது', 'Issue deleted': 'பிரச்சனை நீக்கப்பட்டது',
+    'Reported': 'தெரிவிக்கப்பட்டது', 'by': 'தெரிவித்தவர்', 'Fixed on': 'சரிசெய்த நாள்', 'Open issues': 'திறந்த பிரச்சனைகள்', 'Fixed issues': 'சரிசெய்யப்பட்டவை',
+    'Photo of the fix (optional)': 'சரிசெய்ததன் புகைப்படம் (விருப்பம்)', 'Save as fixed': 'சரிசெய்யப்பட்டதாகச் சேமி',
+
+    // ── petty cash ──
+    '· Caretaker ledger': '· பராமரிப்பாளர் கணக்கேடு', 'Cash in hand': 'கையிருப்பு பணம்', 'Float target': 'முன்பண இலக்கு',
+    'authorised advance': 'அனுமதிக்கப்பட்ட முன்பணம்', 'Pending reimbursement': 'திருப்பித் தர வேண்டியது', 'owed back to caretaker': 'பராமரிப்பாளருக்குத் திருப்பித் தர வேண்டியது',
+    'Spent this month': 'இந்த மாதச் செலவு', '＋ Add expense': '＋ செலவைச் சேர்', '↺ Reimburse pending': '↺ நிலுவையைத் திருப்பித் தா',
+    '＋ Add cash / top-up': '＋ பணம் சேர் / டாப்-அப்', '− Collect cash back': '− பணத்தைத் திரும்பப் பெறு', '⚑ Set float': '⚑ முன்பணம் அமை',
+    '⤓ Export CSV': '⤓ CSV பதிவிறக்கு', '⎙ Print report': '⎙ அறிக்கையை அச்சிடு', 'All months': 'அனைத்து மாதங்களும்', 'All categories': 'அனைத்து வகைகளும்',
+    'Groceries & Guest Supplies': 'மளிகை & விருந்தினர் பொருட்கள்', 'Housekeeping': 'வீட்டுப் பராமரிப்பு', 'Utilities': 'மின்சாரம், நீர் கட்டணங்கள்',
+    'Repairs & Maintenance': 'பழுது & பராமரிப்பு', 'Transport': 'போக்குவரத்து', 'Miscellaneous': 'இதர செலவுகள்',
+    'Pending': 'நிலுவை', 'pending': 'நிலுவை', 'Reimbursed': 'திருப்பித் தரப்பட்டது', 'reimbursed': 'திருப்பித் தரப்பட்டது',
+    'No reimbursement': 'திருப்பித் தர தேவையில்லை', 'No reimbursement needed': 'திருப்பித் தர தேவையில்லை',
+    'Reimburse selected': 'தேர்ந்தவற்றைத் திருப்பித் தா', 'Receipt': 'ரசீது', 'Cash top-up': 'பணம் டாப்-அப்', 'Opening float': 'தொடக்க முன்பணம்',
+    'No entries for this filter.': 'இந்த வடிகட்டலுக்கு பதிவுகள் இல்லை.', 'Spend by category': 'வகை வாரியான செலவு', 'Period summary': 'காலச் சுருக்கம்',
+    'Period': 'காலம்', 'Expenses': 'செலவுகள்', 'Total spent': 'மொத்தச் செலவு', 'Add expense': 'செலவைச் சேர்', 'Amount (₹)': 'தொகை (₹)',
+    'Already paid directly — no reimbursement needed': 'நேரடியாகச் செலுத்தப்பட்டது — திருப்பித் தர தேவையில்லை',
+    '📷 Tap to add a photo of the bill': '📷 பில்லின் புகைப்படம் சேர்க்கத் தட்டவும்', 'Save expense': 'செலவைச் சேமி', '⤓ Download': '⤓ பதிவிறக்கு',
+    'Loading ledger…': 'கணக்கேடு ஏற்றப்படுகிறது…', 'note or category…': 'குறிப்பு அல்லது வகை…', 'What was this for?': 'இது எதற்காக?',
+    'No pending expenses to reimburse': 'திருப்பித் தர நிலுவைச் செலவுகள் இல்லை', 'Amount must be greater than 0.': 'தொகை 0-ஐ விட அதிகமாக இருக்க வேண்டும்.',
+    'Compressing…': 'சுருக்குகிறது…', 'Enter a valid amount.': 'சரியான தொகையை உள்ளிடவும்.', 'Please add a photo of the receipt.': 'ரசீதின் புகைப்படத்தைச் சேர்க்கவும்.',
+    'Please choose a category.': 'ஒரு வகையைத் தேர்ந்தெடுக்கவும்.', 'Please pick a date.': 'ஒரு தேதியைத் தேர்ந்தெடுக்கவும்.', 'at / above float': 'முன்பண அளவில் / அதற்கு மேல்',
+    'Expense saved': 'செலவு சேமிக்கப்பட்டது', 'Expense': 'செலவு',
+
+    // ── inventory ──
+    '· Consumables tracker': '· பயன்பாட்டுப் பொருட்கள் கண்காணிப்பு', '＋ Add item': '＋ பொருளைச் சேர்', 'Total items': 'மொத்தப் பொருட்கள்', 'tracked': 'கண்காணிக்கப்படுகின்றன',
+    'Low stock': 'குறைந்த இருப்பு', 'at or below threshold': 'வரம்பு அளவில் அல்லது கீழே', 'Out of stock': 'இருப்பு இல்லை', 'zero on hand': 'கையில் இல்லை',
+    'Shopping list': 'வாங்க வேண்டிய பட்டியல்', 'Copy list': 'பட்டியலை நகலெடு', 'Linen & Bedding': 'படுக்கை விரிப்புகள் & துணிகள்',
+    'Toiletries & Guest Supplies': 'கழிப்பறைப் பொருட்கள் & விருந்தினர் பொருட்கள்', 'Kitchen & Pantry': 'சமையலறை & சரக்கறை', 'Cleaning Supplies': 'சுத்தம் செய்யும் பொருட்கள்',
+    'Gas & Fuel': 'எரிவாயு & எரிபொருள்', 'Pool & Maintenance': 'நீச்சல் குளம் & பராமரிப்பு', 'Low stock only': 'குறைந்த இருப்பு மட்டும்',
+    'Add item': 'பொருளைச் சேர்', 'Edit item': 'பொருளைத் திருத்து', 'Item name': 'பொருளின் பெயர்', 'Unit': 'அலகு', 'Quantity on hand': 'கையிருப்பு அளவு',
+    'Low-stock threshold': 'குறைந்த இருப்பு வரம்பு', 'Loading inventory…': 'இருப்பு ஏற்றப்படுகிறது…', 'Search items…': 'பொருட்களைத் தேடு…',
+    'e.g. Bath towels': 'எ.கா. குளியல் துண்டுகள்', 'pcs, kg, bottles…': 'எண்ணிக்கை, கிலோ, பாட்டில்…',
+    'Could not copy — select and copy manually': 'நகலெடுக்க முடியவில்லை — கைமுறையாகத் தேர்ந்து நகலெடுக்கவும்',
+    'Delete this item from inventory? This cannot be undone.': 'இந்தப் பொருளை இருப்பிலிருந்து நீக்கவா? இதைத் திரும்பப் பெற முடியாது.',
+    'Item deleted': 'பொருள் நீக்கப்பட்டது', 'Shopping list copied': 'பட்டியல் நகலெடுக்கப்பட்டது', 'Item name is required.': 'பொருளின் பெயர் தேவை.',
+    'Quantity must be 0 or more.': 'அளவு 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்.', 'Threshold must be 0 or more.': 'வரம்பு 0 அல்லது அதற்கு மேல் இருக்க வேண்டும்.',
+    'Item saved': 'பொருள் சேமிக்கப்பட்டது',
+    'Checklists saved': 'பட்டியல்கள் சேமிக்கப்பட்டன', 'Check-in and check-out each need at least one item.': 'செக்-இன், செக்-அவுட் ஒவ்வொன்றிலும் குறைந்தது ஒரு பொருள் தேவை.',
+    'At most 60 items per checklist.': 'ஒரு பட்டியலில் அதிகபட்சம் 60 பொருட்கள்.', 'Daily rounds checklist': 'தினசரிச் சுற்றுப் பட்டியல்'
+  };
+
+  var MONTHS = { Jan:'ஜனவரி', Feb:'பிப்ரவரி', Mar:'மார்ச்', Apr:'ஏப்ரல்', May:'மே', Jun:'ஜூன்', Jul:'ஜூலை', Aug:'ஆகஸ்ட்', Sep:'செப்டம்பர்', Oct:'அக்டோபர்', Nov:'நவம்பர்', Dec:'டிசம்பர்' };
+  var TYPE = { 'Check-in': 'செக்-இன்', 'Check-out': 'செக்-அவுட்', 'Daily': 'தினசரி' };
+  function bedroom(n, toilet){ return 'படுக்கையறை ' + n + (toilet ? ' கழிவறை' : ''); }
+  var PATTERNS = [
+    [/^Bedroom (\d+)( toilet)? — (.+)$/, function(m){ return bedroom(m[1], m[2]) + ' — ' + (TA[m[3]] || m[3]); }],
+    [/^Bedroom (\d+)$/, function(m){ return bedroom(m[1]); }],
+    [/^(\d+) \/ (\d+) items checked$/, function(m){ return m[2] + '-இல் ' + m[1] + ' சரிபார்க்கப்பட்டது'; }],
+    [/^(\d+)\/(\d+) done$/, function(m){ return m[1] + '/' + m[2] + ' முடிந்தது'; }],
+    [/^⚠ (\d+) notes?$/, function(m){ return '⚠ ' + m[1] + ' குறிப்பு'; }],
+    [/^(Check-in|Check-out|Daily) checklist( — (.+))?$/, function(m){ return TYPE[m[1]] + ' சரிபார்ப்பு' + (m[3] ? ' — ' + (TA[m[3]] || m[3]) : ''); }],
+    [/^(.+) left · needs (.+) more$/, function(m){ return m[1] + ' மீதம் · இன்னும் ' + m[2] + ' தேவை'; }],
+    [/^Threshold: (.+)$/, function(m){ return 'வரம்பு: ' + m[1]; }],
+    [/^(\d+) selected · (.+)$/, function(m){ return m[1] + ' தேர்வு · ' + m[2]; }],
+    [/^(₹[\d,.]+) below float — nothing pending, just net cash withdrawn$/, function(m){ return 'முன்பணத்தை விட ' + m[1] + ' குறைவு — நிலுவை இல்லை, நிகரமாக எடுக்கப்பட்ட பணம்'; }],
+    [/^(₹[\d,.]+) below float — all of it pending reimbursement$/, function(m){ return 'முன்பணத்தை விட ' + m[1] + ' குறைவு — முழுவதும் திருப்பித் தர வேண்டியது'; }],
+    [/^(₹[\d,.]+) below float \((₹[\d,.]+) pending \+ (₹[\d,.]+) net withdrawn\)$/, function(m){ return 'முன்பணத்தை விட ' + m[1] + ' குறைவு (' + m[2] + ' நிலுவை + ' + m[3] + ' நிகர எடுப்பு)'; }],
+    [/^(₹[\d,.]+) below float \((₹[\d,.]+) pending, offset by (₹[\d,.]+) topped up above float\)$/, function(m){ return 'முன்பணத்தை விட ' + m[1] + ' குறைவு (' + m[2] + ' நிலுவை, ' + m[3] + ' கூடுதல் டாப்-அப் ஈடு)'; }],
+    [/^Could not load (.+?) — (.+)$/, function(m){ return 'ஏற்ற முடியவில்லை — ' + m[2]; }],
+    [/^Could not load — (.+)$/, function(m){ return 'ஏற்ற முடியவில்லை — ' + m[1]; }],
+    [/^(\d+) open$/, function(m){ return m[1] + ' திறந்தவை'; }],
+    [/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)\w* (\d{4})$/, function(m){ return MONTHS[m[1].slice(0,3)] + ' ' + m[2]; }]
+  ];
+  function T(s){
+    if (!s) return null;
+    if (Object.prototype.hasOwnProperty.call(TA, s)) return TA[s];
+    for (var i = 0; i < PATTERNS.length; i++) { var m = PATTERNS[i][0].exec(s); if (m) return PATTERNS[i][1](m); }
+    return null;
+  }
+  window.rystT = function(s){ return lang === 'ta' ? (T(s) || s) : s; };
+
+  if (lang !== 'ta') {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ wireToggles(document); }); else wireToggles(document);
+    return;
+  }
+
+  document.documentElement.lang = 'ta';
+  try {
+    var l = document.createElement('link'); l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap';
+    document.head.appendChild(l);
+    var st = document.createElement('style');
+    st.textContent = 'html[lang="ta"] body,html[lang="ta"] button,html[lang="ta"] input,html[lang="ta"] select,html[lang="ta"] textarea{font-family:"Outfit","Noto Sans Tamil",system-ui,sans-serif}';
+    document.head.appendChild(st);
+  } catch (e) {}
+
+  var SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, NOSCRIPT: 1 };
+  function skip(el){ return !el || SKIP[el.tagName] || (el.closest && el.closest('[data-no-i18n]')); }
+  function textNode(n){
+    var pe = n.parentElement; if (skip(pe)) return;
+    var v = n.nodeValue; if (!v || !/[A-Za-z]/.test(v)) return;
+    var m = /^(\s*)([\s\S]*?)(\s*)$/.exec(v), r = T(m[2]);
+    if (r == null || r === m[2]) return;
+    // An <option> with no value attribute submits its text — pin the
+    // English value before its label changes.
+    if (pe.tagName === 'OPTION' && !pe.hasAttribute('value')) pe.setAttribute('value', m[2]);
+    n.nodeValue = m[1] + r + m[3];
+  }
+  var ATTRS = ['placeholder', 'title', 'aria-label'];
+  function attrs(el){
+    if (skip(el)) return;
+    ATTRS.forEach(function(a){ var v = el.getAttribute(a); if (v && /[A-Za-z]/.test(v)) { var r = T(v.trim()); if (r != null && r !== v) el.setAttribute(a, r); } });
+  }
+  function walk(root){
+    if (root.nodeType === 3) return textNode(root);
+    if (root.nodeType !== 1 || skip(root)) return;
+    attrs(root);
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT), n;
+    while ((n = w.nextNode())) { if (n.nodeType === 3) textNode(n); else attrs(n); }
+    wireToggles(root);
+  }
+  ['alert', 'confirm', 'prompt'].forEach(function(k){
+    var orig = window[k]; if (!orig) return;
+    window[k] = function(msg){ var a = Array.prototype.slice.call(arguments); a[0] = window.rystT(String(msg == null ? '' : msg)); return orig.apply(window, a); };
+  });
+  function start(){
+    walk(document.body);
+    if (document.title) { var t = T(document.title.split(' · ')[0]); if (t) document.title = t + document.title.slice(document.title.split(' · ')[0].length); }
+    new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if (m.type === 'childList') m.addedNodes.forEach(walk);
+        else if (m.type === 'characterData') textNode(m.target);
+        else if (m.type === 'attributes') attrs(m.target);
+      });
+    }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
