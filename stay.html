@@ -137,6 +137,14 @@
   table.d-table tfoot tr.sub td{font-weight:600}
   table.d-table tfoot tr.gst td{color:#6a7a76;font-weight:500}
   table.d-table tfoot tr.grand td{background:var(--sea);color:#fff;font-weight:700;font-size:14.5px}
+  table.d-table tfoot tr.tax-row td{color:#4c5c58;font-weight:500;background:#f8faf9}
+  .gst-id{font-size:11.5px;color:#2c3633;margin-top:6px;font-weight:600;letter-spacing:.2px}
+  .d-words{font-size:12px;color:#2c3633;margin:8px 0 0;font-weight:600}
+  .gst-note{font-size:12px;border-radius:9px;padding:9px 11px;margin-top:10px;background:#eaf4ee;color:#2f7d54;line-height:1.45}
+  .gst-note.warn{background:#fbf3e6;color:#9a6a17}
+  .gst-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .gst-sum{background:#f4f7f6;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.7}
+  .gst-sum b{float:right}
 
   .d-side{display:flex;flex-direction:column;gap:10px}
   .side-box{border:1px solid #d7e2e0;border-radius:8px;padding:9px 12px}
@@ -261,6 +269,7 @@
       <div class="bar-sep"></div>
       <button class="btn" id="btnNew">+ New</button>
       <button class="btn primary" id="btnPdf">PDF</button>
+      <button class="btn" id="btnGst" style="display:none">🧾 GST tax invoice</button>
       <div class="dd" id="walletDd">
         <button class="btn" id="btnWallet" disabled title="Save the document first, then share to Wallet">Wallet ▾</button>
         <div class="dd-menu">
@@ -277,6 +286,7 @@
     <section class="form">
       <div class="group">
         <p class="gh">Document</p>
+        <div class="gst-note" id="gstNote" hidden></div>
         <div class="seg" id="typeSeg">
           <button data-type="quote" class="on">Quotation</button>
           <button data-type="invoice">Invoice</button>
@@ -389,6 +399,8 @@
             <div class="kv"><span>Email ID</span><b id="pEmail"></b></div>
             <div class="kv"><span>Phone</span><b id="pPhone"></b></div>
             <div class="kv"><span>No. of Guests</span><b id="pGuests"></b></div>
+            <div class="kv" id="pBuyerGstinRow" hidden><span>GSTIN</span><b id="pBuyerGstin"></b></div>
+            <div class="kv" id="pBuyerAddrRow" hidden><span>Address</span><b id="pBuyerAddr"></b></div>
           </div>
           <div class="panel">
             <div class="panel-h">STAY DETAILS</div>
@@ -399,6 +411,8 @@
             <div class="kv"><span>Check-out</span><b id="pOut"></b></div>
             <div class="kv"><span>No. of Nights</span><b id="pNights"></b></div>
             <div class="kv"><span>Payment Mode</span><b id="pMode"></b></div>
+            <div class="kv" id="pPosRow" hidden><span>Place of Supply</span><b id="pPos"></b></div>
+            <div class="kv" id="pSacRow" hidden><span>SAC</span><b id="pSac"></b></div>
           </div>
         </div>
 
@@ -409,9 +423,10 @@
             <tfoot>
               <tr class="sub"><td colspan="3">SUBTOTAL</td><td class="amt" id="pSub"></td></tr>
 
-              <tr class="grand"><td colspan="3">GRAND TOTAL</td><td class="amt" id="pGrand"></td></tr>
+              <tr class="grand"><td colspan="3" id="pGrandLbl">GRAND TOTAL</td><td class="amt" id="pGrand"></td></tr>
             </tfoot>
           </table>
+          <div class="d-words" id="pWords" hidden></div>
           <div class="d-side">
             <div class="side-box"><div class="sb-l">Booking Advance Received</div><div class="sb-v" id="pAdvance"></div></div>
             <div class="side-box"><div class="sb-l">Security Deposit <small>(refundable, collected separately)</small></div><div class="sb-v" id="pDeposit"></div></div>
@@ -478,6 +493,19 @@
     <div class="modal-foot">
       <button class="btn" id="sendQuoteCancel">Cancel</button>
       <button class="btn primary" id="sendQuoteConfirm">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- GST tax invoice modal -->
+<div class="modal" id="gstModal" hidden>
+  <div class="modal-card" style="width:min(520px,100%)">
+    <h2 id="gstMTitle">GST tax invoice</h2>
+    <div id="gstMBody"></div>
+    <div class="send-result" id="gstMErr" style="font-size:12.5px;color:#c0584b;min-height:16px"></div>
+    <div class="modal-foot">
+      <button class="btn" id="gstMClose">Close</button>
+      <button class="btn primary" id="gstMGo">Issue</button>
     </div>
   </div>
 </div>
@@ -1113,6 +1141,7 @@ function render(){
   // Guest acceptance signature shown on both invoice and quote
   $("#pGuestSign").style.display = "flex";
   $("#pGuestSignName").textContent = ($("#guest").value || "Guest") + ($("#date").value ? "  " + fmtDate($("#date").value) : "");
+  applyTaxView(); syncGstBtn();
 }
 
 /* ---------- SAVE / LOAD ---------- */
@@ -1297,6 +1326,7 @@ function syncPdfBtn(){
   const b=$("#btnPdf"); if(!b) return;
   b.disabled=!editingKey;
   b.title=editingKey?"Download PDF":"Save the document first, then download PDF";
+  syncGstBtn();
 }
 
 /* ---------- WALLET ----------
@@ -1425,10 +1455,138 @@ $("#sendQuoteConfirm").addEventListener("click", async ()=>{
     btn.disabled = false; btn.textContent = "Send";
   }
 });
+/* ---------- GST TAX INVOICE ----------
+   For GST-registered villas (Settings → Villa & Business → GST, Pro plan).
+   The server numbers and stores the tax invoice as a snapshot on the
+   booking (stay.gstInvoice); this page only asks for it, shows it, and
+   prints it. Prices include GST, so the totals are the booking's own. */
+function gstCfg(){ return (settings && settings.gst) || {}; }
+function gstAllowed(){ return !Array.isArray(window.RYST_FEATURES) || window.RYST_FEATURES.includes('gstInvoices'); }
+function gstOn(){ return gstCfg().enabled === true && gstAllowed(); }
+function liveGst(){ const s = currentStay(); return s && s.gstInvoice && docType === 'invoice' ? s.gstInvoice : null; }
+function syncGstBtn(){
+  const b=$("#btnGst"); if(!b) return;
+  const gi = liveGst();
+  const show = gstOn() && editingKey && docType==="invoice";
+  b.style.display = show || gi ? "" : "none";
+  b.textContent = gi ? "🧾 "+gi.no : "🧾 GST tax invoice";
+  b.title = gi ? "Tax invoice issued — view or cancel" : "Issue a GST tax invoice for this invoice";
+}
+document.addEventListener('plan-features', syncGstBtn);
+var WORDS1 = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+var WORDS10 = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+function words99(n){ return n<20 ? WORDS1[n] : WORDS10[Math.floor(n/10)] + (n%10 ? ' '+WORDS1[n%10] : ''); }
+function words999(n){ const h=Math.floor(n/100), r=n%100; return (h ? WORDS1[h]+' Hundred'+(r?' ':'') : '') + (r ? words99(r) : ''); }
+// Indian numbering: crore, lakh, thousand.
+function rupeesInWords(amount){
+  const rupees=Math.floor(amount+1e-9), paise=Math.round((amount-rupees)*100);
+  let n=rupees, parts=[];
+  const cr=Math.floor(n/1e7); n%=1e7; const lk=Math.floor(n/1e5); n%=1e5; const th=Math.floor(n/1e3); n%=1e3;
+  if(cr) parts.push(words999(cr)+' Crore'); if(lk) parts.push(words99(lk)+' Lakh'); if(th) parts.push(words99(th)+' Thousand'); if(n) parts.push(words999(n));
+  return 'Rupees ' + (parts.join(' ') || 'Zero') + (paise ? ' and ' + words99(paise) + ' Paise' : '') + ' Only';
+}
+function applyTaxView(){
+  const gi = liveGst(), tf = document.querySelector("#stayDoc .d-table tfoot");
+  tf.querySelectorAll(".tax-row").forEach(r=>r.remove());
+  ["pBuyerGstinRow","pBuyerAddrRow","pPosRow","pSacRow"].forEach(id=>$("#"+id).hidden=true);
+  $("#pWords").hidden = true; $("#pGrandLbl").textContent = "GRAND TOTAL";
+  const note = $("#gstNote");
+  if(!gi){
+    const cancelled = (currentStay()||{}).gstInvoiceCancelled;
+    note.hidden = !(cancelled && cancelled.length);
+    if(!note.hidden){ note.className="gst-note warn"; note.textContent = "Tax invoice " + cancelled[cancelled.length-1].no + " was cancelled. Issue a new one once the charges are right."; }
+    return;
+  }
+  note.hidden=false; note.className="gst-note";
+  note.textContent = `GST tax invoice ${gi.no} issued on ${fmtDate(gi.date)} — charges, discount and type are locked. Cancel the tax invoice to change them.`;
+  const pct = r => (Math.round(r*100)/100).toString();
+  $("#pTitle").textContent = "TAX INVOICE";
+  $("#pNoLbl").textContent = "Tax Invoice No"; $("#pNo").textContent = gi.no;
+  $("#pDateLbl").textContent = "Invoice Date"; $("#pDate").textContent = fmtDate(gi.date);
+  $("#pRef").textContent = gi.bookingNo || "—";
+  $("#coBlock").insertAdjacentHTML("beforeend", `<div class="gst-id">GSTIN: ${esc(gi.supplier.gstin)}${gi.supplier.legalName ? " · " + esc(gi.supplier.legalName) : ""}</div>`);
+  if(gi.buyer && gi.buyer.name) $("#pGuest").textContent = gi.buyer.name;
+  if(gi.buyer && gi.buyer.gstin){ $("#pBuyerGstinRow").hidden=false; $("#pBuyerGstin").textContent = gi.buyer.gstin; }
+  if(gi.buyer && gi.buyer.address){ $("#pBuyerAddrRow").hidden=false; $("#pBuyerAddr").textContent = gi.buyer.address; }
+  if(gi.placeOfSupply){ $("#pPosRow").hidden=false; $("#pPos").textContent = gi.placeOfSupply.name + " (" + gi.placeOfSupply.code + ")"; }
+  $("#pSacRow").hidden=false; $("#pSac").textContent = gi.sac;
+  $("#pRows").innerHTML = gi.lines.map(l=>`<tr><td>${esc(l.desc)}</td><td class="num">${esc(l.qty)}</td><td class="amt">${inr(l.rate)}</td><td class="amt">${inr(l.amount)}</td></tr>`).join("");
+  $("#pSub").textContent = money(gi.subtotal);
+  const dr = tf.querySelector(".disc-row"); if(dr) dr.remove();
+  const grandRow = tf.querySelector("tr.grand");
+  const add = (label, val) => { const tr=document.createElement("tr"); tr.className="tax-row"; tr.innerHTML=`<td colspan="3">${label}</td><td class="amt">${val}</td>`; grandRow.before(tr); };
+  if(gi.discount > 0) add("DISCOUNT", "− " + money(gi.discount));
+  add("TAXABLE VALUE", money(gi.taxable));
+  add(`CGST @ ${pct(gi.rate/2)}%`, money(gi.cgst));
+  add(`SGST @ ${pct(gi.rate/2)}%`, money(gi.sgst));
+  $("#pGrandLbl").textContent = "TOTAL (INCL. GST)"; $("#pGrand").textContent = money(gi.total);
+  $("#pWords").hidden=false; $("#pWords").textContent = "Amount in words: " + rupeesInWords(gi.total);
+  $("#pDecl").textContent = `Prices include GST. The taxable value is the total less CGST @ ${pct(gi.rate/2)}% and SGST @ ${pct(gi.rate/2)}%. SAC ${gi.sac} — accommodation services. Place of supply: ${gi.placeOfSupply ? gi.placeOfSupply.name : ""}. Tax payable on reverse charge: No. Original for recipient.`;
+  $("#pTerms").innerHTML = settings.terms.filter(t=>!/not (registered|by a GST-registered)|GST has not been charged/i.test(t)).map(t=>`<li>${esc(t)}</li>`).join("");
+}
+function gstGstinValid(g){
+  g=String(g||'').trim().toUpperCase();
+  if(!/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g)) return false;
+  const C='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let sum=0;
+  for(let i=0;i<14;i++){ const p=C.indexOf(g[i])*(i%2?2:1); sum+=Math.floor(p/36)+(p%36); }
+  return C[(36-(sum%36))%36]===g[14];
+}
+var gstMode = 'issue';
+function openGstModal(){
+  const s = currentStay(); if(!s) return;
+  const gi = s.gstInvoice; $("#gstMErr").textContent = "";
+  if(gi){
+    gstMode='cancel';
+    $("#gstMTitle").textContent = "Tax invoice " + gi.no;
+    $("#gstMBody").innerHTML = `<div class="gst-sum">Issued<b>${fmtDate(gi.date)}</b><br>Billed to<b>${esc(gi.buyer.name||'—')}${gi.buyer.gstin?' · '+esc(gi.buyer.gstin):''}</b><br>Taxable value<b>${money(gi.taxable)}</b><br>CGST + SGST @ ${gi.rate}%<b>${money(gi.cgst+gi.sgst)}</b><br>Total<b>${money(gi.total)}</b></div>
+      <p class="sd" style="margin:12px 0 6px">Use <b>PDF</b> to download or print it. To change the charges, cancel it and issue a new one — the cancelled number stays in your GST register.</p>
+      <label class="f"><span>Reason for cancelling</span><input class="t" id="gstReason" maxlength="300" placeholder="e.g. Wrong guest GSTIN"></label>`;
+    $("#gstMGo").textContent = "Cancel tax invoice"; $("#gstMGo").className = "btn";
+  } else {
+    gstMode='issue';
+    const c = gstCfg(), rateTxt = c.rateMode==='fixed' ? c.rate+'%' : 'automatic (5% up to ₹7,500 a night, 18% above)';
+    $("#gstMTitle").textContent = "Issue GST tax invoice";
+    $("#gstMBody").innerHTML = `<p class="sd" style="margin:0 0 10px">For ${esc(s.no)} · total ${money(Math.max(0,(s.items||[]).reduce((a,it)=>a+lineAmt(it),0)-(parseFloat(s.discount)||0)))} including GST · rate ${esc(rateTxt)}. Save any changes first — the tax invoice is made from the saved booking.</p>
+      <label class="f"><span>Bill to (name)</span><input class="t" id="gstBName" maxlength="120" value="${esc(s.guest||'')}"></label>
+      <div class="gst-grid">
+        <label class="f"><span>Guest's GSTIN (for a business, optional)</span><input class="t" id="gstBGstin" maxlength="15" autocapitalize="characters" spellcheck="false"></label>
+        <label class="f"><span>Guest's address (optional)</span><input class="t" id="gstBAddr" maxlength="300"></label>
+      </div>`;
+    $("#gstMGo").textContent = "Issue tax invoice"; $("#gstMGo").className = "btn primary";
+  }
+  $("#gstModal").hidden = false;
+}
+$("#btnGst").addEventListener("click", openGstModal);
+$("#gstMClose").addEventListener("click", ()=>{ $("#gstModal").hidden = true; });
+$("#gstMGo").addEventListener("click", async ()=>{
+  const s = currentStay(); if(!s) return;
+  let body;
+  if(gstMode==='issue'){
+    const g = $("#gstBGstin").value.trim().toUpperCase();
+    if(g && !gstGstinValid(g)){ $("#gstMErr").textContent = "That GSTIN doesn't look right — check it or leave it blank."; return; }
+    body = { no:s.no, action:'issue', buyer:{ name:$("#gstBName").value.trim(), gstin:g, address:$("#gstBAddr").value.trim() } };
+  } else {
+    const reason = $("#gstReason").value.trim();
+    if(!reason){ $("#gstMErr").textContent = "Say why it's being cancelled."; return; }
+    body = { no:s.no, action:'cancel', reason };
+  }
+  const b = $("#gstMGo"); b.disabled = true;
+  try{
+    const res = await fetch(PROXY_URL+'/gst/invoice', { method:'POST', headers:{'X-Token':proxyToken,'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    if(res.status===401){ handleExpired(); return; }
+    const d = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error || ('HTTP '+res.status));
+    await fetchStaysFromProxy();
+    $("#gstModal").hidden = true; render(); syncGstBtn();
+    toast(gstMode==='issue' ? "Tax invoice "+((d.stay&&d.stay.gstInvoice&&d.stay.gstInvoice.no)||'')+" issued" : "Tax invoice cancelled");
+  }catch(e){ $("#gstMErr").textContent = e.message; }
+  finally{ b.disabled = false; }
+});
+
 async function downloadPdf(){
   try{ await document.fonts.ready; }catch(e){}
   const prevTitle=document.title;
-  document.title=(curNo||"stay").replace(/[\/\\]/g,"-");
+  document.title=((liveGst()&&liveGst().no)||curNo||"stay").replace(/[\/\\]/g,"-");
   const restore=()=>{ document.title=prevTitle; window.removeEventListener("afterprint",restore); };
   window.addEventListener("afterprint",restore);
   window.print();

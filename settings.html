@@ -285,7 +285,29 @@
       <label class="chk-toggle"><input type="checkbox" id="stayWalletApple"> Apple Wallet</label>
       <label class="chk-toggle"><input type="checkbox" id="stayWalletGoogle"> Google Wallet</label>
     </div>
-    <label class="f"><span>GST declaration</span><textarea class="t" id="stayDecl" rows="3"></textarea></label>
+    <p class="gh-mini" id="gst">GST tax invoices</p>
+    <div id="gstPlanNote" class="sync-result warn" style="margin-bottom:12px;display:none"><span>GST tax invoices are part of the Pro plan — upgrade under User Access → Subscription.</span></div>
+    <label class="chk-toggle" style="margin-bottom:12px;display:inline-flex"><input type="checkbox" id="gstEnabled"> I'm GST-registered — issue GST tax invoices</label>
+    <div id="gstFields">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <label class="f"><span>GSTIN</span><input class="t" id="gstGstin" maxlength="15" autocapitalize="characters" spellcheck="false" placeholder="15 characters"></label>
+        <label class="f"><span>Legal name (as on the GST certificate)</span><input class="t" id="gstLegal" maxlength="120"></label>
+        <label class="f"><span>SAC code</span><input class="t" id="gstSac" maxlength="8" inputmode="numeric" placeholder="996311"></label>
+        <label class="f"><span>GST rate</span><select class="t" id="gstRate">
+          <option value="auto">Automatic — 5% up to ₹7,500 a night, 18% above</option>
+          <option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option><option value="0">0% (exempt)</option>
+        </select></label>
+        <label class="f"><span>Tax invoice series</span><input class="t" id="gstPrefix" maxlength="5" autocapitalize="characters" spellcheck="false" placeholder="INV"></label>
+      </div>
+      <p class="sd" id="gstHint" style="margin:-4px 0 10px"></p>
+      <p class="sd" style="margin:0 0 12px">Your prices <b>include</b> GST: the tax invoice shows the taxable value and CGST + SGST inside the amount the guest pays, so booking totals don't change. Issue one from an invoice in Stay Quote &amp; Invoice → <b>GST tax invoice</b>. Numbers run in one series per financial year (April–March). Please confirm the rate and SAC code with your accountant.</p>
+      <div class="ical-copy" style="margin-bottom:16px;align-items:center;flex-wrap:wrap">
+        <label class="f" style="margin:0;flex:0 0 auto"><span>GST register for</span><input class="t" id="gstMonth" type="month"></label>
+        <button type="button" class="btn" id="gstRegBtn" style="align-self:flex-end">⤓ Download CSV</button>
+        <span class="sd" id="gstRegMsg" style="align-self:flex-end;margin:0 0 8px"></span>
+      </div>
+    </div>
+    <label class="f"><span>Declaration (when not issuing a GST tax invoice)</span><textarea class="t" id="stayDecl" rows="3"></textarea></label>
     <label class="f"><span>Terms &amp; conditions (one per line)</span><textarea class="t" id="stayTerms" rows="7"></textarea></label>
   </div>
 
@@ -868,6 +890,7 @@ function renderFromStay(){
   document.getElementById("stayWalletApple").checked=stay.walletAppleEnabled!==false;
   document.getElementById("stayWalletGoogle").checked=stay.walletGoogleEnabled!==false;
   document.getElementById("stayDecl").value=stay.declaration||"";
+  fillGst(stay.gst||{});
   document.getElementById("stayTerms").value=(stay.terms||[]).join("\n");
   icalFeedsDraft=(stay.icalFeeds||[]).map(f=>({...f}));
   renderIcalFeeds();
@@ -1186,7 +1209,7 @@ document.getElementById('storCopyBtn').addEventListener('click', e => {
 // ── Subscription (billed villas, admins) ──
 const inr = n => '₹' + Number(n||0).toLocaleString('en-IN');
 const fmtDay = iso => iso ? new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : '';
-const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST invoices (coming soon)', prioritySupport:'Priority support' };
+const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST tax invoices', prioritySupport:'Priority support' };
 let subCycle = 'annual';
 async function subLoad(){
   let d; try{ d = await storCall('GET','/billing'); }catch(e){ return; }
@@ -1812,6 +1835,9 @@ async function saveStay(){
   stay.walletAppleEnabled=document.getElementById("stayWalletApple").checked;
   stay.walletGoogleEnabled=document.getElementById("stayWalletGoogle").checked;
   stay.declaration=document.getElementById("stayDecl").value;
+  const gstErr = gstProblem();
+  if(gstErr){ toast(gstErr); btn.disabled=false; btn.textContent="Save stay settings"; document.getElementById('gstGstin').focus(); return; }
+  stay.gst = collectGst();
   stay.terms=(document.getElementById("stayTerms").value||"").split("\n").map(t=>t.trim()).filter(Boolean);
   if(!stay.terms.length) stay.terms=STAY_DEFAULTS.terms.slice();
   stay.icalFeeds=icalFeedsDraft
@@ -1842,6 +1868,66 @@ async function saveStay(){
   renderStayCoupons();
 }
 document.getElementById("staySave").addEventListener("click",saveStay);
+
+/* ---------- GST ---------- */
+// Mirrors the proxy's gst.js: GSTIN format + check character, state codes.
+function gstStates(){ return {'01':'Jammu and Kashmir','02':'Himachal Pradesh','03':'Punjab','04':'Chandigarh','05':'Uttarakhand','06':'Haryana','07':'Delhi','08':'Rajasthan','09':'Uttar Pradesh','10':'Bihar','11':'Sikkim','12':'Arunachal Pradesh','13':'Nagaland','14':'Manipur','15':'Mizoram','16':'Tripura','17':'Meghalaya','18':'Assam','19':'West Bengal','20':'Jharkhand','21':'Odisha','22':'Chhattisgarh','23':'Madhya Pradesh','24':'Gujarat','26':'Dadra and Nagar Haveli and Daman and Diu','27':'Maharashtra','29':'Karnataka','30':'Goa','31':'Lakshadweep','32':'Kerala','33':'Tamil Nadu','34':'Puducherry','35':'Andaman and Nicobar Islands','36':'Telangana','37':'Andhra Pradesh','38':'Ladakh'}; }
+function gstinValid(g){
+  g=String(g||'').trim().toUpperCase();
+  if(!/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g) || !gstStates()[g.slice(0,2)]) return false;
+  const C='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let sum=0;
+  for(let i=0;i<14;i++){ const p=C.indexOf(g[i])*(i%2?2:1); sum+=Math.floor(p/36)+(p%36); }
+  return C[(36-(sum%36))%36]===g[14];
+}
+function gEl(id){ return document.getElementById(id); }
+function fyNow(){ const d=new Date(), y=d.getMonth()>=3?d.getFullYear():d.getFullYear()-1; return String(y%100).padStart(2,'0')+'-'+String((y+1)%100).padStart(2,'0'); }
+function gstPrefixVal(){ return (gEl('gstPrefix').value||'INV').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5)||'INV'; }
+function syncGstUi(){
+  const on=gEl('gstEnabled').checked; gEl('gstFields').style.opacity=on?'':'.55';
+  const g=gEl('gstGstin').value.trim().toUpperCase(), st=gstStates()[g.slice(0,2)];
+  const parts=[];
+  if(g) parts.push(gstinValid(g) ? `✓ Valid GSTIN — ${st}` : '⚠ This GSTIN doesn\'t look right — check each character');
+  parts.push(`Next tax invoice: ${gstPrefixVal()}/${fyNow()}/0001 (or the next free number)`);
+  gEl('gstHint').textContent=parts.join(' · ');
+}
+function fillGst(c){
+  gEl('gstEnabled').checked=c.enabled===true; gEl('gstGstin').value=c.gstin||''; gEl('gstLegal').value=c.legalName||'';
+  gEl('gstSac').value=c.sac||''; gEl('gstRate').value=c.rateMode==='fixed'?String(c.rate):'auto'; gEl('gstPrefix').value=c.prefix||'';
+  syncGstUi();
+}
+function collectGst(){
+  const r=gEl('gstRate').value;
+  return { enabled:gEl('gstEnabled').checked, gstin:gEl('gstGstin').value.trim().toUpperCase(), legalName:gEl('gstLegal').value.trim(),
+    sac:gEl('gstSac').value.trim()||'996311', rateMode:r==='auto'?'auto':'fixed', rate:r==='auto'?18:Number(r), prefix:gstPrefixVal() };
+}
+function gstProblem(){
+  if(!gEl('gstEnabled').checked) return '';
+  if(!gstinValid(gEl('gstGstin').value)) return 'Enter a valid GSTIN to turn on GST tax invoices';
+  if(!gEl('gstLegal').value.trim()) return 'Enter the legal name on your GST certificate';
+  const sac=gEl('gstSac').value.trim(); if(sac && !/^\d{4,8}$/.test(sac)) return 'The SAC code is 4 to 8 digits (accommodation is 996311)';
+  return '';
+}
+['gstEnabled','gstGstin','gstPrefix'].forEach(id=>gEl(id).addEventListener('input',syncGstUi));
+gEl('gstEnabled').addEventListener('change',syncGstUi);
+document.addEventListener('plan-features', e=>{ if(Array.isArray(e.detail) && !e.detail.includes('gstInvoices')) gEl('gstPlanNote').style.display=''; });
+(function(){ const d=new Date(); gEl('gstMonth').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); })();
+gEl('gstRegBtn').addEventListener('click', async ()=>{
+  const m=gEl('gstMonth').value; if(!/^\d{4}-\d{2}$/.test(m)){ toast('Pick a month'); return; }
+  const [y,mo]=m.split('-').map(Number), last=new Date(y,mo,0).getDate();
+  const msg=gEl('gstRegMsg'); msg.textContent='Loading…';
+  try{
+    const res=await fetch(`${PROXY_URL}/gst/register?from=${m}-01&to=${m}-${String(last).padStart(2,'0')}`,{headers:{'X-Token':proxyToken},cache:'no-store'});
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('HTTP '+res.status));
+    const q=v=>{ const s=String(v==null?'':v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+    const head=['Invoice no','Invoice date','Status','Booking no','Guest / buyer','Buyer GSTIN','Buyer state','Place of supply','SAC','Rate %','Taxable value','CGST','SGST','IGST','Invoice value','Cancelled on','Cancel reason'];
+    const rows=(d.invoices||[]).map(g=>[g.no,g.date,g.status,g.bookingNo,g.buyer&&g.buyer.name,g.buyer&&g.buyer.gstin,g.buyer&&g.buyer.state&&g.buyer.state.name,g.placeOfSupply&&(g.placeOfSupply.code+'-'+g.placeOfSupply.name),g.sac,g.rate,g.taxable,g.cgst,g.sgst,g.igst,g.total,(g.cancelledAt||'').slice(0,10),g.cancelReason||'']);
+    const csv=[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n');
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'})); a.download=`gst-register-${m}.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    const live=(d.invoices||[]).filter(g=>g.status!=='cancelled');
+    msg.textContent=`${live.length} invoice${live.length===1?'':'s'} · taxable ₹${live.reduce((a,g)=>a+g.taxable,0).toLocaleString('en-IN',{maximumFractionDigits:2})} · GST ₹${live.reduce((a,g)=>a+g.cgst+g.sgst,0).toLocaleString('en-IN',{maximumFractionDigits:2})}`;
+  }catch(e){ msg.textContent='Could not download — '+e.message; }
+});
 
 /* ---------- WEBSITE ---------- */
 /* The villa's public booking page (served by the proxy at villas.ryst.in/<villa>
