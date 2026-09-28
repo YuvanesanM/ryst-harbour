@@ -432,6 +432,13 @@
       <button class="btn primary" id="userSave" disabled>Save user access</button>
     </div>
 
+    <div id="subSection" hidden>
+      <p class="gh-mini" style="margin-top:28px" id="subscription">Subscription</p>
+      <p class="sd" style="margin-bottom:12px">Your RYST Harbour plan for this villa. Payment is by UPI Autopay or card on Razorpay's secure page, renewing automatically; you can cancel from the link in Razorpay's emails. Invoices are issued by <span id="subBiz">Dreamour Multiventures</span>.</p>
+      <div class="sync-results" id="subStatus" style="margin-bottom:12px"></div>
+      <div class="rc-foot" id="subPlans" style="margin-top:0;margin-bottom:22px;flex-wrap:wrap;gap:8px"></div>
+    </div>
+
     <p class="gh-mini" style="margin-top:28px">Connections</p>
     <p class="sd" style="margin-bottom:12px">Your own WhatsApp Business (Interakt) and Razorpay accounts: guest messages go out from your number, and guest payments go straight to your Razorpay account. Keys are stored encrypted and are never shown again after saving.</p>
     <div class="sync-results" id="connStatus" style="margin-bottom:12px"><div class="sync-result"><span>Connections</span><span>Loading…</span></div></div>
@@ -465,8 +472,20 @@
     </div>
     <div class="sync-results" id="photoResults" style="margin-bottom:22px"></div>
 
+    <p class="gh-mini" style="margin-top:28px">Billing settings</p>
+    <p class="sd" style="margin-bottom:12px">What villas pay for RYST Harbour. Invoices and payments are in the name of the business below, through the Razorpay account set on Render (HARBOUR_RAZORPAY_KEY_ID, _KEY_SECRET, _WEBHOOK_SECRET). A new price makes a new Razorpay plan; existing subscribers keep theirs.</p>
+    <div class="sync-results" id="billCfgStatus" style="margin-bottom:10px"></div>
+    <label class="f" style="margin-bottom:8px"><span>Monthly price (₹)</span><input class="t" id="billMonthly" type="number" min="0" step="1" inputmode="numeric" placeholder="0 = not offered"></label>
+    <label class="f" style="margin-bottom:8px"><span>Annual price (₹)</span><input class="t" id="billAnnual" type="number" min="0" step="1" inputmode="numeric" placeholder="0 = not offered"></label>
+    <label class="f" style="margin-bottom:8px"><span>Prices</span><select class="t" id="billGstMode"><option value="incl">Include GST</option><option value="excl">Exclude GST (+ GST at checkout)</option></select></label>
+    <label class="f" style="margin-bottom:8px"><span>Free trial (days)</span><input class="t" id="billTrial" type="number" min="1" max="365" step="1" inputmode="numeric"></label>
+    <label class="f" style="margin-bottom:8px"><span>Grace after trial end / missed payment (days)</span><input class="t" id="billGrace" type="number" min="0" max="60" step="1" inputmode="numeric"></label>
+    <label class="f" style="margin-bottom:8px"><span>Business name on invoices</span><input class="t" id="billBiz" maxlength="120"></label>
+    <label class="f" style="margin-bottom:8px"><span>GSTIN</span><input class="t" id="billGstin" maxlength="15" autocapitalize="characters" spellcheck="false" placeholder="33ABCDE1234F1Z5"></label>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button class="btn primary" id="billSave">Save billing settings</button></div>
+
     <p class="gh-mini" style="margin-top:28px">Villas</p>
-    <p class="sd" style="margin-bottom:12px">Other villas on RYST Harbour. Each villa has its own bookings, cash, inventory, settings and staff — its admin signs in with the email below (Google or Telegram) and sees only that villa. WhatsApp, online payments and calendar sync stay connected to this villa only for now.</p>
+    <p class="sd" style="margin-bottom:12px">Other villas on RYST Harbour. Each villa has its own bookings, cash, inventory, settings, staff, OTA calendars and guest links — its admin signs in with the email below (Google or Telegram) and sees only that villa, and connects its own WhatsApp and Razorpay under Connections. Each row shows the villa's billing state; the buttons under it extend a trial, record a payment you received directly (e.g. bank transfer), or make the villa read-only.</p>
     <div class="rc-foot" style="margin-top:0;margin-bottom:8px"><button class="btn" id="villaListBtn">Show villas</button></div>
     <div class="sync-results" id="villaResults" style="margin-bottom:14px"></div>
     <div>
@@ -1080,6 +1099,44 @@ document.getElementById('storCopyBtn').addEventListener('click', e => {
   storRun(e.currentTarget, 'Copying…', async ()=> storFileRows(await storCall('POST','/admin/storage/copy')));
 });
 
+// ── Subscription (billed villas, admins) ──
+const inr = n => '₹' + Number(n||0).toLocaleString('en-IN');
+const fmtDay = iso => iso ? new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : '';
+async function subLoad(){
+  let d; try{ d = await storCall('GET','/billing'); }catch(e){ return; }
+  if(!d || !d.billed) return;
+  document.getElementById('subSection').hidden = false;
+  document.getElementById('subBiz').textContent = d.businessName || 'Dreamour Multiventures';
+  const s = d.state || {}, row=(l,ok,t)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(l)}</span><span>${esc(t)}</span></div>`;
+  const days = n => n===1 ? '1 day' : n+' days';
+  const label = { trial: s.daysLeft!=null ? `Free trial — ${days(s.daysLeft)} left (until ${fmtDay(s.trialEndsAt)})` : 'Free trial',
+    active: s.paidUntil ? `Active — paid up to ${fmtDay(s.paidUntil)}${s.plan?' ('+s.plan+')':''}` : 'Active',
+    grace: `Payment due — ${days(s.daysLeft||0)} left before this villa becomes read-only`,
+    lapsed: 'Read-only — the subscription has lapsed. Choose a plan to unlock.' }[s.effective] || s.effective || '—';
+  document.getElementById('subStatus').innerHTML = row('Status', s.effective==='trial'||s.effective==='active', label) + (s.note ? row('Note', true, s.note) : '');
+  const plans = document.getElementById('subPlans');
+  const hasSub = s.effective==='active' && s.status==='active';
+  if(!d.canPay){ plans.innerHTML = `<p class="sd" style="margin:0">Online payment isn't switched on yet — to subscribe, call RYST Harbour on <a href="tel:+918608008608">+91 86080 08608</a>.</p>`; return; }
+  const tax = d.pricesIncludeGst ? ' incl. GST' : ' + GST';
+  const btn = (k,t) => d.plans[k].amount>0 ? `<button class="btn${k==='annual'?' primary':''}" data-plan="${k}">${t} · ${inr(d.plans[k].amount)}${tax}</button>` : '';
+  plans.innerHTML = hasSub ? `<p class="sd" style="margin:0">Your plan renews automatically. Payment problems or changes: call <a href="tel:+918608008608">+91 86080 08608</a>.</p>`
+    : btn('monthly','Monthly') + btn('annual','Annual');
+  plans.querySelectorAll('[data-plan]').forEach(b=>b.addEventListener('click', async ()=>{
+    const k=b.dataset.plan;
+    if(!confirm(`Subscribe to the ${k} plan at ${inr(d.plans[k].amount)}${tax}?\n\nYou'll finish on Razorpay's secure page (UPI Autopay or card).`)) return;
+    b.disabled=true; const t=b.textContent; b.textContent='Opening Razorpay…';
+    try{
+      const res=await fetch(PROXY_URL+'/billing/subscribe',{method:'POST',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify({plan:k})});
+      const r=await res.json().catch(()=>({}));
+      if(!res.ok||!r.url) throw new Error(r.error||('Error '+res.status));
+      location.href = r.url;
+    }catch(e){ toast(e.message); b.disabled=false; b.textContent=t; }
+  }));
+}
+if(localStorage.getItem('ryst_demo')!=='1' && localStorage.getItem('ryst_user_admin')==='true') subLoad();
+// settings.html#subscription (from the billing banner) opens that section.
+if(location.hash==='#subscription'){ setTimeout(()=>{ const u=document.querySelector('.tab-btn[data-tab="users"]'); if(u && u.style.display!=='none'){ switchTab('users'); const el=document.getElementById('subscription'); if(el) el.scrollIntoView({block:'start'}); } }, 600); }
+
 // ── Connections (this villa's own Interakt + Razorpay) ──
 function connRender(d){
   const st=document.getElementById('connStatus');
@@ -1136,10 +1193,59 @@ function tokenVilla(){
   catch(e){ return 'ryst-109a'; }
 }
 if(tokenVilla()!=='ryst-109a') document.getElementById('platformOnly').style.display='none';
+function villaBillText(b){
+  if(!b) return 'not billed';
+  const d = n => n===1 ? '1 day' : n+' days';
+  return ({ trial: `trial${b.daysLeft!=null?', '+d(b.daysLeft)+' left':''}`, active: `active${b.paidUntil?' to '+fmtDay(b.paidUntil):''}`, grace: `payment due, ${d(b.daysLeft||0)} grace`, lapsed: 'read-only' })[b.effective] || b.effective;
+}
 function villaRows(list){
   if(!list.length) return '<div class="sync-result"><span>Villas</span><span>None yet</span></div>';
-  return list.map(v=>`<div class="sync-result"><span>${esc(v.name)}${v.isDefault?' (this villa)':''}</span><span>${esc(v.slug)} · ${v.bookings} booking${v.bookings===1?'':'s'} · ${v.users} user${v.users===1?'':'s'} · ${esc(v.status)}</span></div>`).join('');
+  return list.map(v=>`<div class="sync-result${v.billing&&v.billing.locked?' err':''}"><span>${esc(v.name)}${v.isDefault?' (this villa)':''}</span><span>${esc(v.slug)} · ${v.bookings} booking${v.bookings===1?'':'s'} · ${v.users} user${v.users===1?'':'s'} · ${esc(villaBillText(v.billing))}${v.billing&&v.billing.note?' · '+esc(v.billing.note):''}</span></div>`
+    + (v.isDefault ? '' : `<div class="rc-foot" style="margin:4px 0 10px;flex-wrap:wrap;gap:6px">
+        <button type="button" class="rc-add" data-bill="extend-trial" data-slug="${esc(v.slug)}">Extend trial</button>
+        <button type="button" class="rc-add" data-bill="mark-paid" data-slug="${esc(v.slug)}">Mark paid</button>
+        ${v.billing&&v.billing.locked ? `<button type="button" class="rc-add" data-bill="restore" data-slug="${esc(v.slug)}">Unlock</button>` : `<button type="button" class="rc-add" data-bill="read-only" data-slug="${esc(v.slug)}">Make read-only</button>`}
+      </div>`)).join('');
 }
+async function villaBill(slug, action){
+  const body = { slug, action };
+  if(action==='extend-trial'){ const n=prompt('Extend the free trial by how many days?','14'); if(!n) return; body.days=Number(n); }
+  if(action==='mark-paid'){ const n=prompt('Paid for how many months?','1'); if(!n) return; body.months=Number(n); const note=prompt('Note (e.g. "Pilot — paid by bank transfer on 1 Oct")',''); if(note!=null) body.note=note; }
+  if(action==='read-only' && !confirm(`Make ${slug} read-only now? Its staff can still view everything but can't change anything until you unlock it.`)) return;
+  try{
+    const res=await fetch(PROXY_URL+'/platform/villas/billing',{method:'POST',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('Error '+res.status));
+    toast('Updated'); villaList();
+  }catch(e){ toast(e.message); }
+}
+document.getElementById('villaResults').addEventListener('click', e=>{ const b=e.target.closest('[data-bill]'); if(b) villaBill(b.dataset.slug, b.dataset.bill); });
+async function billCfgLoad(){
+  try{
+    const c=await storCall('GET','/platform/billing');
+    document.getElementById('billMonthly').value=c.monthly.amount||''; document.getElementById('billAnnual').value=c.annual.amount||'';
+    document.getElementById('billGstMode').value=c.pricesIncludeGst?'incl':'excl';
+    document.getElementById('billTrial').value=c.trialDays; document.getElementById('billGrace').value=c.graceDays;
+    document.getElementById('billBiz').value=c.businessName||''; document.getElementById('billGstin').value=c.gstin||'';
+    const row=(l,ok,t)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(l)}</span><span>${esc(t)}</span></div>`;
+    document.getElementById('billCfgStatus').innerHTML = row('Razorpay account', c.razorpayConfigured, c.razorpayConfigured ? 'Connected ('+c.razorpayMode+' mode)' : 'Not set — add HARBOUR_RAZORPAY_KEY_ID and HARBOUR_RAZORPAY_KEY_SECRET on Render')
+      + row('Subscription webhook', c.webhookConfigured, c.webhookConfigured ? c.webhookUrl : 'Add HARBOUR_RAZORPAY_WEBHOOK_SECRET on Render, then a Razorpay webhook to '+c.webhookUrl+' with subscription events');
+  }catch(e){ document.getElementById('billCfgStatus').innerHTML=`<div class="sync-result err"><span>Billing</span><span>${esc(e.message)}</span></div>`; }
+}
+document.getElementById('billSave').addEventListener('click', async e=>{
+  const b=e.currentTarget, t=b.textContent; b.disabled=true; b.textContent='Saving…';
+  const body={ monthly:{amount:Number(document.getElementById('billMonthly').value)||0}, annual:{amount:Number(document.getElementById('billAnnual').value)||0},
+    pricesIncludeGst: document.getElementById('billGstMode').value==='incl', trialDays:Number(document.getElementById('billTrial').value)||14,
+    graceDays:Number(document.getElementById('billGrace').value)||0, businessName:document.getElementById('billBiz').value.trim(), gstin:document.getElementById('billGstin').value.trim().toUpperCase() };
+  try{
+    const res=await fetch(PROXY_URL+'/platform/billing',{method:'PUT',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('Error '+res.status));
+    toast('Billing settings saved'); billCfgLoad();
+  }catch(err){ toast(err.message); }
+  finally{ b.disabled=false; b.textContent=t; }
+});
+if(tokenVilla()==='ryst-109a' && localStorage.getItem('ryst_demo')!=='1' && localStorage.getItem('ryst_user_admin')==='true') billCfgLoad();
 async function villaList(){
   const out=document.getElementById('villaResults');
   try{ const d=await storCall('GET','/platform/villas'); out.innerHTML=villaRows(d.villas||[]); }

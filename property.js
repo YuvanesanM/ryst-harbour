@@ -97,10 +97,33 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ apply(document); });
   else apply(document);
 
+  // Staff pages of a billed villa: a thin notice when the free trial is
+  // nearly over, payment is overdue, or the villa has gone read-only.
+  function billingBanner(b){
+    if (!staff || demo || !b || !b.effective) return;
+    var admin = false; try { admin = localStorage.getItem('ryst_user_admin') === 'true'; } catch (e) {}
+    var n = b.daysLeft, days = n === 1 ? '1 day' : n + ' days', msg = '', tone = '#8a5a00', bg = '#fff4d6';
+    if (b.effective === 'trial' && n != null && n <= 5) msg = 'Your free trial ends in ' + days + '.' + (admin ? ' Choose a plan to keep going.' : ' Ask your villa admin to choose a plan.');
+    else if (b.effective === 'grace') msg = 'Payment is due — ' + days + ' left before this villa becomes read-only.' + (admin ? '' : ' Ask your villa admin to renew.');
+    else if (b.effective === 'lapsed') { msg = 'This villa is read-only: the RYST Harbour subscription has lapsed.' + (admin ? '' : ' Ask your villa admin to renew.'); tone = '#8a1c1c'; bg = '#fde7e5'; }
+    if (!msg) return;
+    var show = function(){
+      if (document.getElementById('rystBillingBar')) return;
+      var bar = document.createElement('div');
+      bar.id = 'rystBillingBar'; bar.setAttribute('role', 'status');
+      bar.style.cssText = 'position:sticky;top:0;z-index:2147482000;background:' + bg + ';color:' + tone + ';font:600 13px/1.4 system-ui,-apple-system,Roboto,sans-serif;padding:8px 14px;text-align:center;border-bottom:1px solid rgba(0,0,0,.08)';
+      bar.textContent = msg + ' ';
+      if (admin) { var a = document.createElement('a'); a.href = '/settings.html#subscription'; a.textContent = b.effective === 'trial' ? 'See plans' : 'Renew now'; a.style.cssText = 'color:inherit;text-decoration:underline'; bar.appendChild(a); }
+      document.body.insertBefore(bar, document.body.firstChild);
+    };
+    if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
+  }
+
   fetch('https://data.ryst.in/property', token ? { cache: 'no-cache', headers: { 'X-Token': token } } : { cache: 'no-cache' })
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
       if (!d || typeof d !== 'object' || !d.name) return;
+      billingBanner(d._billing); delete d._billing;
       try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {}
       var before = JSON.stringify(P);
       Object.keys(P).forEach(function(k){ delete P[k]; });
