@@ -361,6 +361,15 @@
     </div>
     <div class="sync-results" id="waRunResults" style="margin-bottom:18px"></div>
 
+    <p class="gh-mini">Owner report on your phone</p>
+    <p class="sd" style="margin-bottom:12px">Every Monday at 8 am a weekly report, and on the 1st a monthly one, goes to the villa's owners and admins on Telegram — revenue, occupancy, expenses, who's arriving, balances to collect, and anything waiting at the villa. Caretakers never get it. Turn it off per person under User Access (Telegram alerts).</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:10px">
+      <button class="btn" data-report="weekly">Preview weekly</button>
+      <button class="btn" data-report="monthly">Preview monthly</button>
+      <button class="btn" id="reportSendBtn" disabled>Send it to Telegram now</button>
+    </div>
+    <pre id="reportPreview" style="display:none;white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.55;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 22px;max-width:560px"></pre>
+
     <p class="gh-mini">Send a test message</p>
     <p class="sd" style="margin-bottom:12px">Sends one real Interakt message with sample data (a made-up guest, dates, and links — never a real stay) to any phone number, using whichever scenario's template name is saved below. Useful to confirm a template + API key actually work without waiting for a real stay to fall into the right date window.</p>
     <div class="feed-row" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
@@ -674,6 +683,7 @@ const TELEGRAM_ALERT_TYPES = [
   { key:"staleQuote", label:"Quote going cold (5+ days, no advance)" },
   { key:"otaSync", label:"OTA calendar sync failure/recovery" },
   { key:"userAccess", label:"User access changed" },
+  { key:"ownerReport", label:"Weekly & monthly owner report (owners and admins)" },
 ];
 let stay = JSON.parse(JSON.stringify(STAY_DEFAULTS));
 let stayRcDraft = [];
@@ -1927,6 +1937,31 @@ gEl('gstRegBtn').addEventListener('click', async ()=>{
     const live=(d.invoices||[]).filter(g=>g.status!=='cancelled');
     msg.textContent=`${live.length} invoice${live.length===1?'':'s'} · taxable ₹${live.reduce((a,g)=>a+g.taxable,0).toLocaleString('en-IN',{maximumFractionDigits:2})} · GST ₹${live.reduce((a,g)=>a+g.cgst+g.sgst,0).toLocaleString('en-IN',{maximumFractionDigits:2})}`;
   }catch(e){ msg.textContent='Could not download — '+e.message; }
+});
+
+/* ---------- OWNER REPORT ---------- */
+let reportKind = null;
+document.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click', async ()=>{
+  const box=document.getElementById('reportPreview'); box.style.display='block'; box.textContent='Loading…';
+  try{
+    const res=await fetch(PROXY_URL+'/owner-report?kind='+b.dataset.report,{headers:{'X-Token':proxyToken},cache:'no-store'});
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('HTTP '+res.status));
+    // The report is Telegram HTML (bold only) — show it as plain text here.
+    box.textContent=d.text.replace(/<\/?b>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+    reportKind=d.kind; document.getElementById('reportSendBtn').disabled=false;
+  }catch(e){ box.textContent='Could not load the report — '+e.message; }
+}));
+document.getElementById('reportSendBtn').addEventListener('click', async ()=>{
+  if(!reportKind) return;
+  const b=document.getElementById('reportSendBtn'); b.disabled=true;
+  try{
+    const res=await fetch(PROXY_URL+'/owner-report',{method:'POST',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify({kind:reportKind})});
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('HTTP '+res.status));
+    toast('Sent to owners and admins on Telegram');
+  }catch(e){ toast('Not sent — '+e.message); }
+  finally{ b.disabled=false; }
 });
 
 /* ---------- WEBSITE ---------- */
