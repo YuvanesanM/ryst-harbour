@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Modern browsers already default to this, but this page's URL can carry
+     a one-time portal token as a query param (?no=&t=) before
+     tryMagicLinkLogin strips it — belt-and-suspenders against an older/
+     in-app-browser default leaking it via Referer to a third-party
+     subresource. -->
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/villa.js"></script>
+<script src="/property.js"></script>
+<title data-title="My Stay | {name}">My Stay | RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+<!-- "Outfit" — used only by the quote/invoice PDF (.doc, below) so it
+     matches stay.html's own printable document exactly; the rest of this
+     page keeps its own DM Sans / Cormorant Garamond fonts. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+  @font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 100 1000; font-display: swap; src: url('/assets/fonts/dm-sans-latin-wght-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 600; font-display: swap; src: url('/assets/fonts/cormorant-garamond-latin-600-normal.woff2') format('woff2'); }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --ink:#0e2420; --sea:#0b3d52; --sea-mid:#1a6a7a; --foam:#eef4f2; --bg:#eef4f2;
+    --sand:#c8a97a; --coral:#c96a3b; --white:#fbfaf8;
+    /* was #6b8480 — that failed WCAG AA (4.5:1) for the small uppercase
+       labels (.bc-label, .f-label, .r-lbl) that use it; this passes on
+       both --white and --foam with a comfortable margin and is otherwise
+       visually near-identical. */
+    --muted:#596d6a; --muted-text:#5a706c;
+    --line:rgba(14,36,32,.1); --serif:'Cormorant Garamond',Georgia,serif;
+    --sans:'DM Sans',system-ui,sans-serif; --ease:cubic-bezier(.22,1,.36,1);
+    --shadow-sm:0 2px 8px rgba(11,61,82,.08); --shadow-md:0 10px 24px rgba(11,61,82,.12);
+    --shadow-lg:0 28px 70px rgba(11,61,82,.14); --r-sm:10px; --r-md:14px; --r-lg:18px;
+  }
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100%;-webkit-font-smoothing:antialiased}
+  body{
+    display:flex;align-items:center;justify-content:center;padding:24px;min-height:100vh;
+    background:radial-gradient(120% 100% at 50% -12%,#ffffff 0%,var(--bg) 55%);
+  }
+  a{color:inherit}
+  button{font-family:inherit;cursor:pointer}
+  button:active{transform:scale(.97)}
+  .wrap{max-width:560px;width:100%}
+  .card{
+    position:relative;background:var(--white);border-radius:28px;padding:clamp(22px,5vw,38px);
+    box-shadow:var(--shadow-lg); border:1px solid rgba(255,255,255,.8); overflow:hidden;
+  }
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--sea),var(--sea-mid),var(--sand))}
+  .logo{height:44px;display:block;margin:0 auto 22px;object-fit:contain}
+
+  @media (prefers-reduced-motion: reduce){ * { transition:none !important; animation:none !important; } }
+  button:focus-visible,a:focus-visible,input:focus-visible{ outline:2px solid var(--sea-mid); outline-offset:2px; }
+
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(22px,5vw,27px);color:var(--sea);margin-bottom:4px;text-align:center;letter-spacing:.1px}
+  .sub{color:var(--muted-text);font-size:13.5px;line-height:1.55;text-align:center;margin-bottom:18px}
+  .err{color:var(--coral);font-size:13px;text-align:center;min-height:16px;margin-top:10px}
+
+  .screen{display:none}
+  .screen.active{display:block}
+  /* ── Ghost/pill buttons: Back, Sign out, Switch guest — shared look so
+     every secondary action on this page reads as the same control family
+     instead of ad-hoc underlined text links. ── */
+  .back-btn,.logout-link,.switch-link{
+    display:inline-flex;align-items:center;gap:6px;background:var(--foam);border:1px solid transparent;
+    color:var(--sea);font-family:var(--sans);font-size:12.5px;font-weight:700;cursor:pointer;
+    border-radius:999px;padding:8px 14px;transition:background .15s,border-color .15s,transform .12s var(--ease);
+  }
+  .back-btn:hover,.logout-link:hover,.switch-link:hover{background:var(--white);border-color:var(--line);box-shadow:var(--shadow-sm)}
+  .back-btn{margin-bottom:16px;color:var(--muted-text)}
+  .back-btn:active,.logout-link:active,.switch-link:active{transform:scale(.96)}
+  .logout-link{color:var(--muted-text)}
+  .top-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+
+  #googleSignInBtn{display:flex;justify-content:center;min-height:44px;margin-bottom:8px}
+
+  /* ── BOOKING SUMMARY (mirrors checkin.html's booking-card) ── */
+  .booking-card{
+    background:linear-gradient(160deg,var(--foam),#e6efeb);border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:18px 20px;margin:0 0 16px;display:grid;gap:14px;box-shadow:var(--shadow-sm);
+  }
+  .bc-name{display:flex;flex-direction:column;gap:2px}
+  .bc-label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:600}
+  .bc-value{font-size:14.5px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+  .bc-name .bc-value{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--sea)}
+  .bc-divider{height:1px;background:var(--line)}
+  .bc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:12px 6px}
+  .bc-cell{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .bc-id{
+    display:inline-flex;align-items:center;gap:6px;width:fit-content;max-width:100%;
+    background:var(--white);color:var(--sea);font-size:12.5px;font-weight:700;
+    padding:7px 13px;border-radius:999px;overflow-wrap:anywhere;box-shadow:var(--shadow-sm);
+  }
+  /* Trip-status + check-in nudge pills sit alongside the booking-id pill —
+     same .bc-id pill shape, state-specific fill via modifier classes so
+     everything still reads as one pill family. */
+  .bc-pills{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .bc-id.status-upcoming{background:var(--foam);color:var(--sea-mid)}
+  /* Same coral gradient .menu-badge already uses for "live now" emphasis. */
+  .bc-id.status-staying{background:linear-gradient(135deg,#d3764a,var(--coral));color:#fff;box-shadow:0 4px 10px rgba(201,106,59,.28)}
+  .bc-id.status-checkedout{background:var(--foam);color:var(--muted-text)}
+  .bc-id.checkin-nudge{background:var(--sea-mid);color:#fff;text-decoration:none;cursor:pointer;border:none}
+  .bc-id.checkin-nudge:hover{opacity:.92}
+  /* Same green .order-status.settled already uses for "done/paid". */
+  .bc-id.checkin-done{background:#e3f0ea;color:#215f3f}
+  .bc-id svg{flex-shrink:0}
+  /* Quote-review screen's booking-id pill doubles as a button — opens the
+     full quote as a printable document (see viewQuotePdf/#receiptArea
+     below), so the terms, bank details and full breakdown a staff-
+     generated PDF shows travel with the guest too, not just the on-screen
+     summary. */
+  .bc-id.pdf-link{border:none;font-family:inherit;transition:background .15s,box-shadow .15s}
+  .bc-id.pdf-link:hover{background:var(--foam)}
+  /* ── Wallet pass (mirrors checkin.html's wallet-links block) ── */
+  .wallet-links{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:2px;flex-wrap:wrap}
+  .wallet-links img{height:44px;width:auto;display:block;transition:opacity .2s}
+  .wallet-links a.apple:hover img{opacity:.85}
+  .wallet-btn-google{
+    display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:8px;
+    background:#fff;border:1px solid #dadce0;color:#3c4043;font-family:var(--sans);
+    font-size:14px;font-weight:500;text-decoration:none;transition:box-shadow .2s;
+  }
+  .wallet-btn-google:hover{box-shadow:0 1px 4px rgba(60,64,67,.3)}
+
+  /* ── STAFF "ACTING AS" ── */
+  .acting-bar{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 10px;
+    background:linear-gradient(135deg,#eaf3f1,#dcece8);border:1px solid rgba(26,106,122,.22);border-left:4px solid var(--sea-mid);
+    border-radius:var(--r-md);padding:11px 14px 11px 12px;margin-bottom:14px;font-size:12.5px;color:var(--sea);
+  }
+  .acting-bar strong{font-weight:700}
+  .acting-bar .switch-link{background:var(--white);flex-shrink:0}
+  .admin-guest-list{display:flex;flex-direction:column;gap:10px}
+
+  .due-banner{
+    background:linear-gradient(135deg,#fdeee3,#fbe0cd);border:1px solid rgba(201,106,59,.25);
+    border-radius:var(--r-lg);padding:16px 18px;margin:0 0 16px;text-align:center;font-size:13.5px;color:#8a4321;line-height:1.5;
+    box-shadow:var(--shadow-sm);
+  }
+  .due-banner strong{font-size:15px;color:var(--coral)}
+  .due-banner p{margin:0}
+  .pay-btn{
+    margin-top:12px;background:linear-gradient(135deg,#d3764a,var(--coral));color:#fff;border:none;border-radius:12px;
+    padding:12px 22px;font-family:var(--sans);font-size:13.5px;font-weight:700;letter-spacing:.1px;
+    cursor:pointer;min-height:44px;box-shadow:0 8px 18px rgba(201,106,59,.3);transition:opacity .2s,transform .12s var(--ease);
+  }
+  .pay-btn:hover:not(:disabled){opacity:.92}
+  .pay-btn:active:not(:disabled){transform:scale(.97)}
+  .pay-btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+  .pay-msg{margin-top:8px;font-size:12.5px;color:#8a4321}
+
+  /* ── HOME TILES (mirrors play.html's menu-item) ── */
+  .menu{display:flex;flex-direction:column;gap:11px}
+  .menu-item{
+    display:flex;align-items:center;gap:14px;text-align:left;background:var(--white);border:1px solid var(--line);
+    border-radius:var(--r-lg);padding:14px 16px;cursor:pointer;width:100%;text-decoration:none;color:inherit;
+    box-shadow:var(--shadow-sm);transition:border-color .15s,box-shadow .15s,transform .12s var(--ease);
+  }
+  .menu-item:hover{border-color:var(--sea-mid);box-shadow:var(--shadow-md)}
+  .menu-item:active{transform:scale(.98)}
+  .menu-item.disabled{opacity:.55;cursor:not-allowed}
+  .menu-item.disabled:hover{border-color:var(--line);box-shadow:var(--shadow-sm)}
+  .menu-icon{
+    font-size:21px;flex-shrink:0;width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(150deg,var(--foam),#e2ece8);
+  }
+  .menu-body{flex:1;min-width:0}
+  .menu-title{display:block;font-family:var(--serif);font-weight:600;font-size:16.5px;color:var(--sea)}
+  .menu-desc{display:block;color:var(--muted-text);font-size:12px;margin-top:2px}
+  .menu-badge{
+    background:linear-gradient(135deg,#d3764a,var(--coral));color:#fff;font-size:11.5px;font-weight:700;
+    padding:4px 10px;border-radius:999px;flex-shrink:0;box-shadow:0 4px 10px rgba(201,106,59,.28);
+  }
+  .menu-chevron{color:var(--muted);font-size:19px;font-weight:400;flex-shrink:0;margin-left:2px;transition:transform .15s var(--ease)}
+  .menu-item:hover .menu-chevron{transform:translateX(2px);color:var(--sea-mid)}
+
+  /* ── MENU / ORDER ── */
+  .meal-picker{background:var(--foam);border-radius:var(--r-md);padding:14px 16px;margin-bottom:16px;border:1px solid var(--line)}
+  .meal-chips{display:flex;gap:8px;margin-bottom:12px}
+  .meal-chip{
+    flex:1;text-align:center;background:var(--white);border:1.5px solid var(--line);border-radius:var(--r-sm);
+    padding:9px 6px;font-family:var(--sans);font-size:13px;font-weight:700;color:var(--muted-text);cursor:pointer;
+    transition:background .15s,border-color .15s,color .15s,box-shadow .15s;
+  }
+  .meal-chip.active{background:var(--sea-mid);border-color:var(--sea-mid);color:#fff;box-shadow:0 6px 14px rgba(26,106,122,.3)}
+  .f-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px;font-weight:600}
+  .date-input{
+    width:100%;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;
+    font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--white);outline:none;transition:border-color .15s;
+  }
+  .date-input:focus{border-color:var(--sea-mid)}
+  .date-time-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .date-time-row label{display:block}
+  .f-optional{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted-text)}
+  /* ── Search + filter chips (menu browsing, ahead of the meal tabs) ── */
+  .menu-search{
+    display:flex;align-items:center;gap:9px;background:var(--white);border:1.5px solid var(--line);
+    border-radius:999px;padding:10px 14px;margin-bottom:10px;transition:border-color .15s;
+  }
+  .menu-search:focus-within{border-color:var(--sea-mid)}
+  .menu-search svg{flex-shrink:0;color:var(--muted-text)}
+  .menu-search input{
+    flex:1;min-width:0;border:none;background:transparent;outline:none;font-family:var(--sans);
+    font-size:13.5px;color:var(--ink);
+  }
+  .menu-search input::placeholder{color:var(--muted-text)}
+  .filter-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .filter-chip{
+    display:inline-flex;align-items:center;gap:5px;background:var(--white);border:1.5px solid var(--line);
+    border-radius:999px;padding:7px 13px;font-family:var(--sans);font-size:12px;font-weight:700;
+    color:var(--muted-text);cursor:pointer;transition:background .15s,border-color .15s,color .15s;
+  }
+  .filter-chip.active{background:rgba(26,106,122,.1);border-color:var(--sea-mid);color:var(--sea-mid)}
+  .cat-head{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--sea);margin:18px 0 8px;display:flex;align-items:baseline;gap:6px}
+  .cat-head:first-child{margin-top:0}
+  .cat-count{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--muted-text)}
+  .item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .item-info{flex:1;min-width:0}
+  .item-name{font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px}
+  /* FSSAI-style marks — a filled circle (veg) vs. a filled triangle
+     (non-veg) inside a coloured square, the same convention used on Indian
+     food packaging and now on the public food-menu.html page too. Shape,
+     not just colour, tells them apart, so this is no worse for WCAG 1.4.1
+     (colorblind sighted users) than the V/N letter it replaces. */
+  .veg-dot{width:14px;height:14px;border:1.5px solid;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+  .veg-dot.veg{border-color:#2e7d32}
+  .veg-dot.veg::before{content:'';width:7px;height:7px;border-radius:50%;background:#2e7d32}
+  .veg-dot.nonveg{border-color:var(--coral)}
+  .veg-dot.nonveg::before{content:'';width:0;height:0;border-left:4.5px solid transparent;border-right:4.5px solid transparent;border-bottom:7.5px solid var(--coral)}
+  .item-star{color:var(--sand);flex-shrink:0}
+  .item-price{font-size:12.5px;color:var(--muted-text);margin-top:1px}
+  .item-desc{font-size:11.5px;color:var(--muted-text);margin-top:3px;line-height:1.5}
+  /* Only shown when a category actually mixes veg and non-veg — matches
+     food-menu.html's same restraint (no label when there's nothing to
+     contrast against). */
+  .veg-group-label{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;margin:14px 0 6px}
+  .veg-group-label:first-child{margin-top:0}
+  .veg-group-label.veg{color:#2e7d32}
+  .veg-group-label.nonveg{color:var(--coral)}
+  .qty-stepper{display:flex;align-items:center;gap:9px;flex-shrink:0}
+  .qty-btn{
+    width:44px;height:44px;border-radius:var(--r-sm);border:1.5px solid var(--line);background:var(--white);
+    color:var(--sea);font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;
+    transition:background .15s,border-color .15s,transform .12s var(--ease);
+  }
+  .qty-btn:hover:not(:disabled){border-color:var(--sea-mid);background:var(--foam)}
+  .qty-btn:active:not(:disabled){transform:scale(.9)}
+  .qty-btn:disabled{opacity:.4;cursor:not-allowed}
+  .qty-n{min-width:20px;text-align:center;font-weight:700;font-size:14px}
+  /* Default per-item control before anything's in the cart — tapping it
+     adds 1 and swaps this slot for the qty-stepper above; qty back to 0
+     swaps it back. Same 44px height as .qty-btn so the swap doesn't jump. */
+  .add-btn{
+    min-width:78px;height:44px;border-radius:var(--r-sm);border:1.5px solid var(--sea-mid);background:var(--white);
+    color:var(--sea-mid);font-family:var(--sans);font-size:13px;font-weight:800;letter-spacing:.3px;cursor:pointer;
+    flex-shrink:0;transition:background .15s,transform .12s var(--ease);
+  }
+  .add-btn:hover{background:var(--foam)}
+  .add-btn:active{transform:scale(.94)}
+  /* Fixed to the viewport, not the card — same pattern as restaurant.html's
+     mobile order-builder cart bar (.ob-cartbar), which is where this
+     convention comes from. #screen-menu gets matching bottom padding so
+     the item list never sits underneath it. Hidden until the cart actually
+     has something in it (.show) rather than always-visible-but-disabled —
+     nothing to show, nothing to do, so no reason to occupy the space. */
+  .cart-bar{
+    position:fixed;left:0;right:0;bottom:0;z-index:40;display:none;
+    align-items:center;justify-content:space-between;gap:12px;
+    background:var(--sea);color:#fff;
+    padding:13px 20px calc(13px + env(safe-area-inset-bottom));
+    box-shadow:0 -8px 20px rgba(11,61,82,.25);
+  }
+  .cart-bar.show{display:flex}
+  #screen-menu{padding-bottom:86px}
+  .cart-count{font-size:14px;font-weight:700;line-height:1.3}
+  .cart-count span{display:block;font-size:11.5px;font-weight:500;color:rgba(255,255,255,.75);margin-top:1px}
+  .place-order-btn{
+    background:linear-gradient(135deg,#f3ddae,#e3c486 55%,#d4ad6a);color:#1a2c33;border:none;border-radius:12px;
+    padding:12px 22px;font-family:var(--sans);font-size:13.5px;font-weight:700;cursor:pointer;min-height:44px;
+    box-shadow:0 6px 16px rgba(196,158,90,.4);transition:opacity .2s,transform .12s var(--ease);
+  }
+  .place-order-btn:active:not(:disabled){transform:scale(.97)}
+  .place-order-btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+
+  /* ── FOOD BILL ── */
+  .order-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r-md);padding:15px 16px;margin-bottom:11px;box-shadow:var(--shadow-sm)}
+  .order-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+  .order-no{font-size:12px;color:var(--muted-text)}
+  .order-total{font-weight:700;font-size:16.5px;color:var(--sea)}
+  .order-items{font-size:12.5px;color:var(--muted-text);line-height:1.5}
+  .order-status{display:inline-block;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px}
+  .order-status.open{background:#fdeee3;color:#8a4321}
+  .order-status.settled{background:#e3f0ea;color:#215f3f}
+  .order-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+  .order-actions{display:flex;gap:8px}
+  .order-action-btn{
+    background:var(--foam);border:1px solid var(--line);border-radius:var(--r-sm);
+    padding:6px 13px;font-size:11.5px;font-weight:700;color:var(--sea-mid);cursor:pointer;transition:background .15s,box-shadow .15s;
+  }
+  .order-action-btn:hover{background:var(--white);box-shadow:var(--shadow-sm)}
+  .empty-note{color:var(--muted-text);font-size:13.5px;text-align:center;padding:24px 0}
+
+  /* ── WI-FI ── */
+  .wifi-card{background:linear-gradient(160deg,var(--foam),#e6efeb);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 20px;text-align:center;box-shadow:var(--shadow-sm)}
+  .wifi-field{margin:14px 0}
+  /* The site's own sans (DM Sans), not the display serif — this is a
+     network name and password a guest has to read character-by-character
+     and type into their phone, and a fancy serif's stylistic figures
+     actively work against that. Bolder weight, tracked-out letter-spacing
+     and tabular digits give it a considered "this is a code" presentation
+     without dropping into a generic system monospace that would look out
+     of place next to the rest of the page (and render differently across
+     guests' devices, unlike this already-loaded self-hosted font). */
+  .wifi-value{
+    font-family:var(--sans);font-weight:700;font-size:25px;letter-spacing:.6px;
+    font-variant-numeric:tabular-nums;color:var(--sea);word-break:break-word;
+  }
+  .copy-btn{
+    margin-top:8px;background:var(--white);border:1.5px solid var(--line);border-radius:var(--r-sm);
+    padding:7px 16px;font-size:12px;font-weight:700;color:var(--sea-mid);cursor:pointer;transition:border-color .15s,box-shadow .15s;
+  }
+  .copy-btn:hover{border-color:var(--sea-mid);box-shadow:var(--shadow-sm)}
+  .toys-cta{
+    display:inline-block;margin-top:16px;text-decoration:none;
+    background:linear-gradient(135deg,#f3ddae,#e3c486 55%,#d4ad6a);color:#1a2c33;border-radius:12px;
+    padding:12px 26px;font-family:var(--sans);font-size:13.5px;font-weight:700;
+    box-shadow:0 6px 16px rgba(196,158,90,.4);transition:transform .12s var(--ease);
+  }
+  .toys-cta:active{transform:scale(.97)}
+
+  .spinner{width:26px;height:26px;border-radius:50%;border:3px solid rgba(26,106,122,.2);border-top-color:var(--sea-mid);animation:spin .8s linear infinite;margin:24px auto}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── VIEW BILL (customer receipt) ──
+     Same document structure as restaurant.html's own printReceipt — a
+     guest and staff looking at the same order should see something that
+     looks like it belongs to the same villa, not two different tools.
+     Shown as an in-app overlay (not launched straight into the OS print
+     dialog) so the guest can actually read it first; their browser's own
+     Share/Print/Save-as-PDF still works normally from here if they want
+     an actual file — see the trimmed @media print block below. */
+  .receipt-overlay{display:none;position:fixed;inset:0;z-index:100;background:var(--bg);overflow-y:auto;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+  .receipt-overlay.active{display:block}
+  .receipt-overlay-bar{max-width:480px;margin:0 auto 14px;display:flex;align-items:center;gap:8px}
+  .r-doc{max-width:480px;margin:0 auto;background:var(--white);border-radius:var(--r-lg);padding:22px 20px;box-shadow:var(--shadow-lg);border:1px solid var(--line)}
+  .r-head{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:3px solid var(--sea-mid)}
+  .r-head img{height:40px;object-fit:contain;flex-shrink:0}
+  .r-head .nm{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--sea)}
+  .r-head .sub{font-size:11px;color:var(--muted-text);margin-top:2px}
+  .r-title{font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--muted-text);text-align:center;margin:18px 0}
+  .r-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;font-size:12px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .r-meta div{display:flex;flex-direction:column;gap:2px}
+  .r-meta .r-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .r-meta b{font-size:13px;font-weight:700;color:var(--ink)}
+  .r-meta .r-right{text-align:right}
+  table.r-items{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px}
+  table.r-items th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-text);padding:0 0 8px;border-bottom:1.5px solid var(--ink)}
+  table.r-items td{padding:8px 0;border-bottom:1px solid var(--foam);vertical-align:top;color:var(--ink)}
+  table.r-items th.num,table.r-items td.num{text-align:right;white-space:nowrap}
+  table.r-items td.nm{font-weight:600}
+  .r-totals{margin-top:14px;padding-top:2px}
+  .r-tot{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;color:var(--muted-text)}
+  .r-tot.grand{font-weight:700;font-size:16px;color:var(--ink);border-top:1.5px solid var(--ink);margin-top:8px;padding-top:10px}
+  .r-tot.grand span:last-child{color:var(--sea-mid)}
+  .r-foot{text-align:center;font-size:11px;color:var(--muted-text);line-height:1.6;margin-top:32px;padding-top:14px;border-top:1px dashed var(--line)}
+  .r-foot .brand{font-weight:700;color:var(--sea-mid);letter-spacing:.3px}
+
+  /* ── QUOTE/INVOICE PDF — an exact copy of stay.html's own printable
+     ".doc" document (colors, fonts, layout all hardcoded to match, not
+     guest.html's own theme tokens) so what a guest downloads is
+     pixel-for-pixel what staff generates from the dashboard. Any layout
+     change made to stay.html's #stayDoc should be mirrored here too.
+     Sized responsively on screen (this overlay is mobile-first); print
+     switches it to the real A4/210mm layout via @media print below. ── */
+  .doc{width:100%;background:#fff;color:#1c2422;padding:18px 16px;font-family:"Outfit",sans-serif;font-weight:400;display:flex;flex-direction:column;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);border:1px solid var(--line)}
+  .d-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+  .d-brand{display:flex;align-items:center;gap:10px}
+  .d-brand-logo{height:64px;width:auto;display:block;object-fit:contain;align-self:center}
+  .d-brand-text{align-self:center}
+  .bt-name{font-weight:700;font-size:20px;letter-spacing:1px;color:#143b44;line-height:1.05}
+  .bt-name span{color:#c0922f}
+  .bt-villa{font-weight:600;font-size:11px;letter-spacing:4px;color:#0a5b63;margin-top:1px}
+  .bt-tag{font-size:8px;letter-spacing:2px;color:#6a7a76;margin-top:3px}
+  .co-ig{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:4px;font-size:11px;color:#c96a3b;text-decoration:none;letter-spacing:.3px}
+  .d-co{text-align:right;color:#33433f;font-size:11.5px;line-height:1.6;padding-top:2px}
+  .addr-link{color:inherit;text-decoration:none}
+  .d-title{text-align:center;color:#fff;background:#0e7c86;font-weight:700;font-size:16px;letter-spacing:3px;padding:8px;border-radius:6px;margin:14px 0}
+  .d-panels{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px}
+  .panel{border:1px solid #d7e2e0;border-radius:8px;overflow:hidden}
+  .panel-h{background:#e3f1f1;color:#0a5b63;font-weight:700;font-size:11px;letter-spacing:1.2px;padding:7px 12px;border-bottom:1px solid #d7e2e0}
+  .panel .kv{display:flex;justify-content:space-between;gap:12px;padding:4px 12px;font-size:12.5px;line-height:1.4}
+  .panel .kv span{color:#6a7a76}
+  .panel .kv b{color:#1c2a27;font-weight:600;text-align:right}
+  .d-mid{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+  table.d-table{width:100%;border-collapse:collapse;font-size:12px}
+  table.d-table th{background:#0e7c86;color:#fff;text-align:left;padding:8px 10px;font-weight:600;font-size:10.5px}
+  table.d-table th.num,table.d-table td.num{text-align:center}
+  table.d-table th.amt,table.d-table td.amt{text-align:right}
+  table.d-table td{padding:7px 10px;color:#2c3633;background:#f4f7f6;vertical-align:middle}
+  table.d-table tr:nth-child(even) td{background:#eef3f2}
+  table.d-table tfoot td{background:#fff;border-top:1px solid #d7e2e0;font-weight:600;color:#1c2a27}
+  table.d-table tfoot tr.grand td{background:#0e7c86;color:#fff;font-weight:700;font-size:13px}
+  .d-side{display:flex;flex-direction:column;gap:10px}
+  .side-box{border:1px solid #d7e2e0;border-radius:8px;padding:9px 12px}
+  .side-box .sb-l{font-size:10px;font-weight:700;letter-spacing:.5px;color:#6a7a76;text-transform:uppercase}
+  .side-box .sb-l small{font-weight:500;text-transform:none;letter-spacing:0}
+  .side-box .sb-v{font-size:15px;font-weight:700;color:#0a5b63;margin-top:3px}
+  .side-box.bal{background:#e3f1f1;border-color:#bfe0e0}
+  .side-box.bal .sb-v{color:#143b44}
+  .d-pay{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:12px}
+  .d-pay-qr{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .d-pay-qr img{width:120px;height:120px;display:block;border:1px solid #d7e2e0;border-radius:6px;padding:3px}
+  .d-pay-qr .qr-label{font-size:9px;letter-spacing:.8px;color:#6a7a76;text-transform:uppercase;text-align:center;margin-top:3px}
+  .pb-h{font-weight:700;font-size:11px;letter-spacing:1px;color:#0a5b63;margin-bottom:6px}
+  .pb-body{font-size:12px;line-height:1.7;color:#2c3633}
+  .decl{font-size:11px;line-height:1.55;color:#52605c}
+  .d-terms{margin-bottom:10px}
+  .d-terms ol{margin:0;padding-left:18px;font-size:11px;color:#42504c;line-height:1.6}
+  .d-terms ol li{margin-bottom:2px}
+  .d-decl{margin-bottom:10px}
+  .d-sign-row{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-top:10px}
+  .d-sign{display:flex;flex-direction:column;align-items:flex-end;text-align:right;margin-left:auto}
+  .d-sign.guest{align-items:flex-start;text-align:left;margin-left:0}
+  .d-sign .sign-for{font-size:11px;color:#52605c;margin-bottom:2px}
+  .d-sign .sign-name{font-size:11.5px;font-weight:700;color:#1c2a27;letter-spacing:.3px}
+  .d-sign .sign-blank{height:32px;border-bottom:1px solid #bbb;width:110px;margin:6px 0 4px}
+  .d-foot{text-align:center;font-size:10.5px;font-weight:600;letter-spacing:1.5px;color:#0a5b63;border-top:1px solid #dde4e3;padding-top:9px;margin-top:14px}
+  @media print{
+    /* Same uniform-zoom trick stay.html's own print CSS uses, for the same
+       reason: guarantees the whole document fits one A4 page regardless of
+       how much terms/bank text the owner has saved, rather than spilling a
+       signature block + footer onto an orphan second page. */
+    .doc{width:210mm;min-height:297mm;padding:12mm 13mm 9mm;box-shadow:none;border:none;border-radius:0;zoom:0.93}
+    .d-brand-logo{height:116px}
+    .bt-name{font-size:30px}
+    .bt-villa{font-size:17px;letter-spacing:6px}
+    .bt-tag{font-size:10.5px;letter-spacing:3px}
+    .d-co{font-size:12.5px;padding-top:24px}
+    .d-title{font-size:22px;letter-spacing:4px;margin:14px 0}
+    .d-panels{grid-template-columns:1fr 1fr;gap:14px}
+    .panel-h{font-size:12px;letter-spacing:1.5px}
+    .panel .kv{padding:3px 12px;font-size:13px}
+    .d-mid{flex-direction:row;align-items:start;gap:14px}
+    .d-mid table.d-table{flex:1}
+    .d-side{width:188px;flex-shrink:0}
+    .side-box .sb-l{font-size:10.5px}
+    .side-box .sb-v{font-size:16px}
+    table.d-table{font-size:13.5px}
+    table.d-table th{padding:9px 12px;font-size:12.5px}
+    table.d-table td{padding:7px 12px}
+    table.d-table tfoot tr.grand td{font-size:14.5px}
+    .d-pay{flex-direction:row;justify-content:space-between;align-items:start}
+    .d-pay-qr img{width:135px;height:135px}
+    .pb-h{font-size:12px;letter-spacing:1.2px}
+    .pb-body{font-size:12.5px}
+    .decl{font-size:11.5px}
+    .d-terms ol,.d-decl .decl{font-size:11.5px}
+    .d-sign-row{margin-top:6px}
+    .d-sign .sign-for{font-size:12px}
+    .d-sign .sign-name{font-size:12.5px}
+    .d-sign .sign-blank{height:38px;width:140px}
+    .d-foot{font-size:11.5px;letter-spacing:2px;margin-top:10px}
+  }
+
+  /* ── FEEDBACK (reuses .receipt-overlay's full-screen shell, own inner
+     card — .r-doc's table/invoice layout doesn't fit a rating form) ── */
+  .fb-doc{max-width:480px;margin:0 auto;background:var(--white);border-radius:var(--r-lg);padding:22px 20px;box-shadow:var(--shadow-lg);border:1px solid var(--line)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .fb-stars{display:flex;gap:6px;justify-content:center;margin:18px 0}
+  .fb-star{position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);cursor:pointer;color:var(--line);transition:color .15s,background .15s}
+  .fb-star input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+  .fb-star.filled{color:var(--sand)}
+  .fb-doc textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;resize:vertical;
+    font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--white);outline:none;transition:border-color .15s;
+  }
+  .fb-doc textarea:focus{border-color:var(--sea-mid)}
+
+  @page{ size:A4; margin:7mm 5mm 6mm }
+  @media print{
+    body *{visibility:hidden}
+    #receiptArea, #receiptArea *{visibility:visible}
+    .receipt-overlay-bar{display:none}
+    #receiptArea{position:absolute;top:0;left:0;width:100%;font-family:var(--sans);color:var(--ink)}
+    #receiptArea, #receiptArea *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    .r-doc{box-shadow:none;border:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <img class="logo" alt="RYST 109A" data-prop-alt="name" data-prop-src="logoUrl" src="/assets/stay-logo.webp">
+
+    <section class="screen active" id="screen-signin">
+      <h1>Manage Your Stay</h1>
+      <p class="sub">Sign in with the email used for your booking to view your invoice, pay your balance, order food and more.</p>
+      <div id="googleSignInBtn"></div>
+      <p class="err" id="signinErr" role="alert" aria-live="polite"></p>
+    </section>
+
+    <section class="screen" id="screen-loading">
+      <div class="spinner"></div>
+    </section>
+
+    <section class="screen" id="screen-adminpicker">
+      <div class="top-row">
+        <h1 style="text-align:left;margin:0">Choose a guest</h1>
+        <button type="button" class="logout-link" id="adminLogoutBtn">⏻ Sign out</button>
+      </div>
+      <p class="sub" style="text-align:left">Staff sign-in — pick a guest currently staying to view and act on their behalf.</p>
+      <div id="adminPickerList"></div>
+      <p class="err" id="adminPickerErr" role="alert" aria-live="polite"></p>
+    </section>
+
+    <section class="screen" id="screen-home">
+      <div class="top-row">
+        <h1 style="text-align:left;margin:0">Welcome back</h1>
+        <button type="button" class="logout-link" id="logoutBtn">⏻ Sign out</button>
+      </div>
+      <div class="acting-bar" id="actingAsBar" style="display:none"></div>
+      <div id="homeBooking"></div>
+      <div id="homeDue"></div>
+      <div class="menu">
+        <button type="button" class="menu-item" data-mode="menu">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v6a2 2 0 0 0 4 0V2"/><path d="M8 2v20"/><path d="M18 2c-2 2-2 5-2 7s0 3 2 3 2-1 2-3 0-5-2-7Z"/><path d="M18 12v10"/></svg></span>
+          <span class="menu-body"><span class="menu-title">Food Menu &amp; Order</span><span class="menu-desc">Browse <span data-prop="restaurantName">Casa de RYST</span> and place an order</span></span>
+          <span class="menu-chevron" aria-hidden="true">›</span>
+        </button>
+        <button type="button" class="menu-item" data-mode="foodbill">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>
+          <span class="menu-body"><span class="menu-title">Food Bill</span><span class="menu-desc">View and pay your food orders</span></span>
+          <span class="menu-badge" id="foodBadge" style="display:none"></span>
+          <span class="menu-chevron" aria-hidden="true">›</span>
+        </button>
+        <button type="button" class="menu-item" data-mode="toys">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="10" width="7" height="7" rx="1"/><rect x="14" y="10" width="7" height="7" rx="1"/><rect x="8.5" y="3" width="7" height="7" rx="1"/></svg></span>
+          <span class="menu-body"><span class="menu-title">RYST Toys</span><span class="menu-desc">Wooden Montessori toys &amp; puzzles — 10% off during your stay</span></span>
+          <span class="menu-chevron" aria-hidden="true">›</span>
+        </button>
+        <a class="menu-item" id="playLink" href="/play.html">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="5"/><path d="M7 10v4M5 12h4"/><circle cx="15" cy="10.5" r="1"/><circle cx="17.5" cy="13" r="1"/></svg></span>
+          <span class="menu-body"><span class="menu-title">Play &amp; Entertainment</span><span class="menu-desc" id="playDesc">Games on the pool screen</span></span>
+          <span class="menu-chevron" aria-hidden="true">›</span>
+        </a>
+        <button type="button" class="menu-item" data-mode="wifi">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8.5a16 16 0 0 1 20 0"/><path d="M5.5 12.5a11 11 0 0 1 13 0"/><path d="M9 16.5a6 6 0 0 1 6 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg></span>
+          <span class="menu-body"><span class="menu-title">Wi-Fi</span><span class="menu-desc">Network &amp; voucher code</span></span>
+          <span class="menu-chevron" aria-hidden="true">›</span>
+        </button>
+        <a class="menu-item" href="/nearby.html" data-ryst-only>
+          <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-7.58 7-12.5A7 7 0 0 0 5 9.5C5 14.42 12 22 12 22z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+          <span class="menu-body"><span class="menu-title">Explore Nearby</span><span class="menu-desc">Beaches, cafes and things to do near the villa</span></span>
+          <span class="menu-chevron" aria-hidden="true">›</span>
+        </a>
+        <button type="button" class="menu-item" data-mode="feedback" id="feedbackTile">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15 9 22 9.5 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.5 9 9"/></svg></span>
+          <span class="menu-body"><span class="menu-title">Rate Your Stay</span><span class="menu-desc" id="feedbackDesc">Tell us how everything's going</span></span>
+          <span class="menu-chevron" aria-hidden="true">›</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Shown instead of screen-home for a not-yet-paid quote's magic
+         link — review the quote and pay online to confirm it. The same
+         link becomes a normal portal link (screen-home) automatically
+         the moment the guest pays, since /portal/me's committed flag
+         flips as soon as the payment webhook lands. -->
+    <section class="screen" id="screen-quotereview">
+      <h1 style="text-align:left;margin:0 0 4px">Review your booking</h1>
+      <p class="sub" style="text-align:left;margin-bottom:16px">Here's your quote from <span data-prop="fullName">RYST 109A Beach Villa</span> — pay online any time to confirm these dates.</p>
+      <div id="qrBooking"></div>
+      <div class="r-doc" style="margin:18px 0 0">
+        <table class="r-items">
+          <thead><tr><th>Item</th><th class="num">Rate</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
+          <tbody id="qrItems"></tbody>
+        </table>
+        <div class="r-totals" id="qrTotals"></div>
+      </div>
+      <div class="due-banner" style="margin-top:20px">
+        <p>Amount to confirm your booking: <strong id="qrAmount"></strong></p>
+        <button type="button" class="pay-btn" id="qrPayBtn">Pay Now to Confirm</button>
+        <p class="pay-msg" id="qrPayMsg" role="alert" aria-live="polite"></p>
+      </div>
+      <p class="sub" style="margin-top:18px">Once paid, this same link becomes your guest portal — manage your invoice, order food, and check Wi-Fi details, right here.</p>
+    </section>
+
+    <section class="screen" id="screen-menu">
+      <button type="button" class="back-btn" data-back>&larr; Back</button>
+      <h1 style="text-align:left" id="menuTitle">Food Menu</h1>
+      <p class="sub" style="text-align:left;margin-bottom:10px" id="menuSub">Order ahead for any day of your stay — pick a meal and a date, then tap ADD.</p>
+      <div class="menu-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.4" y2="16.4"/></svg>
+        <input type="search" id="menuSearch" placeholder="Search dishes…" autocomplete="off" aria-label="Search the menu">
+      </div>
+      <div class="filter-chips">
+        <button type="button" class="filter-chip" id="chipVeg"><span aria-hidden="true">🟢</span> Pure Veg</button>
+        <button type="button" class="filter-chip" id="chipSpecial"><span aria-hidden="true">⭐</span> Chef's Special</button>
+      </div>
+      <div class="meal-picker">
+        <div class="meal-chips" id="mealChips"></div>
+        <div class="date-time-row">
+          <label><span class="f-label">Date</span><input type="date" id="orderDate" class="date-input"></label>
+          <label><span class="f-label">Time <span class="f-optional">(optional)</span></span><input type="time" id="orderTime" class="date-input"></label>
+        </div>
+      </div>
+      <div id="menuList"></div>
+      <div class="cart-bar" id="cartBar">
+        <span class="cart-count"><strong id="cartCountText">0 items</strong><span id="cartTotalSub">Total ₹0</span></span>
+        <button type="button" class="place-order-btn" id="placeOrderBtn">Place Order</button>
+      </div>
+      <p class="err" id="menuErr" role="alert" aria-live="polite"></p>
+    </section>
+
+    <section class="screen" id="screen-foodbill">
+      <button type="button" class="back-btn" data-back>&larr; Back</button>
+      <h1 style="text-align:left">Food Bill</h1>
+      <div id="billList"></div>
+      <div id="billPay"></div>
+    </section>
+
+    <section class="screen" id="screen-wifi">
+      <button type="button" class="back-btn" data-back>&larr; Back</button>
+      <h1 style="text-align:left">Wi-Fi</h1>
+      <div class="wifi-card" id="wifiCard"></div>
+    </section>
+
+    <section class="screen" id="screen-toys">
+      <button type="button" class="back-btn" data-back>&larr; Back</button>
+      <h1 style="text-align:left">RYST Toys</h1>
+      <p class="sub" style="text-align:left;margin-bottom:14px">Handcrafted wooden Montessori toys and puzzles, made for little hands — browse and shop online, with a little something off for guests staying with us.</p>
+      <div class="wifi-card">
+        <div class="wifi-field">
+          <span class="bc-label">Your discount code</span>
+          <div class="wifi-value">STAY10</div>
+          <button type="button" class="copy-btn" id="toysCopyBtn">Copy code</button>
+        </div>
+        <a class="toys-cta" href="https://toys.ryst.in/ryst-109a" target="_blank" rel="noopener">Visit toys.ryst.in</a>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="receipt-overlay" id="receiptOverlay">
+  <div class="receipt-overlay-bar">
+    <button type="button" class="back-btn" id="closeReceiptBtn">&larr; Back</button>
+    <button type="button" class="back-btn r-print-btn" id="printReceiptBtn">🖨️ Print / Save as PDF</button>
+  </div>
+  <div id="receiptArea"></div>
+</div>
+
+<div class="receipt-overlay" id="feedbackOverlay">
+  <div class="receipt-overlay-bar"><button type="button" class="back-btn" id="closeFeedbackBtn">&larr; Back</button></div>
+  <div id="feedbackArea"></div>
+</div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const $ = s => document.querySelector(s);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = n => '₹' + Math.round(Number(n)||0).toLocaleString('en-IN');
+// Same chef's-special icon as the public food-menu.html page — one shared
+// glyph instead of guest.html's old plain "⭐" emoji.
+const chefStarSvg = '<svg class="item-star" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.4 3 1 5.5 3 7.5S19.5 12 22 12c-3 .5-5.5 1-7.5 3S12 19.5 12 22c-.5-3-1-5.5-3-7.5S4.5 12 2 12c3-.5 5.5-1 7.5-3S12 4.5 12 2Z"/></svg>';
+
+let portalToken = localStorage.getItem('ryst_portal_token') || '';
+let isStaff = localStorage.getItem('ryst_portal_is_staff') === 'true';
+let me = null;      // last /portal/me response
+let cart = {};       // menuItemId -> qty
+let adminStays = []; // active stays, staff picker only
+
+function fmtDateShort(iso){
+  if(!iso) return '';
+  const d = new Date(iso+'T00:00:00');
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+}
+function fmtDateTime(iso, time){
+  const d = fmtDateShort(iso);
+  return time ? `${d}, ${time}` : d;
+}
+
+// Small inline-SVG glyphs used inside dynamically-built template strings
+// (the static tile icons are inlined directly in the HTML above — these
+// three are the only icons actually assembled at render time: the
+// check-in-done pill, the feedback star rating, and the staff admin
+// picker's guest-entry icon). Same stroke-based, currentColor convention
+// as checkin.html's own inline SVGs.
+const ICON_CHECK = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
+const ICON_STAR = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15 9 22 9.5 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.5 9 9"/></svg>`;
+const ICON_SUITCASE = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+
+// ── Trip status (client-side hint only — the server's own checkin<=today<=
+// checkout + grace-period logic is the real access gate; a wrong device
+// clock just means an occasional wrong chip, never a security issue) ──
+function tripStatusChip(b){
+  const today = new Date().toISOString().slice(0,10);
+  if(today < b.checkin){
+    const nights = Math.max(1, Math.round((new Date(b.checkin) - new Date(today)) / 86400000));
+    return { cls:'status-upcoming', label: `${nights} night${nights===1?'':'s'} to go` };
+  }
+  if(today <= b.checkout) return { cls:'status-staying', label:'Currently staying' };
+  return { cls:'status-checkedout', label:'Checked out' };
+}
+function checkinNudgePill(b){
+  if(b.checkedIn) return `<span class="bc-id checkin-done">${ICON_CHECK} Checked in</span>`;
+  if(!b.checkinToken) return ''; // defensive — never render a t=undefined link
+  const href = `checkin.html?no=${encodeURIComponent(b.no)}&t=${encodeURIComponent(b.checkinToken)}${villaLinkParam()}`;
+  return `<a class="bc-id checkin-nudge" href="${href}">Complete your check-in ›</a>`;
+}
+
+// ── Wallet pass — same walletUrl()/googleWalletUrl()/GOOGLE_G_ICON pattern
+// checkin.html uses, taking the current stay (`b`) as an argument rather
+// than a module-level bookingNo/walletTok pair: guest.html already holds
+// the active stay reactively in me.stay (and staff can switch guests
+// mid-session via the admin picker), so a second global would just be a
+// second source of truth to keep in sync — b is already in scope wherever
+// these are called from.
+function walletUrl(b){
+  return (b && b.no && b.wallet && me.walletAppleEnabled !== false) ? `${PROXY_URL}/booking/wallet/apple?no=${encodeURIComponent(b.no)}&t=${encodeURIComponent(b.wallet)}` : '';
+}
+function googleWalletUrl(b){
+  return (b && b.no && b.wallet && me.walletGoogleEnabled !== false) ? `${PROXY_URL}/booking/wallet/google?no=${encodeURIComponent(b.no)}&t=${encodeURIComponent(b.wallet)}` : '';
+}
+const GOOGLE_G_ICON = `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>`;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-'+id);
+  if(el) el.classList.add('active');
+}
+document.querySelectorAll('[data-back]').forEach(btn => btn.addEventListener('click', () => showScreen('home')));
+
+// ── Sign-in ──────────────────────────────────────────────────────────────
+const GOOGLE_CLIENT_ID = '717827758789-99ugj40a6j2rr4r7db26shn0hivq0vv0.apps.googleusercontent.com';
+
+async function handleGoogleLogin(credentialResponse){
+  const errEl = $('#signinErr');
+  errEl.textContent = 'Verifying…';
+  try{
+    const res = await fetch(PROXY_URL+'/auth/portal', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ googleIdToken: credentialResponse.credential }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(data.ok && data.token){
+      portalToken = data.token;
+      isStaff = !!data.isStaff;
+      localStorage.setItem('ryst_portal_token', portalToken);
+      localStorage.setItem('ryst_portal_is_staff', isStaff ? 'true' : 'false');
+      errEl.textContent = '';
+      if(isStaff) loadAdminPicker(); else loadMe();
+    } else {
+      errEl.textContent = data.error || 'Could not sign in.';
+    }
+  }catch(e){
+    errEl.textContent = 'Could not reach the server — check your connection.';
+  }
+}
+// ── Magic-link sign-in (no Google account needed) ──────────────────────
+// The same no-account-needed pattern checkin.html already uses for digital
+// check-in: a per-booking unguessable token in the URL (?no=&t=) proves the
+// caller was handed THIS booking's link, verified server-side via
+// portalToken(no) — see POST /auth/portal-link — then exchanged for the
+// exact same portal session token /auth/portal's Google path issues.
+// Staff build this link from stay.html (Stay Builder → Guest Portal Link)
+// for a guest who has no Google account to sign in with. Takes priority
+// over any already-stored session — a fresh magic-link tap always wins
+// (e.g. on a shared/kiosk device that previously had someone else's
+// session on it) — and the token is stripped from the address bar the
+// moment it's read, since the session now lives in localStorage and there's
+// no reason to leave the raw credential sitting in the URL/history any
+// longer than it takes to load.
+async function tryMagicLinkLogin(){
+  const params = new URLSearchParams(location.search);
+  const no = params.get('no'), t = params.get('t');
+  if(!no || !t) return 'none';
+  history.replaceState(null, '', location.pathname);
+  showScreen('loading');
+  try{
+    const res = await fetch(PROXY_URL+'/auth/portal-link', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ no, t }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(data.ok && data.token){
+      portalToken = data.token;
+      isStaff = false;
+      localStorage.setItem('ryst_portal_token', portalToken);
+      localStorage.setItem('ryst_portal_is_staff', 'false');
+      return 'success';
+    }
+    $('#signinErr').textContent = data.error || 'This link is invalid or has expired.';
+    showScreen('signin');
+    return 'failed';
+  }catch(e){
+    $('#signinErr').textContent = 'Could not reach the server — check your connection.';
+    showScreen('signin');
+    return 'failed';
+  }
+}
+
+let gsiRendered = false;
+function initGoogleSignIn(){
+  if(gsiRendered) return;
+  if(typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+  const target = $('#googleSignInBtn');
+  if(!target) return;
+  gsiRendered = true;
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin, auto_select: false });
+  google.accounts.id.renderButton(target, { theme:'outline', size:'large', width: 300, text:'signin_with' });
+}
+window.onGoogleLibraryLoad = initGoogleSignIn;
+window.addEventListener('load', initGoogleSignIn);
+setTimeout(() => {
+  if(!gsiRendered && $('#screen-signin').classList.contains('active')){
+    const errEl = $('#signinErr');
+    if(errEl) errEl.textContent = 'Could not load Google Sign-In — check your connection or disable ad blockers.';
+  }
+}, 8000);
+
+function logout(){
+  portalToken = ''; isStaff = false;
+  localStorage.removeItem('ryst_portal_token');
+  localStorage.removeItem('ryst_portal_is_staff');
+  me = null; cart = {}; adminStays = [];
+  showScreen('signin');
+}
+$('#logoutBtn').addEventListener('click', logout);
+$('#adminLogoutBtn').addEventListener('click', logout);
+
+// Mirrors bookings.html's isConvertedQuote (and the proxy's own copy of the
+// same check) — once a quote has a real invoice for the same checkin/
+// checkout and guest identity, it's a superseded draft, not a second
+// booking. Without this a converted quote and its invoice both show up as
+// separate picker entries for what's actually one guest, one stay.
+function isConvertedQuote(s, allStays){
+  if((s.type||'invoice')!=='quote') return false;
+  const email = (s.email||'').trim().toLowerCase();
+  const guest = (s.guest||'').trim().toLowerCase();
+  return allStays.some(x=>
+    (x.type||'invoice')==='invoice' && x.checkin===s.checkin && x.checkout===s.checkout &&
+    (email ? (x.email||'').trim().toLowerCase()===email : (guest && (x.guest||'').trim().toLowerCase()===guest)));
+}
+
+// ── Staff "acting on behalf of" picker ──────────────────────────────────
+// Reuses /stays exactly like checkin.html's own admin picker — a staff
+// token already has full read access to it (gated on hasModule bookings/
+// reports server-side), so no new listing route is needed. Filtered to
+// stays that are ACTIVE right now (checkin<=today<=checkout, non-block) —
+// matches the server's own resolvePortalStay() override window, so nothing
+// shown here can ever fail to resolve once picked.
+async function loadAdminPicker(){
+  showScreen('loading');
+  const errEl = $('#adminPickerErr');
+  errEl.textContent = '';
+  try{
+    const res = await fetch(PROXY_URL+'/stays', { headers:{ 'X-Token': portalToken } });
+    if(res.status === 401){ logout(); return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ errEl.textContent = data.error || 'Could not load bookings.'; showScreen('adminpicker'); return; }
+    const today = new Date().toISOString().slice(0,10);
+    const allStays = Array.isArray(data.stays) ? data.stays : [];
+    adminStays = allStays
+      .filter(s => (s.type||'invoice') !== 'block' && s.checkin && s.checkout && s.checkin <= today && today <= s.checkout &&
+        ((s.type||'invoice') !== 'quote' || Number(s.advance) > 0) && !isConvertedQuote(s, allStays))
+      .sort((a,b) => (a.guest||'').localeCompare(b.guest||''));
+    renderAdminPicker();
+    showScreen('adminpicker');
+  }catch(e){
+    errEl.textContent = 'Could not reach the server — check your connection.';
+    showScreen('adminpicker');
+  }
+}
+function renderAdminPicker(){
+  const list = $('#adminPickerList');
+  if(!adminStays.length){
+    list.innerHTML = `<p class="empty-note">No one is currently staying at ${esc(PROPERTY.name)}.</p>`;
+    return;
+  }
+  list.innerHTML = `<div class="admin-guest-list">${adminStays.map(s => `
+    <button type="button" class="menu-item" data-no="${esc(s.no)}">
+      <span class="menu-icon">${ICON_SUITCASE}</span>
+      <span class="menu-body"><span class="menu-title">${esc(s.guest||'Guest')}</span><span class="menu-desc">${fmtDateShort(s.checkin)} → ${fmtDateShort(s.checkout)} · ${esc(s.no)}</span></span>
+      <span class="menu-chevron" aria-hidden="true">›</span>
+    </button>
+  `).join('')}</div>`;
+  list.querySelectorAll('[data-no]').forEach(btn => btn.addEventListener('click', () => loadMe(btn.dataset.no)));
+}
+
+// ── Data load ────────────────────────────────────────────────────────────
+async function loadMe(stayNo){
+  showScreen('loading');
+  try{
+    const path = stayNo ? '/portal/me?stayNo='+encodeURIComponent(stayNo) : '/portal/me';
+    const res = await fetch(PROXY_URL+path, { headers:{ 'X-Token': portalToken } });
+    if(res.status === 401){ logout(); return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.ok){
+      const errEl = isStaff ? $('#adminPickerErr') : $('#signinErr');
+      if(errEl) errEl.textContent = data.error || 'Could not load booking.';
+      showScreen(isStaff ? 'adminpicker' : 'signin');
+      return;
+    }
+    me = data;
+    isStaff = !!data.isStaff;
+    // A not-yet-paid quote (magic link only — see stayQualifiesForPortal
+    // OrQuoteReview server-side; a Google-signed-in guest never gets a
+    // committed:false stay at all, that path still excludes unpaid
+    // quotes entirely) gets the review-and-pay screen instead of the
+    // full portal. Same link, no reload needed: the next loadMe() call
+    // (after a successful payment) naturally lands on 'home' instead,
+    // since committed flips server-side the moment the webhook lands.
+    if(me.stay && me.stay.committed === false){ renderQuoteReview(); showScreen('quotereview'); }
+    else { renderHome(); showScreen('home'); }
+  }catch(e){
+    const errEl = isStaff ? $('#adminPickerErr') : $('#signinErr');
+    if(errEl) errEl.textContent = 'Could not reach the server — check your connection.';
+    showScreen(isStaff ? 'adminpicker' : 'signin');
+  }
+}
+(async () => {
+  const magicResult = await tryMagicLinkLogin();
+  if(magicResult === 'success'){ loadMe(); return; }
+  if(magicResult === 'failed') return; // error already shown on the sign-in screen
+  if(portalToken){ if(isStaff) loadAdminPicker(); else loadMe(); }
+})();
+
+// ── Home ─────────────────────────────────────────────────────────────────
+function renderHome(){
+  const b = me.stay;
+
+  const actingEl = $('#actingAsBar');
+  if(isStaff && b){
+    actingEl.style.display = '';
+    actingEl.innerHTML = `<span>👤 Viewing as staff — <strong>${esc(b.guest||'Guest')}</strong></span><button type="button" class="switch-link" id="switchGuestBtn">⇄ Switch guest</button>`;
+    $('#switchGuestBtn').addEventListener('click', loadAdminPicker);
+  } else {
+    actingEl.style.display = 'none';
+  }
+
+  const bookingEl = $('#homeBooking');
+  if(b){
+    const tripStatus = tripStatusChip(b);
+    bookingEl.innerHTML = `
+      <div class="booking-card">
+        <div class="bc-name"><span class="bc-label">Guest</span><span class="bc-value">${esc(b.guest||'Guest')}</span></div>
+        <div class="bc-divider"></div>
+        <div class="bc-grid">
+          <div class="bc-cell"><span class="bc-label">Check-in</span><span class="bc-value">${fmtDateShort(b.checkin)}</span></div>
+          <div class="bc-cell"><span class="bc-label">Check-out</span><span class="bc-value">${fmtDateShort(b.checkout)}</span></div>
+          ${b.guests ? `<div class="bc-cell"><span class="bc-label">Guests</span><span class="bc-value">${esc(String(b.guests))}</span></div>` : ''}
+        </div>
+        <div class="bc-pills">
+          <button type="button" class="bc-id pdf-link" id="homePdfBtn">🔖 ${esc(b.no)} · View PDF ↓</button>
+          <div class="bc-id ${tripStatus.cls}">${esc(tripStatus.label)}</div>
+          ${checkinNudgePill(b)}
+        </div>
+        ${(walletUrl(b) || googleWalletUrl(b)) ? `<div class="wallet-links">
+          ${walletUrl(b) ? `<a class="apple" href="${walletUrl(b)}"><img src="/assets/apple-wallet-badge.png" alt="Add to Apple Wallet" width="142" height="44"></a>` : ''}
+          ${googleWalletUrl(b) ? `<a class="wallet-btn-google" href="${googleWalletUrl(b)}">${GOOGLE_G_ICON} Add to Google Wallet</a>` : ''}
+        </div>` : ''}
+      </div>`;
+    $('#homePdfBtn').addEventListener('click', () => viewQuotePdf(b));
+  } else {
+    bookingEl.innerHTML = `<p class="empty-note">We couldn't find a confirmed booking for this account. If you've just booked, please check back shortly, or WhatsApp us.</p>`;
+  }
+
+  const dueEl = $('#homeDue');
+  if(b && b.balance > 0){
+    dueEl.innerHTML = `
+      <div class="due-banner">
+        <p>Balance due: <strong>${money(b.balance)}</strong></p>
+        <button type="button" class="pay-btn" id="payBalanceBtn">Pay Balance Now</button>
+        <p class="pay-msg" id="payBalanceMsg" role="alert" aria-live="polite"></p>
+      </div>`;
+    $('#payBalanceBtn').addEventListener('click', () => payLink('balance', $('#payBalanceBtn'), $('#payBalanceMsg')));
+  } else {
+    dueEl.innerHTML = '';
+  }
+
+  const badge = $('#foodBadge');
+  if(me.foodBalance > 0){ badge.style.display = ''; badge.textContent = money(me.foodBalance); }
+  else badge.style.display = 'none';
+
+  const playLink = $('#playLink'), playDesc = $('#playDesc');
+  if(me.playAvailable){
+    playLink.classList.remove('disabled');
+    playDesc.textContent = 'Available now — games on the pool screen';
+  } else {
+    playDesc.textContent = 'Opens automatically during your stay';
+  }
+
+  // Hidden entirely (not just disabled) until checkout day — rating a
+  // stay that's still in progress is premature. Once submitted, the tile
+  // stays enabled and visible (a guest checking back after checkout may
+  // want to add more) — the description just changes, tracked with a
+  // simple per-booking localStorage flag since there's no server-side
+  // "already submitted" linkage to check against.
+  const feedbackTile = $('#feedbackTile'), feedbackDesc = $('#feedbackDesc');
+  if(!b || new Date().toISOString().slice(0,10) < b.checkout){
+    feedbackTile.style.display = 'none';
+  } else {
+    feedbackTile.style.display = '';
+    feedbackDesc.textContent = localStorage.getItem('ryst_feedback_'+b.no)
+      ? "Thanks for your feedback! Tap to add more."
+      : "Tell us how everything's going";
+  }
+
+  document.querySelectorAll('.menu-item[data-mode]').forEach(btn => {
+    btn.onclick = () => {
+      const mode = btn.dataset.mode;
+      if(mode === 'menu'){ renderMenu(); showScreen(mode); }
+      if(mode === 'foodbill'){ renderBill(); showScreen(mode); }
+      if(mode === 'wifi'){ renderWifi(); showScreen(mode); }
+      if(mode === 'toys') showScreen(mode);
+      if(mode === 'feedback') openFeedbackForm();
+    };
+  });
+}
+
+// A not-yet-paid quote's landing screen — booking summary, the full rate
+// breakdown (same {desc,qty,rate} items /portal/me now sends for this
+// case), and a Pay Now button. Reuses payLink('balance', …) as-is: the
+// amount it fetches (/portal/balance-payment-link) is just grandTotal minus
+// advance, which for a fresh quote (advance 0) already comes out to the
+// full total — no separate "advance" concept needed here.
+function renderQuoteReview(){
+  const b = me.stay;
+  if(!b) return;
+  $('#qrBooking').innerHTML = `
+    <div class="booking-card">
+      <div class="bc-name"><span class="bc-label">Guest</span><span class="bc-value">${esc(b.guest||'Guest')}</span></div>
+      <div class="bc-divider"></div>
+      <div class="bc-grid">
+        <div class="bc-cell"><span class="bc-label">Check-in</span><span class="bc-value">${fmtDateShort(b.checkin)}</span></div>
+        <div class="bc-cell"><span class="bc-label">Check-out</span><span class="bc-value">${fmtDateShort(b.checkout)}</span></div>
+        ${b.guests ? `<div class="bc-cell"><span class="bc-label">Guests</span><span class="bc-value">${esc(String(b.guests))}</span></div>` : ''}
+      </div>
+      <div class="bc-pills"><button type="button" class="bc-id pdf-link" id="qrPdfBtn">🔖 ${esc(b.no)} · View PDF ↓</button></div>
+    </div>`;
+  $('#qrPdfBtn').addEventListener('click', () => viewQuotePdf(b));
+
+  const items = Array.isArray(b.items) ? b.items : [];
+  $('#qrItems').innerHTML = items.map(it => `
+    <tr><td class="nm">${esc(it.desc)}</td><td class="num">${money(it.rate)}</td><td class="num">${it.qty}</td><td class="num">${money(it.rate*it.qty)}</td></tr>
+  `).join('');
+  const subtotal = items.reduce((s,it)=> s + (Number(it.rate)||0)*(Number(it.qty)||0), 0);
+  $('#qrTotals').innerHTML = `
+    <div class="r-tot"><span>Subtotal</span><span>${money(subtotal)}</span></div>
+    ${b.discount>0 ? `<div class="r-tot"><span>Discount</span><span>− ${money(b.discount)}</span></div>` : ''}
+    <div class="r-tot grand"><span>Total</span><span>${money(b.total)}</span></div>`;
+
+  $('#qrAmount').textContent = money(b.balance);
+  const btn = $('#qrPayBtn'), msg = $('#qrPayMsg');
+  btn.onclick = async () => {
+    await payLink('balance', btn, msg);
+    // A successful payment doesn't redirect anywhere on its own (Razorpay
+    // Checkout opens in a new tab) — re-fetch on return to this tab so a
+    // guest who pays and comes back sees the portal unlock immediately,
+    // without needing to reopen the link themselves.
+    document.addEventListener('visibilitychange', function onVis(){
+      if(document.hidden) return;
+      document.removeEventListener('visibilitychange', onVis);
+      loadMe();
+    });
+  };
+}
+
+async function payLink(kind, btn, msgEl){
+  if(!btn || btn.disabled) return;
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Preparing payment…';
+  if(msgEl) msgEl.textContent = '';
+  try{
+    const path = kind === 'balance' ? '/portal/balance-payment-link' : '/portal/food-payment-link';
+    const res = await fetch(PROXY_URL+path, {
+      method:'POST', headers:{ 'Content-Type':'application/json', 'X-Token': portalToken },
+      body: JSON.stringify({ stayNo: (me.stay && me.stay.no) || undefined }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error || 'Could not start payment.');
+    if(data.url) window.open(data.url, '_blank', 'noopener');
+    else if(msgEl) msgEl.textContent = 'Nothing currently due.';
+  }catch(err){
+    if(msgEl) msgEl.textContent = err.message || 'Could not start payment — please try again or WhatsApp us.';
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = orig; }
+  }
+}
+
+// ── Menu & order ─────────────────────────────────────────────────────────
+// Which menu category each meal period shows — matches the real Casa de
+// RYST categories (Settings → Restaurant), not a guess: 'Breakfast',
+// 'Meals' (the lunch thalis) and 'Dinner' are the actual category names.
+// (The category was originally seeded as 'Breakfast Combos' and later
+// renamed to 'Breakfast' from the Menu tab's category editor — this must
+// track whatever the category is actually called today, not the seed.)
+// Beverages don't belong to any one meal, so they're always shown alongside
+// whichever meal is selected rather than requiring their own tab.
+const MEAL_CATEGORY = { Breakfast: 'Breakfast', Lunch: 'Meals', Dinner: 'Dinner' };
+const MEAL_PERIODS = ['Breakfast', 'Lunch', 'Dinner'];
+let selectedMeal = ''; // set by defaultMeal() on first render, preserved across chip taps/back-navigation after that
+let searchQuery = ''; let vegOnly = false; let specialOnly = false;
+
+// A reasonable starting meal for whenever the guest happens to open the
+// menu — before 11am defaults to Breakfast, before 4pm to Lunch, else
+// Dinner. Just a starting point; every option stays one tap away.
+function defaultMeal(){
+  const h = new Date().getHours();
+  return h < 11 ? 'Breakfast' : h < 16 ? 'Lunch' : 'Dinner';
+}
+function cartTotal(){
+  return (me.menu||[]).reduce((s,m)=> s + (cart[m.id]||0) * m.price, 0);
+}
+function renderMealChips(){
+  $('#mealChips').innerHTML = MEAL_PERIODS.map(m =>
+    `<button type="button" class="meal-chip${m===selectedMeal?' active':''}" data-meal="${m}" aria-pressed="${m===selectedMeal}">${m}</button>`
+  ).join('');
+  $('#mealChips').querySelectorAll('.meal-chip').forEach(btn => btn.addEventListener('click', () => {
+    if(btn.dataset.meal === selectedMeal) return;
+    selectedMeal = btn.dataset.meal;
+    renderMenu();
+  }));
+}
+// The per-item control shown in an item-row's action slot: an ADD button
+// while it's not in the cart yet, or the −/qty/+ stepper once it is —
+// same swap Swiggy's own menu uses, so the row only spends space on a
+// stepper for things actually being ordered.
+function itemActionHTML(id){
+  const qty = cart[id] || 0;
+  if(!qty) return `<button type="button" class="add-btn" data-act="add" data-id="${esc(id)}">ADD</button>`;
+  return `<div class="qty-stepper">
+    <button type="button" class="qty-btn" data-act="dec" data-id="${esc(id)}">&minus;</button>
+    <span class="qty-n" data-qty="${esc(id)}">${qty}</span>
+    <button type="button" class="qty-btn" data-act="inc" data-id="${esc(id)}">+</button>
+  </div>`;
+}
+// Full (re)entry into the menu screen — resets the cart and any active
+// search/filters, since switching meals starts a fresh order (an order is
+// for one meal period; see `meal: selectedMeal` on the place-order call
+// below) and a stale search across the old meal's dishes wouldn't make
+// sense against the new one either.
+function renderMenu(){
+  cart = {};
+  selectedMeal = selectedMeal || defaultMeal();
+  searchQuery = ''; vegOnly = false; specialOnly = false;
+  $('#menuSearch').value = '';
+  $('#chipVeg').classList.remove('active');
+  $('#chipSpecial').classList.remove('active');
+
+  // Guests can pre-order for any day of their actual stay, never outside
+  // it — the date input is hard-bounded to [checkin, checkout], same
+  // window the server itself validates against.
+  const dateInput = $('#orderDate');
+  const b = me.stay;
+  if(b){
+    dateInput.min = b.checkin; dateInput.max = b.checkout;
+    if(!dateInput.value || dateInput.value < b.checkin || dateInput.value > b.checkout){
+      const today = new Date().toISOString().slice(0,10);
+      dateInput.value = (today >= b.checkin && today <= b.checkout) ? today : b.checkin;
+    }
+  }
+
+  renderMealChips();
+  renderMenuList();
+}
+// Just the item list, driven by the current meal/search/filter state —
+// called on every search keystroke and filter-chip tap too, so those never
+// touch the cart, the date, or which meal tab is selected.
+function renderMenuList(){
+  const list = $('#menuList');
+  $('#menuErr').textContent = '';
+  const q = searchQuery.trim().toLowerCase();
+  // A search looks across the WHOLE menu, not just the selected meal — more
+  // useful than making the guest guess which meal tab a dish lives under.
+  let menu = q
+    ? (me.menu || []).filter(m => m.name.toLowerCase().includes(q))
+    : (me.menu || []).filter(m => new Set([MEAL_CATEGORY[selectedMeal], 'Beverages']).has(m.category));
+  if(vegOnly) menu = menu.filter(m => m.veg);
+  if(specialOnly) menu = menu.filter(m => m.chefSpecial);
+
+  if(!menu.length){
+    const filtered = q || vegOnly || specialOnly;
+    list.innerHTML = `<p class="empty-note">${filtered
+      ? 'Nothing matches your search/filters — try clearing them.'
+      : `Nothing available for ${esc(selectedMeal)} right now — please WhatsApp us to order.`}</p>`;
+  } else {
+    const cats = [...new Set(menu.map(m=>m.category||'Miscellaneous'))];
+    // Same arrangement as the public food-menu.html page, for parity
+    // between browsing and actually ordering: chef's specials float to the
+    // top (a stable sort — everything else keeps its existing order), and
+    // veg is grouped before non-veg — but only as two labelled blocks when
+    // a category actually has both, so an all-veg category doesn't get a
+    // header with nothing to contrast against.
+    const bySpecialFirst = (a,b) => (b.chefSpecial?1:0) - (a.chefSpecial?1:0);
+    const renderItem = m => `
+      <div class="item-row" data-id="${esc(m.id)}">
+        <div class="item-info">
+          <div class="item-name"><span class="veg-dot ${m.veg?'veg':'nonveg'}" role="img" aria-label="${m.veg?'Vegetarian':'Non-vegetarian'}"></span>${esc(m.name)}${m.chefSpecial?` ${chefStarSvg}`:''}</div>
+          <div class="item-price">${money(m.price)}</div>
+          ${(m.description || m.kcal!=null) ? `<div class="item-desc">${esc(m.description)}${m.description && m.kcal!=null ? ' · ' : ''}${m.kcal!=null ? '~'+esc(m.kcal)+' kcal' : ''}</div>` : ''}
+        </div>
+        <div class="item-action" data-action-for="${esc(m.id)}">${itemActionHTML(m.id)}</div>
+      </div>`;
+    list.innerHTML = cats.map(cat => {
+      const catItems = menu.filter(m=>(m.category||'Miscellaneous')===cat);
+      const vegItems = catItems.filter(m=>m.veg).sort(bySpecialFirst);
+      const nonVegItems = catItems.filter(m=>!m.veg).sort(bySpecialFirst);
+      const itemsHtml = (vegItems.length && nonVegItems.length)
+        ? `
+          <p class="veg-group-label veg"><span class="veg-dot veg" aria-hidden="true"></span> Vegetarian</p>
+          ${vegItems.map(renderItem).join('')}
+          <p class="veg-group-label nonveg"><span class="veg-dot nonveg" aria-hidden="true"></span> Non-Vegetarian</p>
+          ${nonVegItems.map(renderItem).join('')}
+        `
+        : catItems.slice().sort(bySpecialFirst).map(renderItem).join('');
+      return `
+      <div class="cat-head">${esc(cat)}${catItems.some(m=>m.chefSpecial) ? ` ${chefStarSvg}` : ''} <span class="cat-count">(${catItems.length})</span></div>
+      ${itemsHtml}`;
+    }).join('');
+  }
+  // Delegated per-row: the ADD↔stepper swap replaces this slot's innerHTML
+  // on every tap, so listeners are (re)bound to the slot itself rather than
+  // the buttons inside it, which get thrown away each time.
+  list.querySelectorAll('[data-action-for]').forEach(slot => {
+    const id = slot.dataset.actionFor;
+    slot.addEventListener('click', e => {
+      const btn = e.target.closest('[data-act]');
+      if(!btn) return;
+      const cur = cart[id] || 0;
+      const next = btn.dataset.act === 'dec' ? Math.max(0, cur - 1) : cur + 1;
+      cart[id] = next;
+      if(!next) delete cart[id];
+      slot.innerHTML = itemActionHTML(id);
+      renderCartBar();
+    });
+  });
+  renderCartBar();
+}
+function renderCartBar(){
+  const bar = $('#cartBar');
+  const n = Object.values(cart).reduce((s,q)=>s+q, 0);
+  if(!n){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  $('#cartCountText').textContent = n===1 ? '1 item added' : `${n} items added`;
+  $('#cartTotalSub').textContent = 'Total ' + money(cartTotal());
+}
+$('#menuSearch').addEventListener('input', e => { searchQuery = e.target.value; renderMenuList(); });
+$('#chipVeg').addEventListener('click', () => {
+  vegOnly = !vegOnly; $('#chipVeg').classList.toggle('active', vegOnly); renderMenuList();
+});
+$('#chipSpecial').addEventListener('click', () => {
+  specialOnly = !specialOnly; $('#chipSpecial').classList.toggle('active', specialOnly); renderMenuList();
+});
+$('#placeOrderBtn').addEventListener('click', async () => {
+  const btn = $('#placeOrderBtn'), errEl = $('#menuErr');
+  const items = Object.entries(cart).map(([menuItemId,qty]) => ({ menuItemId, qty }));
+  if(!items.length) return;
+  const date = $('#orderDate').value;
+  if(!date){ errEl.textContent = 'Please choose a date.'; return; }
+  btn.disabled = true; btn.textContent = 'Placing order…';
+  errEl.textContent = '';
+  try{
+    const stayNo = me.stay && me.stay.no;
+    const time = $('#orderTime').value || undefined;
+    const body = { items, date, time, meal: selectedMeal, stayNo };
+    const res = await fetch(PROXY_URL+'/portal/food-order', {
+      method:'POST', headers:{ 'Content-Type':'application/json', 'X-Token': portalToken },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error || 'Could not place order.');
+    cart = {};
+    await loadMe(stayNo);
+    renderBill();
+    showScreen('foodbill');
+  }catch(err){
+    errEl.textContent = err.message || 'Could not save — please try again.';
+    btn.disabled = false; btn.textContent = 'Place Order';
+    renderCartBar();
+  }
+});
+
+// ── Food bill ────────────────────────────────────────────────────────────
+function renderBill(){
+  const list = $('#billList');
+  const orders = me.orders || [];
+  if(!orders.length){
+    list.innerHTML = `<p class="empty-note">No food orders yet — place one from the Food Menu.</p>`;
+  } else {
+    list.innerHTML = orders.map(o => `
+      <div class="order-card">
+        <div class="order-head"><span class="order-no">${o.meal ? `${esc(o.meal)} · ` : ''}${esc(fmtDateTime(o.date, o.time))} · ${esc(o.no)}</span><span class="order-total">${money(o.total)}</span></div>
+        <div class="order-items">${(o.items||[]).map(it => `${it.qty}× ${esc(it.name)}`).join(', ')}</div>
+        <div class="order-foot">
+          <span class="order-status ${o.status==='settled'?'settled':'open'}">${o.status==='settled' ? 'Paid' : 'Unpaid'}</span>
+          <div class="order-actions">
+            <button type="button" class="order-action-btn" data-view-order="${esc(o.no)}">View Bill</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    list.querySelectorAll('[data-view-order]').forEach(btn => btn.addEventListener('click', () => {
+      const o = (me.orders||[]).find(x => x.no === btn.dataset.viewOrder);
+      if(o) viewReceipt(o);
+    }));
+  }
+  const payEl = $('#billPay');
+  if(me.foodBalance > 0){
+    payEl.innerHTML = `
+      <div class="due-banner">
+        <p>Food bill outstanding: <strong>${money(me.foodBalance)}</strong></p>
+        <button type="button" class="pay-btn" id="payFoodBtn">Pay Food Bill Now</button>
+        <p class="pay-msg" id="payFoodMsg" role="alert" aria-live="polite"></p>
+      </div>`;
+    $('#payFoodBtn').addEventListener('click', () => payLink('food', $('#payFoodBtn'), $('#payFoodMsg')));
+  } else {
+    payEl.innerHTML = '';
+  }
+}
+
+// ── Wi-Fi ────────────────────────────────────────────────────────────────
+function renderWifi(){
+  const network = me.wifiNetwork || PROPERTY.name;
+  const voucher = me.wifiVoucher || '';
+  $('#wifiCard').innerHTML = `
+    <div class="wifi-field">
+      <span class="bc-label">Network</span>
+      <div class="wifi-value">${esc(network)}</div>
+    </div>
+    ${voucher ? `<div class="wifi-field">
+      <span class="bc-label">Voucher Code</span>
+      <div class="wifi-value" id="wifiVoucherVal">${esc(voucher)}</div>
+      <button type="button" class="copy-btn" id="wifiCopyBtn">Copy code</button>
+    </div>` : `<p class="sub">Please check with the coordinator for your voucher code.</p>`}
+  `;
+  const copyBtn = $('#wifiCopyBtn');
+  if(copyBtn) copyBtn.addEventListener('click', async () => {
+    try{ await navigator.clipboard.writeText(voucher); copyBtn.textContent = 'Copied!'; setTimeout(()=>{ copyBtn.textContent = 'Copy code'; }, 1500); }
+    catch(e){ /* clipboard unavailable — the code is already shown on screen */ }
+  });
+}
+// RYST Toys — a static promo (unlike Wi-Fi's network/voucher, this isn't
+// per-stay data from /portal/me), so the copy handler is wired once here
+// rather than inside a per-visit render function.
+$('#toysCopyBtn').addEventListener('click', async () => {
+  const btn = $('#toysCopyBtn');
+  try{ await navigator.clipboard.writeText('STAY10'); btn.textContent = 'Copied!'; setTimeout(()=>{ btn.textContent = 'Copy code'; }, 1500); }
+  catch(e){ /* clipboard unavailable — the code is already shown on screen */ }
+});
+
+// ── View Bill ────────────────────────────────────────────────────────────
+// Same customer-receipt design restaurant.html's own printReceipt builds —
+// a guest viewing their own order sees the same document staff would hand
+// them, just on their own phone. Opens as an in-app overlay to actually
+// read, rather than jumping straight into the OS print dialog — the
+// guest's own browser Share/Print/Save-as-PDF still works normally from
+// here if they want a file. /portal/me sends enough of each order
+// (subtotal/discount/GST/service charge/paymentMode) to render it without
+// a second round-trip.
+function viewReceipt(o){
+  const whenParts = [fmtDateShort(o.date)];
+  if(o.meal) whenParts.push(esc(o.meal));
+  if(o.time) whenParts.push(esc(o.time));
+  const whenLabel = whenParts.join(' · ');
+  const lblParts = ['Date']; if(o.meal) lblParts.push('Meal'); if(o.time) lblParts.push('Time');
+  const whenLbl = lblParts.join(' &amp; ');
+  const guestName = (me.stay && me.stay.guest) || 'Guest';
+  $('#receiptArea').innerHTML = `
+    <div class="r-doc">
+      <div class="r-head">
+        <img src="${esc(PROPERTY.logoUrl)}" alt="${esc(PROPERTY.name)}">
+        <div>
+          <div class="nm">${esc(PROPERTY.restaurantName || PROPERTY.name)}</div>
+          <div class="sub">${esc(PROPERTY.addressLine)}</div>
+        </div>
+      </div>
+      <div class="r-title">CUSTOMER RECEIPT</div>
+      <div class="r-meta">
+        <div><span class="r-lbl">Order No</span><b>${esc(o.no)}</b></div>
+        <div class="r-right"><span class="r-lbl">Guest</span><b>${esc(guestName)}</b></div>
+        <div><span class="r-lbl">${whenLbl}</span><b>${whenLabel}</b></div>
+        <div class="r-right"><span class="r-lbl">Status</span><b>${o.status==='settled' ? esc(o.paymentMode||'Paid') : 'Open Tab'}</b></div>
+      </div>
+      <table class="r-items">
+        <thead><tr><th>Item</th><th class="num">Rate</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
+        <tbody>${(o.items||[]).map(it=>`<tr><td class="nm">${esc(it.name)}</td><td class="num">${money(it.price)}</td><td class="num">${it.qty}</td><td class="num">${money(it.price*it.qty)}</td></tr>`).join('')}</tbody>
+      </table>
+      <div class="r-totals">
+        <div class="r-tot"><span>Subtotal</span><span>${money(o.subtotal)}</span></div>
+        ${o.discount>0?`<div class="r-tot"><span>Discount</span><span>− ${money(o.discount)}</span></div>`:''}
+        ${o.gstAmount>0?`<div class="r-tot"><span>GST (${o.gstPercent}%)</span><span>${money(o.gstAmount)}</span></div>`:''}
+        ${o.serviceChargeAmount>0?`<div class="r-tot"><span>Service charge (${o.serviceChargePercent}%)</span><span>${money(o.serviceChargeAmount)}</span></div>`:''}
+        <div class="r-tot grand"><span>Total</span><span>${money(o.total)}</span></div>
+      </div>
+      <div class="r-foot">${esc(PROPERTY.receiptNote)}${PROPERTY.receiptNote ? '<br>' : ''}<span class="brand">${esc(PROPERTY.name)}</span>${PROPERTY.websiteHost ? ' · ' + esc(PROPERTY.websiteHost) : ''}</div>
+    </div>
+  `;
+  $('#receiptOverlay').classList.add('active');
+}
+
+// The quote-review screen's booking-id pill (and the home screen's, for a
+// paid invoice) opens this — same #receiptArea/#receiptOverlay shell
+// viewReceipt() above uses (and the @media print block already targets),
+// filled with an EXACT copy of stay.html's own printable invoice/quote
+// document (".doc" and everything under it — see stay.html's #stayDoc for
+// the source of truth; mirror any layout change made there here too) so
+// what a guest downloads is pixel-for-pixel what staff would generate from
+// the dashboard, not a lighter guest.html-only rendering. `biz`
+// (me.business) carries the same bank/terms/declaration text stay.html
+// pulls from stay-settings.json — nothing here is guest.html's own
+// invention, it's what the owner has actually configured in Settings.
+const numDoc = n => Math.round(Number(n)||0).toLocaleString('en-IN');
+const IG_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>';
+function viewQuotePdf(b){
+  b = b || (me && me.stay); if(!b) return;
+  const biz = (me && me.business) || {};
+  const isInv = (b.type||'invoice') !== 'quote';
+  const fmtDateD = iso => { if(!iso) return '—'; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; };
+  const nights = (() => {
+    if(!b.checkin || !b.checkout) return 0;
+    const a = new Date(b.checkin+'T00:00:00'), c = new Date(b.checkout+'T00:00:00');
+    const n = Math.round((c-a)/86400000);
+    return n>0 ? n : 0;
+  })();
+  const items = Array.isArray(b.items) ? b.items : [];
+  const subtotal = items.reduce((s,it)=> s + (Number(it.rate)||0)*(Number(it.qty)||0), 0);
+  const grand = Math.max(0, subtotal - (Number(b.discount)||0));
+  const rows = items.length ? items.map(it => `<tr>
+      <td>${esc(it.desc)}</td>
+      <td class="num">${it.qty}</td>
+      <td class="amt">${numDoc(it.rate)}</td>
+      <td class="amt">${numDoc((Number(it.rate)||0)*(Number(it.qty)||0))}</td></tr>`).join('')
+    : `<tr><td colspan="4" style="color:#aaa">—</td></tr>`;
+  const tfoot = `
+    <tr class="sub"><td colspan="3">SUBTOTAL</td><td class="amt">₹${numDoc(subtotal)}</td></tr>
+    ${b.discount>0 ? `<tr><td colspan="3" style="color:#6a7a76;font-weight:500">DISCOUNT</td><td class="amt" style="color:#6a7a76">− ₹${numDoc(b.discount)}</td></tr>` : ''}
+    <tr class="grand"><td colspan="3">GRAND TOTAL</td><td class="amt">₹${numDoc(grand)}</td></tr>`;
+  $('#receiptArea').innerHTML = `
+    <div class="doc">
+      <div class="d-top">
+        <div class="d-brand">
+          <img class="d-brand-logo" src="${esc(PROPERTY.logoUrl)}" alt="${esc(PROPERTY.name)}">
+          <div class="d-brand-text">
+            <div class="bt-name">${(n => { const i = n.lastIndexOf(' '); return i > 0 ? esc(n.slice(0, i)) + ' <span>' + esc(n.slice(i + 1)) + '</span>' : esc(n); })(PROPERTY.name)}</div>
+            <div class="bt-villa" style="text-transform:uppercase">${esc(PROPERTY.typeLabel)}</div>
+            <div class="bt-tag" style="text-transform:uppercase">${esc(PROPERTY.tagline)}</div>
+          </div>
+        </div>
+        <div class="d-co">
+          ${PROPERTY.mapLink ? `<a href="${esc(PROPERTY.mapLink)}" target="_blank" rel="noopener" class="addr-link">${esc(String(biz.company||'')).replace(/\n/g,'<br>')}</a>` : `<span class="addr-link">${esc(String(biz.company||'')).replace(/\n/g,'<br>')}</span>`}
+          ${PROPERTY.instagram ? `<a href="${esc(PROPERTY.instagramUrl)}" target="_blank" rel="noopener" class="co-ig">${IG_ICON_SVG}${esc(PROPERTY.instagramHandle)}</a>` : ''}
+        </div>
+      </div>
+
+      <div class="d-title">${isInv ? 'INVOICE' : 'QUOTATION'}</div>
+
+      <div class="d-panels">
+        <div class="panel">
+          <div class="panel-h">BILL TO</div>
+          <div class="kv"><span>Guest Name</span><b>${esc(b.guest||'—')}</b></div>
+          <div class="kv"><span>Email ID</span><b>${esc(b.email||'—')}</b></div>
+          <div class="kv"><span>Phone</span><b>${esc(b.phone||'—')}</b></div>
+          <div class="kv"><span>No. of Guests</span><b>${esc(b.guests ? String(b.guests) : '—')}</b></div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">STAY DETAILS</div>
+          <div class="kv"><span>${isInv?'Invoice':'Quote'} No</span><b>${esc(b.no)}</b></div>
+          <div class="kv"><span>${isInv?'Invoice':'Quote'} Date</span><b>${fmtDateD(b.date)}</b></div>
+          <div class="kv"><span>Booking Ref</span><b>${esc(b.ref||'—')}</b></div>
+          <div class="kv"><span>Check-in</span><b>${fmtDateD(b.checkin)}</b></div>
+          <div class="kv"><span>Check-out</span><b>${fmtDateD(b.checkout)}</b></div>
+          <div class="kv"><span>No. of Nights</span><b>${nights ? nights+' Night'+(nights>1?'s':'') : '—'}</b></div>
+          <div class="kv"><span>Payment Mode</span><b>${esc(b.mode||'—')}</b></div>
+        </div>
+      </div>
+
+      <div class="d-mid">
+        <table class="d-table">
+          <thead><tr><th>Description</th><th class="num">Qty</th><th class="amt">Rate (₹)</th><th class="amt">Amount (₹)</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot>${tfoot}</tfoot>
+        </table>
+        <div class="d-side">
+          <div class="side-box"><div class="sb-l">Booking Advance Received</div><div class="sb-v">₹${numDoc(b.advance)}</div></div>
+          <div class="side-box"><div class="sb-l">Security Deposit <small>(refundable, collected separately)</small></div><div class="sb-v">₹${numDoc(b.deposit)}</div></div>
+          <div class="side-box bal"><div class="sb-l">Balance Due <small>(if any)</small></div><div class="sb-v">₹${numDoc(b.balance)}</div></div>
+        </div>
+      </div>
+
+      <div class="d-pay">
+        <div>
+          <div class="pb-h">PAYMENT / BANK DETAILS</div>
+          <div class="pb-body">${esc(biz.bank||'').replace(/\n/g,'<br>')}<div style="margin-top:6px;font-weight:600;color:#0a5b63">PAN: ${esc(biz.pan||'')}</div></div>
+        </div>
+        ${window.RYST_VILLA ? '' : `<div class="d-pay-qr">
+          <img src="/assets/stay-payment-qr.png" alt="Scan to pay">
+          <div class="qr-label">Scan to Pay</div>
+        </div>`}
+      </div>
+
+      <div class="d-terms">
+        <div class="pb-h">TERMS &amp; CONDITIONS</div>
+        <ol>${(biz.terms||[]).map(t=>`<li>${esc(t)}</li>`).join('')}</ol>
+      </div>
+
+      <div class="d-decl">
+        <div class="pb-h">DECLARATION</div>
+        <div class="decl">${esc(biz.declaration||'')}</div>
+      </div>
+
+      <div class="d-sign-row">
+        <div class="d-sign guest">
+          <div class="sign-for">Accepted by (Guest)</div>
+          <div class="sign-blank"></div>
+          <div class="sign-name">${esc(b.guest||'Guest')}${b.date ? '  '+fmtDateD(b.date) : ''}</div>
+        </div>
+        <div class="d-sign">
+          <div class="sign-for">For ${esc(PROPERTY.name)}</div>
+          <div class="sign-blank"></div>
+          <div class="sign-name">${esc(PROPERTY.signatory)}</div>
+        </div>
+      </div>
+
+      <div class="d-foot">${isInv ? `Thank you for joining us at ${esc(PROPERTY.fullName)}!` : 'PLEASE JOIN US FOR A RELAXING, WARM &amp; WONDERFUL STAY'}</div>
+    </div>
+  `;
+  $('#receiptOverlay').classList.add('active');
+}
+$('#printReceiptBtn').addEventListener('click', () => window.print());
+$('#closeReceiptBtn').addEventListener('click', () => $('#receiptOverlay').classList.remove('active'));
+
+// ── Feedback ─────────────────────────────────────────────────────────────
+// Reuses the existing public /feedback endpoint as-is (guest.html doesn't
+// need a dedicated portal route for this) — unauthenticated, IP rate-
+// limited server-side, same one bookings.html's own review-request flow
+// feeds into. guest/bookingNo come straight from me.stay, already resolved
+// server-side on every /portal/me call.
+function openFeedbackForm(){
+  const b = me.stay;
+  $('#feedbackArea').innerHTML = `
+    <div class="fb-doc">
+      <h1 style="text-align:left">Rate Your Stay</h1>
+      <p class="sub" style="text-align:left">We'd love to hear how things are going, ${esc((b&&b.guest)||'there')}.</p>
+      <div class="fb-stars" id="fbStars" role="radiogroup" aria-label="Rating">
+        ${[1,2,3,4,5].map(n => `
+          <label class="fb-star">
+            <input type="radio" name="fbRating" value="${n}">
+            ${ICON_STAR}
+            <span class="sr-only">${n} star${n===1?'':'s'}</span>
+          </label>`).join('')}
+      </div>
+      <label class="f-label" for="fbComment">Comments (optional)</label>
+      <textarea id="fbComment" rows="4" maxlength="2000" placeholder="Anything we should know?"></textarea>
+      <button type="button" class="pay-btn" id="fbSubmitBtn" style="width:100%;margin-top:14px">Submit Feedback</button>
+      <p class="err" id="fbErr" role="alert" aria-live="polite"></p>
+    </div>`;
+  $('#fbStars').addEventListener('change', e => {
+    const n = Number(e.target.value);
+    $('#fbStars').querySelectorAll('.fb-star').forEach((el,i) => el.classList.toggle('filled', i < n));
+  });
+  $('#fbSubmitBtn').addEventListener('click', submitFeedback);
+  $('#feedbackOverlay').classList.add('active');
+}
+$('#closeFeedbackBtn').addEventListener('click', () => $('#feedbackOverlay').classList.remove('active'));
+
+async function submitFeedback(){
+  const b = me.stay, btn = $('#fbSubmitBtn'), errEl = $('#fbErr');
+  const checked = document.querySelector('input[name="fbRating"]:checked');
+  if(!checked){ errEl.textContent = 'Please choose a rating.'; return; }
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Sending…'; errEl.textContent = '';
+  try{
+    const res = await fetch(PROXY_URL+'/feedback', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        guest: (b && b.guest) || '', bookingNo: (b && b.no) || '',
+        rating: Number(checked.value), comment: $('#fbComment').value, allowFeature: true,
+      }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || (data && data.ok === false)) throw new Error((data && data.error) || 'Could not submit feedback.');
+    if(b && b.no) localStorage.setItem('ryst_feedback_'+b.no, '1');
+    $('#feedbackOverlay').classList.remove('active');
+    renderHome(); // refresh the tile description to the "thanks" state
+  }catch(err){
+    errEl.textContent = err.message || 'Could not submit — please try again.';
+  }finally{
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+</script>
+</body>
+</html>

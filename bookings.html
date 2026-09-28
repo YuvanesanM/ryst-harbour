@@ -1,0 +1,1495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<title data-title="Booking Calendar · {name}">Booking Calendar · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097;
+    --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6;
+    --inv:#0e7c86; --inv-soft:#e3f1f1; --qt:#c0922f; --qt-soft:#fbf0d8;
+    --block:#6b7280; --block-soft:#eceef0; --telegram:#229ED9;
+    /* OTA platform colors for blocked-date pills — matched by name against
+       each iCal feed's owner-typed label (Settings → OTA Sync), so a custom
+       or unrecognized label just falls back to --block above. */
+    --ota-airbnb:#e8484f; --ota-booking:#003580; --ota-agoda:#d97706; --ota-vrbo:#1a9e8f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  button,input,select{font-family:inherit}
+  button{cursor:pointer}
+  a{color:var(--accent-d)}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 60px}
+
+  /* ── Top bar ── */
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 18px}
+  header.top img{height:38px;object-fit:contain}
+  header.top .ttl{font-weight:700;font-size:18px;letter-spacing:.2px}
+  header.top .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px}
+  header.top .spacer{flex:1}
+  .tbtn{background:var(--panel);border:1.5px solid var(--line);color:var(--muted);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;transition:.15s}
+  .tbtn:hover{border-color:var(--accent);color:var(--accent-d)}
+
+  /* ── Stats cards ── */
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 15px;box-shadow:0 6px 18px rgba(40,50,40,.04)}
+  .card .lbl{font-size:11.5px;font-weight:600;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase}
+  .card .val{font-size:25px;font-weight:700;margin-top:7px;letter-spacing:-.5px}
+  .card .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .card.hero{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-d) 100%);border:none;color:#fff}
+  .card.hero .lbl{color:#dff0e6}
+  .card.hero .sub{color:#dff0e6}
+  .card.warn .val{color:var(--warn)}
+
+  /* ── Layout: calendar + sidebar ── */
+  .layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+
+  /* ── Calendar panel ── */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 18px rgba(40,50,40,.04)}
+  .cal-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .cal-head .mon{font-size:15px;font-weight:700;min-width:150px}
+  .cal-nav{display:flex;gap:6px}
+  .cal-nav button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:14px;display:flex;align-items:center;justify-content:center}
+  .cal-nav button:hover{border-color:var(--accent);color:var(--accent-d)}
+  .cal-head .spacer{flex:1}
+  .cal-legend{display:flex;gap:12px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+  .cal-legend span{display:inline-flex;align-items:center;gap:5px}
+  .cal-legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+  .cal-legend .i-inv{background:var(--inv)}
+  .cal-legend .i-qt{background:var(--qt)}
+  .cal-legend .i-block{background:var(--block)}
+  .cal-legend .i-airbnb{background:var(--ota-airbnb)}
+  .cal-legend .i-booking{background:var(--ota-booking)}
+  .cal-legend .i-agoda{background:var(--ota-agoda)}
+  .cal-legend .i-conf{background:var(--danger)}
+
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+  .cal-dow{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted2);text-align:center;padding:10px 4px;border-bottom:1px solid var(--line)}
+  .cal-cell{min-height:92px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);border-left:4px solid transparent;padding:6px;display:flex;flex-direction:column;gap:3px;cursor:pointer;transition:background .12s;position:relative}
+  .cal-cell:hover{background:var(--panel2)}
+  .cal-cell:nth-child(7n){border-right:none}
+  .cal-cell.out{color:var(--muted2);background:#fafaf9}
+  .cal-cell.today .daynum{background:var(--accent);color:#fff;border-radius:50%}
+  .cal-cell.conflict{box-shadow:inset 0 0 0 2px var(--danger)}
+  /* Blocked date: a soft full-cell tint (not just the small pill inside)
+     so a blocked day reads at a glance across a whole month, not only on
+     close reading — plus a left accent bar in that day's specific OTA
+     color (set inline per-cell, same otaBlockColor() the pill already
+     uses) so which platform blocked it is visible without opening it.
+     Uses --danger-soft (a light red tint), not --block-soft — a plain
+     grey read as just "muted/disabled" rather than "taken", and red is
+     the more intuitive "this date is unavailable" signal at a glance.
+     --block-soft stays as-is for the unrelated Blocked badge/chip
+     elsewhere on this page, where a neutral tag reads better. */
+  .cal-cell.blocked{background:var(--danger-soft)}
+  /* A date genuinely unavailable for a new booking — an invoice, or a
+     quote with an advance actually paid against it (same isNonBlockingStay
+     rule everywhere else on this page treats as "committed", just
+     inverted) — gets the same light red tint as a blocked date, since
+     both mean the same thing to someone scanning for open dates: this
+     day is taken. A quote with no advance yet stays unhighlighted, same
+     "Tentative" standing it has everywhere else on this page. */
+  .cal-cell.unavailable{background:var(--danger-soft)}
+  .daynum{font-size:12px;font-weight:600;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  .cal-pill{font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+  .cal-pill.inv{background:var(--inv)}
+  .cal-pill.qt{background:var(--qt)}
+  .cal-pill.block{background:var(--block)}
+  .cal-more{font-size:10px;color:var(--muted);padding:0 2px}
+
+  /* ── Sidebar ── */
+  .side{display:flex;flex-direction:column;gap:14px}
+  .side .panel{padding:14px 15px}
+  .side h2{font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted2);margin-bottom:10px}
+  .filters{display:flex;flex-direction:column;gap:8px}
+  .filters input,.filters select{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:13px;color:var(--ink);outline:none;width:100%}
+  .filters input:focus,.filters select:focus{border-color:var(--accent)}
+  .seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--panel2)}
+  .seg button{border:none;background:transparent;padding:8px 4px;font-size:12px;font-weight:600;color:var(--muted)}
+  .seg button.on{background:var(--accent);color:#fff}
+
+  .rem-badge{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 5px;border-radius:20px;background:var(--warn);color:#fff;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle}
+  .reminders{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto}
+  .rem-item{padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);font-size:12.5px}
+  .rem-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .rem-guest{font-weight:600}
+  .rem-when{font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;text-transform:uppercase;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
+  .rem-dates{color:var(--muted);font-size:11.5px;margin-top:2px}
+  .rem-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+  .rem-sent{color:var(--muted2);font-size:11.5px}
+  .rem-sent a{color:var(--muted2);text-decoration:underline;cursor:pointer}
+  .wa-st{font-weight:600;white-space:nowrap}
+  .wa-accepted,.wa-sent{color:var(--muted2)}
+  .wa-delivered{color:#2f855a}
+  .wa-read{color:#2b6cb0}
+  .wa-failed{color:#c53030;cursor:pointer;text-decoration:underline dotted}
+  .rem-send{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600}
+  .rem-send:hover{background:var(--accent-d)}
+  .rem-send:disabled{background:var(--line);color:var(--muted2);cursor:not-allowed}
+  .rem-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  /* Secondary to .rem-send (outlined, not filled) — this only ever nudges a
+     Telegram message with a tap-to-send link, it doesn't send anything
+     itself, so it reads as the lighter-weight action next to "Send
+     WhatsApp"/"Send Confirmation" etc. */
+  .rem-tg{background:var(--panel);color:var(--telegram);border:1.5px solid var(--line);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600}
+  .rem-tg:hover{border-color:var(--telegram)}
+  .rem-tg:disabled{background:var(--line);color:var(--muted2);cursor:not-allowed;border-color:var(--line)}
+
+  .agenda{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+  .ag-item{display:flex;flex-direction:column;gap:2px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);font-size:12.5px;text-decoration:none;color:inherit;transition:.12s}
+  .ag-item:hover{border-color:var(--accent)}
+  .ag-item .ag-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .ag-item .ag-no{color:var(--accent-d);font-weight:600}
+  .ag-item .ag-tag{font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;text-transform:uppercase}
+  .ag-tag.now{background:var(--inv-soft);color:var(--inv)}
+  .ag-tag.past{background:#f0f0f0;color:var(--muted2)}
+  /* Same status-color convention petty-cash.html already uses for its
+     pending/reimbursed chips — yellow for not-yet-committed, green for
+     confirmed, grey for a manual/OTA hold (.ag-tag's Blocked case,
+     styled inline further down since it also needs the OTA-color
+     override on .ag-no next to it). Tentative and Upcoming used to
+     share this one class/color, which made an unpaid quote look exactly
+     like a real confirmed booking at a glance. */
+  .ag-tag.tentative{background:var(--warn-soft);color:var(--warn)}
+  .ag-tag.upcoming{background:var(--accent-soft);color:var(--accent-d)}
+  .ag-item .ag-guest{font-weight:600}
+  .ag-item .ag-dates{color:var(--muted);font-size:11.5px}
+  .empty{color:var(--muted2);font-size:13px;text-align:center;padding:20px}
+
+  /* ── Day detail overlay ── */
+  .overlay{position:fixed;inset:0;background:rgba(29,33,28,.5);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel);border-radius:16px;width:min(440px,100%);max-height:86vh;overflow-y:auto;box-shadow:0 24px 70px rgba(20,30,20,.28)}
+  .modal h3{font-size:16px;font-weight:700;padding:20px 22px 0}
+  .modal .sd{color:var(--muted);font-size:12.5px;padding:4px 22px 0}
+  .mbody{padding:14px 22px 22px;display:flex;flex-direction:column;gap:10px}
+  .mfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:4px;padding:0 22px 20px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:12px;font-weight:600;color:var(--muted)}
+  .field input{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:13.5px;color:var(--ink);outline:none;width:100%}
+  .field input:focus{border-color:var(--accent)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .reason-chips{display:flex;gap:7px;flex-wrap:wrap}
+  .reason-chip{padding:6px 12px;border:1.5px solid var(--line);border-radius:20px;background:var(--panel2);font-size:12px;font-weight:600;color:var(--muted)}
+  .reason-chip:hover{border-color:var(--block)}
+  .reason-chip.on{background:var(--block-soft);border-color:var(--block);color:var(--ink)}
+  .merr{color:var(--danger);font-size:12.5px;min-height:16px}
+  .btn{border:none;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:600;background:var(--panel2);color:var(--ink)}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-d)}
+  .btn.danger{background:var(--danger-soft);color:var(--danger)}
+  .btn.danger:hover{background:#f6dad6}
+
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:100;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{background:var(--danger)}
+  #loader{position:fixed;inset:0;background:rgba(243,244,241,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:90;color:var(--muted)}
+  #loader.hide{display:none}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media(max-width:960px){
+    .layout{grid-template-columns:1fr}
+    .cards{grid-template-columns:1fr 1fr}
+  }
+  .layout > *{min-width:0}
+  @media(max-width:680px){
+    .wrap{padding:14px 12px 60px}
+    /* Nav + month + legend in one unwrappable row forced the page to ~420px
+       on phones — let the legend drop to its own line. */
+    .cal-head{flex-wrap:wrap}
+    .cal-head .mon{min-width:0}
+    .cal-legend{flex-basis:100%}
+    .cal-cell{min-height:64px;padding:4px}
+    .cal-pill{display:none}
+    .cal-cell.has-booking::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--inv)}
+    .cal-cell.has-quote-only::after{background:var(--qt)}
+    .cal-cell.has-block-only::after{background:var(--block)}
+    .cards{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:420px){
+    .cards{grid-template-columns:1fr}
+  }
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#0e2420">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img id="logo" alt="RYST" src="/assets/stay-logo.webp" />
+    <div class="ttl">Booking Calendar<small><span data-prop="name">RYST 109A</span> · All stays at a glance</small></div>
+    <div class="spacer"></div>
+    <button class="tbtn" onclick="window.location.href='login.html'">⌂ Home</button>
+    <button class="tbtn" id="btnSyncOta" title="Pull latest reservations from Airbnb/Booking.com">⟳ Sync OTA</button>
+    <button class="tbtn" id="btnBlock">🚫 Block dates</button>
+    <button class="tbtn" onclick="window.location.href='stay.html'">＋ New booking</button>
+  </header>
+
+  <div class="cards">
+    <div class="card hero">
+      <div class="lbl">Nights booked</div>
+      <div class="val" id="cNights">—</div>
+      <div class="sub" id="cNightsSub">this month</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Occupancy</div>
+      <div class="val" id="cOcc">—</div>
+      <div class="sub">this month</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Revenue</div>
+      <div class="val" id="cRev">—</div>
+      <div class="sub">invoices, this month</div>
+    </div>
+    <div class="card warn">
+      <div class="lbl">Next 7 days</div>
+      <div class="val" id="cUpcoming">—</div>
+      <div class="sub" id="cUpcomingSub">check-ins / check-outs</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="cal-head">
+        <div class="cal-nav">
+          <button id="calPrev" aria-label="Previous month">‹</button>
+          <button id="calToday">Today</button>
+          <button id="calNext" aria-label="Next month">›</button>
+        </div>
+        <div class="mon" id="calMonLabel">—</div>
+        <div class="spacer"></div>
+        <div class="cal-legend">
+          <span><i class="i-inv"></i>Invoice</span>
+          <span><i class="i-qt"></i>Quote</span>
+          <span><i class="i-airbnb"></i>Airbnb</span>
+          <span><i class="i-booking"></i>Booking.com</span>
+          <span><i class="i-agoda"></i>Agoda</span>
+          <span><i class="i-block"></i>Other block</span>
+          <span><i class="i-conf"></i>Overlap</span>
+        </div>
+      </div>
+      <div class="cal-grid" id="calDow"></div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <div class="side">
+      <div class="panel">
+        <h2>Direct bookings<span class="rem-badge" id="dbBadge" style="display:none">0</span></h2>
+        <div class="reminders" id="directBookings"></div>
+      </div>
+      <div class="panel">
+        <h2>Guest check-ins<span class="rem-badge" id="ciBadge" style="display:none">0</span></h2>
+        <div class="reminders" id="checkins"></div>
+      </div>
+      <div class="panel">
+        <h2>Pre-arrival reminders<span class="rem-badge" id="remBadge" style="display:none">0</span></h2>
+        <div class="reminders" id="reminders"></div>
+      </div>
+      <div class="panel">
+        <h2>Request guest feedback<span class="rem-badge" id="fbBadge" style="display:none">0</span></h2>
+        <div class="reminders" id="fbRequests"></div>
+      </div>
+      <div class="panel">
+        <h2>Search &amp; filter</h2>
+        <div class="filters">
+          <input id="fSearch" placeholder="Guest name or booking no…" />
+          <div class="seg" id="fType">
+            <button data-t="all" class="on">All</button>
+            <button data-t="invoice">Invoices</button>
+            <button data-t="quote">Quotes</button>
+            <button data-t="block">Blocked</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Upcoming</h2>
+        <div class="agenda" id="agenda"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Day detail modal -->
+<div class="overlay" id="dayOverlay">
+  <div class="modal">
+    <h3 id="dayTitle">Bookings</h3>
+    <p class="sd" id="daySub"></p>
+    <div class="mbody" id="dayBody"></div>
+    <div class="mfoot"><button class="tbtn" id="dayClose">Close</button></div>
+  </div>
+</div>
+
+<!-- Guest check-in detail modal -->
+<div class="overlay" id="checkinOverlay">
+  <div class="modal">
+    <h3>Guest check-in</h3>
+    <p class="sd" id="ciSub"></p>
+    <div class="mbody" id="ciBody"></div>
+    <div class="mfoot"><button class="tbtn" id="ciClose">Close</button></div>
+  </div>
+</div>
+
+<!-- Block dates modal -->
+<div class="overlay" id="blockOverlay">
+  <div class="modal">
+    <h3>Block dates</h3>
+    <p class="sd">Marks these nights unavailable — no invoice or quote attached. Use for maintenance, personal use, holidays etc.</p>
+    <div class="mbody">
+      <div class="two">
+        <div class="field"><label>Start date</label><input type="date" id="bkStart" /></div>
+        <div class="field"><label>End date <span style="font-weight:400">(last night blocked)</span></label><input type="date" id="bkEnd" /></div>
+      </div>
+      <div class="field">
+        <label>Reason</label>
+        <input id="bkReason" placeholder="e.g. Maintenance" />
+        <div class="reason-chips" id="bkChips">
+          <button type="button" class="reason-chip" data-r="Maintenance">Maintenance</button>
+          <button type="button" class="reason-chip" data-r="Personal use">Personal use</button>
+          <button type="button" class="reason-chip" data-r="Holiday">Holiday</button>
+        </div>
+      </div>
+      <div class="merr" id="bkErr"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" id="bkCancel">Cancel</button>
+      <button class="btn primary" id="bkSave">Block dates</button>
+    </div>
+  </div>
+</div>
+
+<div id="loader">
+  <div class="spin" id="loaderSpin"></div>
+  <div id="loaderMsg">Loading bookings…</div>
+  <button class="tbtn" id="loaderRetry" style="display:none">Retry</button>
+</div>
+<div id="toast"></div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const ROLE  = localStorage.getItem('ryst_user_role') || 'owner';
+const MYEMAIL = localStorage.getItem('ryst_user_email') || '';
+// Admin is assigned via Settings → User Access (data-driven, cached at
+// login), not a hardcoded email. Server-enforced in the proxy's /stays PUT
+// validator regardless — this only controls whether the button renders.
+const IS_ADMIN = localStorage.getItem('ryst_user_admin') === 'true';
+
+// Owner always has full access. Coordinator/caretaker need the 'bookings'
+// module granted in Settings → User Access — server-enforced on /stays
+// regardless, this just avoids loading a page the user can't actually use.
+function hasModule(mod){
+  let modules;
+  try { modules = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { modules = null; }
+  if(!Array.isArray(modules)) modules = ROLE === 'caretaker' ? ['petty-cash','inventory','checklist'] : [];
+  return ROLE === 'owner' || modules.includes(mod);
+}
+
+if(!TOKEN){ window.location.href = 'login.html'; }
+if(!hasModule('bookings')){ window.location.href = 'login.html'; }
+
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = n => '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0});
+// d.toISOString() converts through UTC — for any timezone ahead of UTC
+// (IST included), a locally-constructed midnight Date lands on the PREVIOUS
+// UTC calendar day, silently shifting every date-only value back by one.
+// Read the local calendar fields directly instead.
+const dateOnly = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const todayISO = () => dateOnly(new Date());
+const fmtDate = iso => { if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; };
+const addDays = (iso,n) => { const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return dateOnly(d); };
+
+let STAYS = [];
+let view = new Date(); view.setDate(1);
+let FILTERS = { type:'all', q:'' };
+
+// How far ahead a check-in shows up in the reminders list.
+const REMINDER_WINDOW_DAYS = 3;
+// How far back a check-out still shows up in the feedback-request list.
+const FEEDBACK_WINDOW_DAYS = 7;
+const FEEDBACK_FORM_URL = guestSiteUrl() + '/feedback.html';
+// Wider than the reminder window on purpose — check-in (ID + signature)
+// should happen well before arrival, not in the last few days alongside
+// the arrival-time reminder.
+const CHECKIN_WINDOW_DAYS = 7;
+const CHECKIN_FORM_URL = guestSiteUrl() + '/checkin.html';
+const GUEST_PORTAL_URL = guestSiteUrl() + '/guest.html';
+
+// ── WHATSAPP TEMPLATES ── owner-editable wording (Settings → WhatsApp
+// Templates). These hardcoded strings are only the fallback while the fetch
+// is in flight or if the proxy is unreachable.
+let waTemplates = {
+  reminder: `Hi {{guest}}! This is {{property}} confirming your upcoming stay from {{checkin}} to {{checkout}}. We're looking forward to hosting you.\n\nLocation: {{mapLink}}\n\nManage your stay any time — check your invoice, order food, and pay your balance — here: {{portalLink}}\n\nLet us know your expected arrival time, or reply here if you need directions or have any questions before you arrive. See you soon!`,
+  feedbackRequest: `Hi {{guest}}! Thank you for staying at {{property}}. We'd love to hear how your stay was — it only takes a minute:\n\n{{feedbackLink}}\n\nThanks so much, and hope to host you again soon!`,
+  checkinRequest: `Hi {{guest}}! Ahead of your stay at {{property}} from {{checkin}} to {{checkout}}, please complete a quick digital check-in so we have everything ready for you:\n\n{{checkinLink}}\n\nTakes about 2 minutes — a government ID and your signature on our house rules. See you soon!`,
+  bookingConfirmed: `Hi {{guest}}! Your booking at {{property}} is confirmed for {{checkin}} to {{checkout}}.\n\n*Reference:* {{no}}\n*Advance received:* ₹{{amount}}\n\n{{balanceLine}}\n\nWe'll be in touch closer to your stay — see you soon!`
+};
+// "Send WhatsApp" fires window.open() synchronously from the click handler
+// (awaiting this fetch right there would risk the browser treating the
+// popup as not user-triggered and blocking it) — so instead the send
+// buttons stay disabled until this resolves, rather than silently sending
+// the hardcoded fallback (no emoji, generic wording) if someone clicks
+// before it's back. On Render's free tier this can take 30-60s on a cold
+// start, which is real time for a caretaker to click through reminders.
+let waTemplatesLoaded = false;
+// no-store: the proxy sends no Cache-Control on this response, so without
+// this a browser is free to cache the JSON on disk and keep replaying an
+// old (possibly since-fixed) copy indefinitely instead of refetching.
+fetch(PROXY_URL+'/whatsapp-templates', { cache: 'no-store', headers:{'X-Token':TOKEN} })
+  .then(r => r.ok ? r.json() : null)
+  .then(data => {
+    if(!data || !data.templates) return;
+    if(data.templates.reminder) waTemplates.reminder = data.templates.reminder;
+    if(data.templates.feedbackRequest) waTemplates.feedbackRequest = data.templates.feedbackRequest;
+    if(data.templates.checkinRequest) waTemplates.checkinRequest = data.templates.checkinRequest;
+    if(data.templates.bookingConfirmed) waTemplates.bookingConfirmed = data.templates.bookingConfirmed;
+  })
+  .catch(()=>{}) // silent — keeps the hardcoded defaults above
+  .finally(()=>{ waTemplatesLoaded = true; renderReminders(); renderFeedbackRequests(); renderCheckins(); renderDirectBookings(); });
+
+// A line containing any {{token}} whose value is empty/missing is dropped
+// entirely, so a template can mark a field optional just by giving it its
+// own line — no separate conditional syntax needed.
+function renderWaTemplate(tpl, vars){
+  vars = Object.assign({ property: PROPERTY.fullName, propertyName: PROPERTY.name, restaurant: PROPERTY.restaurantName }, vars);
+  const src = String(tpl||'').split('\n');
+  const dropped = src.map(line=>{
+    const tokens = line.match(/\{\{(\w+)\}\}/g) || [];
+    return tokens.some(t => { const v = vars[t.slice(2,-2)]; return v==null || v===''; });
+  });
+  // …and a token-free "Heading:" line right above a dropped one goes too.
+  const lines = src.filter((line,i)=> !dropped[i] && !(dropped[i+1] && /:\s*$/.test(line) && !/\{\{\w+\}\}/.test(line)));
+  return lines.join('\n')
+    .replace(/\{\{(\w+)\}\}/g, (_,k)=> vars[k]!=null ? vars[k] : '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+// Guest phone numbers are hand-typed ("+91 98765 43210", "9876543210", etc.)
+// — wa.me needs bare digits with a country code, so assume India (91) when
+// the number looks like a 10-digit local number.
+function normalizePhone(p){
+  const digits = String(p||'').replace(/\D/g,'');
+  if(!digits) return '';
+  if(digits.length===10) return '91'+digits;
+  return digits;
+}
+// Same magic-link the "Guest Portal" button on the Stay Builder copies
+// (stay.html) — no Google account needed, just this token. The reminders
+// list already only shows stays that are non-block, committed (advance>0
+// for a quote), and not a superseded quote (see isNonBlockingStay/
+// isConvertedQuote above), so d.portalToken being present here always
+// means the link is live — same "committed" gate the portal itself checks
+// server-side on every request regardless.
+function portalLink(d){
+  return `${GUEST_PORTAL_URL}?no=${encodeURIComponent(d.no)}&t=${encodeURIComponent(d.portalToken||'')}${villaLinkParam()}`;
+}
+function reminderMessage(d){
+  return renderWaTemplate(waTemplates.reminder, {
+    guest: (d.guest||'').trim() || 'there', checkin: fmtDate(d.checkin), checkout: fmtDate(d.checkout), mapLink: PROPERTY.mapLink,
+    portalLink: d.portalToken ? portalLink(d) : '',
+  });
+}
+function feedbackLink(d){
+  return `${FEEDBACK_FORM_URL}?no=${encodeURIComponent(d.no)}&guest=${encodeURIComponent((d.guest||'').trim())}${villaLinkParam()}`;
+}
+function feedbackRequestMessage(d){
+  return renderWaTemplate(waTemplates.feedbackRequest, {
+    guest: (d.guest||'').trim() || 'there', feedbackLink: feedbackLink(d)
+  });
+}
+// Just no+t — checkin.html fetches everything else (guest, dates, guests,
+// due, phone, email, wallet token) live from /checkin/lookup on page load,
+// rather than baking a stale snapshot into the link's query string. Keeps
+// the link short AND means it always reflects the current balance (e.g.
+// after a Pay Balance Now payment), not whatever it was when this link was
+// generated.
+function checkinLink(d){
+  return `${CHECKIN_FORM_URL}?no=${encodeURIComponent(d.no)}&t=${encodeURIComponent(d.checkinToken||'')}${villaLinkParam()}`;
+}
+function checkinRequestMessage(d){
+  return renderWaTemplate(waTemplates.checkinRequest, {
+    guest: (d.guest||'').trim() || 'there', checkin: fmtDate(d.checkin), checkout: fmtDate(d.checkout), checkinLink: checkinLink(d)
+  });
+}
+function bookingConfirmedMessage(d){
+  const balance = grandTotal(d) - toNum(d.advance);
+  const balanceLine = balance > 0
+    ? `The balance of ₹${Math.round(balance).toLocaleString('en-IN')} is due 72 hours before check-in.`
+    : `You're all paid up for this stay — no balance due.`;
+  return renderWaTemplate(waTemplates.bookingConfirmed, {
+    guest: (d.guest||'').trim() || 'there', checkin: fmtDate(d.checkin), checkout: fmtDate(d.checkout),
+    no: d.no, amount: toNum(d.advance).toLocaleString('en-IN'), balanceLine
+  });
+}
+
+// Tolerates messy hand-entered values like "₹45,000" or "1 night", which
+// parseFloat alone chokes on (parseFloat("₹45000") is NaN, not 45000).
+const toNum = v => { const n = parseFloat(String(v==null?'':v).replace(/[^0-9.-]/g,'')); return isFinite(n) ? n : 0; };
+function lineAmt(it){ return toNum(it.rate)*toNum(it.qty); }
+function grandTotal(d){
+  const sub = (d.items||[]).reduce((s,it)=>s+lineAmt(it),0);
+  return Math.max(0, sub - toNum(d.discount));
+}
+function nightsBetween(a,b){
+  if(!a||!b) return 0;
+  const d1=new Date(a+'T00:00:00'), d2=new Date(b+'T00:00:00');
+  return Math.max(0, Math.round((d2-d1)/86400000));
+}
+// A booking "occupies" every night from checkin (incl.) to checkout (excl.)
+function occupiesDate(d, iso){ return d.checkin && d.checkout && iso >= d.checkin && iso < d.checkout; }
+function pillClass(type){ return type==='block' ? 'block' : (type==='quote' ? 'qt' : 'inv'); }
+// Matches a blocked date's OTA feed label (owner-typed in Settings → OTA
+// Sync, e.g. "Airbnb") against known platforms so its pill gets a
+// recognizable color at a glance — anything custom/unrecognized falls
+// back to the plain grey block color.
+function otaBlockColor(label){
+  const l = (label||'').toLowerCase();
+  if(l.includes('airbnb')) return 'var(--ota-airbnb)';
+  if(l.includes('booking')) return 'var(--ota-booking)';
+  if(l.includes('agoda')) return 'var(--ota-agoda)';
+  if(l.includes('vrbo') || l.includes('homeaway')) return 'var(--ota-vrbo)';
+  return 'var(--block)';
+}
+
+function passFilter(d){
+  if(FILTERS.type!=='all' && (d.type||'invoice')!==FILTERS.type) return false;
+  const q = FILTERS.q.trim().toLowerCase();
+  if(q && !((d.guest||'').toLowerCase().includes(q) || (d.no||'').toLowerCase().includes(q))) return false;
+  if(isConvertedQuote(d)) return false;
+  return true;
+}
+// A quote turned into an invoice (via "Load from quote" in stay.html) stays
+// in stays.json as its own record so the quote history isn't lost, but it no
+// longer represents a separate booking — without this it shows up as a
+// second pill/night alongside the invoice it became, making the calendar
+// look double-booked and inflating the occupancy stats for one real stay.
+function isConvertedQuote(d){
+  if((d.type||'invoice')!=='quote') return false;
+  const email = (d.email||'').trim().toLowerCase();
+  const guest = (d.guest||'').trim().toLowerCase();
+  return STAYS.some(s=>
+    (s.type||'invoice')==='invoice' && s.checkin===d.checkin && s.checkout===d.checkout &&
+    (email ? (s.email||'').trim().toLowerCase()===email : (guest && (s.guest||'').trim().toLowerCase()===guest)));
+}
+
+// Used by renderStats to keep "nights booked"/occupancy/"next 7 days"
+// honest: a block isn't a guest booking at all, and a quote that's been
+// shared but never paid — even partially — is only a proposal, not a
+// commitment. Mirrors stayBlocksDates in the proxy's server.js (same
+// advance>0 rule — a partial advance or paid-in-full both just show up as
+// advance>0, there's no separate "fully paid" flag), just phrased the other
+// way around since this drives dashboard stats rather than availability.
+// Deliberately NOT folded into passFilter/isConvertedQuote above — an
+// unpaid quote should still show up on the calendar and Agenda as a
+// tentative pill for the owner to track, it just shouldn't count as an
+// occupied night.
+function isNonBlockingStay(d){
+  if((d.type||'invoice')==='block') return true;
+  if((d.type||'invoice')==='quote') return !(Number(d.advance)>0);
+  return false;
+}
+
+/* ---------- LOAD ---------- */
+async function load(){
+  const loader = $('#loader'), msgEl = $('#loaderMsg'), retryBtn = $('#loaderRetry');
+  loader.classList.remove('hide');
+  $('#loaderSpin').style.display = '';
+  retryBtn.style.display = 'none';
+  msgEl.textContent = 'Loading bookings…';
+
+  // The proxy runs on Render's free tier and can cold-start for 30–60s. Keep
+  // the user informed rather than leaving a bare spinner up (same pattern as
+  // login.html / petty-cash.html), and never let this hang forever.
+  const ctrl = new AbortController();
+  const slowTimer = setTimeout(() => { msgEl.textContent = 'Waking up the server… this can take up to a minute.'; }, 4000);
+  const abortTimer = setTimeout(() => ctrl.abort(), 75000);
+  try{
+    const res = await fetch(PROXY_URL+'/stays', { headers:{'X-Token':TOKEN}, signal: ctrl.signal });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    if(!res.ok) throw new Error('Server error ('+res.status+')');
+    const data = await res.json().catch(()=>({}));
+    STAYS = Array.isArray(data.stays) ? data.stays.filter(d=>d.checkin && d.checkout) : [];
+    render();
+    loader.classList.add('hide');
+    syncOta(true); // best-effort, silent — keeps OTA blocks fresh without an extra click
+  }catch(e){
+    $('#loaderSpin').style.display = 'none';
+    msgEl.textContent = (e && e.name === 'AbortError')
+      ? 'Server timed out — please retry.'
+      : 'Could not load bookings — ' + (e && e.message ? e.message : 'check your connection.');
+    retryBtn.style.display = '';
+  } finally {
+    clearTimeout(slowTimer); clearTimeout(abortTimer);
+  }
+}
+$('#loaderRetry').addEventListener('click', load);
+
+function showToast(msg, isErr){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = isErr ? 'show err' : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 4000);
+}
+
+// Pulls the latest Airbnb/Booking.com reservations in as blocked dates.
+// silent=true (auto-triggered on page load) fails quietly — a stale OTA
+// calendar is a minor inconvenience, not worth an intrusive error on every
+// visit; silent=false (the toolbar button) reports what happened.
+let otaSyncing = false;
+async function syncOta(silent){
+  if(otaSyncing) return;
+  otaSyncing = true;
+  const btn = $('#btnSyncOta');
+  if(!silent){ btn.disabled = true; btn.textContent = '⟳ Syncing…'; }
+  try{
+    const res = await fetch(PROXY_URL+'/ical-import', { method:'POST', headers:{'X-Token':TOKEN} });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ if(!silent) showToast(data.error || 'OTA sync failed', true); return; }
+    const results = Array.isArray(data.results) ? data.results : [];
+    if(!results.length){ if(!silent) showToast('No OTA feeds configured — add one in Settings.'); return; }
+
+    // Refresh STAYS so newly synced OTA blocks show up immediately.
+    const sres = await fetch(PROXY_URL+'/stays', { headers:{'X-Token':TOKEN} });
+    if(sres.ok){ const sdata = await sres.json().catch(()=>({})); STAYS = Array.isArray(sdata.stays) ? sdata.stays.filter(d=>d.checkin && d.checkout) : STAYS; render(); }
+
+    if(!silent){
+      const ok = results.filter(r=>r.ok);
+      const failed = results.filter(r=>!r.ok);
+      const okPart = ok.length ? ok.map(r=>`${r.label}: ${r.count}`).join(', ') : '';
+      const failPart = failed.length ? ' · Failed: '+failed.map(r=>r.label).join(', ') : '';
+      showToast((okPart||'Synced')+failPart, failed.length>0 && ok.length===0);
+    }
+  }catch(e){
+    if(!silent) showToast('Could not reach the server for OTA sync', true);
+  }finally{
+    otaSyncing = false;
+    if(!silent){ btn.disabled = false; btn.textContent = '⟳ Sync OTA'; }
+  }
+}
+$('#btnSyncOta').addEventListener('click', ()=>syncOta(false));
+
+// Writes the full STAYS array back — blocks live in the same /stays document
+// as invoices/quotes so they share storage, the overlap-conflict check, and
+// the owner-only auth already enforced on this route.
+async function pushStays(){
+  const res = await fetch(PROXY_URL+'/stays', {
+    method:'PUT', headers:{'X-Token':TOKEN,'Content-Type':'application/json'},
+    body: JSON.stringify({version:1, stays: STAYS})
+  });
+  if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return false; }
+  if(!res.ok){
+    const data = await res.json().catch(()=>({}));
+    throw new Error(data.error || ('Save failed ('+res.status+')'));
+  }
+  return true;
+}
+
+// Direct WhatsApp Business API send (Interakt, via the proxy's
+// /whatsapp/send-booking) for the four Send buttons below — confirm first,
+// then the approved template goes straight to the guest's phone; the proxy
+// stamps the *SentAt field itself. When the API can't send (template needs
+// a link this stay doesn't have, Interakt error), that button falls back to
+// opening WhatsApp here for the rest of the session — `${field}:${no}` keys.
+const waManual = new Set();
+// Delivery status from Interakt's webhook (proxy stores it per field in
+// d.waDelivery) — only present for sends that went through the API, and
+// only when it belongs to the current send (same timestamp or later).
+const WA_ST = {
+  accepted: ['Queued', 'Accepted by WhatsApp, waiting for delivery'],
+  sent: ['Sent ✓', 'Sent — not yet delivered to the phone'],
+  delivered: ['Delivered ✓✓', 'Delivered to the guest\'s phone'],
+  read: ['Read ✓✓', 'The guest has opened it'],
+  failed: ['Not delivered', 'WhatsApp could not deliver this message'],
+};
+function waDeliveryFor(d, field){
+  const w = d.waDelivery && d.waDelivery[field];
+  if(!w || !d[field] || !w.at) return null;
+  return (new Date(w.at) >= new Date(d[field]) - 5*60000) ? w : null;
+}
+function waStatusBadge(d, field){
+  const w = waDeliveryFor(d, field);
+  if(!w || !WA_ST[w.status]) return '';
+  const [label, tip] = WA_ST[w.status];
+  const title = w.status==='failed' && w.reason ? `${tip}: ${w.reason}` : tip;
+  return ` · <span class="wa-st wa-${esc(w.status)}" title="${esc(title)}"${w.status==='failed' ? ` onclick="alert(this.title)"` : ''}>${esc(label)}</span>`;
+}
+// Statuses land on the proxy via webhook seconds-to-minutes after a send —
+// quietly re-read /stays a few times so the badge updates without a reload.
+let waRefreshTimers = [];
+function scheduleWaRefresh(){
+  waRefreshTimers.forEach(clearTimeout);
+  waRefreshTimers = [15000, 45000, 120000].map(ms => setTimeout(async ()=>{
+    try{
+      const res = await fetch(PROXY_URL+'/stays', { headers:{'X-Token':TOKEN}, cache:'no-store' });
+      if(!res.ok) return;
+      const data = await res.json().catch(()=>null);
+      if(data && Array.isArray(data.stays)){ STAYS = data.stays.filter(d=>d.checkin && d.checkout); render(); }
+    }catch(e){}
+  }, ms));
+}
+function waSendLabel(d, field, firstLabel){
+  if(!waTemplatesLoaded) return 'Loading template…';
+  if(waManual.has(field+':'+d.no)) return 'Open WhatsApp';
+  return d[field] ? 'Resend' : firstLabel;
+}
+async function sendWaApi({ d, scenario, field, label, btn, onDone }){
+  const phone = normalizePhone(d.phone);
+  if(!phone) return;
+  const again = d[field] ? `\n\nAlready sent on ${fmtDate(dateOnly(new Date(d[field])))} — this sends it again.` : '';
+  if(!confirm(`Send the ${label} to ${d.guest||'the guest'} on WhatsApp (+${phone})?\n\nIt goes out immediately from the RYST WhatsApp Business number.${again}`)) return;
+  const originalLabel = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
+  try{
+    const res = await fetch(PROXY_URL+'/whatsapp/send-booking', {
+      method:'POST', headers:{'X-Token':TOKEN,'Content-Type':'application/json'},
+      body: JSON.stringify({ no: d.no, scenario })
+    });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.ok){
+      if(data.fallback){
+        waManual.add(field+':'+d.no);
+        alert(`Couldn't send through the WhatsApp API:\n${data.error || 'Unknown error'}\n\nThe button now says "Open WhatsApp" — tap it to send this one yourself.`);
+      } else {
+        alert(data.error || ('Send failed ('+res.status+')'));
+      }
+      return;
+    }
+    d[field] = data.sentAt || new Date().toISOString();
+    if(data.delivery) d.waDelivery = Object.assign({}, d.waDelivery, { [field]: data.delivery });
+    onDone();
+    scheduleWaRefresh();
+    alert(`WhatsApp accepted the ${label} for ${(d.guest||'').trim()||'the guest'}.\n\nThat isn't delivery yet — the status next to it will change to Delivered ✓✓, Read ✓✓ or Not delivered once WhatsApp reports back.`);
+  }catch(e){
+    alert('Could not reach the server: ' + e.message);
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = originalLabel; }
+    onDone();
+  }
+}
+
+// The four Telegram buttons: the proxy builds the message itself (same
+// template + links as the automatic sends, incl. guest-portal eligibility
+// and the wallet link) and pushes a tap-to-send nudge, stamping the field.
+async function sendWaTelegram({ d, scenario, field, btn, onDone }){
+  if(!normalizePhone(d.phone)) return;
+  const originalLabel = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
+  try{
+    const res = await fetch(PROXY_URL+'/whatsapp/send-booking', {
+      method:'POST', headers:{'X-Token':TOKEN,'Content-Type':'application/json'},
+      body: JSON.stringify({ no: d.no, scenario, via: 'telegram' })
+    });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.ok){ alert(data.error || 'Could not send Telegram notification'); return; }
+    d[field] = data.sentAt || new Date().toISOString();
+    showToast('✓ Sent to Telegram — tap the link there to send it on WhatsApp');
+  }catch(e){
+    alert('Could not reach the server: ' + e.message);
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = originalLabel; }
+    onDone();
+  }
+}
+
+function render(){
+  renderStats();
+  renderCalendar();
+  renderAgenda();
+  renderDirectBookings();
+  renderCheckins();
+  renderReminders();
+  renderFeedbackRequests();
+}
+
+/* ---------- DIRECT (ONLINE-PAID) BOOKINGS ---------- */
+function renderDirectBookings(){
+  const today = todayISO();
+  const due = STAYS
+    .filter(d=> d.mode==='Razorpay' && d.checkout>=today && !isConvertedQuote(d))
+    .sort((a,b)=> a.checkin.localeCompare(b.checkin));
+
+  const badge = $('#dbBadge');
+  const pendingCount = due.filter(d=>!d.confirmationSentAt).length;
+  badge.style.display = pendingCount ? '' : 'none';
+  badge.textContent = pendingCount;
+
+  const list = $('#directBookings');
+  if(!due.length){ list.innerHTML = '<div class="empty">No online-paid bookings yet.</div>'; return; }
+
+  list.innerHTML = due.map(d=>{
+    const phone = normalizePhone(d.phone);
+    const statusNote = d.confirmationSentAt
+      ? `<span class="rem-sent">Sent ${fmtDate(dateOnly(new Date(d.confirmationSentAt)))}${waStatusBadge(d,'confirmationSentAt')} · <a onclick="markBookingConfirmationUnsent('${esc(d.no)}')">undo</a></span>`
+      : (phone ? '' : '<span class="rem-sent">No phone on file — add one in the invoice</span>');
+    const actionBtn = `<button class="rem-send" ${(phone&&waTemplatesLoaded)?'':'disabled'} onclick="sendBookingConfirmation('${esc(d.no)}', this)">${waSendLabel(d,'confirmationSentAt','Send Confirmation')}</button>`;
+    const tgBtn = `<button class="rem-tg" ${(phone&&waTemplatesLoaded)?'':'disabled'} onclick="sendBookingConfirmationTg('${esc(d.no)}', this)" title="Push a tap-to-send link to Telegram instead of opening WhatsApp here">✈ Telegram</button>`;
+    return `<div class="rem-item">
+      <div class="rem-top"><span class="rem-guest">${esc(d.guest||'—')}</span><span class="rem-when">₹${toNum(d.advance).toLocaleString('en-IN')} paid</span></div>
+      <div class="rem-dates">${fmtDate(d.checkin)} → ${fmtDate(d.checkout)} · ${esc(d.no)}</div>
+      <div class="rem-foot">${statusNote}<span class="rem-actions">${tgBtn}${actionBtn}</span></div>
+    </div>`;
+  }).join('');
+}
+
+async function sendBookingConfirmationTg(no, btn){
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  await sendWaTelegram({ d, scenario:'bookingConfirmed', field:'confirmationSentAt', btn, onDone: renderDirectBookings });
+}
+
+async function sendBookingConfirmation(no, btn){
+  if(!waTemplatesLoaded) return;
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  const phone = normalizePhone(d.phone);
+  if(!phone) return;
+  if(!waManual.has('confirmationSentAt:'+no)) return sendWaApi({ d, scenario:'bookingConfirmed', field:'confirmationSentAt', label:'booking confirmation', btn, onDone: renderDirectBookings });
+  window.open(`https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(bookingConfirmedMessage(d))}`, '_blank');
+  d.confirmationSentAt = new Date().toISOString();
+  try{
+    const ok = await pushStays();
+    if(ok===false) return;
+    renderDirectBookings();
+  }catch(e){
+    delete d.confirmationSentAt;
+    alert('Could not save confirmation-sent status: ' + e.message + '\n\n(The WhatsApp message still opened — this only affects the "sent" checkmark.)');
+    renderDirectBookings();
+  }
+}
+
+async function markBookingConfirmationUnsent(no){
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  const prev = d.confirmationSentAt;
+  delete d.confirmationSentAt;
+  try{
+    const ok = await pushStays();
+    if(ok===false) return;
+    renderDirectBookings();
+  }catch(e){
+    d.confirmationSentAt = prev;
+    alert('Could not update confirmation status: ' + e.message);
+    renderDirectBookings();
+  }
+}
+
+/* ---------- GUEST CHECK-INS ---------- */
+function renderCheckins(){
+  const today = todayISO();
+  const cutoff = addDays(today, CHECKIN_WINDOW_DAYS);
+  // A quote with no advance is only a proposal, not a booking — same rule
+  // renderStats/isNonBlockingStay already applies, so an unconfirmed guest
+  // never gets a check-in link (mirrors the fix already shipped for the
+  // automated Telegram nudges in the proxy's /whatsapp/run-scheduled).
+  const due = STAYS
+    .filter(d=> !isNonBlockingStay(d) && d.checkin>=today && d.checkin<=cutoff && !isConvertedQuote(d))
+    .sort((a,b)=> a.checkin.localeCompare(b.checkin));
+
+  const badge = $('#ciBadge');
+  const pendingCount = due.filter(d=>!d.checkinInfo).length;
+  badge.style.display = pendingCount ? '' : 'none';
+  badge.textContent = pendingCount;
+
+  const list = $('#checkins');
+  if(!due.length){ list.innerHTML = '<div class="empty">No arrivals in the next '+CHECKIN_WINDOW_DAYS+' days.</div>'; return; }
+
+  list.innerHTML = due.map(d=>{
+    const days = nightsBetween(today, d.checkin);
+    const when = days<=0 ? 'Today' : days===1 ? 'Tomorrow' : `In ${days} days`;
+    const phone = normalizePhone(d.phone);
+    let statusNote, actionBtn, tgBtn;
+    if(d.checkinInfo){
+      statusNote = `<span class="rem-sent">✓ Checked in ${fmtDate(dateOnly(new Date(d.checkinInfo.submittedAt)))} · <a onclick="openCheckinDetail('${esc(d.no)}')">view</a></span>`;
+      actionBtn = ''; tgBtn = '';
+    } else {
+      statusNote = d.checkinRequestedAt
+        ? `<span class="rem-sent">Link sent ${fmtDate(dateOnly(new Date(d.checkinRequestedAt)))}${waStatusBadge(d,'checkinRequestedAt')} · <a onclick="markCheckinUnsent('${esc(d.no)}')">undo</a></span>`
+        : (phone ? '' : '<span class="rem-sent">No phone on file — add one in the invoice</span>');
+      actionBtn = `<button class="rem-send" ${(phone&&waTemplatesLoaded)?'':'disabled'} onclick="sendCheckinRequest('${esc(d.no)}', this)">${waSendLabel(d,'checkinRequestedAt','Send Check-in Link')}</button>`;
+      tgBtn = `<button class="rem-tg" ${(phone&&waTemplatesLoaded)?'':'disabled'} onclick="sendCheckinRequestTg('${esc(d.no)}', this)" title="Push a tap-to-send link to Telegram instead of opening WhatsApp here">✈ Telegram</button>`;
+    }
+    return `<div class="rem-item">
+      <div class="rem-top"><span class="rem-guest">${esc(d.guest||'—')}</span><span class="rem-when">${when}</span></div>
+      <div class="rem-dates">${fmtDate(d.checkin)} → ${fmtDate(d.checkout)} · ${esc(d.no)}</div>
+      <div class="rem-foot">${statusNote}<span class="rem-actions">${tgBtn}${actionBtn}</span></div>
+    </div>`;
+  }).join('');
+}
+
+async function sendCheckinRequestTg(no, btn){
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  await sendWaTelegram({ d, scenario:'checkinRequest', field:'checkinRequestedAt', btn, onDone: renderCheckins });
+}
+
+async function sendCheckinRequest(no, btn){
+  if(!waTemplatesLoaded) return;
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  const phone = normalizePhone(d.phone);
+  if(!phone) return;
+  if(!waManual.has('checkinRequestedAt:'+no)) return sendWaApi({ d, scenario:'checkinRequest', field:'checkinRequestedAt', label:'check-in link', btn, onDone: renderCheckins });
+  window.open(`https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(checkinRequestMessage(d))}`, '_blank');
+  d.checkinRequestedAt = new Date().toISOString();
+  try{
+    const ok = await pushStays();
+    if(ok===false) return;
+    renderCheckins();
+  }catch(e){
+    delete d.checkinRequestedAt;
+    alert('Could not save check-in link status: ' + e.message + '\n\n(The WhatsApp message still opened — this only affects the "sent" checkmark.)');
+    renderCheckins();
+  }
+}
+
+async function markCheckinUnsent(no){
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  const prev = d.checkinRequestedAt;
+  delete d.checkinRequestedAt;
+  try{
+    const ok = await pushStays();
+    if(ok===false) return;
+    renderCheckins();
+  }catch(e){
+    d.checkinRequestedAt = prev;
+    alert('Could not update check-in link status: ' + e.message);
+    renderCheckins();
+  }
+}
+
+function openCheckinDetail(no){
+  const d = STAYS.find(s=>s.no===no);
+  if(!d || !d.checkinInfo) return;
+  const c = d.checkinInfo;
+  $('#ciSub').textContent = `${d.guest||'—'} · ${fmtDate(d.checkin)} → ${fmtDate(d.checkout)} · ${d.no}`;
+  const row = (label, value) => value ? `<div class="ag-dates"><strong>${esc(label)}:</strong> ${esc(value)}</div>` : '';
+  $('#ciBody').innerHTML = `
+    ${row('Name', c.name)}
+    ${row('ID Type', c.idType)}
+    ${row('ID Number', c.idNumber)}
+    ${row('Address', c.address)}
+    ${row('Vehicle', c.vehicleNumber)}
+    ${row('Expected arrival', c.arrivalTime)}
+    ${row('Guests', c.guestsCount != null ? String(c.guestsCount) : '')}
+    ${row('Note to host', c.note)}
+    ${row('Submitted', new Date(c.submittedAt).toLocaleString('en-IN'))}
+    ${c.idPhotoUrl ? `<div class="ag-dates" style="margin-top:10px"><strong>ID Photo:</strong></div><img src="${esc(c.idPhotoUrl)}" alt="ID photo" style="max-width:100%;border-radius:10px;margin-top:6px;border:1px solid var(--line)">` : ''}
+    ${c.signatureUrl ? `<div class="ag-dates" style="margin-top:10px"><strong>Signature:</strong></div><img src="${esc(c.signatureUrl)}" alt="Signature" style="max-width:100%;border-radius:10px;margin-top:6px;border:1px solid var(--line);background:#fff">` : ''}
+  `;
+  $('#checkinOverlay').classList.add('show');
+}
+$('#ciClose').addEventListener('click', ()=> $('#checkinOverlay').classList.remove('show'));
+$('#checkinOverlay').addEventListener('click', e=>{ if(e.target===$('#checkinOverlay')) $('#checkinOverlay').classList.remove('show'); });
+
+/* ---------- PRE-ARRIVAL REMINDERS ---------- */
+function renderReminders(){
+  const today = todayISO();
+  const cutoff = addDays(today, REMINDER_WINDOW_DAYS);
+  // A quote with no advance is only a proposal, not a booking — same rule
+  // renderStats/isNonBlockingStay already applies, so an unconfirmed guest
+  // never gets a pre-arrival reminder (mirrors the fix already shipped for
+  // the automated Telegram nudges in the proxy's /whatsapp/run-scheduled).
+  const due = STAYS
+    .filter(d=> !isNonBlockingStay(d) && d.checkin>=today && d.checkin<=cutoff && !isConvertedQuote(d))
+    .sort((a,b)=> a.checkin.localeCompare(b.checkin));
+
+  const badge = $('#remBadge');
+  const pendingCount = due.filter(d=>!d.reminderSentAt).length;
+  badge.style.display = pendingCount ? '' : 'none';
+  badge.textContent = pendingCount;
+
+  const list = $('#reminders');
+  if(!due.length){ list.innerHTML = '<div class="empty">No check-ins in the next '+REMINDER_WINDOW_DAYS+' days.</div>'; return; }
+
+  list.innerHTML = due.map(d=>{
+    const days = nightsBetween(today, d.checkin);
+    const when = days<=0 ? 'Today' : days===1 ? 'Tomorrow' : `In ${days} days`;
+    const phone = normalizePhone(d.phone);
+    const sentNote = d.reminderSentAt
+      ? `<span class="rem-sent">✓ Reminded ${fmtDate(dateOnly(new Date(d.reminderSentAt)))}${waStatusBadge(d,'reminderSentAt')} · <a onclick="markReminderUnsent('${esc(d.no)}')">undo</a></span>`
+      : (phone ? '' : '<span class="rem-sent">No phone on file — add one in the invoice</span>');
+    const sendBtn = `<button class="rem-send" ${(phone&&waTemplatesLoaded)?'':'disabled'} onclick="sendReminder('${esc(d.no)}', this)">${waSendLabel(d,'reminderSentAt','Send WhatsApp')}</button>`;
+    const tgBtn = `<button class="rem-tg" ${(phone&&waTemplatesLoaded)?'':'disabled'} onclick="sendReminderTg('${esc(d.no)}', this)" title="Push a tap-to-send link to Telegram instead of opening WhatsApp here">✈ Telegram</button>`;
+    return `<div class="rem-item">
+      <div class="rem-top"><span class="rem-guest">${esc(d.guest||'—')}</span><span class="rem-when">${when}</span></div>
+      <div class="rem-dates">${fmtDate(d.checkin)} → ${fmtDate(d.checkout)} · ${esc(d.no)}</div>
+      <div class="rem-foot">${sentNote}<span class="rem-actions">${tgBtn}${sendBtn}</span></div>
+    </div>`;
+  }).join('');
+}
+
+async function sendReminderTg(no, btn){
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  await sendWaTelegram({ d, scenario:'reminder', field:'reminderSentAt', btn, onDone: renderReminders });
+}
+
+async function sendReminder(no, btn){
+  if(!waTemplatesLoaded) return; // belt-and-suspenders — the button is disabled until this is true
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  const phone = normalizePhone(d.phone);
+  if(!phone) return;
+  if(!waManual.has('reminderSentAt:'+no)) return sendWaApi({ d, scenario:'reminder', field:'reminderSentAt', label:'stay reminder', btn, onDone: renderReminders });
+  // api.whatsapp.com/send directly — NOT wa.me. wa.me's own redirect
+  // service corrupts non-ASCII characters (emoji, mainly) in the `text`
+  // param before it ever reaches api.whatsapp.com, verified by hitting
+  // wa.me directly and inspecting its redirect Location header. Going
+  // straight to the destination skips that broken hop.
+  window.open(`https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(reminderMessage(d))}`, '_blank');
+  d.reminderSentAt = new Date().toISOString();
+  try{
+    const ok = await pushStays();
+    if(ok===false) return;
+    renderReminders();
+  }catch(e){
+    delete d.reminderSentAt;
+    alert('Could not save reminder status: ' + e.message + '\n\n(The WhatsApp message still opened — this only affects the "reminded" checkmark.)');
+    renderReminders();
+  }
+}
+
+async function markReminderUnsent(no){
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  const prev = d.reminderSentAt;
+  delete d.reminderSentAt;
+  try{
+    const ok = await pushStays();
+    if(ok===false) return;
+    renderReminders();
+  }catch(e){
+    d.reminderSentAt = prev;
+    alert('Could not update reminder status: ' + e.message);
+    renderReminders();
+  }
+}
+
+/* ---------- POST-STAY FEEDBACK REQUESTS ---------- */
+function renderFeedbackRequests(){
+  const today = todayISO();
+  const cutoff = addDays(today, -FEEDBACK_WINDOW_DAYS);
+  // A quote with no advance is only a proposal, not a booking — same rule
+  // renderStats/isNonBlockingStay already applies, so an unconfirmed guest
+  // never gets a feedback request (mirrors the fix already shipped for the
+  // automated Telegram nudges in the proxy's /whatsapp/run-scheduled).
+  const due = STAYS
+    .filter(d=> !isNonBlockingStay(d) && d.checkout<=today && d.checkout>=cutoff && !isConvertedQuote(d))
+    .sort((a,b)=> b.checkout.localeCompare(a.checkout));
+
+  const badge = $('#fbBadge');
+  const pendingCount = due.filter(d=>!d.feedbackRequestedAt).length;
+  badge.style.display = pendingCount ? '' : 'none';
+  badge.textContent = pendingCount;
+
+  const list = $('#fbRequests');
+  if(!due.length){ list.innerHTML = '<div class="empty">No check-outs in the last '+FEEDBACK_WINDOW_DAYS+' days.</div>'; return; }
+
+  list.innerHTML = due.map(d=>{
+    const days = nightsBetween(d.checkout, today);
+    const when = days<=0 ? 'Checked out today' : days===1 ? 'Checked out yesterday' : `Checked out ${days} days ago`;
+    const phone = normalizePhone(d.phone);
+    const sentNote = d.feedbackRequestedAt
+      ? `<span class="rem-sent">✓ Requested ${fmtDate(dateOnly(new Date(d.feedbackRequestedAt)))}${waStatusBadge(d,'feedbackRequestedAt')} · <a onclick="markFeedbackRequestUnsent('${esc(d.no)}')">undo</a></span>`
+      : (phone ? '' : '<span class="rem-sent">No phone on file — add one in the invoice</span>');
+    const sendBtn = `<button class="rem-send" ${(phone&&waTemplatesLoaded)?'':'disabled'} onclick="sendFeedbackRequest('${esc(d.no)}', this)">${waSendLabel(d,'feedbackRequestedAt','Send WhatsApp')}</button>`;
+    const tgBtn = `<button class="rem-tg" ${(phone&&waTemplatesLoaded)?'':'disabled'} onclick="sendFeedbackRequestTg('${esc(d.no)}', this)" title="Push a tap-to-send link to Telegram instead of opening WhatsApp here">✈ Telegram</button>`;
+    return `<div class="rem-item">
+      <div class="rem-top"><span class="rem-guest">${esc(d.guest||'—')}</span><span class="rem-when">${when}</span></div>
+      <div class="rem-dates">${fmtDate(d.checkin)} → ${fmtDate(d.checkout)} · ${esc(d.no)}</div>
+      <div class="rem-foot">${sentNote}<span class="rem-actions">${tgBtn}${sendBtn}</span></div>
+    </div>`;
+  }).join('');
+}
+
+async function sendFeedbackRequestTg(no, btn){
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  await sendWaTelegram({ d, scenario:'feedbackRequest', field:'feedbackRequestedAt', btn, onDone: renderFeedbackRequests });
+}
+
+async function sendFeedbackRequest(no, btn){
+  if(!waTemplatesLoaded) return; // belt-and-suspenders — the button is disabled until this is true
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  const phone = normalizePhone(d.phone);
+  if(!phone) return;
+  if(!waManual.has('feedbackRequestedAt:'+no)) return sendWaApi({ d, scenario:'feedbackRequest', field:'feedbackRequestedAt', label:'feedback request', btn, onDone: renderFeedbackRequests });
+  // api.whatsapp.com/send directly — see the matching comment in sendReminder.
+  window.open(`https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(feedbackRequestMessage(d))}`, '_blank');
+  d.feedbackRequestedAt = new Date().toISOString();
+  try{
+    const ok = await pushStays();
+    if(ok===false) return;
+    renderFeedbackRequests();
+  }catch(e){
+    delete d.feedbackRequestedAt;
+    alert('Could not save request status: ' + e.message + '\n\n(The WhatsApp message still opened — this only affects the "requested" checkmark.)');
+    renderFeedbackRequests();
+  }
+}
+
+async function markFeedbackRequestUnsent(no){
+  const d = STAYS.find(s=>s.no===no);
+  if(!d) return;
+  const prev = d.feedbackRequestedAt;
+  delete d.feedbackRequestedAt;
+  try{
+    const ok = await pushStays();
+    if(ok===false) return;
+    renderFeedbackRequests();
+  }catch(e){
+    d.feedbackRequestedAt = prev;
+    alert('Could not update request status: ' + e.message);
+    renderFeedbackRequests();
+  }
+}
+
+/* ---------- STATS ---------- */
+function renderStats(){
+  const y=view.getFullYear(), m=view.getMonth();
+  const monthStart = new Date(y,m,1), monthEnd = new Date(y,m+1,0);
+  const daysInMonth = monthEnd.getDate();
+  const monthStartISO = dateOnly(monthStart), monthEndISO = dateOnly(new Date(y,m+1,1));
+
+  const filtered = STAYS.filter(passFilter);
+  const nextMonthStart = new Date(y,m+1,1);
+  let nights = 0, revenue = 0;
+  for(const d of filtered){
+    // Blocks (manual holds, OTA-synced Airbnb/Booking.com reservations) mark
+    // nights unavailable but aren't a booking — don't count them as "nights
+    // booked" or toward occupancy. Same reasoning for an unpaid quote: it's
+    // a proposal shared with a guest who hasn't confirmed or paid anything,
+    // not a real booking — mirrors stayBlocksDates in the proxy's
+    // server.js, which stops an unpaid quote from blocking real
+    // availability the same way. It stays visible on the calendar/agenda
+    // for tracking, it just doesn't count as an occupied night until there's
+    // real payment against it (advance > 0 covers both a partial advance
+    // and paid-in-full — there's no separate "fully paid" flag).
+    if(isNonBlockingStay(d)) continue;
+    // Nights of this booking that overlap the viewed month, via a closed-form
+    // range intersection rather than stepping day-by-day — a hand-entered
+    // date typo (checkout years out) would otherwise turn into a very long
+    // or effectively stuck loop.
+    const s = new Date(d.checkin+'T00:00:00'), e = new Date(d.checkout+'T00:00:00');
+    const overlapStart = s < monthStart ? monthStart : s;
+    const overlapEnd = e > nextMonthStart ? nextMonthStart : e;
+    nights += Math.max(0, Math.round((overlapEnd - overlapStart)/86400000));
+    if((d.type||'invoice')==='invoice' && d.checkin >= monthStartISO && d.checkin < monthEndISO) revenue += grandTotal(d);
+  }
+  const occ = daysInMonth ? Math.round((nights/daysInMonth)*100) : 0;
+
+  const today = todayISO(), weekAhead = addDays(today,7);
+  // Same exclusion as the nights count above — a block isn't a guest
+  // arriving or leaving, and an unpaid quote isn't a confirmed arrival
+  // either, so neither belongs in a "who's actually checking in/out" count.
+  const upcoming = filtered.filter(d => !isNonBlockingStay(d) && ((d.checkin>=today && d.checkin<=weekAhead) || (d.checkout>=today && d.checkout<=weekAhead)));
+
+  $('#cNights').textContent = nights;
+  $('#cNightsSub').textContent = view.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  $('#cOcc').textContent = occ+'%';
+  $('#cRev').textContent = money(revenue);
+  $('#cUpcoming').textContent = upcoming.length;
+}
+
+/* ---------- CALENDAR ---------- */
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function renderCalendarDow(){
+  $('#calDow').innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+}
+function renderCalendar(){
+  renderCalendarDow();
+  const y=view.getFullYear(), m=view.getMonth();
+  $('#calMonLabel').textContent = view.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+
+  const firstOfMonth = new Date(y,m,1);
+  const startOffset = firstOfMonth.getDay(); // 0=Sun
+  const gridStart = new Date(y,m,1-startOffset);
+  const today = todayISO();
+  const filtered = STAYS.filter(passFilter);
+
+  const cells = [];
+  for(let i=0;i<42;i++){
+    const d = new Date(gridStart); d.setDate(gridStart.getDate()+i);
+    const iso = dateOnly(d);
+    const inMonth = d.getMonth()===m;
+    const dayBookings = filtered.filter(b=>occupiesDate(b,iso));
+    cells.push({ date:d, iso, inMonth, dayBookings });
+  }
+
+  $('#calGrid').innerHTML = cells.map(c=>{
+    const hasInv = c.dayBookings.some(b=>(b.type||'invoice')==='invoice');
+    const hasQt  = c.dayBookings.some(b=>(b.type||'invoice')==='quote');
+    const hasBlk = c.dayBookings.some(b=>b.type==='block');
+    // Invoice, or a quote with an advance actually paid — a real
+    // commitment, not just a proposal. Same rule isNonBlockingStay uses
+    // elsewhere on this page, inverted.
+    const hasConfirmed = c.dayBookings.some(b=>!isNonBlockingStay(b));
+    const conflict = c.dayBookings.length > 1;
+    const cls = ['cal-cell'];
+    if(!c.inMonth) cls.push('out');
+    if(c.iso===today) cls.push('today');
+    if(conflict) cls.push('conflict');
+    if(c.dayBookings.length) cls.push('has-booking');
+    if(hasBlk) cls.push('blocked');
+    if(hasConfirmed) cls.push('unavailable');
+    // Mobile collapses to a single dot — priority invoice > quote > block.
+    if(!hasInv && hasQt) cls.push('has-quote-only');
+    else if(!hasInv && !hasQt && hasBlk) cls.push('has-block-only');
+    const shown = c.dayBookings.slice(0,2).map(b=>
+      `<div class="cal-pill ${pillClass(b.type)}"${b.type==='block' ? ` style="background:${otaBlockColor(b.guest)}"` : ''}>${esc(b.type==='block' ? (b.guest||'Blocked') : (b.guest||b.no||''))}</div>`
+    ).join('');
+    const more = c.dayBookings.length>2 ? `<div class="cal-more">+${c.dayBookings.length-2} more</div>` : '';
+    // Left accent bar in that day's specific OTA color (same otaBlockColor()
+    // the pill already uses) — first block of the day sets it, since a
+    // day essentially never has two different-platform blocks at once.
+    const style = hasBlk ? ` style="border-left-color:${otaBlockColor(c.dayBookings.find(b=>b.type==='block').guest)}"` : '';
+    return `<div class="${cls.join(' ')}" data-iso="${c.iso}"${style}>
+      <div class="daynum">${c.date.getDate()}</div>
+      ${shown}${more}
+    </div>`;
+  }).join('');
+
+  $$('#calGrid .cal-cell').forEach(el=> el.addEventListener('click', ()=> openDay(el.dataset.iso)));
+}
+
+/* ---------- DAY DETAIL ---------- */
+function openDay(iso){
+  const filtered = STAYS.filter(passFilter);
+  const dayBookings = filtered.filter(b=>occupiesDate(b,iso));
+  $('#dayTitle').textContent = new Date(iso+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  $('#daySub').textContent = dayBookings.length>1 ? `${dayBookings.length} overlapping bookings` : (dayBookings.length ? '1 booking' : 'No bookings');
+  $('#dayBody').innerHTML = !dayBookings.length ? '<div class="empty">Nothing booked this day.</div>'
+    : dayBookings.map(b=>{
+        if(b.type==='block'){
+          return `<div class="ag-item">
+            <div class="ag-top">
+              <span class="ag-no" style="color:${otaBlockColor(b.guest)}">${esc(b.guest||'Blocked')}</span>
+              <span class="ag-tag" style="background:var(--block-soft);color:var(--block)">Blocked</span>
+            </div>
+            <div class="ag-dates">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${nightsBetween(b.checkin,b.checkout)} night(s)</div>
+            <button type="button" class="btn danger" style="align-self:flex-start;margin-top:4px" data-unblock="${esc(b.no)}">Remove block</button>
+          </div>`;
+        }
+        const publicBadge = b.mode==='Razorpay'
+          ? `<span class="ag-tag" style="background:var(--inv-soft);color:var(--inv)">Paid online</span>`
+          : b.source==='public'
+          ? `<span class="ag-tag" style="background:var(--danger-soft,#fbecea);color:var(--danger,#c0584b)">New enquiry</span>` : '';
+        const extra = b.source==='public' ? `
+          <div class="ag-dates">${esc(b.phone||'')}${b.email?' · '+esc(b.email):''}</div>
+          ${b.ref ? `<div class="ag-dates">Occasion: ${esc(b.ref)}</div>` : ''}
+          ${b.message ? `<div class="ag-dates">"${esc(b.message)}"</div>` : ''}
+        ` : '';
+        // Guest check-ins only shows arrivals due in the next
+        // CHECKIN_WINDOW_DAYS, so it's the only place openCheckinDetail was
+        // reachable from — a submitted check-in (ID, signature, etc.) became
+        // unreachable the moment the stay aged out of that window, even
+        // though checkinInfo itself never gets deleted. The calendar has no
+        // such window (any month is one click away), so this is where a
+        // past submission can actually still be looked up.
+        const checkinLine = b.checkinInfo
+          ? `<div class="ag-dates">✓ Checked in ${fmtDate(dateOnly(new Date(b.checkinInfo.submittedAt)))} · <a onclick="openCheckinDetail('${esc(b.no)}')">view</a></div>`
+          : '';
+        // Only the admin account can delete anything — quote or invoice.
+        // (Server-enforced in the proxy; this just controls whether the
+        // button renders.) The card itself can't be an <a> once it contains
+        // a delete <button> (nested interactive elements are invalid HTML)
+        // — so the booking number is its own link instead, matching how
+        // the block card already renders as a plain, non-clickable container.
+        const delBtn = IS_ADMIN
+          ? `<button type="button" class="btn danger" style="align-self:flex-start;margin-top:4px" data-delstay="${esc(b.no)}">Delete ${b.type==='quote'?'quote':'invoice'}</button>` : '';
+        return `<div class="ag-item">
+          <div class="ag-top">
+            <a class="ag-no" href="stay.html?open=${encodeURIComponent(b.no)}">${esc(b.no)}</a>
+            <span style="display:flex;gap:6px">${publicBadge}<span class="ag-tag" style="${b.type==='quote'?'background:var(--qt-soft);color:var(--qt)':'background:var(--inv-soft);color:var(--inv)'}">${b.type==='quote'?'Quote':'Invoice'}</span></span>
+          </div>
+          <div class="ag-guest">${esc(b.guest||'—')}</div>
+          <div class="ag-dates">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${nightsBetween(b.checkin,b.checkout)} night(s) · ${money(grandTotal(b))}</div>
+          ${checkinLine}${extra}${delBtn}
+        </div>`;
+      }).join('');
+  $('#dayBody').querySelectorAll('[data-unblock]').forEach(btn=>
+    btn.addEventListener('click', ()=> removeBlock(btn.dataset.unblock, iso)));
+  $('#dayBody').querySelectorAll('[data-delstay]').forEach(btn=>
+    btn.addEventListener('click', ()=> deleteStayEntry(btn.dataset.delstay, iso)));
+  $('#dayOverlay').classList.add('show');
+}
+$('#dayClose').addEventListener('click', ()=> $('#dayOverlay').classList.remove('show'));
+$('#dayOverlay').addEventListener('click', e=>{ if(e.target===$('#dayOverlay')) $('#dayOverlay').classList.remove('show'); });
+
+async function removeBlock(no, reopenIso){
+  const idx = STAYS.findIndex(s=>s.no===no && s.type==='block');
+  if(idx<0) return;
+  const removed = STAYS.splice(idx,1);
+  try{
+    const ok = await pushStays();
+    if(ok===false) return; // pushStays already redirected on 401
+    render();
+    if(reopenIso) openDay(reopenIso);
+  }catch(e){
+    STAYS.splice(idx,0,removed[0]); // restore on failure
+    alert('Could not remove block: '+e.message);
+  }
+}
+
+// Quote-only (not invoices — those are billing history). This page is
+// already owner-gated on load, and only mailyuvanesh@gmail.com /
+// studioryst01@gmail.com resolve to the owner role server-side, so no
+// separate check is needed here beyond confirming it really is a quote.
+async function deleteStayEntry(no, reopenIso){
+  const idx = STAYS.findIndex(s=>s.no===no && (s.type==='quote'||s.type==='invoice'));
+  if(idx<0) return;
+  const target = STAYS[idx];
+  if(!IS_ADMIN) return; // server would reject this anyway; button shouldn't even be visible
+  const label = target.type==='invoice' ? 'invoice' : 'quote';
+  if(!confirm(`Delete ${label} ${no}${target.guest?' ('+target.guest+')':''}? This can't be undone.`)) return;
+  const removed = STAYS.splice(idx,1);
+  try{
+    const ok = await pushStays();
+    if(ok===false) return; // pushStays already redirected on 401
+    render();
+    if(reopenIso) openDay(reopenIso);
+  }catch(e){
+    STAYS.splice(idx,0,removed[0]); // restore on failure
+    alert('Could not delete '+label+': '+e.message);
+  }
+}
+
+/* ---------- AGENDA (upcoming list) ---------- */
+function renderAgenda(){
+  const today = todayISO();
+  const filtered = STAYS.filter(passFilter)
+    .filter(d=> d.checkout >= today)
+    .sort((a,b)=> a.checkin.localeCompare(b.checkin));
+  const list = $('#agenda');
+  if(!filtered.length){ list.innerHTML = '<div class="empty">No upcoming bookings.</div>'; return; }
+  list.innerHTML = filtered.slice(0,25).map(d=>{
+    const isNow = d.checkin<=today && d.checkout>today;
+    // A quote with no advance against it is a proposal, not a commitment —
+    // same advance>0 rule as isNonBlockingStay/stayBlocksDates elsewhere.
+    // Tagging it "Now"/"Upcoming" alongside real invoices and paid quotes
+    // misrepresents it as a confirmed booking that's actually happening;
+    // "Tentative" says what it actually is while still surfacing it here
+    // for the owner to track (this list intentionally keeps unpaid quotes
+    // visible — see isNonBlockingStay's comment above).
+    const committed = (d.type||'invoice')!=='quote' || Number(d.advance)>0;
+    const tag = d.type==='block' ? '<span class="ag-tag" style="background:var(--block-soft);color:var(--block)">Blocked</span>'
+      : !committed ? '<span class="ag-tag tentative">Tentative</span>'
+      : isNow ? '<span class="ag-tag now">Now</span>' : '<span class="ag-tag upcoming">Upcoming</span>';
+    const publicBadge = d.mode==='Razorpay'
+      ? `<span class="ag-tag" style="background:var(--inv-soft);color:var(--inv)">Paid online</span>`
+      : d.source==='public'
+      ? `<span class="ag-tag" style="background:var(--danger-soft,#fbecea);color:var(--danger,#c0584b)">New enquiry</span>` : '';
+    const inner = `
+      <div class="ag-top"><span class="ag-no"${d.type==='block' ? ` style="color:${otaBlockColor(d.guest)}"` : ''}>${esc(d.type==='block' ? (d.guest||'Blocked') : d.no)}</span><span style="display:flex;gap:6px">${publicBadge}${tag}</span></div>
+      ${d.type==='block' ? '' : `<div class="ag-guest">${esc(d.guest||'—')}</div>`}
+      <div class="ag-dates">${fmtDate(d.checkin)} → ${fmtDate(d.checkout)}</div>`;
+    return d.type==='block' ? `<div class="ag-item">${inner}</div>` : `<a class="ag-item" href="stay.html?open=${encodeURIComponent(d.no)}">${inner}</a>`;
+  }).join('');
+}
+
+/* ---------- WIRE UP ---------- */
+$('#calPrev').addEventListener('click', ()=>{ view.setMonth(view.getMonth()-1); renderCalendar(); renderStats(); });
+$('#calNext').addEventListener('click', ()=>{ view.setMonth(view.getMonth()+1); renderCalendar(); renderStats(); });
+$('#calToday').addEventListener('click', ()=>{ view=new Date(); view.setDate(1); renderCalendar(); renderStats(); });
+$('#fSearch').addEventListener('input', e=>{ FILTERS.q=e.target.value; render(); });
+$('#fType').querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>{
+  FILTERS.type = b.dataset.t;
+  $('#fType').querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b));
+  render();
+}));
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ $('#dayOverlay').classList.remove('show'); $('#blockOverlay').classList.remove('show'); $('#checkinOverlay').classList.remove('show'); }
+});
+
+/* ---------- BLOCK DATES ---------- */
+// Keeps the End-date picker from ever offering a date before Start —
+// native `min` attribute, not just the end<start check saveBlock() already
+// does on submit, so an invalid range can't be picked in the first place.
+function syncBkEndMin(){
+  const end = $('#bkEnd');
+  end.min = $('#bkStart').value || '';
+  if(end.min && end.value && end.value < end.min) end.value = end.min;
+}
+function openBlockModal(){
+  $('#bkStart').value = todayISO();
+  $('#bkEnd').value = todayISO();
+  syncBkEndMin();
+  $('#bkReason').value = '';
+  $('#bkErr').textContent = '';
+  $('#bkChips').querySelectorAll('.reason-chip').forEach(c=>c.classList.remove('on'));
+  $('#blockOverlay').classList.add('show');
+  setTimeout(()=>$('#bkStart').focus(), 50);
+}
+$('#bkStart').addEventListener('input', syncBkEndMin);
+function closeBlockModal(){ $('#blockOverlay').classList.remove('show'); }
+$('#btnBlock').addEventListener('click', openBlockModal);
+$('#bkCancel').addEventListener('click', closeBlockModal);
+$('#blockOverlay').addEventListener('click', e=>{ if(e.target===$('#blockOverlay')) closeBlockModal(); });
+$('#bkChips').querySelectorAll('.reason-chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    $('#bkReason').value = chip.dataset.r;
+    $('#bkChips').querySelectorAll('.reason-chip').forEach(c=>c.classList.toggle('on', c===chip));
+  });
+});
+
+async function saveBlock(){
+  const start = $('#bkStart').value, end = $('#bkEnd').value;
+  const reason = $('#bkReason').value.trim() || 'Blocked';
+  if(!start || !end){ $('#bkErr').textContent = 'Pick a start and end date.'; return; }
+  if(end < start){ $('#bkErr').textContent = 'End date is before the start date.'; return; }
+  const checkout = addDays(end, 1); // "end" is inclusive; internal model stores an exclusive checkout
+
+  const btn = $('#bkSave');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const entry = {
+    no: 'BLOCK-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6),
+    type: 'block', guest: reason, checkin: start, checkout,
+    savedAt: Date.now(),
+  };
+  STAYS.push(entry);
+  try{
+    const ok = await pushStays();
+    if(ok===false) return; // pushStays already redirected on 401
+    render();
+    closeBlockModal();
+  }catch(e){
+    STAYS.pop();
+    $('#bkErr').textContent = 'Could not save: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Block dates';
+  }
+}
+$('#bkSave').addEventListener('click', saveBlock);
+
+// Logo from settings (shared with other tools)
+(function(){
+  try{ const s=JSON.parse(localStorage.getItem('ryst_quote_settings')||'null'); if(s&&s.logo){ $('#logo').src=s.logo; return; } }catch(e){}
+})();
+
+load();
+</script>
+</body>
+</html>

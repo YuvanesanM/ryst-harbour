@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<title>RYST Harbour — Sign in</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --danger:#c0584b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  input{font-family:inherit}
+
+  /* ── SHARED LAYOUT ── */
+  .view{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1100px 560px at 50% -8%,#ffffff 0%,var(--bg) 65%)}
+  .view[hidden]{display:none}
+
+  /* ── LOGIN ── */
+  .login-card{width:min(380px,100%);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 32px;text-align:center;box-shadow:0 18px 50px rgba(40,50,40,.10);display:flex;flex-direction:column;gap:14px}
+  .login-card img{height:72px;margin:0 auto;display:block;object-fit:contain}
+  .login-card h1{font-weight:600;font-size:19px;letter-spacing:.2px}
+  .login-card p{color:var(--muted);font-size:13px}
+  .login-err{color:var(--danger);font-size:12.5px;min-height:16px}
+
+  /* ── Telegram OTP alternative ── */
+  .login-divider{display:flex;align-items:center;gap:12px;color:var(--muted2);font-size:12px;margin:4px 0}
+  .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--line)}
+  .alt-login-btn{
+    background:transparent;border:1.5px solid var(--line);color:var(--muted);
+    padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:600;
+    font-family:inherit;cursor:pointer;transition:.18s;
+  }
+  .alt-login-btn:hover{border-color:var(--accent);color:var(--accent-d)}
+  .tg-form{display:flex;flex-direction:column;gap:10px;text-align:left}
+  .tg-form[hidden]{display:none}
+  .tg-hint{color:var(--muted2);font-size:11.5px;text-align:center;margin:0}
+  .tg-field{display:flex;flex-direction:column;gap:4px}
+  .tg-field span{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);font-weight:600}
+  .tg-field input{
+    border:1.5px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;
+    color:var(--ink);background:var(--panel2);outline:none;transition:border-color .15s;
+  }
+  .tg-field input:focus{border-color:var(--accent)}
+  .tg-btn{
+    background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px;
+    font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;transition:.18s;
+  }
+  .tg-btn:hover{background:var(--accent-d)}
+  .tg-btn:disabled{opacity:.6;cursor:not-allowed}
+  .tg-link-btn{
+    background:transparent;border:none;color:var(--muted2);font-size:12px;font-weight:600;
+    font-family:inherit;cursor:pointer;text-decoration:underline;padding:4px;
+    align-self:center;
+  }
+  .tg-link-btn:hover{color:var(--accent-d)}
+  #tgCodeStep{display:flex;flex-direction:column;gap:10px}
+  #tgCodeStep[hidden]{display:none}
+
+  /* ── HOME ── */
+  #homeView{gap:36px}
+  #homeLogo{max-height:72px;max-width:220px;display:block}
+  .home-cards{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+  .home-card{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:32px 28px;width:210px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:.18s;text-align:center;font-family:inherit;color:inherit}
+  .home-card:hover{border-color:var(--accent);box-shadow:0 8px 28px rgba(60,100,60,.13);transform:translateY(-3px)}
+  .hc-icon{width:52px;height:52px;background:var(--accent-soft);border-radius:13px;display:flex;align-items:center;justify-content:center;color:var(--accent-d)}
+  .hc-title{font-size:15px;font-weight:700;color:var(--ink)}
+  .hc-sub{font-size:12px;color:var(--muted2);line-height:1.45}
+  /* Booking Calendar is the daily hub — first in the grid and visually
+     anchored so it reads as the default landing point, not just one tile
+     among equals. */
+  .home-card.primary{border-color:var(--accent);background:linear-gradient(180deg,var(--accent-soft) 0%,var(--panel) 60%)}
+  .home-card.primary:hover{box-shadow:0 8px 28px rgba(60,100,60,.2)}
+  .home-card.primary .hc-icon{background:var(--accent);color:#fff}
+  .logout-btn{margin-top:8px;background:transparent;border:1.5px solid var(--line);color:var(--muted2);padding:10px 24px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:.18s}
+  .install-app-btn{margin-top:14px;background:#0e2420;color:#f6f1e6;border:0;padding:11px 22px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.3px;display:inline-flex;align-items:center;gap:8px}
+  .install-app-btn[hidden]{display:none}
+  .logout-btn:hover{border-color:var(--danger,#c0584b);color:var(--danger,#c0584b)}
+  @media(max-width:600px){
+    #homeView{overflow-y:auto;justify-content:flex-start;padding-top:32px;padding-bottom:32px}
+    .home-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+    .home-card{width:100%;padding:22px 14px;gap:9px}
+    .hc-icon{width:42px;height:42px;border-radius:10px}
+    .hc-title{font-size:13.5px}
+    .hc-sub{font-size:11px}
+    #homeLogo{max-height:52px}
+  }
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#0e2420">
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginView" class="view">
+  <div class="login-card">
+    <img id="loginLogo" alt="RYST 109A" data-prop-alt="name" data-prop-src="logoUrl" src="/assets/stay-logo.webp">
+    <h1 data-prop="name">RYST 109A</h1>
+    <p>Sign in with Google to continue</p>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <div class="login-err" id="loginErr"></div>
+
+    <div class="login-divider"><span>or</span></div>
+    <button type="button" id="showTgLoginBtn" class="alt-login-btn">Sign in with Telegram</button>
+
+    <div id="tgLoginForm" class="tg-form" hidden>
+      <p class="tg-hint">For staff with a Telegram chat ID set in Settings → User Access.</p>
+      <label class="tg-field"><span>Email</span><input type="email" id="tgEmail" autocomplete="username" placeholder="you@example.com"></label>
+      <button type="button" id="tgSendCodeBtn" class="tg-btn">Send code via Telegram</button>
+
+      <div id="tgCodeStep" hidden>
+        <label class="tg-field"><span>Code from Telegram</span><input type="text" id="tgCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"></label>
+        <button type="button" id="tgVerifyBtn" class="tg-btn">Verify &amp; sign in</button>
+        <button type="button" id="tgResendBtn" class="tg-link-btn">Resend code</button>
+      </div>
+      <div class="login-err" id="tgErr"></div>
+    </div>
+    <button type="button" id="showDemoLoginBtn" class="tg-link-btn" style="margin-top:14px">Demo / reviewer sign-in</button>
+    <div id="demoLoginForm" class="tg-form" hidden>
+      <p class="tg-hint">Opens the app with sample data for app-store review. Staff: use Google or Telegram above.</p>
+      <label class="tg-field"><span>Username</span><input type="text" id="demoUser" autocomplete="username" autocapitalize="none"></label>
+      <label class="tg-field"><span>Password</span><input type="password" id="demoPass" autocomplete="current-password"></label>
+      <button type="button" id="demoLoginBtn" class="tg-btn">Sign in to demo</button>
+      <div class="login-err" id="demoErr"></div>
+    </div>
+    <button type="button" class="install-app-btn" hidden>📲 Install RYST Harbour app</button>
+  </div>
+</div>
+
+<!-- ── HOME ── -->
+<div id="homeView" class="view" hidden>
+  <img id="homeLogo" alt="RYST 109A" data-prop-alt="name" data-prop-src="logoUrl" src="/assets/stay-logo.webp">
+  <div class="home-cards">
+    <!-- Ordered guest-lifecycle first (Booking Calendar → Stay Quote →
+         Check-in/out → Feedback — the sequence a single stay actually moves
+         through), then daily operations (Casa de RYST → Petty Cash →
+         Inventory), then reporting/admin last (Profit & Loss → Settings,
+         the two lowest-frequency, most "look at occasionally" pages). -->
+    <button class="home-card primary" data-module="bookings" onclick="window.location.href='bookings.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+      <span class="hc-title">Booking Calendar</span>
+      <span class="hc-sub">Occupancy, revenue &amp; upcoming stays</span>
+    </button>
+    <button class="home-card" data-module="bookings" onclick="window.location.href='stay.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/></svg></div>
+      <span class="hc-title">Stay Quote &amp; Invoice</span>
+      <span class="hc-sub">Villa invoices &amp; quotations</span>
+    </button>
+    <button class="home-card" data-module="checklist" onclick="window.location.href='checklist.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12l3 3 7-7"/></svg></div>
+      <span class="hc-title">Check-in / Check-out</span>
+      <span class="hc-sub">Villa walkthrough checklist</span>
+    </button>
+    <button class="home-card" data-module="guestRegister" onclick="window.location.href='guest-register.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+      <span class="hc-title">Guest Register</span>
+      <span class="hc-sub">Upcoming stays, notes &amp; payment status</span>
+    </button>
+    <button class="home-card" data-module="feedback" onclick="window.location.href='reviews.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.2l7.1-.6z"/></svg></div>
+      <span class="hc-title">Guest Feedback</span>
+      <span class="hc-sub">Post-stay reviews &amp; ratings</span>
+    </button>
+    <button class="home-card" data-module="restaurant" onclick="window.location.href='restaurant.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h0a2 2 0 002-2V2M7 2v20M11 2v7a2 2 0 002 2h0a2 2 0 002-2V2"/><path d="M18 2c-1.1 1.5-1.5 3.4-1.5 5.5 0 2.2.5 4 1.5 5.5v9"/></svg></div>
+      <span class="hc-title" data-prop="restaurantName">Casa de RYST</span>
+      <span class="hc-sub">Restaurant billing, menu &amp; inventory</span>
+    </button>
+    <button class="home-card" data-module="petty-cash" onclick="window.location.href='petty-cash.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><circle cx="12" cy="15" r="1.6"/></svg></div>
+      <span class="hc-title">Petty Cash</span>
+      <span class="hc-sub">Caretaker expenses &amp; reimbursements</span>
+    </button>
+    <button class="home-card" data-module="inventory" onclick="window.location.href='inventory.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+      <span class="hc-title">Inventory &amp; Restock</span>
+      <span class="hc-sub">Consumables &amp; shopping list</span>
+    </button>
+    <button class="home-card" data-module="reports" onclick="window.location.href='reports.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div>
+      <span class="hc-title">Profit &amp; Loss</span>
+      <span class="hc-sub">Revenue vs. petty-cash spend</span>
+    </button>
+    <button class="home-card" data-module="settings" onclick="window.location.href='settings.html'">
+      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
+      <span class="hc-title">Rate Card &amp; Settings</span>
+      <span class="hc-sub">Pricing, bank details &amp; business info</span>
+    </button>
+  </div>
+  <button type="button" class="install-app-btn" hidden>📲 Install RYST Harbour app</button>
+  <button id="logoutBtn" class="logout-btn" type="button">⎋ Log out</button>
+</div>
+
+<script>
+// "Install RYST Harbour app" — Chrome on Android offers installing this
+// page's staff.webmanifest as a real app (home-screen/app-drawer icon,
+// full screen). Shown only when Chrome says it's installable and we're not
+// already running as the installed app.
+(function(){
+  let deferred = null;
+  const btns = () => document.querySelectorAll('.install-app-btn');
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferred = e;
+    if(!standalone) btns().forEach(b => b.hidden = false);
+  });
+  window.addEventListener('appinstalled', () => { deferred = null; btns().forEach(b => b.hidden = true); });
+  document.addEventListener('click', async e => {
+    if(!e.target.closest('.install-app-btn') || !deferred) return;
+    deferred.prompt();
+    await deferred.userChoice.catch(()=>{});
+    deferred = null; btns().forEach(b => b.hidden = true);
+  });
+})();
+const PROXY_URL = 'https://data.ryst.in';
+let proxyToken = localStorage.getItem('ryst_proxy_token') || '';
+
+function showHome(){
+  // Swap views immediately — no network wait
+  document.getElementById('loginView').setAttribute('hidden','');
+  document.getElementById('loginView').style.display='';
+  document.getElementById('homeView').removeAttribute('hidden');
+  applyRoleView();
+}
+
+// Owner always sees every card. Coordinator/caretaker see only the cards for
+// modules granted in Settings → User Access (data-module on each card
+// mirrors MODULES in the proxy's server.js). A caretaker signed in before
+// per-user module access existed has no ryst_user_modules cached yet —
+// fall back to the same legacy default the server assumes for them
+// (petty-cash/inventory/checklist) rather than hiding everything.
+function applyRoleView(){
+  const role = localStorage.getItem('ryst_user_role') || 'owner';
+  if(role === 'owner'){
+    document.querySelectorAll('[data-module]').forEach(el=> el.style.display = '');
+    return;
+  }
+  let modules;
+  try { modules = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { modules = null; }
+  if(!Array.isArray(modules)) modules = role === 'caretaker' ? ['petty-cash','inventory','checklist','guestRegister'] : [];
+  document.querySelectorAll('[data-module]').forEach(el=>{
+    el.style.display = modules.includes(el.dataset.module) ? '' : 'none';
+  });
+}
+
+// ── Google OAuth ──────────────────────────────────────────────────────────
+// Create a Client ID at console.cloud.google.com → APIs & Services → Credentials
+// Add https://stay.ryst.in as an Authorised JavaScript origin (this uses the
+// same OAuth client and proxy backend as signage.ryst.in)
+const GOOGLE_CLIENT_ID = '717827758789-99ugj40a6j2rr4r7db26shn0hivq0vv0.apps.googleusercontent.com';
+
+// Shared by both sign-in paths (Google and Telegram OTP) — same token/
+// role/admin/modules shape comes back from every /auth* route that issues
+// one, so there's exactly one place that decides what gets cached and when
+// the home screen shows.
+function applyAuthSuccess(data){
+  proxyToken = data.token;
+  localStorage.setItem('ryst_proxy_token', data.token);
+  if (data.email) localStorage.setItem('ryst_user_email', data.email);
+  if (data.role)  localStorage.setItem('ryst_user_role', data.role);
+  // Admin is now assigned via Settings → User Access (data-driven), not
+  // a hardcoded email — cache it the same way as role so pages that
+  // gate admin-only buttons don't have to guess.
+  localStorage.setItem('ryst_user_admin', data.isAdmin ? 'true' : 'false');
+  localStorage.setItem('ryst_user_modules', JSON.stringify(Array.isArray(data.modules) ? data.modules : []));
+  showHome();
+}
+
+async function handleGoogleLogin(credentialResponse) {
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = 'Verifying…';
+  // The proxy runs on Render's free tier and can cold-start for 30–60s. Keep the
+  // user informed, but abort after 70s so the UI never hangs on 'Verifying…'.
+  const ctrl = new AbortController();
+  const slowTimer = setTimeout(() => {
+    errEl.textContent = 'Waking up the server… this can take up to a minute.';
+  }, 4000);
+  const abortTimer = setTimeout(() => ctrl.abort(), 70000);
+  try {
+    const res = await fetch(PROXY_URL + '/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ googleIdToken: credentialResponse.credential }),
+      signal: ctrl.signal
+    });
+    const data = await res.json();
+    if (data.ok && data.token) {
+      errEl.textContent = '';
+      applyAuthSuccess(data);
+    } else {
+      errEl.textContent = data.error || 'Access denied.';
+    }
+  } catch(e) {
+    errEl.textContent = (e.name === 'AbortError')
+      ? 'Server timed out — please reload and try again.'
+      : 'Cannot reach proxy — check connection';
+  } finally {
+    clearTimeout(slowTimer);
+    clearTimeout(abortTimer);
+  }
+}
+
+// If a token exists, show the home screen instantly and validate in the
+// background. This avoids a blank page during Render cold starts (the
+// /petty-cash fetch can take 30–60s). We only drop back to the login form on
+// an explicit auth rejection (401) — a transient network error keeps the user
+// on home, and the tool pages re-validate when opened.
+(function bootAuth(){
+  if(!proxyToken) return; // no token → stay on the login form
+  showHome();
+  fetch(PROXY_URL+'/petty-cash',{headers:{'X-Token':proxyToken}}).then(res=>{
+    if(res && res.status===401){
+      proxyToken=''; localStorage.removeItem('ryst_proxy_token');
+      document.getElementById('homeView').setAttribute('hidden','');
+      document.getElementById('loginView').removeAttribute('hidden');
+      document.getElementById('loginView').style.display='';
+    }
+  }).catch(()=>{});
+})();
+
+// Render the Google button. Idempotent — safe to call from multiple triggers.
+let gsiRendered = false;
+function initGoogleSignIn() {
+  if (gsiRendered) return;
+  if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+  const target = document.getElementById('googleSignInBtn');
+  if (!target) return;
+  gsiRendered = true;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleLogin,
+    auto_select: false,
+  });
+  google.accounts.id.renderButton(target, { theme: 'outline', size: 'large', width: 316, text: 'signin_with' });
+}
+
+// GSI invokes this the moment its library finishes loading — this is the
+// reliable trigger when the async script executes AFTER the load event.
+window.onGoogleLibraryLoad = initGoogleSignIn;
+// Also try on load, in case the library was already present by then.
+window.addEventListener('load', initGoogleSignIn);
+// If GSI never loads (offline, ad blocker, CSP), surface an error instead of a
+// blank card so the user has a recovery path.
+setTimeout(() => {
+  if (!gsiRendered) {
+    const errEl = document.getElementById('loginErr');
+    if (errEl) errEl.textContent = 'Could not load Google Sign-In — check your connection or disable ad blockers, then reload.';
+  }
+}, 8000);
+
+// ── Telegram OTP login (alternative to Google) ──────────────────────────
+document.getElementById('showTgLoginBtn').addEventListener('click', () => {
+  document.getElementById('tgLoginForm').hidden = false;
+  document.getElementById('showTgLoginBtn').hidden = true;
+  document.getElementById('tgEmail').focus();
+});
+
+async function requestTelegramCode(){
+  const email = document.getElementById('tgEmail').value.trim();
+  const errEl = document.getElementById('tgErr');
+  const btn = document.getElementById('tgSendCodeBtn');
+  if(!email){ errEl.textContent = 'Please enter your email.'; return; }
+  btn.disabled = true; btn.textContent = 'Sending…';
+  errEl.textContent = '';
+  try{
+    const res = await fetch(PROXY_URL + '/auth/telegram/request', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(data.ok){
+      document.getElementById('tgCodeStep').hidden = false;
+      document.getElementById('tgCode').focus();
+    } else {
+      errEl.textContent = data.error || 'Could not send code — please try again.';
+    }
+  }catch(e){
+    errEl.textContent = 'Cannot reach proxy — check connection';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Send code via Telegram';
+  }
+}
+document.getElementById('tgSendCodeBtn').addEventListener('click', requestTelegramCode);
+document.getElementById('tgResendBtn').addEventListener('click', requestTelegramCode);
+
+document.getElementById('tgVerifyBtn').addEventListener('click', async () => {
+  const email = document.getElementById('tgEmail').value.trim();
+  const code = document.getElementById('tgCode').value.trim();
+  const errEl = document.getElementById('tgErr');
+  const btn = document.getElementById('tgVerifyBtn');
+  if(!code){ errEl.textContent = 'Please enter the code.'; return; }
+  btn.disabled = true; btn.textContent = 'Verifying…';
+  errEl.textContent = '';
+  try{
+    const res = await fetch(PROXY_URL + '/auth/telegram/verify', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(data.ok && data.token){
+      errEl.textContent = '';
+      applyAuthSuccess(data);
+    } else {
+      errEl.textContent = data.error || 'Incorrect code.';
+    }
+  }catch(e){
+    errEl.textContent = 'Cannot reach proxy — check connection';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Verify & sign in';
+  }
+});
+
+// Demo / reviewer sign-in (Play Console → App access). Unlocks sample data
+// only — staff-demo.js serves every data request from built-in fixtures and
+// refuses writes, so these credentials never touch a real account.
+const DEMO_USER = 'user', DEMO_PASS = 'password';
+document.getElementById('showDemoLoginBtn').addEventListener('click', ()=>{
+  const f = document.getElementById('demoLoginForm');
+  f.hidden = !f.hidden;
+  if(!f.hidden) document.getElementById('demoUser').focus();
+});
+function demoSignIn(){
+  const u = document.getElementById('demoUser').value.trim().toLowerCase();
+  const p = document.getElementById('demoPass').value;
+  if(u !== DEMO_USER || p !== DEMO_PASS){ document.getElementById('demoErr').textContent = 'Incorrect username or password.'; return; }
+  localStorage.setItem('ryst_demo', '1');
+  localStorage.setItem('ryst_proxy_token', 'demo');
+  localStorage.setItem('ryst_user_email', 'reviewer@example.com');
+  localStorage.setItem('ryst_user_role', 'owner');
+  localStorage.setItem('ryst_user_admin', 'true');
+  localStorage.setItem('ryst_user_modules', '[]');
+  location.reload(); // reload so staff-demo.js is active from the first request
+}
+document.getElementById('demoLoginBtn').addEventListener('click', demoSignIn);
+document.getElementById('demoPass').addEventListener('keydown', e=>{ if(e.key==='Enter') demoSignIn(); });
+
+function logout(){
+  if(localStorage.getItem('ryst_demo') === '1'){ window.rystExitDemo(); return; }
+  proxyToken='';
+  localStorage.removeItem('ryst_proxy_token');
+  localStorage.removeItem('ryst_user_email');
+  localStorage.removeItem('ryst_user_role');
+  localStorage.removeItem('ryst_user_admin');
+  localStorage.removeItem('ryst_user_modules');
+  document.getElementById('homeView').setAttribute('hidden','');
+  document.getElementById('loginView').removeAttribute('hidden');
+  document.getElementById('loginView').style.display='';
+  try { google.accounts.id.disableAutoSelect(); } catch(e) {}
+}
+document.getElementById('logoutBtn').addEventListener('click', logout);
+</script>
+</body>
+</html>

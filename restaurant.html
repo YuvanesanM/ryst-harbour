@@ -1,0 +1,1803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<title data-title="{restaurantName} · Restaurant · {name}">Casa de RYST · Restaurant · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097;
+    --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  button,input,select,textarea{font-family:inherit}
+  button{cursor:pointer}
+  a{color:var(--accent-d)}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 18px}
+  header.top img{height:38px;object-fit:contain}
+  header.top .ttl{font-weight:700;font-size:18px;letter-spacing:.2px}
+  header.top .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px}
+  header.top .spacer{flex:1}
+  .badge{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase}
+  .badge.owner{background:var(--accent-soft);color:var(--accent-d)}
+  .badge.caretaker{background:var(--warn-soft);color:var(--warn)}
+  .who{font-size:12px;color:var(--muted);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tbtn{background:var(--panel);border:1.5px solid var(--line);color:var(--muted);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;transition:.15s}
+  .tbtn:hover{border-color:var(--accent);color:var(--accent-d)}
+  .tbtn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .tbtn.primary:hover{background:var(--accent-d);color:#fff}
+
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 15px;box-shadow:0 6px 18px rgba(40,50,40,.04)}
+  .card .lbl{font-size:11.5px;font-weight:600;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase}
+  .card .val{font-size:25px;font-weight:700;margin-top:7px;letter-spacing:-.5px}
+  .card .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .card.hero{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-d) 100%);border:none;color:#fff}
+  .card.hero .lbl,.card.hero .sub{color:#dff0e6}
+  .card.warn .val{color:var(--warn)}
+  .card.danger .val{color:var(--danger)}
+
+  .tabs{display:flex;gap:6px;margin:0 0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+  .tab-btn{background:transparent;border:none;padding:11px 16px;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:.15s;flex-shrink:0}
+  .tab-btn:hover{color:var(--ink)}
+  .tab-btn.active{color:var(--accent-d);border-bottom-color:var(--accent)}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 6px 18px rgba(40,50,40,.04);margin-bottom:16px}
+  .panel h2{font-size:13px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted2);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .panel h2 .spacer{flex:1}
+  .panel h2 .linklike{font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--accent-d);background:none;border:none;cursor:pointer}
+
+  .btn{border:none;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:600;background:var(--panel2);color:var(--ink);display:inline-flex;align-items:center;gap:6px;transition:.15s}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-d)}
+  .btn.ghost{background:var(--panel);border:1.5px solid var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent-d)}
+  .btn.danger{background:var(--danger-soft);color:var(--danger)}
+  .btn.danger:hover{background:#f6dad6}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.sm{padding:7px 11px;font-size:12px;border-radius:8px}
+
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+  .filters label{font-size:11.5px;font-weight:600;color:var(--muted2);display:flex;flex-direction:column;gap:4px}
+  .filters select,.filters input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:13px;color:var(--ink);outline:none}
+  .filters select:focus,.filters input:focus{border-color:var(--accent)}
+  .filters .grow{flex:1;min-width:140px}
+  .chk-toggle{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;white-space:nowrap}
+
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:12px;font-weight:600;color:var(--muted)}
+  .field input,.field select,.field textarea{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:13.5px;color:var(--ink);outline:none;width:100%}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .merr{color:var(--danger);font-size:12.5px;min-height:16px}
+
+  .rc-table-wrap{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:12px}
+  table.rc-table{width:100%;border-collapse:collapse;min-width:480px}
+  table.rc-table thead th{background:var(--panel2);border-bottom:2px solid var(--line);padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);font-weight:600;white-space:nowrap}
+  table.rc-table thead th.r{text-align:right}
+  table.rc-table tbody tr{border-bottom:1px solid var(--line)}
+  table.rc-table tbody tr:last-child{border-bottom:none}
+  table.rc-table tbody tr:hover td{background:var(--accent-soft)}
+  table.rc-table td{padding:4px 6px;vertical-align:middle;font-size:13px}
+  table.rc-table td input,table.rc-table td select{width:100%;background:transparent;border:1px solid transparent;border-radius:7px;padding:7px 9px;font-size:13px;font-family:inherit;color:var(--ink)}
+  table.rc-table td input:hover,table.rc-table td select:hover{border-color:var(--line);background:var(--panel2)}
+  table.rc-table td input:focus,table.rc-table td select:focus{outline:none;border-color:var(--accent);background:#fff}
+  table.rc-table td input.r{text-align:right}
+  .rc-del{background:transparent;border:1px solid var(--line);color:var(--muted2);border-radius:8px;width:28px;height:28px;font-size:15px;line-height:1;padding:0}
+  .rc-del:hover{border-color:var(--danger);color:var(--danger)}
+  .rc-add{background:transparent;border:1px dashed #cdd1cb;color:var(--muted);padding:10px 15px;border-radius:9px;font-size:12.5px}
+  .rc-add:hover{border-color:var(--accent);color:var(--accent-d)}
+
+  .cat-group{margin-bottom:16px}
+  .cat-head{font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted2);padding:0 2px 8px;display:flex;align-items:center;gap:8px}
+  .cat-head .cnt{font-weight:500;color:var(--muted2)}
+
+  .dish-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 13px;margin-bottom:7px;flex-wrap:wrap}
+  .dish-main{flex:1;min-width:160px}
+  .dish-name{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:7px}
+  .veg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .veg-dot.veg{background:var(--accent)}
+  .veg-dot.nonveg{background:#b0463a}
+  .dish-sub{font-size:11.5px;color:var(--muted2);margin-top:2px}
+  .dish-price{font-weight:700;font-size:14px;white-space:nowrap;text-align:right}
+  .dish-cost{font-weight:500;font-size:10.5px;color:var(--muted2);white-space:nowrap;margin-top:2px}
+  .dish-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
+  .pill-toggle{font-size:10.5px;font-weight:700;letter-spacing:.3px;padding:3px 9px;border-radius:20px;text-transform:uppercase;border:none;cursor:pointer}
+  .pill-toggle.active{background:var(--accent-soft);color:var(--accent-d)}
+  .pill-toggle.inactive{background:var(--panel2);color:var(--muted2)}
+  .icon-btn{background:none;border:none;color:var(--muted2);font-size:11.5px;text-decoration:underline;cursor:pointer;padding:2px}
+  .icon-btn:hover{color:var(--ink)}
+  .icon-btn.del:hover{color:var(--danger)}
+  body.caretaker-mode .owner-only{display:none!important}
+
+  .inv-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:8px;flex-wrap:wrap}
+  .inv-main{flex:1;min-width:150px}
+  .inv-name{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .inv-status{font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;text-transform:uppercase}
+  .inv-status.ok{background:var(--accent-soft);color:var(--accent-d)}
+  .inv-status.low{background:var(--warn-soft);color:var(--warn)}
+  .inv-status.out{background:var(--danger-soft);color:var(--danger)}
+  .exp-badge{font-size:9.5px;font-weight:700;letter-spacing:.3px;padding:2px 7px;border-radius:20px;text-transform:uppercase}
+  .exp-badge.exp-ok{background:var(--accent-soft);color:var(--accent-d)}
+  .exp-badge.exp-soon{background:var(--warn-soft);color:var(--warn)}
+  .exp-badge.exp-late{background:var(--danger-soft);color:var(--danger)}
+  .inv-sub{font-size:11.5px;color:var(--muted2);margin-top:2px}
+  .stock-bar{width:100%;max-width:220px;height:5px;border-radius:3px;background:var(--panel2);margin-top:7px;overflow:hidden}
+  .stock-bar-fill{height:100%;border-radius:3px;transition:width .2s}
+  .stock-bar-fill.ok{background:var(--accent)}
+  .stock-bar-fill.low{background:var(--warn)}
+  .stock-bar-fill.out{background:var(--danger)}
+  .inv-qty{font-weight:700;font-size:14px;white-space:nowrap;min-width:80px;text-align:right}
+  .inv-actions{display:flex;gap:6px;flex-shrink:0}
+  .batch-list{width:100%;flex-basis:100%;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);display:none}
+  .batch-list.show{display:block}
+  .batch-row{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);padding:3px 0}
+
+  .tablewrap{overflow-x:auto}
+  table.data{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+  table.data th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2);padding:11px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.data td{padding:10px 10px;border-bottom:1px solid var(--panel2);vertical-align:middle}
+  table.data tr:last-child td{border-bottom:none}
+  .amt{font-weight:700;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .status-chip{font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:3px 8px;border-radius:20px;text-transform:uppercase}
+  .status-chip.open{background:var(--warn-soft);color:var(--warn)}
+  .status-chip.settled{background:var(--accent-soft);color:var(--accent-d)}
+  .status-chip.cancelled{background:var(--danger-soft);color:var(--danger)}
+  .status-chip.paid{background:var(--accent-soft);color:var(--accent-d)}
+  .status-chip.unpaid{background:var(--warn-soft);color:var(--warn)}
+
+  .order-builder{display:none;margin-top:6px}
+  .order-builder.show{display:block}
+  .ob-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+  @media(max-width:800px){.ob-grid{grid-template-columns:1fr}}
+  .menu-picker{max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel2)}
+  .mp-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 6px;border-bottom:1px solid var(--line);font-size:13px;transition:background .15s}
+  .mp-item:last-child{border-bottom:none}
+  .mp-item.selected{background:var(--accent-soft);border-radius:8px}
+  .mp-name{display:flex;align-items:center;gap:7px;font-weight:600}
+  .mp-add{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700}
+  .mp-add:hover{background:var(--accent-d)}
+  .mp-qty{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .mp-qty span{min-width:16px;text-align:center;font-weight:700}
+  .cart-box{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel2);display:flex;flex-direction:column;gap:8px}
+  .cart-item{display:flex;align-items:center;gap:8px;font-size:13px;background:var(--panel);border-radius:9px;padding:7px 9px}
+  .cart-item .nm{flex:1;font-weight:600}
+  .qbtn{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+  .qbtn:hover{border-color:var(--accent);color:var(--accent-d)}
+  .cart-tot{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);padding:2px 0}
+  .cart-tot.grand{font-size:15px;font-weight:700;color:var(--ink);border-top:1px solid var(--line);margin-top:4px;padding-top:8px}
+  .empty{color:var(--muted2);font-size:13px;text-align:center;padding:24px 16px}
+  /* Mobile only — on a wide screen the cart is already visible beside the
+     menu, so a persistent summary bar would just be redundant chrome. */
+  .ob-cartbar{display:none}
+  @media(max-width:800px){
+    .ob-cartbar.show{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(40,50,40,.1)}
+    .ob-cartbar span{font-weight:700;font-size:13.5px}
+  }
+
+  .overlay{position:fixed;inset:0;background:rgba(29,33,28,.5);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel);border-radius:16px;width:min(460px,100%);max-height:86vh;overflow-y:auto;box-shadow:0 24px 70px rgba(20,30,20,.28)}
+  .modal.wide{width:min(640px,100%)}
+  .modal h3{font-size:16px;font-weight:700;padding:20px 22px 0}
+  .mbody{padding:14px 22px 22px;display:flex;flex-direction:column;gap:10px}
+  .mfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:4px;padding:0 22px 20px}
+
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:100;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{background:var(--danger)}
+  #loader{position:fixed;inset:0;background:rgba(243,244,241,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:90;color:var(--muted)}
+  #loader.hide{display:none}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  #receiptArea{display:none}
+  @page{ size:A4; margin:14mm }
+  @media print{
+    body *{visibility:hidden}
+    #receiptArea, #receiptArea *{visibility:visible}
+    #receiptArea{
+      display:block!important;position:absolute;top:0;left:0;width:100%;
+      font-family:"Outfit",system-ui,sans-serif;color:#1d211c;
+    }
+    #receiptArea, #receiptArea *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    .r-doc{max-width:480px;margin:0 auto}
+
+    .r-head{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:3px solid #3d9b69}
+    .r-head img{height:46px;object-fit:contain;flex-shrink:0}
+    .r-head .nm{font-size:19px;font-weight:700;letter-spacing:.2px}
+    .r-head .sub{font-size:11px;color:#5f655d;margin-top:2px}
+
+    .r-title{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#5f655d;text-align:center;margin:18px 0}
+
+    .r-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;font-size:12px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #e3e5e0}
+    .r-meta div{display:flex;flex-direction:column;gap:2px}
+    .r-meta .r-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:#9aa097}
+    .r-meta b{font-size:13px;font-weight:700}
+    .r-meta .r-right{text-align:right}
+
+    table.r-items{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px}
+    table.r-items th{
+      text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#5f655d;
+      padding:0 0 8px;border-bottom:1.5px solid #1d211c;
+    }
+    table.r-items td{padding:8px 0;border-bottom:1px solid #eef0ed;vertical-align:top}
+    table.r-items th.num,table.r-items td.num{text-align:right;white-space:nowrap}
+    table.r-items td.nm{font-weight:600}
+
+    .r-totals{margin-top:14px;padding-top:2px}
+    .r-tot{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;color:#5f655d}
+    .r-tot.grand{
+      font-weight:700;font-size:16px;color:#1d211c;border-top:1.5px solid #1d211c;
+      margin-top:8px;padding-top:10px;
+    }
+    .r-tot.grand span:last-child{color:#2f7d54}
+
+    .r-foot{text-align:center;font-size:11px;color:#5f655d;line-height:1.6;margin-top:32px;padding-top:14px;border-top:1px dashed #cfd3cc}
+    .r-foot .brand{font-weight:700;color:#2f7d54;letter-spacing:.3px}
+  }
+
+  @media(max-width:680px){
+    .wrap{padding:14px 12px 60px}
+    header.top .who{display:none}
+    .cards{grid-template-columns:1fr 1fr}
+    .card .val{font-size:20px}
+    .field input,.field select{font-size:16px}
+    .two,.three{grid-template-columns:1fr}
+  }
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#0e2420">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img id="logo" alt="RYST" src="/assets/stay-logo.webp" />
+    <div class="ttl"><span data-prop="restaurantName">Casa de RYST</span><small><span data-prop="name">RYST 109A</span> · Restaurant</small></div>
+    <div class="spacer"></div>
+    <span id="roleBadge" class="badge owner">Owner</span>
+    <span id="whoami" class="who"></span>
+    <button class="tbtn" onclick="window.location.href='login.html'">⌂ Home</button>
+  </header>
+
+  <div class="cards">
+    <div class="card hero">
+      <div class="lbl">Today's sales</div>
+      <div class="val" id="cSales">—</div>
+      <div class="sub" id="cSalesSub">settled orders</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Open orders</div>
+      <div class="val" id="cOpen">—</div>
+      <div class="sub">running tabs</div>
+    </div>
+    <div class="card warn">
+      <div class="lbl">Low stock</div>
+      <div class="val" id="cLow">—</div>
+      <div class="sub">at or below reorder level</div>
+    </div>
+    <div class="card danger">
+      <div class="lbl">Expiring soon</div>
+      <div class="val" id="cExp">—</div>
+      <div class="sub" id="cExpSub">within alert window</div>
+    </div>
+  </div>
+
+  <div class="tabs" id="rsTabs">
+    <button type="button" class="tab-btn active" data-tab="billing">Billing</button>
+    <button type="button" class="tab-btn" data-tab="menu">Menu</button>
+    <button type="button" class="tab-btn" data-tab="inventory">Inventory</button>
+    <button type="button" class="tab-btn" data-tab="purchases">Purchases</button>
+    <button type="button" class="tab-btn owner-only" id="tabReportsBtn" data-tab="reports">Reports</button>
+    <button type="button" class="tab-btn owner-only" id="tabSettingsBtn" data-tab="settings">Settings</button>
+  </div>
+
+  <!-- ══ BILLING ══ -->
+  <div class="tab-panel" data-panel="billing">
+    <div class="panel">
+      <h2>New order<span class="spacer"></span><button class="linklike" id="btnToggleBuilder">+ New order</button></h2>
+      <div class="order-builder" id="orderBuilder">
+        <div class="three" style="margin-bottom:12px">
+          <div class="field"><label>Requested date</label><input id="obDate" type="date"></div>
+          <div class="field"><label>Requested time (optional)</label><input id="obTime" type="time"></div>
+          <div class="field">
+            <label>Guest / table reference</label>
+            <select id="obGuestPick"><option value="">— Pick current stay —</option></select>
+            <input id="obGuest" placeholder="e.g. Room guest — Villa, or Walk-in">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:12px"><label>Note (optional)</label><input id="obNote" placeholder="e.g. No spice, extra portion"></div>
+        <div class="ob-grid">
+          <div>
+            <input id="obSearch" placeholder="Search dishes…" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:13px;margin-bottom:8px">
+            <div class="menu-picker" id="menuPicker"></div>
+          </div>
+          <div class="cart-box" id="obCartBox">
+            <div id="cartList"><div class="empty">No items added yet</div></div>
+            <div class="field"><label>Discount (₹)</label><input id="obDiscount" type="number" min="0" step="1" value="0"></div>
+            <div class="cart-tot"><span>Subtotal</span><span id="obSubtotal">₹0</span></div>
+            <div class="cart-tot"><span id="obGstLbl">GST</span><span id="obGst">₹0</span></div>
+            <div class="cart-tot"><span id="obSvcLbl">Service charge</span><span id="obSvc">₹0</span></div>
+            <div class="cart-tot grand"><span>Total</span><span id="obTotal">₹0</span></div>
+            <div class="field"><label>Payment mode</label>
+              <select id="obPaymentMode">
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Card">Card</option>
+                <option value="Room Account">Room Account (bill later)</option>
+                <option value="">Save as open tab (settle later)</option>
+              </select>
+            </div>
+            <div class="merr" id="obErr"></div>
+            <button class="btn primary" id="btnSaveOrder" style="width:100%;justify-content:center">Save order</button>
+          </div>
+        </div>
+        <div class="ob-cartbar" id="obCartBar">
+          <span id="obCartBarInfo">0 items · ₹0</span>
+          <button type="button" class="btn primary" id="obCartBarBtn">View cart ▾</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <input class="grow" id="ordSearch" placeholder="Search orders (guest, order no)…">
+      <label>Status<select id="ordStatus"><option value="all">All</option><option value="open">Open</option><option value="settled">Settled</option><option value="cancelled">Cancelled</option></select></label>
+    </div>
+    <div class="panel">
+      <h2>Orders</h2>
+      <div class="tablewrap">
+        <table class="data">
+          <thead><tr><th>Order</th><th>Date</th><th>Guest</th><th>Items</th><th class="r">Total</th><th>Payment</th><th>Status</th><th></th></tr></thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MENU ══ -->
+  <div class="tab-panel" data-panel="menu" style="display:none">
+    <div class="filters">
+      <input class="grow" id="menuSearch" placeholder="Search dishes…">
+      <select id="menuCatFilter"><option value="all">All categories</option></select>
+      <button class="btn owner-only" id="btnExportMenu">⬇ Export CSV</button>
+      <button class="btn owner-only" id="btnImportMenu">⬆ Import CSV</button>
+      <input type="file" id="menuImportFile" accept=".csv,text/csv" style="display:none">
+      <button class="btn primary owner-only" id="btnAddDish">＋ Add dish</button>
+    </div>
+    <div id="menuList"></div>
+  </div>
+
+  <!-- ══ INVENTORY ══ -->
+  <div class="tab-panel" data-panel="inventory" style="display:none">
+    <div class="filters">
+      <input class="grow" id="invSearch" placeholder="Search ingredients…">
+      <select id="invCatFilter"><option value="all">All categories</option></select>
+      <label class="chk-toggle"><input type="checkbox" id="invLowOnly"> Low stock only</label>
+      <label class="chk-toggle"><input type="checkbox" id="invExpOnly"> Expiring soon only</label>
+      <button class="btn primary owner-only" id="btnAddInv">＋ Add ingredient</button>
+    </div>
+    <div id="invList"></div>
+  </div>
+
+  <!-- ══ PURCHASES ══ -->
+  <div class="tab-panel" data-panel="purchases" style="display:none">
+    <div class="panel">
+      <h2>New purchase entry</h2>
+      <div class="three" style="margin-bottom:12px">
+        <div class="field"><label>Vendor</label><input id="puVendor" placeholder="e.g. Local supermarket"></div>
+        <div class="field"><label>Bill / invoice no.</label><input id="puBillNo" placeholder="Optional"></div>
+        <div class="field"><label>Date</label><input id="puDate" type="date"></div>
+      </div>
+      <div class="rc-table-wrap">
+        <table class="rc-table">
+          <thead><tr><th>Ingredient</th><th style="width:90px">Unit</th><th class="r" style="width:90px">Qty</th><th class="r" style="width:110px">Cost / unit</th><th style="width:140px">Expiry date</th><th class="r" style="width:100px">Line total</th><th></th></tr></thead>
+          <tbody id="puLines"></tbody>
+        </table>
+      </div>
+      <button class="rc-add" id="puAddLine">+ Add line item</button>
+      <div class="two" style="margin-top:14px">
+        <div class="field"><label>Payment status</label>
+          <select id="puPaymentStatus"><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select>
+        </div>
+        <div class="field"><label>Notes (optional)</label><input id="puNotes"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+        <div style="font-weight:700;font-size:15px">Total: <span id="puGrandTotal">₹0</span></div>
+        <div class="merr" id="puErr" style="flex:1;text-align:right;margin-right:12px"></div>
+        <button class="btn primary" id="btnSavePurchase">Save purchase</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Purchase history</h2>
+      <div class="tablewrap">
+        <table class="data">
+          <thead><tr><th>Date</th><th>Vendor</th><th>Bill no.</th><th>Items</th><th class="r">Total</th><th>Payment</th><th></th></tr></thead>
+          <tbody id="purchasesBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ REPORTS (owner only) ══ -->
+  <div class="tab-panel owner-only" data-panel="reports" style="display:none">
+    <div class="panel">
+      <h2>Sales &amp; profit</h2>
+      <div class="filters" style="margin-bottom:14px">
+        <button type="button" class="tbtn" data-rep-preset="today">Today</button>
+        <button type="button" class="tbtn" data-rep-preset="week">This week</button>
+        <button type="button" class="tbtn" data-rep-preset="month">This month</button>
+        <button type="button" class="tbtn" data-rep-preset="all">All time</button>
+        <label>From <input id="repFrom" type="date"></label>
+        <label>To <input id="repTo" type="date"></label>
+      </div>
+      <div class="cards" style="margin-bottom:14px">
+        <div class="card hero">
+          <div class="lbl">Revenue</div>
+          <div class="val" id="repRevenue">—</div>
+          <div class="sub" id="repOrderCount">settled orders</div>
+        </div>
+        <div class="card">
+          <div class="lbl">Cost of goods sold</div>
+          <div class="val" id="repCogs">—</div>
+          <div class="sub">purchase cost of items sold</div>
+        </div>
+        <div class="card">
+          <div class="lbl">Gross profit</div>
+          <div class="val" id="repProfit">—</div>
+          <div class="sub">revenue minus cost</div>
+        </div>
+        <div class="card">
+          <div class="lbl">Margin</div>
+          <div class="val" id="repMargin">—</div>
+          <div class="sub">profit as % of revenue</div>
+        </div>
+      </div>
+      <div class="merr" id="repCostWarning" style="margin-bottom:10px"></div>
+    </div>
+    <div class="panel">
+      <h2>By category</h2>
+      <div class="tablewrap">
+        <table class="data">
+          <thead><tr><th>Category</th><th class="r">Items sold</th><th class="r">Revenue</th><th class="r">Cost</th><th class="r">Profit</th><th class="r">Margin</th></tr></thead>
+          <tbody id="repCatBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>By dish</h2>
+      <div class="tablewrap">
+        <table class="data">
+          <thead><tr><th>Dish</th><th>Category</th><th class="r">Qty sold</th><th class="r">Revenue</th><th class="r">Cost</th><th class="r">Profit</th><th class="r">Margin</th></tr></thead>
+          <tbody id="repItemBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS (owner only) ══ -->
+  <div class="tab-panel owner-only" data-panel="settings" style="display:none">
+    <div class="panel">
+      <h2>Billing settings</h2>
+      <div class="three">
+        <div class="field"><label>GST %</label><input id="stGst" type="number" min="0" max="100" step="0.01"></div>
+        <div class="field"><label>Service charge %</label><input id="stSvc" type="number" min="0" max="100" step="0.01"></div>
+        <div class="field"><label>Invoice prefix</label><input id="stPrefix" maxlength="10"></div>
+      </div>
+      <div class="two" style="margin-top:12px">
+        <div class="field"><label>Expiry alert window (days)</label><input id="stExpDays" type="number" min="0" step="1"></div>
+        <div class="field"><label>Partner kitchen WhatsApp number</label><input id="stPartnerPhone" placeholder="e.g. 9876543210"></div>
+      </div>
+      <div style="margin-top:12px">
+        <label class="chk-toggle"><input type="checkbox" id="stShowPartnerRate"> Show purchase rate in Partner Kitchen WhatsApp message</label>
+      </div>
+      <div class="merr" id="stErr"></div>
+      <button class="btn primary" id="btnSaveSettings" style="margin-top:12px">Save settings</button>
+    </div>
+    <div class="panel">
+      <h2>Menu categories</h2>
+      <div class="rc-table-wrap">
+        <table class="rc-table"><tbody id="catRows"></tbody></table>
+      </div>
+      <button class="rc-add" id="catAdd">+ Add category</button>
+      <div style="margin-top:12px"><button class="btn primary" id="btnSaveCats">Save categories</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add / edit dish modal -->
+<div class="overlay" id="dishOverlay">
+  <div class="modal">
+    <h3 id="dishModalTitle">Add dish</h3>
+    <div class="mbody">
+      <div class="field"><label>Dish name</label><input id="dName"></div>
+      <div class="two">
+        <div class="field"><label>Category</label><select id="dCategory"></select></div>
+        <div class="field"><label>Selling price (₹)</label><input id="dPrice" type="number" min="0" step="1"></div>
+      </div>
+      <div class="two">
+        <div class="field"><label>Cost price (₹) — what you pay per portion</label><input id="dCost" type="number" min="0" step="1"></div>
+        <div class="field"><label>Type</label><select id="dVeg"><option value="true">Vegetarian</option><option value="false">Non-vegetarian</option></select></div>
+      </div>
+      <div class="two">
+        <div class="field"><label>Sourcing</label><input id="dSourcing" list="dSourcingOpts" placeholder="e.g. Partner Kitchen, Kitchen">
+          <datalist id="dSourcingOpts"><option value="Partner Kitchen"><option value="Kitchen"></datalist>
+        </div>
+        <div class="field"><label>MOQ (portions per batch)</label><input id="dMoq" type="number" min="1" step="1"></div>
+      </div>
+      <div class="two">
+        <div class="field"><label>Calories (optional)</label><input id="dKcal" type="number" min="0" step="1"></div>
+        <div class="field" style="justify-content:center"><label class="chk-toggle" style="margin-top:18px"><input type="checkbox" id="dChefSpecial"> Chef's Special</label></div>
+      </div>
+      <div class="field"><label>Description (optional, guest-facing)</label><input id="dDesc"></div>
+      <div class="field"><label>Notes (optional, internal — costing basis, availability window, etc.)</label><input id="dNotes"></div>
+      <div class="merr" id="dErr"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" id="dCancel">Cancel</button>
+      <button class="btn primary" id="dSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import menu CSV — preview before committing -->
+<div class="overlay" id="importOverlay">
+  <div class="modal" style="width:min(760px,100%)">
+    <h3>Import menu — preview</h3>
+    <div class="mbody">
+      <div id="importSummary" style="font-size:13px;color:var(--muted);margin-bottom:10px"></div>
+      <div style="max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:10px">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead><tr style="text-align:left;background:var(--panel2)">
+            <th style="padding:7px 9px">Row</th><th style="padding:7px 9px">Dish</th><th style="padding:7px 9px">Category</th>
+            <th style="padding:7px 9px;text-align:right">Price</th><th style="padding:7px 9px">Status</th>
+          </tr></thead>
+          <tbody id="importRows"></tbody>
+        </table>
+      </div>
+      <div class="merr" id="importErr"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" id="importCancel">Cancel</button>
+      <button class="btn primary" id="importConfirm">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / edit inventory item modal -->
+<div class="overlay" id="invOverlay">
+  <div class="modal">
+    <h3 id="invModalTitle">Add ingredient</h3>
+    <div class="mbody">
+      <div class="field"><label>Ingredient name</label><input id="iName"></div>
+      <div class="two">
+        <div class="field"><label>Category</label><input id="iCategory" placeholder="e.g. Vegetables, Dairy, Seafood"></div>
+        <div class="field"><label>Unit</label><input id="iUnit" placeholder="kg, l, pcs…"></div>
+      </div>
+      <div class="field"><label>Reorder level</label><input id="iReorder" type="number" min="0" step="any"></div>
+      <div class="merr" id="iErr"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" id="iCancel">Cancel</button>
+      <button class="btn primary" id="iSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Consume / waste stock modal -->
+<div class="overlay" id="consumeOverlay">
+  <div class="modal">
+    <h3>Use / waste stock</h3>
+    <div class="mbody">
+      <div id="consumeItemName" style="font-weight:600"></div>
+      <div class="field"><label>Quantity</label><input id="consumeQty" type="number" min="0" step="any"></div>
+      <div class="field"><label>Reason (optional)</label><input id="consumeReason" placeholder="e.g. Used in kitchen, spoilage"></div>
+      <div class="merr" id="consumeErr"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" id="consumeCancel">Cancel</button>
+      <button class="btn primary" id="consumeSave">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="receiptArea"></div>
+
+<div id="loader">
+  <div class="spin" id="loaderSpin"></div>
+  <div id="loaderMsg">Loading restaurant data…</div>
+  <button class="tbtn" id="loaderRetry" style="display:none">Retry</button>
+</div>
+<div id="toast"></div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const ROLE  = localStorage.getItem('ryst_user_role') || 'owner';
+const isOwner = ROLE === 'owner';
+
+function hasModule(mod){
+  let modules;
+  try { modules = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { modules = null; }
+  if(!Array.isArray(modules)) modules = ROLE === 'caretaker' ? ['petty-cash','inventory','checklist'] : [];
+  return ROLE === 'owner' || modules.includes(mod);
+}
+
+if(!TOKEN){ window.location.href = 'login.html'; }
+if(!hasModule('restaurant')){ window.location.href = 'login.html'; }
+
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = n => '₹' + Math.round(Number(n)||0).toLocaleString('en-IN');
+const fmtQty = n => { const v = Number(n)||0; return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/\.?0+$/,''); };
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+$('#roleBadge').textContent = isOwner ? 'Owner' : (ROLE === 'coordinator' ? 'Coordinator' : 'Caretaker');
+$('#roleBadge').className = 'badge ' + (isOwner ? 'owner' : 'caretaker');
+$('#whoami').textContent = localStorage.getItem('ryst_user_email') || '';
+document.body.classList.toggle('caretaker-mode', !isOwner);
+
+const CATEGORY_EMOJI = {
+  'Breakfast':'🌅','Lunch':'🍛','Dinner':'🍽️','All-Day Snacks':'🍟','Grill':'🔥',
+  'Kids':'🧒','Desserts':'🍮','Beverages':'🥤','Miscellaneous':'📦'
+};
+const emojiFor = c => CATEGORY_EMOJI[c] || '🏷️';
+
+let DOC = { settings:{}, categories:[], menu:[], inventory:[], purchases:[], orders:[] };
+let cart = []; // [{menuItemId, name, price, qty, veg}]
+let editingOrderNo = null; // set via "Edit" on an open order — routes Save through edit-order-items instead of create-order
+let catRowsDraft = [];
+
+function showToast(msg, isErr){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = isErr ? 'show err' : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+async function load(){
+  const loader = $('#loader'), msgEl = $('#loaderMsg'), retryBtn = $('#loaderRetry');
+  loader.classList.remove('hide');
+  $('#loaderSpin').style.display = '';
+  retryBtn.style.display = 'none';
+  msgEl.textContent = 'Loading restaurant data…';
+
+  const ctrl = new AbortController();
+  const slowTimer = setTimeout(() => { msgEl.textContent = 'Waking up the server… this can take up to a minute.'; }, 4000);
+  const abortTimer = setTimeout(() => ctrl.abort(), 75000);
+  try{
+    const res = await fetch(PROXY_URL+'/restaurant', { headers:{'X-Token':TOKEN}, signal: ctrl.signal });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    if(res.status===403){ msgEl.textContent = 'You do not have access to the Restaurant module.'; $('#loaderSpin').style.display='none'; return; }
+    if(!res.ok) throw new Error('Server error ('+res.status+')');
+    const data = await res.json().catch(()=>({}));
+    DOC = {
+      settings: data.settings || {},
+      categories: Array.isArray(data.categories) ? data.categories : [],
+      menu: Array.isArray(data.menu) ? data.menu : [],
+      inventory: Array.isArray(data.inventory) ? data.inventory : [],
+      purchases: Array.isArray(data.purchases) ? data.purchases : [],
+      orders: Array.isArray(data.orders) ? data.orders : [],
+    };
+    renderAll();
+    loader.classList.add('hide');
+  }catch(e){
+    $('#loaderSpin').style.display = 'none';
+    msgEl.textContent = (e && e.name === 'AbortError')
+      ? 'Server timed out — please retry.'
+      : 'Could not load restaurant data — ' + (e && e.message ? e.message : 'check your connection.');
+    retryBtn.style.display = '';
+  } finally {
+    clearTimeout(slowTimer); clearTimeout(abortTimer);
+  }
+}
+$('#loaderRetry').addEventListener('click', load);
+
+async function sendCommand(cmd){
+  const res = await fetch(PROXY_URL+'/restaurant', {
+    method:'POST', headers:{'X-Token':TOKEN,'Content-Type':'application/json'},
+    body: JSON.stringify(cmd)
+  });
+  if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return null; }
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || ('Failed ('+res.status+')'));
+  return data;
+}
+async function runCommand(cmd, successMsg){
+  try{
+    const data = await sendCommand(cmd);
+    if(!data) return null;
+    DOC = {
+      settings: data.settings || {}, categories: data.categories || [], menu: data.menu || [],
+      inventory: data.inventory || [], purchases: data.purchases || [], orders: data.orders || [],
+    };
+    renderAll();
+    if(successMsg) showToast(successMsg);
+    return data;
+  }catch(e){ showToast(e.message || 'Something went wrong', true); return null; }
+}
+
+/* ── Tabs ── */
+$$('#rsTabs .tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+function switchTab(tab){
+  $$('.tab-panel').forEach(p => p.style.display = (p.dataset.panel===tab) ? '' : 'none');
+  $$('#rsTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+}
+if(!isOwner){ $('#tabSettingsBtn').style.display = 'none'; $('#tabReportsBtn').style.display = 'none'; }
+
+/* ── Shared render ── */
+function renderAll(){
+  renderSummaryCards();
+  renderMenuFilters();
+  renderMenu();
+  renderInvFilters();
+  renderInventory();
+  renderOrders();
+  renderPurchases();
+  renderSettingsForm();
+  renderCategoryEditor();
+  renderMenuPicker();
+  renderPuLines();
+  if(isOwner) renderReports();
+}
+
+function invStock(item){ return (item.batches||[]).reduce((s,b)=>s+Number(b.qty||0),0); }
+function invStatus(item){
+  const q = invStock(item), t = Number(item.reorderLevel)||0;
+  if(q<=0) return 'out';
+  if(q<=t) return 'low';
+  return 'ok';
+}
+function earliestExpiry(item){
+  const dated = (item.batches||[]).map(b=>b.expiryDate).filter(Boolean).sort();
+  return dated.length ? dated[0] : null;
+}
+function expiryState(dateStr){
+  if(!dateStr) return null;
+  const days = Math.floor((new Date(dateStr+'T00:00:00') - new Date(todayISO()+'T00:00:00')) / 86400000);
+  const alertDays = Number(DOC.settings.expiryAlertDays)||0;
+  if(days < 0) return 'exp-late';
+  if(days <= alertDays) return 'exp-soon';
+  return 'exp-ok';
+}
+
+function renderSummaryCards(){
+  const today = todayISO();
+  const todaysOrders = DOC.orders.filter(o=>o.status==='settled' && o.date===today);
+  const sales = todaysOrders.reduce((s,o)=>s+Number(o.total||0),0);
+  $('#cSales').textContent = money(sales);
+  $('#cSalesSub').textContent = todaysOrders.length + ' settled order' + (todaysOrders.length===1?'':'s');
+  $('#cOpen').textContent = DOC.orders.filter(o=>o.status==='open').length;
+  $('#cLow').textContent = DOC.inventory.filter(i=>invStatus(i)!=='ok').length;
+  const alertDays = Number(DOC.settings.expiryAlertDays)||0;
+  const expiring = DOC.inventory.filter(i=>{
+    const d = earliestExpiry(i);
+    if(!d) return false;
+    const st = expiryState(d);
+    return st==='exp-soon' || st==='exp-late';
+  });
+  $('#cExp').textContent = expiring.length;
+  $('#cExpSub').textContent = 'within ' + alertDays + ' day' + (alertDays===1?'':'s');
+}
+
+/* ── Menu tab ── */
+let menuFilters = { q:'', cat:'all' };
+function renderMenuFilters(){
+  const cur = $('#menuCatFilter').value || 'all';
+  $('#menuCatFilter').innerHTML = '<option value="all">All categories</option>' + DOC.categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  $('#menuCatFilter').value = DOC.categories.includes(cur) ? cur : 'all';
+  const dCat = $('#dCategory');
+  const curD = dCat.value;
+  dCat.innerHTML = DOC.categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  if(DOC.categories.includes(curD)) dCat.value = curD;
+}
+$('#menuSearch').addEventListener('input', e=>{ menuFilters.q = e.target.value; renderMenu(); });
+$('#menuCatFilter').addEventListener('change', e=>{ menuFilters.cat = e.target.value; renderMenu(); });
+
+function renderMenu(){
+  const q = menuFilters.q.trim().toLowerCase();
+  let items = DOC.menu.filter(m=>{
+    if(menuFilters.cat!=='all' && m.category!==menuFilters.cat) return false;
+    if(q && !m.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const byCat = {};
+  items.forEach(m=>{ (byCat[m.category] = byCat[m.category]||[]).push(m); });
+  const cats = Object.keys(byCat).sort((a,b)=>DOC.categories.indexOf(a)-DOC.categories.indexOf(b));
+  $('#menuList').innerHTML = cats.length ? cats.map(c=>`
+    <div class="cat-group">
+      <div class="cat-head">${emojiFor(c)} ${esc(c)} <span class="cnt">(${byCat[c].length})</span></div>
+      ${byCat[c].map(m=>`
+        <div class="dish-row">
+          <div class="dish-main">
+            <div class="dish-name"><span class="veg-dot ${m.veg?'veg':'nonveg'}"></span>${esc(m.name)}${m.chefSpecial?' ⭐':''}</div>
+            <div class="dish-sub">${esc(m.description||'')}${m.kcal?' · ~'+m.kcal+' kcal':''}</div>
+          </div>
+          <div class="dish-price">${money(m.price)}${isOwner ? `<div class="dish-cost">cost ${money(m.cost||0)}${m.price>0?' &middot; '+Math.round((1-((Number(m.cost)||0)/m.price))*100)+'% margin':''}</div>` : ''}</div>
+          <div class="dish-actions">
+            <button class="pill-toggle owner-only ${m.active?'active':'inactive'}" data-toggle-active="${esc(m.id)}">${m.active?'Active':'Hidden'}</button>
+            <button class="icon-btn owner-only" data-edit-dish="${esc(m.id)}">Edit</button>
+            <button class="icon-btn del owner-only" data-del-dish="${esc(m.id)}">Delete</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('') : '<div class="empty">No dishes match.</div>';
+
+  $$('[data-toggle-active]').forEach(b=>b.addEventListener('click', ()=>{
+    const m = DOC.menu.find(x=>x.id===b.dataset.toggleActive);
+    runCommand({ action:'update-menu-item', id: m.id, active: !m.active });
+  }));
+  $$('[data-edit-dish]').forEach(b=>b.addEventListener('click', ()=>openDishModal(b.dataset.editDish)));
+  $$('[data-del-dish]').forEach(b=>b.addEventListener('click', ()=>{
+    if(confirm('Delete this dish from the menu?')) runCommand({ action:'delete-menu-item', id:b.dataset.delDish }, 'Dish deleted');
+  }));
+}
+
+let editingDishId = null;
+function openDishModal(id){
+  editingDishId = id || null;
+  const m = id ? DOC.menu.find(x=>x.id===id) : null;
+  $('#dishModalTitle').textContent = m ? 'Edit dish' : 'Add dish';
+  $('#dName').value = m ? m.name : '';
+  $('#dCategory').value = m ? m.category : (DOC.categories[0]||'');
+  $('#dPrice').value = m ? m.price : '';
+  $('#dCost').value = m && m.cost!=null ? m.cost : '';
+  $('#dVeg').value = m ? String(!!m.veg) : 'true';
+  $('#dSourcing').value = m ? (m.sourcing||'') : '';
+  $('#dMoq').value = m && m.moq!=null ? m.moq : 1;
+  $('#dKcal').value = m && m.kcal!=null ? m.kcal : '';
+  $('#dChefSpecial').checked = m ? !!m.chefSpecial : false;
+  $('#dDesc').value = m ? (m.description||'') : '';
+  $('#dNotes').value = m ? (m.notes||'') : '';
+  $('#dErr').textContent = '';
+  $('#dishOverlay').classList.add('show');
+}
+$('#btnAddDish').addEventListener('click', ()=>openDishModal(null));
+$('#dCancel').addEventListener('click', ()=>$('#dishOverlay').classList.remove('show'));
+$('#dSave').addEventListener('click', async ()=>{
+  const name = $('#dName').value.trim();
+  if(!name){ $('#dErr').textContent = 'Dish name is required'; return; }
+  const payload = {
+    name, category: $('#dCategory').value, price: $('#dPrice').value, cost: $('#dCost').value,
+    veg: $('#dVeg').value === 'true', sourcing: $('#dSourcing').value, moq: $('#dMoq').value || 1,
+    chefSpecial: $('#dChefSpecial').checked, kcal: $('#dKcal').value,
+    description: $('#dDesc').value, notes: $('#dNotes').value,
+  };
+  const cmd = editingDishId ? Object.assign({ action:'update-menu-item', id: editingDishId }, payload) : Object.assign({ action:'add-menu-item' }, payload);
+  const data = await runCommand(cmd, editingDishId ? 'Dish updated' : 'Dish added');
+  if(data) $('#dishOverlay').classList.remove('show');
+  else $('#dErr').textContent = 'Could not save — check the fields above';
+});
+
+/* ── Menu bulk import / export ── */
+function csvCell(v){ const s=String(v==null?'':v); return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
+function downloadCSV(filename, rows){
+  const lines = rows.map(r=>r.map(csvCell).join(','));
+  const blob = new Blob([lines.join('\n')], { type:'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function exportMenuCSV(){
+  const head = ['ID','Dish Name','Category','Price','Cost','Veg','Active','Chef Special','Sourcing','MOQ','Calories','Description','Notes'];
+  const rows = DOC.menu.map(m=>[
+    m.id, m.name, m.category||'', m.price, m.cost||0, m.veg?'Yes':'No', m.active!==false?'Yes':'No',
+    m.chefSpecial?'Yes':'No', m.sourcing||'', m.moq||1, m.kcal==null?'':m.kcal, m.description||'', m.notes||'',
+  ]);
+  downloadCSV(`ryst-menu-${todayISO()}.csv`, [head, ...rows]);
+}
+$('#btnExportMenu').addEventListener('click', exportMenuCSV);
+
+// Minimal RFC4180-ish CSV parser — handles quoted fields with embedded
+// commas/newlines and "" escaped quotes, which round-tripping the export
+// through Excel/Sheets (a dish description with a comma, say) can easily
+// produce.
+function parseCsv(text){
+  const rows = []; let row = []; let cell = ''; let inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else inQuotes=false; }
+      else cell += c;
+    } else {
+      if(c==='"') inQuotes = true;
+      else if(c===',') { row.push(cell); cell=''; }
+      else if(c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; }
+      else if(c==='\r'){ /* skip — \r\n's \n does the row push */ }
+      else cell += c;
+    }
+  }
+  if(cell!=='' || row.length){ row.push(cell); rows.push(row); }
+  return rows.filter(r=>r.length>1 || r[0]!=='');
+}
+// Tolerant of header spelling/casing/spacing so a re-export from Excel or a
+// hand-written sheet both still match ("Dish Name", "dish_name", "Name"…).
+const normalizeCsvHeader = h => String(h||'').toLowerCase().replace(/[^a-z]/g,'');
+const MENU_CSV_HEADER_MAP = {
+  id:'id', dishname:'name', name:'name', category:'category',
+  price:'price', sellingprice:'price', cost:'cost', costprice:'cost',
+  veg:'veg', vegetarian:'veg', type:'veg', active:'active',
+  chefspecial:'chefSpecial', sourcing:'sourcing', moq:'moq',
+  calories:'kcal', kcal:'kcal', description:'description', notes:'notes',
+};
+function parseBoolCell(v, def){
+  const s = String(v==null?'':v).trim().toLowerCase();
+  if(!s) return def;
+  if(['true','yes','y','1','veg','vegetarian'].includes(s)) return true;
+  if(['false','no','n','0','non-veg','nonveg','non-vegetarian'].includes(s)) return false;
+  return def;
+}
+$('#btnImportMenu').addEventListener('click', ()=>$('#menuImportFile').click());
+$('#menuImportFile').addEventListener('change', async e=>{
+  const file = e.target.files[0];
+  e.target.value = ''; // so picking the same file again still fires 'change'
+  if(!file) return;
+  const text = await file.text();
+  const grid = parseCsv(text);
+  if(grid.length < 2){ showToast('CSV has no data rows', true); return; }
+  const headerKeys = grid[0].map(normalizeCsvHeader).map(h=>MENU_CSV_HEADER_MAP[h] || null);
+  if(!headerKeys.includes('name') || !headerKeys.includes('price')){
+    showToast('CSV must have a "Dish Name" and "Price" column', true); return;
+  }
+  // Each row is validated against the same rules the server enforces
+  // (name required, price >= 0) so the preview's add/update/error split
+  // is what will actually happen — the server-side import-menu command
+  // re-checks the same fields, but only as a defensive backstop.
+  const preview = [];
+  for(let r=1; r<grid.length; r++){
+    const cells = grid[r];
+    if(cells.length===1 && cells[0].trim()==='') continue; // trailing blank line
+    const obj = {};
+    headerKeys.forEach((key,i)=>{ if(key) obj[key] = cells[i]; });
+    const name = String(obj.name||'').trim().slice(0,100);
+    const priceRaw = String(obj.price==null?'':obj.price).trim();
+    const price = priceRaw==='' ? 0 : Number(priceRaw);
+    let status, reason = '';
+    if(!name){ status='error'; reason='Missing dish name'; }
+    else if(priceRaw!=='' && !(price>=0)){ status='error'; reason='Invalid price'; }
+    else status = (obj.id && DOC.menu.some(m=>m.id===obj.id)) ? 'update' : 'add';
+    preview.push({
+      rowNum: r+1, status, reason,
+      display: { name, category: (obj.category||'').trim(), price },
+      row: status==='error' ? null : {
+        id: obj.id || undefined, name, category: (obj.category||'').trim(), price,
+        cost: (obj.cost===undefined||obj.cost==='') ? undefined : Number(obj.cost),
+        veg: parseBoolCell(obj.veg, true), active: parseBoolCell(obj.active, true),
+        chefSpecial: parseBoolCell(obj.chefSpecial, false),
+        sourcing: (obj.sourcing||'').trim(),
+        moq: (obj.moq===undefined||obj.moq==='') ? undefined : Number(obj.moq),
+        kcal: (obj.kcal===undefined||obj.kcal==='') ? undefined : Number(obj.kcal),
+        description: (obj.description||'').trim(), notes: (obj.notes||'').trim(),
+      },
+    });
+  }
+  openImportPreview(preview);
+});
+function openImportPreview(preview){
+  const added = preview.filter(p=>p.status==='add').length;
+  const updated = preview.filter(p=>p.status==='update').length;
+  const errors = preview.filter(p=>p.status==='error').length;
+  $('#importSummary').textContent = `${preview.length} row${preview.length===1?'':'s'} parsed — ${added} to add, ${updated} to update${errors?`, ${errors} skipped (errors)`:''}.`;
+  $('#importRows').innerHTML = preview.map(p=>`
+    <tr>
+      <td style="padding:6px 9px">${p.rowNum}</td>
+      <td style="padding:6px 9px">${esc(p.display.name||'—')}</td>
+      <td style="padding:6px 9px">${esc(p.display.category||'')}</td>
+      <td style="padding:6px 9px;text-align:right">${p.status!=='error'?money(p.display.price):''}</td>
+      <td style="padding:6px 9px">${
+        p.status==='add' ? `<span style="color:var(--accent-d)">+ New</span>`
+        : p.status==='update' ? `<span style="color:var(--warn)">Update</span>`
+        : `<span style="color:var(--danger)">${esc(p.reason)}</span>`
+      }</td>
+    </tr>
+  `).join('');
+  $('#importErr').textContent = '';
+  const validRows = preview.filter(p=>p.status!=='error').map(p=>p.row);
+  $('#importConfirm').disabled = !validRows.length;
+  $('#importConfirm').onclick = async ()=>{
+    if(!validRows.length) return;
+    const data = await runCommand({ action:'import-menu', rows: validRows }, `Imported ${validRows.length} dish${validRows.length===1?'':'es'}`);
+    if(data) $('#importOverlay').classList.remove('show');
+    else $('#importErr').textContent = 'Import failed — please try again';
+  };
+  $('#importOverlay').classList.add('show');
+}
+$('#importCancel').addEventListener('click', ()=>$('#importOverlay').classList.remove('show'));
+
+/* ── Inventory tab ── */
+let invFilters = { q:'', cat:'all', lowOnly:false, expOnly:false };
+function renderInvFilters(){
+  const cur = $('#invCatFilter').value || 'all';
+  const cats = Array.from(new Set(DOC.inventory.map(i=>i.category).filter(Boolean)));
+  $('#invCatFilter').innerHTML = '<option value="all">All categories</option>' + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  $('#invCatFilter').value = cats.includes(cur) ? cur : 'all';
+}
+$('#invSearch').addEventListener('input', e=>{ invFilters.q = e.target.value; renderInventory(); });
+$('#invCatFilter').addEventListener('change', e=>{ invFilters.cat = e.target.value; renderInventory(); });
+$('#invLowOnly').addEventListener('change', e=>{ invFilters.lowOnly = e.target.checked; renderInventory(); });
+$('#invExpOnly').addEventListener('change', e=>{ invFilters.expOnly = e.target.checked; renderInventory(); });
+
+function renderInventory(){
+  const q = invFilters.q.trim().toLowerCase();
+  let items = DOC.inventory.filter(i=>{
+    if(invFilters.cat!=='all' && i.category!==invFilters.cat) return false;
+    if(invFilters.lowOnly && invStatus(i)==='ok') return false;
+    if(invFilters.expOnly){
+      const d = earliestExpiry(i); const st = d ? expiryState(d) : null;
+      if(st!=='exp-soon' && st!=='exp-late') return false;
+    }
+    if(q && !i.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  $('#invList').innerHTML = items.length ? items.map(i=>{
+    const stock = invStock(i), status = invStatus(i);
+    const pct = Math.max(0, Math.min(100, Math.round((stock/Math.max((Number(i.reorderLevel)||1)*2,1))*100)));
+    const exp = earliestExpiry(i);
+    const expSt = exp ? expiryState(exp) : null;
+    return `
+    <div class="inv-row" data-inv-row="${esc(i.id)}">
+      <div class="inv-main">
+        <div class="inv-name">
+          ${esc(i.name)}
+          <span class="inv-status ${status}">${status==='out'?'Out':status==='low'?'Low':'OK'}</span>
+          ${exp?`<span class="exp-badge ${expSt}">${expSt==='exp-late'?'Expired':'Expires'} ${fmtDate(exp)}</span>`:''}
+        </div>
+        <div class="inv-sub">${esc(i.category||'')} · reorder at ${fmtQty(i.reorderLevel)} ${esc(i.unit)}</div>
+        <div class="stock-bar"><div class="stock-bar-fill ${status}" style="width:${pct}%"></div></div>
+      </div>
+      <div class="inv-qty">${fmtQty(stock)} ${esc(i.unit)}</div>
+      <div class="inv-actions">
+        <button class="icon-btn" data-toggle-batches="${esc(i.id)}">Batches</button>
+        <button class="icon-btn" data-consume="${esc(i.id)}">Use/waste</button>
+        <button class="icon-btn owner-only" data-edit-inv="${esc(i.id)}">Edit</button>
+        <button class="icon-btn del owner-only" data-del-inv="${esc(i.id)}">Delete</button>
+      </div>
+      <div class="batch-list" id="batches-${esc(i.id)}">
+        ${(i.batches||[]).length ? i.batches.map(b=>`<div class="batch-row"><span>${fmtQty(b.qty)} ${esc(i.unit)} @ ₹${b.costPerUnit}${b.vendor?' · '+esc(b.vendor):''}</span><span>${b.expiryDate?'exp '+fmtDate(b.expiryDate):'no expiry'}</span></div>`).join('') : '<div class="batch-row">No batches on hand</div>'}
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">No ingredients match.</div>';
+
+  $$('[data-toggle-batches]').forEach(b=>b.addEventListener('click', ()=>{
+    $('#batches-'+b.dataset.toggleBatches).classList.toggle('show');
+  }));
+  $$('[data-consume]').forEach(b=>b.addEventListener('click', ()=>openConsumeModal(b.dataset.consume)));
+  $$('[data-edit-inv]').forEach(b=>b.addEventListener('click', ()=>openInvModal(b.dataset.editInv)));
+  $$('[data-del-inv]').forEach(b=>b.addEventListener('click', ()=>{
+    if(confirm('Delete this ingredient? Any recorded batches go with it.')) runCommand({ action:'delete-inventory-item', id:b.dataset.delInv }, 'Ingredient deleted');
+  }));
+}
+function fmtDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+}
+
+let editingInvId = null;
+function openInvModal(id){
+  editingInvId = id || null;
+  const i = id ? DOC.inventory.find(x=>x.id===id) : null;
+  $('#invModalTitle').textContent = i ? 'Edit ingredient' : 'Add ingredient';
+  $('#iName').value = i ? i.name : '';
+  $('#iCategory').value = i ? (i.category||'') : '';
+  $('#iUnit').value = i ? i.unit : 'kg';
+  $('#iReorder').value = i ? i.reorderLevel : 0;
+  $('#iErr').textContent = '';
+  $('#invOverlay').classList.add('show');
+}
+$('#btnAddInv').addEventListener('click', ()=>openInvModal(null));
+$('#iCancel').addEventListener('click', ()=>$('#invOverlay').classList.remove('show'));
+$('#iSave').addEventListener('click', async ()=>{
+  const name = $('#iName').value.trim();
+  if(!name){ $('#iErr').textContent = 'Item name is required'; return; }
+  const payload = { name, category: $('#iCategory').value, unit: $('#iUnit').value, reorderLevel: $('#iReorder').value };
+  const cmd = editingInvId ? Object.assign({ action:'update-inventory-item', id: editingInvId }, payload) : Object.assign({ action:'add-inventory-item' }, payload);
+  const data = await runCommand(cmd, editingInvId ? 'Ingredient updated' : 'Ingredient added');
+  if(data) $('#invOverlay').classList.remove('show');
+  else $('#iErr').textContent = 'Could not save — check the fields above';
+});
+
+let consumeItemId = null;
+function openConsumeModal(id){
+  consumeItemId = id;
+  const i = DOC.inventory.find(x=>x.id===id);
+  $('#consumeItemName').textContent = `${i.name} — ${fmtQty(invStock(i))} ${i.unit} on hand`;
+  $('#consumeQty').value = '';
+  $('#consumeReason').value = '';
+  $('#consumeErr').textContent = '';
+  $('#consumeOverlay').classList.add('show');
+}
+$('#consumeCancel').addEventListener('click', ()=>$('#consumeOverlay').classList.remove('show'));
+$('#consumeSave').addEventListener('click', async ()=>{
+  const qty = $('#consumeQty').value;
+  if(!(Number(qty)>0)){ $('#consumeErr').textContent = 'Enter a quantity greater than 0'; return; }
+  const data = await runCommand({ action:'consume-stock', id: consumeItemId, qty, reason: $('#consumeReason').value }, 'Stock updated');
+  if(data) $('#consumeOverlay').classList.remove('show');
+  else $('#consumeErr').textContent = 'Could not update — check the quantity';
+});
+
+/* ── Billing / order builder ── */
+$('#btnToggleBuilder').addEventListener('click', ()=>{
+  const b = $('#orderBuilder');
+  const opening = !b.classList.contains('show');
+  b.classList.toggle('show');
+  $('#btnToggleBuilder').textContent = opening ? '– Hide' : '+ New order';
+  if(!opening) resetOrderBuilder(); // closing without saving discards any in-progress edit
+  if(opening){
+    if(!$('#obDate').value) $('#obDate').value = todayISO();
+    // Always refresh (not just on first open with a blank date) — both the
+    // active-stay suggestion and the "recent guests" list below need to
+    // reflect whatever DOC.orders looks like right now, including any order
+    // just saved a moment ago in this same session.
+    refreshGuestPicker();
+  }
+  updateCartBar();
+});
+
+// Suggests the guest currently (or, for a future-dated order, about to be)
+// staying at the villa instead of retyping their name every time — pulled
+// from the same public /active-stay endpoint display.html uses, just for
+// whatever date this order is for. A blank result (no stay covers that
+// date) just leaves the picker at "— Pick current stay —" and the free-
+// text field works exactly as before.
+//
+// A guest legitimately has more than one food bill over a stay (breakfast,
+// then dinner, then a forgotten room-service charge added later) — but
+// /active-stay only ever knows about whoever is staying RIGHT NOW. Once a
+// guest has checked out, or the order being entered is for a day outside
+// today's active-stay window, there was no way to map a second bill back
+// to them at all. So the picker also lists "recent guests" — every distinct
+// stayNo already seen on a past order, sourced from DOC.orders (already
+// loaded client-side, no extra request), newest first, capped at 20 so the
+// list stays short — letting staff pick any guest who already has a bill on
+// record, not just today's.
+//
+// obStayNo carries the picked booking's `no` through to the order (see
+// /portal/food-order's stayNo, which is what makes an order show up on
+// that guest's own food bill in guest.html) — a staff-entered order was
+// otherwise never linked to a stay at all, invisible to the guest even
+// though it was billed to their room. Only set when a picker option is
+// used; cleared the moment staff types over the guest name by hand (no
+// longer safe to assume it's still the same booking), on every date change
+// (the picker's options — and whatever was selected — are rebuilt from
+// scratch), and after a successful save.
+let obStayNo = '';
+async function refreshGuestPicker(){
+  const sel = $('#obGuestPick');
+  obStayNo = '';
+  const date = $('#obDate').value || todayISO();
+
+  const seenStayNos = new Set();
+  const recentGuests = [];
+  for(let i = DOC.orders.length - 1; i >= 0 && recentGuests.length < 20; i--){
+    const o = DOC.orders[i];
+    if(!o.stayNo || seenStayNos.has(o.stayNo)) continue;
+    seenStayNos.add(o.stayNo);
+    recentGuests.push({ guest: o.guest || 'Guest', no: o.stayNo });
+  }
+
+  let activeNo = '';
+  const turnoverNos = new Set();
+  let html = '<option value="">— Pick current stay —</option>';
+  try{
+    const res = await fetch(PROXY_URL+'/active-stay?date='+encodeURIComponent(date), { cache:'no-store', headers:{'X-Token':TOKEN} });
+    const data = await res.json().catch(()=>({}));
+    if(data && data.active && data.guest){
+      activeNo = data.no || '';
+      html += `<option value="${esc(data.guest)}" data-no="${esc(activeNo)}">${esc(data.guest)} (${fmtDate(data.checkin)} → ${fmtDate(data.checkout)})</option>`;
+    }
+    // On a same-day turnover, /active-stay's own single active/guest fields
+    // only ever surface whoever is checking in today — the guest checking
+    // OUT that same day was otherwise impossible to pick here at all (their
+    // very first bill of the stay has no earlier order to fall back on via
+    // "Recent guests" below either). `others` lists them explicitly.
+    (data && Array.isArray(data.others) ? data.others : []).forEach(o => {
+      if(!o.no) return;
+      turnoverNos.add(o.no);
+      html += `<option value="${esc(o.guest||'Guest')}" data-no="${esc(o.no)}">${esc(o.guest||'Guest')} (checking out today)</option>`;
+    });
+  }catch(e){ /* leave just the placeholder — free-text guest field still works */ }
+
+  const recentOptions = recentGuests.filter(g => g.no !== activeNo && !turnoverNos.has(g.no));
+  if(recentOptions.length){
+    html += `<optgroup label="Recent guests — map another bill to them">${recentOptions.map(g =>
+      `<option value="${esc(g.guest)}" data-no="${esc(g.no)}">${esc(g.guest)} — ${esc(g.no)}</option>`
+    ).join('')}</optgroup>`;
+  }
+  sel.innerHTML = html;
+}
+$('#obDate').addEventListener('change', refreshGuestPicker);
+$('#obGuestPick').addEventListener('change', e=>{
+  if(e.target.value){
+    $('#obGuest').value = e.target.value;
+    obStayNo = e.target.selectedOptions[0]?.dataset.no || '';
+  } else {
+    obStayNo = '';
+  }
+});
+$('#obGuest').addEventListener('input', ()=>{ obStayNo = ''; });
+$('#obSearch').addEventListener('input', renderMenuPicker);
+// Builds just the action area for one menu-picker row: "+ Add" if it's not
+// in the cart yet, or a −/qty/+ stepper if it is — so the selection state
+// is visible right on the dish itself, not only in the separate cart list
+// below (which is out of view under the menu on a phone).
+function mpActionsHtml(m){
+  const line = cart.find(c=>c.menuItemId===m.id);
+  if(!line) return `<button type="button" class="mp-add" data-add-cart="${esc(m.id)}">+ Add</button>`;
+  return `<div class="mp-qty"><button type="button" class="qbtn" data-mp-dec="${esc(m.id)}">−</button><span>${line.qty}</span><button type="button" class="qbtn" data-mp-inc="${esc(m.id)}">+</button></div>`;
+}
+function wireMpActionsEl(el){
+  const addBtn = el.querySelector('[data-add-cart]');
+  if(addBtn) addBtn.addEventListener('click', ()=>addToCart(addBtn.dataset.addCart));
+  const incBtn = el.querySelector('[data-mp-inc]');
+  if(incBtn) incBtn.addEventListener('click', ()=>{ const l=cart.find(c=>c.menuItemId===incBtn.dataset.mpInc); if(l){ l.qty++; afterCartChange(l.menuItemId); } });
+  const decBtn = el.querySelector('[data-mp-dec]');
+  if(decBtn) decBtn.addEventListener('click', ()=>{
+    const id = decBtn.dataset.mpDec;
+    const l = cart.find(c=>c.menuItemId===id);
+    if(l){ l.qty--; if(l.qty<=0) cart = cart.filter(c=>c!==l); afterCartChange(id); }
+  });
+}
+function renderMenuPicker(){
+  const q = ($('#obSearch').value||'').trim().toLowerCase();
+  const active = DOC.menu.filter(m=>m.active && (!q || m.name.toLowerCase().includes(q)));
+  const byCat = {};
+  active.forEach(m=>{ (byCat[m.category]=byCat[m.category]||[]).push(m); });
+  const cats = Object.keys(byCat).sort((a,b)=>DOC.categories.indexOf(a)-DOC.categories.indexOf(b));
+  $('#menuPicker').innerHTML = cats.length ? cats.map(c=>`
+    <div class="cat-head">${emojiFor(c)} ${esc(c)}</div>
+    ${byCat[c].map(m=>`
+      <div class="mp-item${cart.find(x=>x.menuItemId===m.id)?' selected':''}" data-mp-row="${esc(m.id)}">
+        <div class="mp-name"><span class="veg-dot ${m.veg?'veg':'nonveg'}"></span>${esc(m.name)} <span style="color:var(--muted2);font-weight:500">${money(m.price)}</span></div>
+        <div class="mp-actions" data-mp-actions="${esc(m.id)}">${mpActionsHtml(m)}</div>
+      </div>
+    `).join('')}
+  `).join('') : '<div class="empty">No dishes match.</div>';
+  $$('.mp-actions').forEach(wireMpActionsEl);
+}
+// Surgically updates just one row's action area (and its selected
+// highlight) instead of re-rendering the whole scrollable menu list —
+// replacing #menuPicker's innerHTML on every tap would reset its scroll
+// position back to the top, which is exactly the annoyance a mobile
+// ordering flow shouldn't have.
+function updateMenuPickerRow(menuItemId){
+  const actionsEl = document.querySelector(`[data-mp-actions="${CSS.escape(menuItemId)}"]`);
+  const m = DOC.menu.find(x=>x.id===menuItemId);
+  if(!actionsEl || !m) return;
+  actionsEl.innerHTML = mpActionsHtml(m);
+  wireMpActionsEl(actionsEl);
+  const rowEl = actionsEl.closest('.mp-item');
+  if(rowEl) rowEl.classList.toggle('selected', !!cart.find(c=>c.menuItemId===menuItemId));
+}
+function afterCartChange(menuItemId){
+  renderCart();
+  updateMenuPickerRow(menuItemId);
+  updateCartBar();
+}
+function addToCart(menuItemId){
+  const m = DOC.menu.find(x=>x.id===menuItemId);
+  if(!m) return;
+  const line = cart.find(c=>c.menuItemId===menuItemId);
+  if(line) line.qty += 1;
+  else cart.push({ menuItemId, name: m.name, price: m.price, qty: 1 });
+  afterCartChange(menuItemId);
+}
+function renderCart(){
+  $('#cartList').innerHTML = cart.length ? cart.map(c=>`
+    <div class="cart-item">
+      <span class="nm">${esc(c.name)}</span>
+      <button type="button" class="qbtn" data-cart-dec="${esc(c.menuItemId)}">−</button>
+      <span>${c.qty}</span>
+      <button type="button" class="qbtn" data-cart-inc="${esc(c.menuItemId)}">+</button>
+      <span style="min-width:64px;text-align:right;font-weight:700">${money(c.price*c.qty)}</span>
+      <button type="button" class="qbtn" data-cart-rm="${esc(c.menuItemId)}" title="Remove">×</button>
+    </div>
+  `).join('') : '<div class="empty">No items added yet</div>';
+  $$('[data-cart-inc]').forEach(b=>b.addEventListener('click', ()=>{ cart.find(c=>c.menuItemId===b.dataset.cartInc).qty++; afterCartChange(b.dataset.cartInc); }));
+  $$('[data-cart-dec]').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.dataset.cartDec;
+    const line = cart.find(c=>c.menuItemId===id);
+    line.qty--; if(line.qty<=0) cart = cart.filter(c=>c!==line);
+    afterCartChange(id);
+  }));
+  $$('[data-cart-rm]').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.dataset.cartRm;
+    cart = cart.filter(c=>c.menuItemId!==id);
+    afterCartChange(id);
+  }));
+  updateOrderTotals();
+}
+// Mobile-only summary bar pinned to the bottom of the screen while the
+// order builder is open and has items — lets a server glance at the
+// running total/count and jump to the cart without scrolling past the
+// whole menu list first.
+function updateCartBar(){
+  const bar = $('#obCartBar');
+  const open = $('#orderBuilder').classList.contains('show');
+  const count = cart.reduce((s,c)=>s+c.qty,0);
+  if(open && count>0){
+    const total = cart.reduce((s,c)=>s+c.price*c.qty,0);
+    $('#obCartBarInfo').textContent = `${count} item${count===1?'':'s'} · ${money(total)}`;
+    bar.classList.add('show');
+  } else {
+    bar.classList.remove('show');
+  }
+}
+$('#obCartBarBtn').addEventListener('click', ()=>{ $('#obCartBox').scrollIntoView({behavior:'smooth', block:'start'}); });
+$('#obDiscount').addEventListener('input', updateOrderTotals);
+function updateOrderTotals(){
+  const subtotal = cart.reduce((s,c)=>s+c.price*c.qty,0);
+  let discount = Number($('#obDiscount').value)||0;
+  if(discount<0) discount = 0;
+  if(discount>subtotal) discount = subtotal;
+  const taxable = subtotal - discount;
+  const gstPercent = Number(DOC.settings.gstPercent)||0;
+  const svcPercent = Number(DOC.settings.serviceChargePercent)||0;
+  const gst = taxable*gstPercent/100;
+  const svc = taxable*svcPercent/100;
+  const total = taxable+gst+svc;
+  $('#obSubtotal').textContent = money(subtotal);
+  $('#obGstLbl').textContent = `GST (${gstPercent}%)`;
+  $('#obGst').textContent = money(gst);
+  $('#obSvcLbl').textContent = `Service charge (${svcPercent}%)`;
+  $('#obSvc').textContent = money(svc);
+  $('#obTotal').textContent = money(total);
+}
+// Clears the order builder back to its blank "new order" state — used both
+// after a successful save and when Hide is tapped without saving, so a
+// half-finished edit never leaks into the next order.
+function resetOrderBuilder(){
+  editingOrderNo = null;
+  // runCommand's own renderAll() already ran renderMenuPicker() while
+  // `cart` still held the just-saved items (so those rows show their
+  // steppers momentarily) — clearing cart and re-rendering here is what
+  // resets every row back to "+ Add" and hides the cart bar.
+  cart = []; renderCart(); renderMenuPicker(); updateCartBar();
+  $('#obGuest').value=''; $('#obGuestPick').value=''; $('#obNote').value=''; $('#obDiscount').value='0'; $('#obErr').textContent='';
+  obStayNo = '';
+  $('#obDate').value = todayISO(); $('#obTime').value = '';
+  $('#btnSaveOrder').textContent = 'Save order';
+}
+// Opens the order builder pre-filled with an existing OPEN order's items,
+// date/time, guest, note, discount and stay link so staff can correct a
+// mistake in place instead of cancelling and re-entering the whole order.
+// Save then routes through edit-order-items (see editingOrderNo) instead of
+// create-order — restaurant.html only, available to caretaker and admin
+// alike (day-to-day correction, not owner-gated like Edit status below,
+// which corrects an already-settled order's payment record).
+function openOrderForEdit(o){
+  editingOrderNo = o.no;
+  cart = (o.items||[]).filter(it=>it.menuItemId).map(it=>({ menuItemId: it.menuItemId, name: it.name, price: it.price, qty: it.qty }));
+  $('#obDate').value = o.date || todayISO();
+  $('#obTime').value = o.time || '';
+  $('#obGuest').value = o.guest || '';
+  $('#obGuestPick').value = '';
+  obStayNo = o.stayNo || '';
+  $('#obNote').value = o.note || '';
+  $('#obDiscount').value = o.discount || 0;
+  $('#obErr').textContent = '';
+  $('#btnSaveOrder').textContent = 'Save changes';
+  renderCart(); renderMenuPicker(); updateCartBar();
+  const b = $('#orderBuilder');
+  b.classList.add('show');
+  $('#btnToggleBuilder').textContent = '– Hide';
+  b.scrollIntoView({behavior:'smooth', block:'start'});
+}
+$('#btnSaveOrder').addEventListener('click', async ()=>{
+  if(!cart.length){ $('#obErr').textContent = 'Add at least one item'; return; }
+  const isEdit = !!editingOrderNo;
+  const cmd = isEdit ? {
+    action:'edit-order-items', no: editingOrderNo,
+    guest: $('#obGuest').value, note: $('#obNote').value,
+    date: $('#obDate').value || undefined, time: $('#obTime').value || undefined,
+    discount: $('#obDiscount').value,
+    items: cart.map(c=>({ menuItemId: c.menuItemId, qty: c.qty })),
+    stayNo: obStayNo || undefined,
+  } : {
+    action:'create-order',
+    guest: $('#obGuest').value, note: $('#obNote').value,
+    date: $('#obDate').value || undefined, time: $('#obTime').value || undefined,
+    discount: $('#obDiscount').value,
+    paymentMode: $('#obPaymentMode').value || undefined,
+    items: cart.map(c=>({ menuItemId: c.menuItemId, qty: c.qty })),
+    stayNo: obStayNo || undefined,
+  };
+  const data = await runCommand(cmd, isEdit ? 'Order updated' : 'Order saved');
+  if(data){
+    resetOrderBuilder();
+    $('#orderBuilder').classList.remove('show'); $('#btnToggleBuilder').textContent = '+ New order';
+    if(!isEdit){
+      const last = DOC.orders[DOC.orders.length-1];
+      if(last) printReceipt(last);
+    }
+  } else $('#obErr').textContent = isEdit ? 'Could not save changes — check the items above' : 'Could not save order — check the items above';
+});
+
+let ordFilters = { q:'', status:'all' };
+$('#ordSearch').addEventListener('input', e=>{ ordFilters.q = e.target.value; renderOrders(); });
+$('#ordStatus').addEventListener('change', e=>{ ordFilters.status = e.target.value; renderOrders(); });
+function renderOrders(){
+  const q = ordFilters.q.trim().toLowerCase();
+  const rows = DOC.orders.slice().reverse().filter(o=>{
+    if(ordFilters.status!=='all' && o.status!==ordFilters.status) return false;
+    if(q && !((o.guest||'').toLowerCase().includes(q) || o.no.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  $('#ordersBody').innerHTML = rows.length ? rows.map(o=>`
+    <tr>
+      <td>${esc(o.no)}</td>
+      <td>${fmtDate(o.date)}${o.time?'<br><span style="color:var(--muted2);font-size:11px">'+fmtTime(o.time)+'</span>':''}</td>
+      <td>${esc(o.guest||'—')}</td>
+      <td>${o.items.map(it=>esc(it.name)+' ×'+it.qty).join(', ')}</td>
+      <td class="amt">${money(o.total)}</td>
+      <td>${esc(o.paymentMode||'—')}</td>
+      <td><span class="status-chip ${o.status}">${o.status}</span></td>
+      <td style="white-space:nowrap">
+        <button class="icon-btn" data-print-order="${esc(o.no)}">Print</button>
+        ${hasSourcedItems(o) ? `<button class="icon-btn" data-wa-order="${esc(o.no)}">📲 Partner Kitchen</button>` : ''}
+        ${o.status==='open' ? `<button class="icon-btn" data-edit-order="${esc(o.no)}">Edit</button>` : ''}
+        ${o.status==='open' ? `<button class="icon-btn" data-settle-order="${esc(o.no)}">Settle</button>` : ''}
+        ${o.status==='settled' ? `<button class="icon-btn owner-only" data-edit-status="${esc(o.no)}">Edit status</button>` : ''}
+        ${o.status!=='cancelled' ? `<button class="icon-btn del" data-cancel-order="${esc(o.no)}">Cancel</button>` : ''}
+        <button class="icon-btn del owner-only" data-del-order="${esc(o.no)}">Delete</button>
+      </td>
+    </tr>
+  `).join('') : '<tr><td colspan="8" style="color:#aaa;text-align:center">No orders yet</td></tr>';
+
+  $$('[data-print-order]').forEach(b=>b.addEventListener('click', ()=>{
+    const o = DOC.orders.find(x=>x.no===b.dataset.printOrder);
+    if(o) printReceipt(o);
+  }));
+  $$('[data-wa-order]').forEach(b=>b.addEventListener('click', ()=>{
+    const o = DOC.orders.find(x=>x.no===b.dataset.waOrder);
+    if(o) sendToPartnerKitchen(o);
+  }));
+  $$('[data-edit-order]').forEach(b=>b.addEventListener('click', ()=>{
+    const o = DOC.orders.find(x=>x.no===b.dataset.editOrder);
+    if(o) openOrderForEdit(o);
+  }));
+  $$('[data-settle-order]').forEach(b=>b.addEventListener('click', ()=>{
+    const mode = prompt('Payment mode (Cash, UPI, Card, Room Account):', 'Cash');
+    if(mode) runCommand({ action:'settle-order', no:b.dataset.settleOrder, paymentMode:mode }, 'Order settled');
+  }));
+  // Corrects a settled order's payment mode, or reopens it back to an open
+  // tab (e.g. it was marked settled/Room Account by mistake and the guest
+  // hasn't actually paid — reopening makes it count again as outstanding on
+  // their food bill in guest.html). Owner-only, same plain confirm/prompt
+  // pattern as Settle above rather than a new modal for a two-way choice.
+  $$('[data-edit-status]').forEach(b=>b.addEventListener('click', ()=>{
+    const no = b.dataset.editStatus;
+    const o = DOC.orders.find(x=>x.no===no);
+    if(!o) return;
+    if(confirm(`Reopen order ${no} back to an open tab?\n\nOK = reopen (removes the payment mode, counts again as outstanding)\nCancel = just correct the payment mode instead`)){
+      runCommand({ action:'edit-order-status', no, status:'open' }, 'Order reopened');
+    } else {
+      const mode = prompt('Correct payment mode (Cash, UPI, Card, Room Account):', o.paymentMode||'Cash');
+      if(mode) runCommand({ action:'edit-order-status', no, status:'settled', paymentMode:mode }, 'Payment mode updated');
+    }
+  }));
+  $$('[data-cancel-order]').forEach(b=>b.addEventListener('click', ()=>{
+    if(confirm('Cancel this order?')) runCommand({ action:'cancel-order', no:b.dataset.cancelOrder }, 'Order cancelled');
+  }));
+  $$('[data-del-order]').forEach(b=>b.addEventListener('click', ()=>{
+    if(confirm('Permanently delete this order?')) runCommand({ action:'delete-order', no:b.dataset.delOrder }, 'Order deleted');
+  }));
+}
+
+function fmtTime(t){
+  if(!t) return '';
+  const [h,m] = t.split(':').map(Number);
+  const h12 = ((h+11)%12)+1;
+  return `${h12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;
+}
+// An item counts as needing a partner-kitchen order unless its sourcing was
+// explicitly recorded as "Kitchen" (in-house) at the time of the order —
+// matches how the menu seed only tags Beverages that way, everything else
+// on this delivery-kitchen menu is partner-sourced by default.
+function isSourcedItem(it){ return (it.sourcing||'').trim().toLowerCase()!=='kitchen'; }
+function hasSourcedItems(o){ return (o.items||[]).some(isSourcedItem); }
+function normalizePhone(p){
+  const digits = String(p||'').replace(/\D/g,'');
+  if(!digits) return '';
+  return digits.length===10 ? '91'+digits : digits;
+}
+function sendToPartnerKitchen(o){
+  const sourced = (o.items||[]).filter(isSourcedItem);
+  if(!sourced.length) return;
+  // Purchase rate/amount (and the subtotal derived from it) are only
+  // included when Settings → "Show purchase rate in Partner Kitchen
+  // WhatsApp message" is on — defaults on, matching this message's
+  // original always-shown behavior. Partner kitchen gets billed at OUR
+  // cost price (what we pay them), never the guest-facing selling price
+  // — those two are deliberately different (the margin is ours), so this
+  // must never show `it.price` regardless of the toggle.
+  const showRate = DOC.settings.showPartnerRate !== false;
+  const lines = sourced.map((it,i)=> showRate
+    ? `${i+1}. ${it.name} ×${it.qty} — ${money(it.cost)} each — ${money(it.cost*it.qty)}`
+    : `${i+1}. ${it.name} ×${it.qty}`);
+  const subtotal = sourced.reduce((s,it)=>s+(Number(it.cost)||0)*it.qty,0);
+  const when = o.time ? `${fmtDate(o.date)}, ${fmtTime(o.time)}` : fmtDate(o.date);
+  const text = [
+    `${PROPERTY.name} — ${PROPERTY.restaurantName || 'Restaurant'} order`,
+    `Requested: ${when}`,
+    '',
+    ...lines,
+    '',
+    ...(showRate ? [`Subtotal (these items): ${money(subtotal)}`] : []),
+    `Order ref: ${o.no}`,
+  ].join('\n');
+  const phone = normalizePhone(DOC.settings.partnerKitchenPhone);
+  const url = phone
+    ? `https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(text)}`
+    : `https://api.whatsapp.com/send/?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
+function printReceipt(o){
+  // Date/meal reads as one line ("20 Aug 2026 · Dinner") when the order
+  // carries a meal period (guest-portal pre-orders always do); falls back
+  // to date + free-text time for older/staff-entered orders that don't.
+  const whenLabel = o.meal ? `${fmtDate(o.date)} · ${esc(o.meal)}` : (o.time ? `${fmtDate(o.date)}, ${fmtTime(o.time)}` : fmtDate(o.date));
+  $('#receiptArea').innerHTML = `
+    <div class="r-doc">
+      <div class="r-head">
+        <img src="${esc(PROPERTY.logoUrl)}" alt="${esc(PROPERTY.name)}">
+        <div>
+          <div class="nm">${esc(PROPERTY.restaurantName || PROPERTY.name)}</div>
+          <div class="sub">${esc(PROPERTY.addressLine)}</div>
+        </div>
+      </div>
+      <div class="r-title">CUSTOMER RECEIPT</div>
+      <div class="r-meta">
+        <div><span class="r-lbl">Order No</span><b>${esc(o.no)}</b></div>
+        <div class="r-right"><span class="r-lbl">Guest</span><b>${esc(o.guest||'Walk-in')}</b></div>
+        <div><span class="r-lbl">Date${o.meal?' &amp; Meal':''}</span><b>${whenLabel}</b></div>
+        <div class="r-right"><span class="r-lbl">Status</span><b>${o.status==='open'?'Open Tab':esc(o.paymentMode||'')}</b></div>
+      </div>
+      <table class="r-items">
+        <thead><tr><th>Item</th><th class="num">Rate</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
+        <tbody>${o.items.map(it=>`<tr><td class="nm">${esc(it.name)}</td><td class="num">${money(it.price)}</td><td class="num">${it.qty}</td><td class="num">${money(it.price*it.qty)}</td></tr>`).join('')}</tbody>
+      </table>
+      <div class="r-totals">
+        <div class="r-tot"><span>Subtotal</span><span>${money(o.subtotal)}</span></div>
+        ${o.discount>0?`<div class="r-tot"><span>Discount</span><span>− ${money(o.discount)}</span></div>`:''}
+        ${o.gstAmount>0?`<div class="r-tot"><span>GST (${o.gstPercent}%)</span><span>${money(o.gstAmount)}</span></div>`:''}
+        ${o.serviceChargeAmount>0?`<div class="r-tot"><span>Service charge (${o.serviceChargePercent}%)</span><span>${money(o.serviceChargeAmount)}</span></div>`:''}
+        <div class="r-tot grand"><span>Total</span><span>${money(o.total)}</span></div>
+      </div>
+      <div class="r-foot">${esc(PROPERTY.receiptNote)}${PROPERTY.receiptNote ? '<br>' : ''}<span class="brand">${esc(PROPERTY.name)}</span>${PROPERTY.websiteHost ? ' · ' + esc(PROPERTY.websiteHost) : ''}</div>
+    </div>
+  `;
+  setTimeout(()=>window.print(), 50);
+}
+
+/* ── Purchases tab ── */
+let puLinesDraft = [];
+function freshPuLine(){ return { inventoryItemId:'', name:'', unit:'kg', qty:'', costPerUnit:'', expiryDate:'' }; }
+function initPurchaseForm(){
+  puLinesDraft = [freshPuLine()];
+  $('#puDate').value = todayISO();
+  renderPuLines();
+}
+function renderPuLines(){
+  const invOptions = DOC.inventory.map(i=>`<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
+  $('#puLines').innerHTML = puLinesDraft.map((l,i)=>`
+    <tr>
+      <td>
+        <select data-i="${i}" data-k="inventoryItemId" class="pu-item-sel">
+          <option value="">+ New ingredient…</option>${invOptions}
+        </select>
+        ${!l.inventoryItemId ? `<input data-i="${i}" data-k="name" placeholder="New ingredient name" value="${esc(l.name)}" style="margin-top:4px">` : ''}
+      </td>
+      <td><input data-i="${i}" data-k="unit" value="${esc(l.unit)}" ${l.inventoryItemId?'disabled':''}></td>
+      <td><input class="r" data-i="${i}" data-k="qty" type="number" min="0" step="any" value="${esc(l.qty)}"></td>
+      <td><input class="r" data-i="${i}" data-k="costPerUnit" type="number" min="0" step="0.01" value="${esc(l.costPerUnit)}"></td>
+      <td><input data-i="${i}" data-k="expiryDate" type="date" value="${esc(l.expiryDate)}"></td>
+      <td class="r">${money((Number(l.qty)||0)*(Number(l.costPerUnit)||0))}</td>
+      <td><button class="rc-del" data-del="${i}" title="Remove">×</button></td>
+    </tr>
+  `).join('');
+  $$('#puLines select[data-k="inventoryItemId"]').forEach(sel=>sel.addEventListener('change', e=>{
+    const i = +e.target.dataset.i;
+    puLinesDraft[i].inventoryItemId = e.target.value;
+    if(e.target.value){
+      const item = DOC.inventory.find(x=>x.id===e.target.value);
+      if(item) puLinesDraft[i].unit = item.unit;
+    }
+    renderPuLines();
+  }));
+  $$('#puLines input').forEach(inp=>inp.addEventListener('input', e=>{
+    const i = +e.target.dataset.i, k = e.target.dataset.k;
+    puLinesDraft[i][k] = e.target.value;
+    renderPuGrandTotal();
+  }));
+  $$('#puLines .rc-del').forEach(b=>b.addEventListener('click', e=>{
+    puLinesDraft.splice(+e.target.dataset.del, 1);
+    if(!puLinesDraft.length) puLinesDraft.push(freshPuLine());
+    renderPuLines(); renderPuGrandTotal();
+  }));
+  renderPuGrandTotal();
+}
+function renderPuGrandTotal(){
+  const total = puLinesDraft.reduce((s,l)=>s+(Number(l.qty)||0)*(Number(l.costPerUnit)||0),0);
+  $('#puGrandTotal').textContent = money(total);
+}
+$('#puAddLine').addEventListener('click', ()=>{ puLinesDraft.push(freshPuLine()); renderPuLines(); });
+$('#btnSavePurchase').addEventListener('click', async ()=>{
+  const lines = puLinesDraft.filter(l=>(Number(l.qty)>0));
+  if(!lines.length){ $('#puErr').textContent = 'Add at least one line item with a quantity'; return; }
+  const cmd = {
+    action:'add-purchase', vendor: $('#puVendor').value, billNo: $('#puBillNo').value,
+    date: $('#puDate').value, paymentStatus: $('#puPaymentStatus').value, notes: $('#puNotes').value,
+    items: lines.map(l=>({ inventoryItemId: l.inventoryItemId||undefined, name:l.name, unit:l.unit, qty:l.qty, costPerUnit:l.costPerUnit, expiryDate:l.expiryDate||undefined })),
+  };
+  const data = await runCommand(cmd, 'Purchase saved');
+  if(data){
+    $('#puVendor').value=''; $('#puBillNo').value=''; $('#puNotes').value=''; $('#puErr').textContent='';
+    initPurchaseForm();
+  } else $('#puErr').textContent = 'Could not save — check the line items above';
+});
+function renderPurchases(){
+  const rows = DOC.purchases.slice().reverse();
+  $('#purchasesBody').innerHTML = rows.length ? rows.map(p=>`
+    <tr>
+      <td>${fmtDate(p.date)}</td>
+      <td>${esc(p.vendor||'—')}</td>
+      <td>${esc(p.billNo||'—')}</td>
+      <td>${p.items.map(it=>esc(it.name)+' ×'+fmtQty(it.qty)).join(', ')}</td>
+      <td class="amt">${money(p.total)}</td>
+      <td><button class="status-chip ${p.paymentStatus}" data-toggle-pay="${esc(p.id)}" style="border:none;cursor:pointer">${p.paymentStatus}</button></td>
+      <td><button class="icon-btn del owner-only" data-del-purchase="${esc(p.id)}">Delete</button></td>
+    </tr>
+  `).join('') : '<tr><td colspan="7" style="color:#aaa;text-align:center">No purchases recorded yet</td></tr>';
+  $$('[data-toggle-pay]').forEach(b=>b.addEventListener('click', ()=>{
+    const p = DOC.purchases.find(x=>x.id===b.dataset.togglePay);
+    runCommand({ action:'update-purchase-payment', id:p.id, paymentStatus: p.paymentStatus==='paid'?'unpaid':'paid' });
+  }));
+  $$('[data-del-purchase]').forEach(b=>b.addEventListener('click', ()=>{
+    if(confirm('Delete this purchase? Its stock batches will be removed too.')) runCommand({ action:'delete-purchase', id:b.dataset.delPurchase }, 'Purchase deleted');
+  }));
+}
+
+/* ── Reports tab (owner only) ── */
+// From/To default to "This month" on first load — set once here, not
+// inside renderReports, so switching tabs back and forth doesn't keep
+// resetting a date range the owner already changed.
+let repRangeInit = false;
+// Same "second date can't precede the first" guard as the checkin/checkout
+// pickers elsewhere — an inverted range here doesn't corrupt anything (the
+// filter below just quietly matches zero orders), but there's no reason to
+// let the picker offer a To date that can only ever produce an empty report.
+function syncRepToMin(){
+  const to = $('#repTo');
+  to.min = $('#repFrom').value || '';
+  if(to.min && to.value && to.value < to.min) to.value = to.min;
+}
+function repSetPreset(preset){
+  const today = todayISO();
+  const d = new Date(today+'T00:00:00');
+  let from = today, to = today;
+  if(preset==='week'){ const day=(d.getDay()+6)%7; const start=new Date(d); start.setDate(d.getDate()-day); from = start.toISOString().slice(0,10); }
+  else if(preset==='month'){ from = today.slice(0,8)+'01'; }
+  else if(preset==='all'){ from = ''; to = ''; }
+  $('#repFrom').value = from;
+  $('#repTo').value = to;
+  syncRepToMin();
+  renderReports();
+}
+$$('[data-rep-preset]').forEach(b=>b.addEventListener('click', ()=>repSetPreset(b.dataset.repPreset)));
+$('#repFrom').addEventListener('change', ()=>{ syncRepToMin(); renderReports(); });
+$('#repTo').addEventListener('change', renderReports);
+
+// Only status:'settled' orders are real, booked revenue — 'open' tabs
+// aren't final yet and 'cancelled' orders never happened. Line items
+// carry their own price/cost snapshot from when the order was created
+// (see create-order in server.js), so editing a menu item's price/cost
+// later never changes a past order's recorded profit.
+function renderReports(){
+  if(!repRangeInit){ repRangeInit = true; repSetPreset('month'); return; }
+  const from = $('#repFrom').value, to = $('#repTo').value;
+  const orders = DOC.orders.filter(o=>{
+    if(o.status!=='settled') return false;
+    if(from && o.date<from) return false;
+    if(to && o.date>to) return false;
+    return true;
+  });
+
+  let revenue=0, cost=0, missingCost=false;
+  const byItem = {}, byCat = {};
+  orders.forEach(o=>{
+    (o.items||[]).forEach(it=>{
+      const lineRevenue = (Number(it.price)||0)*(Number(it.qty)||0);
+      const hasCost = it.cost!=null;
+      if(!hasCost) missingCost = true;
+      const lineCost = hasCost ? (Number(it.cost)||0)*(Number(it.qty)||0) : 0;
+      revenue += lineRevenue; cost += lineCost;
+      const cat = it.category || 'Uncategorised';
+      const key = it.menuItemId || it.name;
+      if(!byItem[key]) byItem[key] = { name: it.name, category: cat, qty:0, revenue:0, cost:0 };
+      byItem[key].qty += Number(it.qty)||0; byItem[key].revenue += lineRevenue; byItem[key].cost += lineCost;
+      if(!byCat[cat]) byCat[cat] = { qty:0, revenue:0, cost:0 };
+      byCat[cat].qty += Number(it.qty)||0; byCat[cat].revenue += lineRevenue; byCat[cat].cost += lineCost;
+    });
+  });
+  const profit = revenue - cost;
+  const marginPct = revenue>0 ? Math.round((profit/revenue)*100) : 0;
+
+  $('#repRevenue').textContent = money(revenue);
+  $('#repOrderCount').textContent = orders.length + ' settled order' + (orders.length===1?'':'s');
+  $('#repCogs').textContent = money(cost);
+  $('#repProfit').textContent = money(profit);
+  $('#repMargin').textContent = marginPct + '%';
+  $('#repCostWarning').textContent = missingCost
+    ? 'Some orders in this range were recorded before cost tracking was added — their cost is shown as ₹0, so profit/margin here is understated.'
+    : '';
+
+  const catRows = Object.keys(byCat).sort((a,b)=>byCat[b].revenue-byCat[a].revenue);
+  $('#repCatBody').innerHTML = catRows.length ? catRows.map(c=>{
+    const r = byCat[c], p = r.revenue-r.cost, m = r.revenue>0?Math.round((p/r.revenue)*100):0;
+    return `<tr><td>${esc(c)}</td><td class="r">${fmtQty(r.qty)}</td><td class="r">${money(r.revenue)}</td><td class="r">${money(r.cost)}</td><td class="r">${money(p)}</td><td class="r">${m}%</td></tr>`;
+  }).join('') : '<tr><td colspan="6" style="color:#aaa;text-align:center">No settled orders in this range</td></tr>';
+
+  const itemRows = Object.keys(byItem).sort((a,b)=>byItem[b].revenue-byItem[a].revenue);
+  $('#repItemBody').innerHTML = itemRows.length ? itemRows.map(k=>{
+    const r = byItem[k], p = r.revenue-r.cost, m = r.revenue>0?Math.round((p/r.revenue)*100):0;
+    return `<tr><td>${esc(r.name)}</td><td>${esc(r.category)}</td><td class="r">${fmtQty(r.qty)}</td><td class="r">${money(r.revenue)}</td><td class="r">${money(r.cost)}</td><td class="r">${money(p)}</td><td class="r">${m}%</td></tr>`;
+  }).join('') : '<tr><td colspan="7" style="color:#aaa;text-align:center">No settled orders in this range</td></tr>';
+}
+
+/* ── Settings tab ── */
+function renderSettingsForm(){
+  $('#stGst').value = DOC.settings.gstPercent ?? 0;
+  $('#stSvc').value = DOC.settings.serviceChargePercent ?? 0;
+  $('#stPrefix').value = DOC.settings.invoicePrefix || 'CDR';
+  $('#stExpDays').value = DOC.settings.expiryAlertDays ?? 5;
+  $('#stPartnerPhone').value = DOC.settings.partnerKitchenPhone || '';
+  // Defaults to on — matches the message's original always-shown behavior
+  // for settings docs saved before this toggle existed.
+  $('#stShowPartnerRate').checked = DOC.settings.showPartnerRate !== false;
+}
+$('#btnSaveSettings').addEventListener('click', async ()=>{
+  const data = await runCommand({
+    action:'update-settings', gstPercent: $('#stGst').value, serviceChargePercent: $('#stSvc').value,
+    invoicePrefix: $('#stPrefix').value, expiryAlertDays: $('#stExpDays').value,
+    partnerKitchenPhone: $('#stPartnerPhone').value, showPartnerRate: $('#stShowPartnerRate').checked,
+  });
+  if(data) showToast('Settings saved'); else $('#stErr').textContent = 'Could not save settings';
+});
+function renderCategoryEditor(){
+  catRowsDraft = DOC.categories.slice();
+  renderCatRows();
+}
+function renderCatRows(){
+  $('#catRows').innerHTML = catRowsDraft.map((c,i)=>`
+    <tr><td><input data-i="${i}" value="${esc(c)}"></td><td style="width:44px"><button class="rc-del" data-del="${i}">×</button></td></tr>
+  `).join('');
+  $$('#catRows input').forEach(inp=>inp.addEventListener('input', e=>{ catRowsDraft[+e.target.dataset.i] = e.target.value; }));
+  $$('#catRows .rc-del').forEach(b=>b.addEventListener('click', e=>{ catRowsDraft.splice(+e.target.dataset.del,1); renderCatRows(); }));
+}
+$('#catAdd').addEventListener('click', ()=>{ catRowsDraft.push(''); renderCatRows(); });
+$('#btnSaveCats').addEventListener('click', ()=>runCommand({ action:'set-categories', categories: catRowsDraft }, 'Categories saved'));
+
+initPurchaseForm();
+load();
+</script>
+</body>
+</html>

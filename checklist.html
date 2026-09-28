@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<title data-title="Check-in / Check-out Checklist · {name}">Check-in / Check-out Checklist · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097;
+    --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6;
+    --qt:#c0922f; --qt-soft:#fbf0d8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  button,input,select,textarea{font-family:inherit}
+  button{cursor:pointer}
+  a{color:var(--accent-d)}
+
+  .wrap{max-width:960px;margin:0 auto;padding:18px 16px 60px}
+
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 18px}
+  header.top img{height:38px;object-fit:contain}
+  header.top .ttl{font-weight:700;font-size:18px;letter-spacing:.2px}
+  header.top .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px}
+  header.top .spacer{flex:1}
+  .badge{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase}
+  .badge.owner{background:var(--accent-soft);color:var(--accent-d)}
+  .badge.caretaker{background:var(--warn-soft);color:var(--warn)}
+  .who{font-size:12px;color:var(--muted);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tbtn{background:var(--panel);border:1.5px solid var(--line);color:var(--muted);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;transition:.15s}
+  .tbtn:hover{border-color:var(--accent);color:var(--accent-d)}
+  .tbtn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .tbtn.primary:hover{background:var(--accent-d);color:#fff}
+
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 15px;box-shadow:0 6px 18px rgba(40,50,40,.04)}
+  .card .lbl{font-size:11.5px;font-weight:600;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase}
+  .card .val{font-size:25px;font-weight:700;margin-top:7px;letter-spacing:-.5px}
+  .card .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .card.hero{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-d) 100%);border:none;color:#fff}
+  .card.hero .lbl,.card.hero .sub{color:#dff0e6}
+  .card.warn .val{color:var(--warn)}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 6px 18px rgba(40,50,40,.04);margin-bottom:16px}
+  .panel h2{font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted2);margin-bottom:10px}
+  .panel .note{font-size:12px;color:var(--muted2);margin-top:6px}
+
+  .due-list{display:flex;flex-direction:column;gap:8px}
+  .due-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);flex-wrap:wrap}
+  .due-main{font-size:13px}
+  .due-guest{font-weight:600}
+  .due-sub{color:var(--muted);font-size:11.5px;margin-top:2px}
+  .type-badge{font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;text-transform:uppercase;margin-left:8px}
+  .type-badge.checkin{background:var(--accent-soft);color:var(--accent-d)}
+  .type-badge.checkout{background:var(--qt-soft);color:var(--qt)}
+  .due-action{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600}
+  .due-action:hover{background:var(--accent-d)}
+  .due-action.continue{background:var(--warn)}
+  .due-action.view{background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .filters input,.filters select{padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:13px;color:var(--ink);outline:none}
+  .filters input{flex:1;min-width:160px}
+  .filters input:focus,.filters select:focus{border-color:var(--accent)}
+
+  .run-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;flex-wrap:wrap;cursor:pointer;transition:.12s}
+  .run-row:hover{border-color:var(--accent)}
+  .run-main{flex:1;min-width:160px}
+  .run-title{font-weight:600;font-size:14px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+  .run-sub{font-size:11.5px;color:var(--muted2);margin-top:2px}
+  .run-progress{font-size:12px;color:var(--muted);white-space:nowrap}
+  .status-badge{font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:3px 9px;border-radius:20px;text-transform:uppercase;white-space:nowrap}
+  .status-badge.completed{background:var(--accent-soft);color:var(--accent-d)}
+  .status-badge.in-progress{background:var(--warn-soft);color:var(--warn)}
+
+  .empty{color:var(--muted2);font-size:13px;text-align:center;padding:30px 20px}
+
+  .overlay{position:fixed;inset:0;background:rgba(29,33,28,.5);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel);border-radius:16px;width:min(560px,100%);max-height:88vh;overflow-y:auto;box-shadow:0 24px 70px rgba(20,30,20,.28)}
+  .modal h3{font-size:16px;font-weight:700;padding:20px 22px 0}
+  .modal .sd{color:var(--muted);font-size:12.5px;padding:4px 22px 0}
+  .mbody{padding:14px 22px 22px;display:flex;flex-direction:column;gap:10px}
+  .mfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:4px;padding:0 22px 20px}
+  .mfoot .right{display:flex;gap:10px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:12px;font-weight:600;color:var(--muted)}
+  .field input,.field select,.field textarea{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:13.5px;color:var(--ink);outline:none;width:100%}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+  .field textarea{resize:vertical;min-height:70px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .merr{color:var(--danger);font-size:12.5px;min-height:16px}
+  .btn{border:none;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:600;background:var(--panel2);color:var(--ink)}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-d)}
+  .btn.danger{background:var(--danger-soft);color:var(--danger)}
+  .btn.danger:hover{background:#f6dad6}
+  /* Rows/modals render dynamically after load() — a one-time querySelectorAll
+     pass at page-init can't reach elements that don't exist yet, so
+     owner-only visibility is driven by this class on <body> instead. */
+  body.caretaker-mode .owner-only{display:none!important}
+
+  .cl-progress-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .cl-progress{font-size:12.5px;color:var(--muted);font-weight:600}
+  .cl-save-status{font-size:11.5px;font-weight:600;color:var(--muted2);white-space:nowrap}
+  .cl-save-status.saving{color:var(--warn)}
+  .cl-save-status.saved{color:var(--accent-d)}
+  .cl-save-status.error{color:var(--danger)}
+  .cl-progress-bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin:8px 0 2px}
+  .cl-progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .25s}
+
+  /* Room-grouped sections — plain <details>/<summary>, no JS needed for
+     expand/collapse. Falls back to a flat list (no .cl-section wrapper at
+     all) when every item lands in one bucket, e.g. the checkout template,
+     which isn't organized by room. */
+  .cl-section{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+  .cl-section + .cl-section{margin-top:10px}
+  .cl-section summary{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 14px;cursor:pointer;font-weight:700;font-size:13.5px;list-style:none;
+    background:var(--panel2);
+  }
+  .cl-section summary::-webkit-details-marker{display:none}
+  .cl-section summary::before{content:'▸';color:var(--muted2);font-size:11px;margin-right:2px;transition:transform .15s}
+  .cl-section[open] summary::before{transform:rotate(90deg)}
+  .cl-section-count{font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .cl-section-body{display:flex;flex-direction:column;gap:8px;padding:10px}
+
+  /* Whole row is a <label> now — tapping the item text checks it too, not
+     just the small checkbox itself. Checkbox bumped up from 19px so it's a
+     real touch target on its own as well. */
+  .cl-item{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel2)}
+  .cl-item-top{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+  .cl-item-top input[type=checkbox]{width:24px;height:24px;margin-top:0;flex-shrink:0;accent-color:var(--accent)}
+  .cl-item-text{flex:1;font-size:14px;font-weight:600;padding-top:2px}
+  .cl-item-text.done{text-decoration:line-through;color:var(--muted2);font-weight:500}
+  .cl-item-toggles{display:flex;gap:8px;margin-top:8px;margin-left:34px}
+  .cl-item-toggles button{
+    display:inline-flex;align-items:center;gap:5px;background:var(--panel);border:1px solid var(--line);
+    color:var(--accent-d);font-size:12px;font-weight:600;border-radius:8px;padding:7px 11px;cursor:pointer;
+  }
+  .cl-item-toggles button:hover{border-color:var(--accent)}
+  .cl-item-extra{margin-left:34px;margin-top:8px;display:flex;flex-direction:column;gap:6px}
+  .cl-item-extra textarea{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:12.5px;width:100%;resize:vertical;min-height:50px;outline:none}
+  .cl-thumb{max-width:120px;max-height:90px;border-radius:8px;display:block;border:1px solid var(--line)}
+  .cl-item-extra .rm{align-self:flex-start;font-size:11px;color:var(--danger);background:none;border:none;text-decoration:underline;cursor:pointer;padding:0}
+
+  /* Flags a run whose items have at least one note attached, so an issue
+     left mid-walkthrough doesn't disappear into a "Completed ✓" row that
+     nobody reopens. */
+  .run-flag{font-size:11px;font-weight:700;color:var(--warn);white-space:nowrap}
+
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:100;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{background:var(--danger)}
+  #loader{position:fixed;inset:0;background:rgba(243,244,241,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:90;color:var(--muted)}
+  #loader.hide{display:none}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media(max-width:680px){
+    .wrap{padding:14px 12px 60px}
+    header.top .who{display:none}
+    .cards{grid-template-columns:1fr}
+    .field input,.field select,.field textarea{font-size:16px}
+    .two{grid-template-columns:1fr}
+    /* Four footer buttons (Delete/Close/Save/Complete) overflow a row on a
+       phone — stack them, primary action on top, Delete (least likely,
+       most destructive) at the very bottom. */
+    .mfoot{flex-direction:column-reverse;align-items:stretch}
+    .mfoot .right{flex-direction:column-reverse;width:100%;gap:8px}
+    .mfoot .right button{width:100%}
+    #runDelete{width:100%}
+  }
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#0e2420">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img id="logo" alt="RYST" src="/assets/stay-logo.webp" />
+    <div class="ttl">Check-in / Check-out Checklist<small><span data-prop="name">RYST 109A</span> · Villa walkthroughs</small></div>
+    <div class="spacer"></div>
+    <span id="roleBadge" class="badge owner">Owner</span>
+    <span id="whoami" class="who"></span>
+    <button class="tbtn" onclick="window.location.href='login.html'">⌂ Home</button>
+    <button class="tbtn primary" id="btnStart">＋ Start checklist</button>
+  </header>
+
+  <div class="cards">
+    <div class="card hero">
+      <div class="lbl">Due today</div>
+      <div class="val" id="cDue">—</div>
+      <div class="sub">check-ins &amp; check-outs</div>
+    </div>
+    <div class="card warn">
+      <div class="lbl">In progress</div>
+      <div class="val" id="cProgress">—</div>
+      <div class="sub">unfinished runs</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Completed</div>
+      <div class="val" id="cDone">—</div>
+      <div class="sub">this month</div>
+    </div>
+  </div>
+
+  <div class="panel" id="duePanel" style="display:none">
+    <h2>Due today</h2>
+    <div class="due-list" id="dueList"></div>
+    <div class="note" id="dueNote"></div>
+  </div>
+
+  <div class="filters">
+    <input id="fSearch" placeholder="Guest name or booking no…" />
+    <select id="fType">
+      <option value="all">All types</option>
+      <option value="checkin">Check-in</option>
+      <option value="checkout">Check-out</option>
+    </select>
+    <select id="fStatus">
+      <option value="all">All statuses</option>
+      <option value="in-progress">In progress</option>
+      <option value="completed">Completed</option>
+    </select>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<!-- Start checklist modal -->
+<div class="overlay" id="startOverlay">
+  <div class="modal">
+    <h3>Start checklist</h3>
+    <div class="mbody">
+      <div class="field"><label>Type</label>
+        <select id="stType">
+          <option value="checkin">Check-in</option>
+          <option value="checkout">Check-out</option>
+        </select>
+      </div>
+      <div class="two">
+        <div class="field"><label>Booking no. (optional)</label><input id="stStayNo" placeholder="e.g. INV-2026/012" /></div>
+        <div class="field"><label>Guest name</label><input id="stGuest" placeholder="e.g. Priya Sharma" /></div>
+      </div>
+      <div class="field"><label>Date</label><input id="stDate" type="date" /></div>
+      <div class="merr" id="stErr"></div>
+    </div>
+    <div class="mfoot"><span></span><span class="right">
+      <button class="btn" id="stCancel">Cancel</button>
+      <button class="btn primary" id="stSave">Start</button>
+    </span></div>
+  </div>
+</div>
+
+<!-- Run detail / checklist modal -->
+<div class="overlay" id="runOverlay">
+  <div class="modal">
+    <h3 id="runTitle">Checklist</h3>
+    <p class="sd" id="runSub"></p>
+    <div class="mbody">
+      <div class="cl-progress-row">
+        <div class="cl-progress" id="runProgress"></div>
+        <div class="cl-save-status" id="runSaveStatus"></div>
+      </div>
+      <div class="cl-progress-bar"><div class="cl-progress-fill" id="runProgressFill" style="width:0%"></div></div>
+      <div id="runItems"></div>
+      <div class="field"><label>Overall note</label><textarea id="runOverallNote" placeholder="Anything else worth recording…"></textarea></div>
+      <div class="merr" id="runErr"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn danger owner-only" id="runDelete">Delete</button>
+      <span class="right">
+        <button class="btn" id="runClose">Close</button>
+        <button class="btn" id="runSaveDraft">Save &amp; continue later</button>
+        <button class="btn primary" id="runComplete">Mark complete</button>
+      </span>
+    </div>
+  </div>
+</div>
+
+<div id="loader">
+  <div class="spin" id="loaderSpin"></div>
+  <div id="loaderMsg">Loading checklists…</div>
+  <button class="tbtn" id="loaderRetry" style="display:none">Retry</button>
+</div>
+<div id="toast"></div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const ROLE  = localStorage.getItem('ryst_user_role') || 'owner';
+const isOwner = ROLE === 'owner';
+
+// Owner always has full access. Coordinator/caretaker need the 'checklist'
+// module granted in Settings → User Access — server-enforced on /checklist
+// regardless, this just avoids loading a page the user can't actually use.
+function hasModule(mod){
+  let modules;
+  try { modules = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { modules = null; }
+  if(!Array.isArray(modules)) modules = ROLE === 'caretaker' ? ['petty-cash','inventory','checklist'] : [];
+  return ROLE === 'owner' || modules.includes(mod);
+}
+
+if(!TOKEN){ window.location.href = 'login.html'; }
+if(!hasModule('checklist')){ window.location.href = 'login.html'; }
+
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// new Date().toISOString() converts through UTC — for any timezone ahead of
+// UTC (IST included), this reports "yesterday" during the first few hours
+// after local midnight. Read the local calendar fields directly instead.
+const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const fmtDate = iso => { if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; };
+
+$('#roleBadge').textContent = isOwner ? 'Owner' : 'Caretaker';
+$('#roleBadge').className = 'badge ' + (isOwner ? 'owner' : 'caretaker');
+$('#whoami').textContent = localStorage.getItem('ryst_user_email') || '';
+document.body.classList.toggle('caretaker-mode', !isOwner);
+
+let DOC = { templates: { checkin: [], checkout: [] }, runs: [] };
+let STAYS = []; // best-effort; caretaker-role tokens may not have access
+let FILTERS = { q:'', type:'all', status:'all' };
+
+function showToast(msg, isErr){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = isErr ? 'show err' : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+async function load(){
+  const loader = $('#loader'), msgEl = $('#loaderMsg'), retryBtn = $('#loaderRetry');
+  loader.classList.remove('hide');
+  $('#loaderSpin').style.display = '';
+  retryBtn.style.display = 'none';
+  msgEl.textContent = 'Loading checklists…';
+
+  const ctrl = new AbortController();
+  const slowTimer = setTimeout(() => { msgEl.textContent = 'Waking up the server… this can take up to a minute.'; }, 4000);
+  const abortTimer = setTimeout(() => ctrl.abort(), 75000);
+  try{
+    const res = await fetch(PROXY_URL+'/checklist', { headers:{'X-Token':TOKEN}, signal: ctrl.signal });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    if(!res.ok) throw new Error('Server error ('+res.status+')');
+    const data = await res.json().catch(()=>({}));
+    DOC = { templates: data.templates || {checkin:[],checkout:[]}, runs: Array.isArray(data.runs)?data.runs:[] };
+
+    // /stays is owner-only server-side — a caretaker-role token gets 403.
+    // That's fine: the "due today" panel just won't populate for them, and
+    // starting a checklist manually still works regardless of role.
+    try{
+      const sres = await fetch(PROXY_URL+'/stays', { headers:{'X-Token':TOKEN} });
+      if(sres.ok){ const sdata = await sres.json().catch(()=>({})); STAYS = Array.isArray(sdata.stays)?sdata.stays:[]; }
+    }catch(e){ /* ignore — best-effort */ }
+
+    render();
+    loader.classList.add('hide');
+  }catch(e){
+    $('#loaderSpin').style.display = 'none';
+    msgEl.textContent = (e && e.name === 'AbortError')
+      ? 'Server timed out — please retry.'
+      : 'Could not load checklists — ' + (e && e.message ? e.message : 'check your connection.');
+    retryBtn.style.display = '';
+  } finally {
+    clearTimeout(slowTimer); clearTimeout(abortTimer);
+  }
+}
+$('#loaderRetry').addEventListener('click', load);
+
+async function sendCommand(cmd){
+  const res = await fetch(PROXY_URL+'/checklist', {
+    method:'POST', headers:{'X-Token':TOKEN,'Content-Type':'application/json'},
+    body: JSON.stringify(cmd)
+  });
+  if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return null; }
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || ('Failed ('+res.status+')'));
+  return data;
+}
+
+function findRun(stayNo, type){
+  return DOC.runs.find(r => r.stayNo === stayNo && r.type === type);
+}
+
+function renderDue(){
+  const today = todayISO();
+  const due = STAYS.filter(s => (s.type||'invoice')==='invoice' && (s.checkin===today || s.checkout===today));
+  const rows = [];
+  due.forEach(s=>{
+    if(s.checkin===today) rows.push({ stayNo:s.no, guest:s.guest, type:'checkin' });
+    if(s.checkout===today) rows.push({ stayNo:s.no, guest:s.guest, type:'checkout' });
+  });
+
+  $('#cDue').textContent = rows.length;
+  $('#duePanel').style.display = rows.length ? '' : 'none';
+  // data-* + a delegated listener below, not inline onclick="startOrOpen('${...}')"
+  // — a guest name is free text (can come from the public quote form) and
+  // esc() doesn't escape single quotes, so concatenating it into a JS string
+  // literal inside an onclick attribute would let an apostrophe (or a
+  // crafted `');…//` payload) break out and run arbitrary JS in this
+  // authenticated session. data-* attributes only ever go through esc()'s
+  // HTML-attribute escaping, never get re-parsed as script source.
+  $('#dueList').innerHTML = rows.map(r=>{
+    const run = findRun(r.stayNo, r.type);
+    const label = r.type==='checkin' ? 'Check-in' : 'Check-out';
+    let btnLabel = 'Start', btnClass = '';
+    if(run){ btnLabel = run.status==='completed' ? 'View' : 'Continue'; btnClass = run.status==='completed' ? 'view' : 'continue'; }
+    return `<div class="due-item">
+      <div class="due-main"><span class="due-guest">${esc(r.guest||'—')}</span><span class="type-badge ${r.type}">${label}</span>
+        <div class="due-sub">${esc(r.stayNo)}</div></div>
+      <button class="due-action ${btnClass}" data-stayno="${esc(r.stayNo)}" data-type="${esc(r.type)}" data-guest="${esc(r.guest||'')}">${btnLabel}</button>
+    </div>`;
+  }).join('');
+  $('#dueList').querySelectorAll('[data-stayno]').forEach(btn=>{
+    btn.addEventListener('click', ()=> startOrOpen(btn.dataset.stayno, btn.dataset.type, btn.dataset.guest));
+  });
+  $('#dueNote').textContent = (STAYS.length===0) ? '' : '';
+}
+
+async function startOrOpen(stayNo, type, guest){
+  const existing = findRun(stayNo, type);
+  if(existing){ openRun(existing.id); return; }
+  try{
+    const data = await sendCommand({ action:'start-run', type, stayNo, guest, date: todayISO() });
+    if(data===null) return;
+    DOC.runs = data.runs;
+    const run = findRun(stayNo, type);
+    render();
+    if(run) openRun(run.id);
+  }catch(e){ showToast(e.message, true); }
+}
+
+function passFilter(r){
+  if(FILTERS.type!=='all' && r.type!==FILTERS.type) return false;
+  if(FILTERS.status!=='all' && r.status!==FILTERS.status) return false;
+  const q = FILTERS.q.trim().toLowerCase();
+  if(q && !((r.guest||'').toLowerCase().includes(q) || (r.stayNo||'').toLowerCase().includes(q))) return false;
+  return true;
+}
+
+function render(){
+  renderDue();
+
+  const now = new Date();
+  // Local YYYY-MM, not UTC — .toISOString() shifts near month boundaries
+  // for any timezone ahead of UTC (IST included).
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const inProgress = DOC.runs.filter(r=>r.status==='in-progress').length;
+  const doneThisMonth = DOC.runs.filter(r=>{
+    if(r.status!=='completed' || !r.completedAt) return false;
+    const c = new Date(r.completedAt);
+    return `${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,'0')}` === monthStart;
+  }).length;
+  $('#cProgress').textContent = inProgress;
+  $('#cDone').textContent = doneThisMonth;
+
+  const filtered = DOC.runs.filter(passFilter).sort((a,b)=>(b.startedAt||0)-(a.startedAt||0));
+  const list = $('#list');
+  if(!filtered.length){ list.innerHTML = '<div class="empty">No checklists match — try clearing filters, or start one above.</div>'; return; }
+
+  list.innerHTML = filtered.map(r=>{
+    const checked = r.items.filter(i=>i.checked).length;
+    const noted = r.items.filter(i=>i.note && i.note.trim()).length;
+    const label = r.type==='checkin' ? 'Check-in' : 'Check-out';
+    return `<div class="run-row" onclick="openRun('${esc(r.id)}')">
+      <div class="run-main">
+        <div class="run-title">${esc(r.guest||r.stayNo||'Untitled')} <span class="type-badge ${r.type}">${label}</span></div>
+        <div class="run-sub">${esc(r.stayNo||'—')} · ${fmtDate(r.date)}</div>
+      </div>
+      ${noted ? `<span class="run-flag" title="${noted} item(s) have a note">⚠ ${noted} note${noted===1?'':'s'}</span>` : ''}
+      <div class="run-progress">${checked}/${r.items.length} done</div>
+      <span class="status-badge ${r.status}">${r.status==='completed'?'Completed':'In progress'}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- START MODAL ---------- */
+function openStartModal(){
+  $('#stType').value = 'checkin';
+  $('#stStayNo').value = ''; $('#stGuest').value = '';
+  $('#stDate').value = todayISO();
+  $('#stErr').textContent = '';
+  $('#startOverlay').classList.add('show');
+}
+function closeStartModal(){ $('#startOverlay').classList.remove('show'); }
+$('#btnStart').addEventListener('click', openStartModal);
+$('#stCancel').addEventListener('click', closeStartModal);
+$('#startOverlay').addEventListener('click', e=>{ if(e.target===$('#startOverlay')) closeStartModal(); });
+$('#stSave').addEventListener('click', async () => {
+  const type = $('#stType').value;
+  const stayNo = $('#stStayNo').value.trim();
+  const guest = $('#stGuest').value.trim();
+  const date = $('#stDate').value || todayISO();
+  const btn = $('#stSave');
+  btn.disabled = true; btn.textContent = 'Starting…';
+  try{
+    const data = await sendCommand({ action:'start-run', type, stayNo, guest, date });
+    if(data===null) return;
+    DOC.runs = data.runs;
+    render();
+    closeStartModal();
+    const created = data.runs[data.runs.length-1];
+    openRun(created.id);
+  }catch(e){ $('#stErr').textContent = e.message; }
+  finally{ btn.disabled = false; btn.textContent = 'Start'; }
+});
+
+/* ---------- RUN / DETAIL MODAL ---------- */
+let currentRunId = null;
+
+function updateProgressLabel(){
+  const run = DOC.runs.find(r=>r.id===currentRunId);
+  if(!run) return;
+  const checked = run.items.filter(i=>i.checked).length;
+  $('#runProgress').textContent = `${checked} / ${run.items.length} items checked`;
+  const pct = run.items.length ? Math.round(checked/run.items.length*100) : 0;
+  $('#runProgressFill').style.width = pct+'%';
+}
+
+// Groups items purely by string-matching the item text at render time —
+// no schema change needed on the server (templates are still plain
+// strings). "Bedroom N — ..." and "Bedroom N toilet — ..." both fall
+// under "Bedroom N" so a room and its en-suite sit together. Anything
+// else (common areas, facilities, and the whole checkout template, which
+// isn't organized by room) lands in one shared bucket.
+function sectionOf(text){
+  const m = /^Bedroom (\d+)/i.exec(text||'');
+  return m ? `Bedroom ${m[1]}` : 'Common Areas & Facilities';
+}
+function groupItems(items){
+  const groups = [], byKey = {};
+  items.forEach((it,idx)=>{
+    const key = sectionOf(it.text);
+    if(!byKey[key]){ byKey[key] = { key, items: [] }; groups.push(byKey[key]); }
+    byKey[key].items.push({ ...it, idx });
+  });
+  return groups;
+}
+function itemHtml(it, idx){
+  return `
+    <div class="cl-item" data-idx="${idx}">
+      <label class="cl-item-top">
+        <input type="checkbox" ${it.checked?'checked':''} onchange="toggleItem(${idx}, this.checked)" />
+        <span class="cl-item-text ${it.checked?'done':''}">${esc(it.text)}</span>
+      </label>
+      <div class="cl-item-toggles">
+        <button type="button" onclick="toggleExtra(${idx})">📝 ${it.note?'Edit note':'Add note'}</button>
+        <button type="button" onclick="triggerPhoto(${idx})">📷 ${it.photo?'Change photo':'Add photo'}</button>
+      </div>
+      <div class="cl-item-extra" id="extra-${idx}" style="display:${it.note||it.photo?'flex':'none'}">
+        <textarea placeholder="Note…" onblur="updateNote(${idx}, this.value)">${esc(it.note||'')}</textarea>
+        ${it.photo ? `<img class="cl-thumb" src="${it.photo}"><button type="button" class="rm" onclick="removePhoto(${idx})">Remove photo</button>` : ''}
+      </div>
+    </div>
+  `;
+}
+function renderRunItems(run){
+  const wrap = $('#runItems');
+  const groups = groupItems(run.items);
+  if(groups.length<=1){
+    wrap.innerHTML = run.items.map((it,idx)=>itemHtml(it,idx)).join('');
+  }else{
+    // Preserve whatever's currently open/closed across a re-render (photo
+    // add/remove rebuilds this whole block) — on the very first render for
+    // this modal session there's nothing to preserve yet, so a section
+    // that's already fully checked off starts collapsed instead, which
+    // matters when reopening an in-progress run where some rooms are done.
+    const prevOpen = [...wrap.querySelectorAll('details.cl-section')].map(d=>d.open);
+    wrap.innerHTML = groups.map((g,gi)=>{
+      const done = g.items.filter(i=>i.checked).length;
+      const allDone = done===g.items.length;
+      const isOpen = prevOpen.length ? prevOpen[gi] : !allDone;
+      return `<details class="cl-section" ${isOpen?'open':''}>
+        <summary><span>${esc(g.key)}</span><span class="cl-section-count">${done}/${g.items.length}</span></summary>
+        <div class="cl-section-body">${g.items.map(i=>itemHtml(i,i.idx)).join('')}</div>
+      </details>`;
+    }).join('');
+  }
+  updateProgressLabel();
+}
+
+/* ---------- AUTOSAVE ----------
+   Every check/note/photo change schedules a debounced background save so
+   nothing is lost if the caretaker gets interrupted mid-walkthrough —
+   status is deliberately never included here, only the explicit Save/
+   Complete buttons change a run's status. */
+let autosaveTimer = null, autosaveInFlight = false, autosavePending = false;
+function setSaveStatus(state, detail){
+  const el = $('#runSaveStatus');
+  if(!el) return;
+  el.className = 'cl-save-status '+state;
+  el.textContent = state==='saving' ? 'Saving…'
+    : state==='saved' ? 'Saved ✓'
+    : state==='unsaved' ? 'Unsaved changes…'
+    : state==='error' ? `⚠ Not saved — retrying (${detail||'error'})`
+    : '';
+}
+function scheduleAutosave(){
+  if(!currentRunId) return;
+  setSaveStatus('unsaved');
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(doAutosave, 1000);
+}
+async function doAutosave(){
+  if(!currentRunId) return;
+  if(autosaveInFlight){ autosavePending = true; return; }
+  const run = DOC.runs.find(r=>r.id===currentRunId);
+  if(!run) return;
+  autosaveInFlight = true;
+  setSaveStatus('saving');
+  const items = run.items.map(it=>({ text:it.text, checked:it.checked, note:it.note||'', photo:it.photo||null }));
+  const overallNote = $('#runOverallNote').value.trim();
+  try{
+    const data = await sendCommand({ action:'update-run', id: currentRunId, items, overallNote });
+    if(data===null) return; // sendCommand already redirected to login
+    DOC.runs = data.runs;
+    setSaveStatus('saved');
+  }catch(e){
+    setSaveStatus('error', e.message);
+    // Retry on its own — a caretaker mid-walkthrough shouldn't have to
+    // notice and manually retry a dropped connection.
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(doAutosave, 5000);
+  }finally{
+    autosaveInFlight = false;
+    if(autosavePending){ autosavePending = false; doAutosave(); }
+  }
+}
+// Flushes any pending debounced save immediately — called wherever the
+// modal can be dismissed, so closing right after the last tap never
+// discards it.
+function flushAutosave(){
+  if(autosaveTimer){ clearTimeout(autosaveTimer); autosaveTimer = null; doAutosave(); }
+}
+
+function openRun(id){
+  const run = DOC.runs.find(r=>r.id===id);
+  if(!run) return;
+  currentRunId = id;
+  clearTimeout(autosaveTimer); autosaveTimer = null; autosavePending = false;
+  const label = run.type==='checkin' ? 'Check-in' : 'Check-out';
+  $('#runTitle').textContent = `${label} checklist${run.guest?' — '+run.guest:''}`;
+  $('#runSub').textContent = `${run.stayNo||'No booking reference'} · ${fmtDate(run.date)}`;
+  $('#runOverallNote').value = run.overallNote || '';
+  $('#runErr').textContent = '';
+  setSaveStatus('');
+  renderRunItems(run);
+  $('#runOverlay').classList.add('show');
+}
+function closeRunModal(){ flushAutosave(); $('#runOverlay').classList.remove('show'); currentRunId = null; }
+$('#runClose').addEventListener('click', closeRunModal);
+$('#runOverlay').addEventListener('click', e=>{ if(e.target===$('#runOverlay')) closeRunModal(); });
+$('#runOverallNote').addEventListener('input', scheduleAutosave);
+
+function toggleItem(idx, checked){
+  const run = DOC.runs.find(r=>r.id===currentRunId);
+  if(!run) return;
+  run.items[idx].checked = checked;
+  const itemEl = $('#runItems').querySelector(`.cl-item[data-idx="${idx}"]`);
+  if(itemEl){
+    itemEl.querySelector('.cl-item-text').classList.toggle('done', checked);
+    const section = itemEl.closest('.cl-section');
+    if(section){
+      const boxes = section.querySelectorAll('.cl-item-top input[type=checkbox]');
+      let done = 0; boxes.forEach(b=>{ if(b.checked) done++; });
+      const countEl = section.querySelector('.cl-section-count');
+      if(countEl) countEl.textContent = `${done}/${boxes.length}`;
+    }
+  }
+  updateProgressLabel();
+  scheduleAutosave();
+}
+function toggleExtra(idx){
+  const el = $('#extra-'+idx);
+  el.style.display = (el.style.display==='none') ? 'flex' : 'none';
+}
+function updateNote(idx, value){
+  const run = DOC.runs.find(r=>r.id===currentRunId);
+  if(!run) return;
+  run.items[idx].note = value;
+  scheduleAutosave();
+}
+
+let pendingPhotoIdx = null;
+const photoInput = document.createElement('input');
+photoInput.type = 'file'; photoInput.accept = 'image/*'; photoInput.capture = 'environment'; photoInput.hidden = true;
+document.body.appendChild(photoInput);
+function triggerPhoto(idx){ pendingPhotoIdx = idx; photoInput.value = ''; photoInput.click(); }
+photoInput.addEventListener('change', async () => {
+  const file = photoInput.files[0];
+  if(!file || pendingPhotoIdx===null) return;
+  try{
+    const dataUrl = await compressImage(file);
+    const run = DOC.runs.find(r=>r.id===currentRunId);
+    if(!run) return;
+    run.items[pendingPhotoIdx].photo = dataUrl;
+    // renderRunItems already opens the note/photo area for any item that
+    // now has a photo — no extra toggleExtra() call needed (and calling
+    // one here used to immediately re-hide the photo right after adding
+    // it, since the freshly-rendered element already started open).
+    renderRunItems(run);
+    scheduleAutosave();
+  }catch(e){ showToast(e.message, true); }
+});
+function removePhoto(idx){
+  const run = DOC.runs.find(r=>r.id===currentRunId);
+  if(!run) return;
+  run.items[idx].photo = null;
+  renderRunItems(run);
+  scheduleAutosave();
+}
+
+function compressImage(file){
+  return new Promise((resolve,reject)=>{
+    if(!file) return resolve(null);
+    if(!file.type || !file.type.startsWith('image/')) return reject(new Error('Please choose an image file'));
+    const reader=new FileReader();
+    reader.onload=()=>{ const img=new Image();
+      img.onload=()=>{ const maxDim=1400; let w=img.width,h=img.height;
+        if(w>maxDim||h>maxDim){ if(w>=h){ h=Math.round(h*maxDim/w); w=maxDim; } else { w=Math.round(w*maxDim/h); h=maxDim; } }
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(cv.toDataURL('image/jpeg',0.6)); };
+      img.onerror=()=>reject(new Error('Could not read image')); img.src=reader.result; };
+    reader.onerror=()=>reject(new Error('Could not read file')); reader.readAsDataURL(file);
+  });
+}
+
+async function saveRun(status){
+  const run = DOC.runs.find(r=>r.id===currentRunId);
+  if(!run) return;
+  // This save already covers everything a pending autosave would send —
+  // drop the scheduled one so closeRunModal's flush doesn't fire a
+  // redundant second write right behind this one.
+  clearTimeout(autosaveTimer); autosaveTimer = null;
+  const items = run.items.map(it=>({ text:it.text, checked:it.checked, note:it.note||'', photo:it.photo||null }));
+  const overallNote = $('#runOverallNote').value.trim();
+  const btn = status==='completed' ? $('#runComplete') : $('#runSaveDraft');
+  btn.disabled = true;
+  try{
+    const data = await sendCommand({ action:'update-run', id: currentRunId, items, overallNote, status });
+    if(data===null) return;
+    DOC.runs = data.runs;
+    render();
+    showToast(status==='completed' ? 'Checklist marked complete' : 'Progress saved');
+    closeRunModal();
+  }catch(e){ $('#runErr').textContent = e.message; }
+  finally{ btn.disabled = false; }
+}
+$('#runSaveDraft').addEventListener('click', ()=>saveRun('in-progress'));
+$('#runComplete').addEventListener('click', ()=>saveRun('completed'));
+
+$('#runDelete').addEventListener('click', async () => {
+  if(!isOwner || !currentRunId) return;
+  if(!confirm('Delete this checklist run? This cannot be undone.')) return;
+  try{
+    const data = await sendCommand({ action:'delete-run', id: currentRunId });
+    if(data===null) return;
+    DOC.runs = data.runs;
+    render();
+    closeRunModal();
+    showToast('Checklist deleted');
+  }catch(e){ showToast(e.message, true); }
+});
+
+$('#fSearch').addEventListener('input', e=>{ FILTERS.q=e.target.value; render(); });
+$('#fType').addEventListener('change', e=>{ FILTERS.type=e.target.value; render(); });
+$('#fStatus').addEventListener('change', e=>{ FILTERS.status=e.target.value; render(); });
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeStartModal(); closeRunModal(); } });
+
+load();
+</script>
+</body>
+</html>

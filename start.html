@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'self' https://data.ryst.in https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Set up your villa · RYST Harbour</title>
+<link rel="icon" href="/assets/staff-icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Self-service villa setup from an invite link (#i=<invite>, made in
+     Settings → Villas). The invite names one Google account; signing in with
+     it creates the villa with that account as owner, then opens Settings. -->
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --danger:#c0584b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%;background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{display:flex;align-items:center;justify-content:center;padding:24px 16px;background:radial-gradient(1100px 560px at 50% -8%,#ffffff 0%,var(--bg) 65%)}
+  .card{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:30px 26px;box-shadow:0 18px 50px rgba(40,50,40,.10);display:flex;flex-direction:column;gap:16px}
+  .card img{height:64px;width:64px;margin:0 auto;display:block;border-radius:14px}
+  h1{font-weight:600;font-size:20px;text-align:center}
+  .sub{color:var(--muted);font-size:13.5px;text-align:center;line-height:1.5}
+  .who{background:var(--accent-soft);color:var(--accent-d);border-radius:10px;padding:10px 12px;font-size:13px;text-align:center;overflow-wrap:anywhere}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field span{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);font-weight:600}
+  .field input{border:1.5px solid var(--line);border-radius:9px;padding:11px 12px;font-size:15px;color:var(--ink);background:var(--panel2);outline:none;font-family:inherit;width:100%}
+  .field input:focus{border-color:var(--accent)}
+  .hint{font-size:12px;color:var(--muted2);line-height:1.45}
+  .err{color:var(--danger);font-size:13px;min-height:18px;text-align:center}
+  #gbtn{display:flex;justify-content:center;min-height:44px}
+  .steps{list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted)}
+  .steps li{display:flex;gap:10px;align-items:flex-start}
+  .steps b{flex:0 0 22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent-d);font-size:12px;display:flex;align-items:center;justify-content:center}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<main class="card">
+  <img src="/assets/staff-icon-192.png" alt="">
+  <div id="formView">
+    <h1>Set up your villa on RYST Harbour</h1>
+    <p class="sub" style="margin-top:6px">Bookings, guest check-in, petty cash, inventory and your team, all in one app.</p>
+    <p class="who" id="who" style="margin-top:14px"></p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+      <label class="field"><span>Villa name</span><input id="villaName" maxlength="120" autocomplete="organization" placeholder="e.g. Sea Breeze Villa"></label>
+      <label class="field"><span>Villa ID</span><input id="slug" maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="e.g. sea-breeze"></label>
+      <p class="hint">Your villa's short ID, used in guest links. Lowercase letters, numbers and dashes; it can't be changed later.</p>
+    </div>
+    <ol class="steps" style="margin-top:14px">
+      <li><b>1</b><span>Continue with Google using the invited account.</span></li>
+      <li><b>2</b><span>We create your villa with you as the owner and admin.</span></li>
+      <li><b>3</b><span>You land in Settings to add your details, team and OTA calendars.</span></li>
+    </ol>
+    <div id="gbtn" style="margin-top:16px"></div>
+    <p class="err" id="err" style="margin-top:8px"></p>
+  </div>
+  <div id="badView" hidden>
+    <h1>This invite link doesn't work</h1>
+    <p class="sub" style="margin-top:8px" id="badMsg">It may have expired or been copied incompletely. Ask for a new invite link.</p>
+  </div>
+</main>
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const GOOGLE_CLIENT_ID = '717827758789-99ugj40a6j2rr4r7db26shn0hivq0vv0.apps.googleusercontent.com';
+const $ = id => document.getElementById(id);
+
+const invite = new URLSearchParams(location.hash.slice(1)).get('i') || '';
+let invitePayload = null;
+try {
+  const p = invite.split('.')[0].replace(/-/g,'+').replace(/_/g,'/');
+  invitePayload = JSON.parse(decodeURIComponent(escape(atob(p + '==='.slice((p.length + 3) % 4)))));
+} catch (e) {}
+if (!invitePayload || !invitePayload.email || !(invitePayload.exp > Date.now())) {
+  $('formView').hidden = true; $('badView').hidden = false;
+  if (invitePayload && invitePayload.exp && invitePayload.exp <= Date.now()) $('badMsg').textContent = 'This invite has expired. Ask for a new invite link.';
+} else {
+  $('who').textContent = 'Invited: ' + invitePayload.email + ' · valid until ' + new Date(invitePayload.exp).toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' });
+}
+
+const slugify = v => v.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
+$('villaName').addEventListener('input', e => { if (!$('slug').dataset.edited) $('slug').value = slugify(e.target.value); });
+$('slug').addEventListener('input', e => { e.target.dataset.edited = '1'; });
+$('slug').addEventListener('blur', e => { e.target.value = slugify(e.target.value); });
+
+async function onGoogle(resp){
+  const err = $('err');
+  const villaName = $('villaName').value.trim(), slug = slugify($('slug').value);
+  if (!villaName) { err.textContent = 'Enter your villa name first, then continue with Google.'; $('villaName').focus(); return; }
+  if (!/^[a-z0-9-]{2,40}$/.test(slug)) { err.textContent = 'Villa ID needs 2–40 lowercase letters, numbers or dashes.'; $('slug').focus(); return; }
+  err.textContent = 'Setting up your villa…';
+  const slow = setTimeout(() => { err.textContent = 'Still working — this can take up to a minute.'; }, 5000);
+  try {
+    const res = await fetch(PROXY_URL + '/signup', { method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ invite, googleIdToken: resp.credential, villaName, slug }) });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok || !d.ok || !d.token) { err.textContent = d.error || ('Something went wrong (' + res.status + ').'); return; }
+    try {
+      localStorage.removeItem('ryst_demo');
+      localStorage.setItem('ryst_proxy_token', d.token);
+      localStorage.setItem('ryst_user_email', d.email || '');
+      localStorage.setItem('ryst_user_role', d.role || 'owner');
+      localStorage.setItem('ryst_user_admin', d.isAdmin ? 'true' : 'false');
+      localStorage.setItem('ryst_user_modules', JSON.stringify(d.modules || []));
+    } catch (e) {}
+    err.style.color = 'var(--accent-d)'; err.textContent = 'Your villa is ready — opening Settings…';
+    location.replace('/settings.html?welcome=1');
+  } catch (e) {
+    err.textContent = 'Could not reach the server — check your connection and try again.';
+  } finally { clearTimeout(slow); }
+}
+function initGoogle(){
+  if (!invitePayload || typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogle, auto_select: false, login_hint: invitePayload.email });
+  google.accounts.id.renderButton($('gbtn'), { theme:'outline', size:'large', width: Math.min(340, $('gbtn').clientWidth || 320), text:'continue_with' });
+}
+window.onGoogleLibraryLoad = initGoogle;
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>

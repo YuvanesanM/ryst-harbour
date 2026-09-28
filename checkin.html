@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Modern browsers already default to this, but this page's URL can carry
+     a one-time check-in token as a query param (?no=&t=) before it's
+     stripped below — belt-and-suspenders against an older/in-app-browser
+     default leaking it via Referer to a third-party subresource. -->
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/villa.js"></script>
+<script src="/property.js"></script>
+<title data-title="Guest Check-in | {name}">Guest Check-in | RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+  @font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 100 1000; font-display: swap; src: url('/assets/fonts/dm-sans-latin-wght-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 600; font-display: swap; src: url('/assets/fonts/cormorant-garamond-latin-600-normal.woff2') format('woff2'); }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --ink:#0e2420; --sea:#0b3d52; --sea-mid:#1a6a7a; --foam:#eef4f2; --bg:#eef4f2;
+    --sand:#c8a97a; --coral:#c96a3b; --white:#fbfaf8; --muted:#6b8480; --muted-text:#5a706c;
+    --line:rgba(14,36,32,.1); --serif:'Cormorant Garamond',Georgia,serif;
+    --sans:'DM Sans',system-ui,sans-serif; --ease:cubic-bezier(.22,1,.36,1);
+  }
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100%;-webkit-font-smoothing:antialiased}
+  body{display:flex;align-items:center;justify-content:center;padding:24px;min-height:100vh}
+  a{color:inherit}
+  .wrap{max-width:560px;width:100%}
+  .card{
+    position:relative;background:var(--white);border-radius:28px;padding:clamp(22px,5vw,38px);
+    box-shadow:0 28px 70px rgba(11,61,82,.14); border:1px solid rgba(255,255,255,.8); overflow:hidden;
+  }
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--sea),var(--sea-mid),var(--sand))}
+  .logo{height:44px;display:block;margin:0 auto 22px;object-fit:contain}
+
+  /* Respect a guest's OS-level reduced-motion preference before anything
+     else — every animation below is decorative, never load-bearing. */
+  @media (prefers-reduced-motion: reduce){
+    .submit{transition:none !important}
+  }
+
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+    outline:2px solid var(--sea-mid);outline-offset:2px;
+  }
+
+  /* ── HERO ── */
+  .hero{text-align:center;margin-bottom:6px}
+  .hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(26px,5vw,32px);color:var(--sea);margin-bottom:10px}
+  .hero-subtitle{color:var(--muted-text);font-size:14.5px;line-height:1.6;margin-bottom:14px}
+  .hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:4px}
+  .hero-badge{background:var(--foam);color:var(--sea);font-size:12px;font-weight:600;padding:7px 14px;border-radius:999px}
+
+  /* ── BOOKING SUMMARY CARD ──
+     Grouped by relationship rather than one boxed icon-row per field:
+     name as a heading, contact as one compact line, check-in/out/guests as
+     a boarding-pass-style column row, booking ID as a small tag. Same
+     seven fields as before, far fewer repeated icon chips. */
+  .booking-card{
+    background:var(--white);border:1px solid var(--line);border-radius:20px;padding:18px 20px;
+    margin:16px 0;box-shadow:0 10px 30px rgba(11,61,82,.08);display:grid;gap:14px;
+  }
+  .bc-row{display:flex;align-items:center;gap:12px}
+  .bc-icon{font-size:17px;width:36px;height:36px;border-radius:11px;background:var(--foam);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .bc-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .bc-label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .bc-value{font-size:14.5px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+  .bc-name{display:flex;flex-direction:column;gap:2px}
+  .bc-name .bc-value{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--sea)}
+  .bc-contact{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;color:var(--muted-text)}
+  .bc-divider{height:1px;background:var(--line)}
+  .bc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:12px 6px}
+  .bc-cell{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .bc-id{
+    display:inline-flex;align-items:center;gap:6px;width:fit-content;max-width:100%;
+    background:var(--foam);color:var(--sea);font-size:12.5px;font-weight:600;
+    padding:6px 12px;border-radius:999px;overflow-wrap:anywhere;
+  }
+  /* Official Apple badge already looks like a complete button (its own
+     black rounded background baked into the image) — just centre it,
+     no extra button chrome of our own around it. Google's pass has no
+     official badge asset in this repo, so it gets a plain button built
+     to the same 44px height so the pair reads as one row. */
+  .wallet-links{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:2px;flex-wrap:wrap}
+  .wallet-links img{height:44px;width:auto;display:block;transition:opacity .2s}
+  .wallet-links a.apple:hover img{opacity:.85}
+  .wallet-btn-google{
+    display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:8px;
+    background:#fff;border:1px solid #dadce0;color:#3c4043;font-family:var(--sans);
+    font-size:14px;font-weight:500;text-decoration:none;transition:box-shadow .2s;
+  }
+  .wallet-btn-google:hover{box-shadow:0 1px 4px rgba(60,64,67,.3)}
+
+  .due-banner{
+    background:linear-gradient(135deg,#fdeee3,#fbe0cd);border:1px solid rgba(201,106,59,.25);
+    border-radius:16px;padding:14px 18px;margin:0 0 16px;text-align:center;
+    font-size:13.5px;color:#8a4321;line-height:1.5;
+  }
+  .due-banner strong{font-size:15px;color:var(--coral)}
+  .due-banner p{margin:0}
+  .pay-balance-btn{
+    margin-top:10px;background:var(--coral);color:#fff;border:none;border-radius:11px;
+    padding:11px 20px;font-family:var(--sans);font-size:13.5px;font-weight:600;
+    cursor:pointer;min-height:42px;transition:opacity .2s;
+  }
+  .pay-balance-btn:hover:not(:disabled){opacity:.88}
+  .pay-balance-btn:disabled{opacity:.6;cursor:not-allowed}
+  .pay-balance-msg{margin-top:8px;font-size:12.5px;color:#8a4321}
+
+  .gsi-block{background:var(--foam);border-radius:16px;padding:18px;text-align:center;margin-bottom:16px}
+  .gsi-hint{font-size:13.5px;color:var(--muted-text);margin-bottom:14px;line-height:1.5}
+  .gsi-matched{font-size:13.5px;color:var(--sea-mid);font-weight:600}
+  #googleSignInBtn{display:flex;justify-content:center}
+
+  .admin-picker{background:var(--foam);border-radius:16px;padding:18px;margin-bottom:16px}
+  .admin-picker label{display:block;font-size:12.5px;font-weight:600;color:var(--muted-text);margin-bottom:10px}
+  .admin-picker select{
+    border:1.5px solid rgba(14,36,32,.12);border-radius:12px;padding:13px 16px;
+    font-family:var(--sans);font-size:14.5px;color:var(--ink);background:var(--white);
+    outline:none;width:100%;
+  }
+
+  /* ── FORM SECTIONS ── */
+  fieldset.ci-section{border:none;padding:0;margin:0 0 8px}
+  fieldset.ci-section legend{width:100%;padding:0;float:left} /* float:left is the classic fix for Firefox legend layout quirks */
+  .ci-section-head{display:flex;align-items:center;gap:10px;width:100%}
+  .ci-section-icon{font-size:19px;width:38px;height:38px;border-radius:12px;background:var(--foam);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ci-section-title{font-family:var(--serif);font-weight:600;font-size:19px;color:var(--sea)}
+  .ci-section-divider{height:1px;background:var(--line);margin:10px 0 16px;width:100%;clear:both}
+
+  .f-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .f-group label{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .f-group label .req{color:var(--coral);margin-left:2px}
+  .f-group input,.f-group textarea,.f-group select{
+    border:1.5px solid rgba(14,36,32,.12);border-radius:12px;padding:13px 16px;
+    font-family:var(--sans);font-size:15px;color:var(--ink);background:var(--white);
+    outline:none;transition:border-color .2s,box-shadow .2s;width:100%;min-height:48px;
+  }
+  .f-group input::placeholder,.f-group textarea::placeholder{color:rgba(14,36,32,.35)}
+  .f-group input:focus,.f-group textarea:focus,.f-group select:focus{border-color:var(--sea-mid);box-shadow:0 0 0 3px rgba(26,106,122,.1)}
+  .f-group input[readonly]{background:var(--foam);color:var(--muted);cursor:not-allowed}
+  .f-group textarea{resize:vertical;min-height:64px}
+  .f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:420px){ .f-row{grid-template-columns:1fr} }
+
+  /* ── ID VERIFICATION ── */
+  .id-verify-block{background:var(--foam);border-radius:18px;padding:16px;margin:2px 0 16px}
+  .id-verify-head{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+  .id-verify-head .icon{font-size:19px}
+  .id-verify-head h3{font-family:var(--serif);font-weight:600;font-size:17px;color:var(--sea)}
+  .chip-group-label{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:2px}
+  .id-chips{display:flex;flex-wrap:wrap;gap:8px}
+  /* Real radio inputs (kept in the tab order, just visually hidden) so the
+     chips get native single-select + keyboard behaviour for free — the
+     label is what's actually visible and clickable. */
+  /* pointer-events:none is the important part — without it this 1px hit
+     target can end up overlapping unrelated elements further down the page
+     (position:absolute inside a flex container drops out of flow oddly)
+     and silently swallow clicks meant for them. The visible <label> stays
+     the real click target; keyboard focus/arrow-key/space still work on
+     the input itself since none of that depends on pointer events. */
+  .id-chip-input{position:absolute;opacity:0;width:1px;height:1px;overflow:hidden;pointer-events:none}
+  .id-chip{
+    display:inline-flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;
+    background:var(--white);border:1.5px solid rgba(14,36,32,.15);border-radius:999px;
+    padding:9px 15px;font-size:12.5px;font-weight:600;color:var(--muted-text);
+    transition:background .2s,border-color .2s,color .2s,transform .1s;min-height:38px;
+  }
+  .id-chip:hover{border-color:var(--sea-mid)}
+  .id-chip:active{transform:scale(.96)}
+  .id-chip-input:checked + .id-chip{background:var(--sea-mid);border-color:var(--sea-mid);color:#fff}
+  .id-chip-input:focus-visible + .id-chip{outline:2px solid var(--sea-mid);outline-offset:2px}
+
+  .photo-box{
+    border:1.5px dashed rgba(14,36,32,.22);border-radius:14px;padding:22px 16px;text-align:center;
+    transition:border-color .2s;background:var(--white);
+  }
+  .photo-box.has-photo{padding:0;border-style:solid;border-color:var(--line);overflow:hidden}
+  .photo-box img{width:100%;max-height:220px;object-fit:contain;display:block;background:#000;animation:photoIn .35s var(--ease)}
+  @keyframes photoIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+  .photo-prompt{color:var(--muted-text);font-size:13.5px}
+  .photo-prompt svg{display:block;margin:0 auto 10px;color:var(--sea-mid)}
+  .photo-choice{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .photo-choice-btn{
+    background:var(--white);border:1.5px solid rgba(14,36,32,.15);border-radius:11px;padding:11px 18px;
+    font-family:var(--sans);font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;
+    transition:border-color .2s,transform .1s;min-height:44px;
+  }
+  .photo-choice-btn:hover{border-color:var(--sea-mid);color:var(--sea-mid)}
+  .photo-choice-btn:active{transform:scale(.96)}
+  .photo-actions{display:flex;justify-content:center;padding:11px;background:var(--white)}
+  .photo-actions button{
+    background:none;border:none;color:var(--coral);font-family:var(--sans);font-size:13px;font-weight:600;
+    cursor:pointer;padding:6px 10px;min-height:36px;
+  }
+  .photo-processing{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--muted-text);font-size:13.5px;padding:6px 0}
+  .spinner{width:26px;height:26px;border-radius:50%;border:3px solid rgba(26,106,122,.2);border-top-color:var(--sea-mid);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .trust-note{font-size:12px;color:var(--muted-text);line-height:1.6;margin-top:11px}
+
+  /* ── SIGNATURE ── (this block went missing during the premium redesign —
+     the canvas rendered at its unstyled browser-default size until now) */
+  .sig-wrap{border:1.5px solid rgba(14,36,32,.12);border-radius:14px;overflow:hidden;background:var(--white)}
+  .sig-wrap canvas{display:block;width:100%;height:140px;touch-action:none;background:var(--white)}
+  .sig-foot{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-top:1px solid var(--line);background:var(--foam)}
+  .sig-hint{font-size:12px;color:var(--muted-text)}
+  .sig-clear{background:none;border:none;color:var(--coral);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;padding:6px 8px;min-height:32px}
+
+  /* ── HOUSE RULES QUICK-GLANCE ── */
+  .house-rules-quick{background:var(--foam);border-radius:14px;padding:14px 18px;margin-bottom:14px;display:grid;gap:7px}
+  .hr-item{font-size:13px;color:var(--ink);line-height:1.4}
+  .hr-item a{color:var(--sea-mid);font-weight:600;text-decoration:underline}
+
+  .chk-row{display:flex;align-items:flex-start;gap:10px;margin:0 0 18px;font-size:13px;color:var(--muted-text);line-height:1.55}
+  .chk-row input{margin-top:3px;flex-shrink:0;width:18px;height:18px}
+  .chk-row a{color:var(--sea-mid);font-weight:600}
+
+  /* ── SUBMIT ── */
+  .submit-bar{margin-top:4px}
+  .submit{
+    position:relative;overflow:hidden;width:100%;height:56px;border:none;border-radius:14px;
+    background:linear-gradient(135deg,#f3ddae,#e3c486 55%,#d4ad6a);color:#1a2c33;font-family:var(--sans);
+    font-size:15.5px;font-weight:600;letter-spacing:.3px;cursor:pointer;transition:transform .15s var(--ease),box-shadow .2s;
+    box-shadow:0 10px 30px rgba(20,40,50,.24),inset 0 1px 0 rgba(255,255,255,.5);
+    display:flex;align-items:center;justify-content:center;gap:10px;
+  }
+  .submit:hover{transform:translateY(-2px)}
+  .submit:active{transform:translateY(0) scale(.99)}
+  .submit:disabled{opacity:.65;cursor:not-allowed;transform:none}
+  .submit-spinner{display:none;width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(26,44,51,.3);border-top-color:#1a2c33;animation:spin .8s linear infinite}
+  .submit.is-loading .submit-spinner{display:inline-block}
+  .err{color:var(--coral);font-size:13px;text-align:center;min-height:18px;margin-top:12px;transition:opacity .2s}
+
+  .thanks{display:none;text-align:center;padding:20px 0}
+  .thanks .tick{width:56px;height:56px;border-radius:50%;background:var(--foam);color:var(--sea-mid);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+  .thanks h2{font-family:var(--serif);font-weight:600;font-size:24px;color:var(--sea);margin-bottom:8px}
+  .thanks p{color:var(--muted-text);font-size:14px;line-height:1.6}
+  /* Mirrors .hero-badges' pill language at the top of the page, but as real
+     links — bookends the flow with the same visual style. */
+  .thanks-links{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
+  .thanks-link{
+    display:inline-flex;align-items:center;gap:7px;background:var(--foam);color:var(--sea);
+    font-size:13px;font-weight:600;padding:10px 16px;border-radius:999px;text-decoration:none;
+    transition:background .2s;
+  }
+  .thanks-link:hover{background:#e2ede9}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <img class="logo" alt="RYST 109A" data-prop-alt="name" data-prop-src="logoUrl" src="/assets/stay-logo.webp">
+    <div id="formView">
+      <div class="hero">
+        <h1 data-prop-tpl="Welcome to {name}">Welcome to RYST 109A</h1>
+        <p class="hero-subtitle">Your stay begins here.<br>Complete your secure check-in in under 2 minutes.</p>
+        <div class="hero-badges">
+          <span class="hero-badge" data-prop-tpl="🏠 Private {typeLabel}">🏠 Private Beach Villa</span>
+          <span class="hero-badge">🔒 Secure Check-in</span>
+          <span class="hero-badge">⏱ Takes about 2 minutes</span>
+        </div>
+      </div>
+
+      <div class="booking-card" id="staySummary" aria-live="polite"></div>
+      <div class="due-banner" id="dueBanner" style="display:none" aria-live="polite"></div>
+
+      <div class="gsi-block" id="gsiBlock">
+        <p class="gsi-hint" id="gsiHint">Sign in with Google to find your booking and auto-fill your details.</p>
+        <div id="googleSignInBtn"></div>
+        <p class="err" id="gsiErr" role="alert" aria-live="polite"></p>
+      </div>
+
+      <div class="admin-picker" id="adminPicker" style="display:none">
+        <label for="adminGuestSelect">Signed in as staff — select a guest to check in</label>
+        <select id="adminGuestSelect">
+          <option value="">Choose a booking…</option>
+        </select>
+      </div>
+
+      <form id="ciForm" novalidate>
+        <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+          <label for="ci-website">Website</label>
+          <input id="ci-website" type="text" tabindex="-1" autocomplete="off">
+        </div>
+
+        <fieldset class="ci-section">
+          <legend><span class="ci-section-head"><span class="ci-section-icon" aria-hidden="true">👤</span><span class="ci-section-title">Personal Details</span></span></legend>
+          <div class="ci-section-divider"></div>
+
+          <div class="f-group">
+            <label for="ci-name">Full Name <span class="req" aria-hidden="true">*</span></label>
+            <input id="ci-name" type="text" placeholder="As on your government ID" required autocomplete="name">
+          </div>
+
+          <div class="id-verify-block">
+            <div class="id-verify-head"><span class="icon" aria-hidden="true">🪪</span><h3>Verify Your Identity</h3></div>
+
+            <div class="f-group">
+              <p class="chip-group-label" id="idTypeGroupLabel">Government ID Type <span class="req" aria-hidden="true">*</span></p>
+              <div class="id-chips" role="radiogroup" aria-labelledby="idTypeGroupLabel">
+                <input type="radio" name="idType" id="idtype-aadhaar" value="Aadhaar" class="id-chip-input">
+                <label for="idtype-aadhaar" class="id-chip">Aadhaar Card</label>
+
+                <input type="radio" name="idType" id="idtype-passport" value="Passport" class="id-chip-input">
+                <label for="idtype-passport" class="id-chip">Passport</label>
+
+                <input type="radio" name="idType" id="idtype-dl" value="Driving License" class="id-chip-input">
+                <label for="idtype-dl" class="id-chip">Driving Licence</label>
+
+                <input type="radio" name="idType" id="idtype-voter" value="Voter ID" class="id-chip-input">
+                <label for="idtype-voter" class="id-chip">Voter ID</label>
+              </div>
+            </div>
+
+            <div class="f-group" style="margin-bottom:0">
+              <label id="photoBoxLabel">ID Photo <span class="req" aria-hidden="true">*</span></label>
+              <!-- Populated entirely by renderPhotoBox() at load — its two
+                   buttons (camera / gallery) need real JS-attached listeners
+                   either way, so there's no static fallback markup here. -->
+              <div class="photo-box" id="photoBox" role="group" aria-labelledby="photoBoxLabel"></div>
+              <p class="trust-note">🔒 Your information is encrypted and securely stored, and used only for verification during your stay — it's never shared with third parties.</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="ci-section">
+          <legend><span class="ci-section-head"><span class="ci-section-icon" aria-hidden="true">🧳</span><span class="ci-section-title">Travel Details</span></span></legend>
+          <div class="ci-section-divider"></div>
+
+          <div class="f-row">
+            <div class="f-group">
+              <label for="ci-vehicle">Vehicle Number</label>
+              <input id="ci-vehicle" type="text" placeholder="If driving" autocomplete="off">
+            </div>
+            <div class="f-group">
+              <label for="ci-arrival">Expected Arrival</label>
+              <input id="ci-arrival" type="time">
+            </div>
+          </div>
+
+        </fieldset>
+
+        <fieldset class="ci-section">
+          <legend><span class="ci-section-head"><span class="ci-section-icon" aria-hidden="true">📝</span><span class="ci-section-title">Additional Information</span></span></legend>
+          <div class="ci-section-divider"></div>
+
+          <div class="f-group">
+            <label for="ci-note">Notes (if any)</label>
+            <textarea id="ci-note" placeholder="Anything you'd like us to know - special occasion, requests..."></textarea>
+          </div>
+
+          <div class="f-group">
+            <label id="sigLabel">Signature <span class="req" aria-hidden="true">*</span></label>
+            <div class="sig-wrap" role="group" aria-labelledby="sigLabel">
+              <canvas id="sigCanvas" role="img" aria-label="Signature pad — sign using your finger or mouse"></canvas>
+              <div class="sig-foot">
+                <span class="sig-hint">Sign using your finger or mouse</span>
+                <button type="button" class="sig-clear" id="sigClear">Clear Signature</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="house-rules-quick">
+            <p class="hr-item">✓ Government ID required</p>
+            <p class="hr-item">✓ No loud music after 10 PM</p>
+            <p class="hr-item">✓ Pool usage at your own risk</p>
+            <p class="hr-item"><a href="/terms.html" target="_blank" rel="noopener">✓ Read Full House Rules</a></p>
+          </div>
+
+          <label class="chk-row">
+            <input type="checkbox" id="ci-agree">
+            <span>I confirm the details above are accurate and I have read and agree to the <a href="/terms.html" target="_blank" rel="noopener">House Rules &amp; Terms</a>.</span>
+          </label>
+        </fieldset>
+
+        <div class="submit-bar">
+          <button type="submit" class="submit" id="ciSubmitBtn">
+            <span class="submit-label">Check-in</span>
+            <span class="submit-spinner" aria-hidden="true"></span>
+          </button>
+          <p class="err" id="ciErr" role="alert" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+
+    <div class="thanks" id="thanksView">
+      <div class="tick"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2>You're all checked in!</h2>
+      <p id="thanksMsg">We'll have everything ready for your stay. See you soon at <span data-prop="name">RYST 109A</span>.</p>
+      <div class="thanks-links">
+        <a class="thanks-link" href="/nearby.html" data-ryst-only>🗺️ Explore Nearby</a>
+        <a class="thanks-link" href="https://maps.app.goo.gl/taBGtjLgbcMWL6mUA" data-prop-href="mapLink" data-prop-if="mapLink" target="_blank" rel="noopener">📍 Get Directions</a>
+        <a class="thanks-link" href="https://www.instagram.com/stay.ryst" data-prop-href="instagramUrl" data-prop-if="instagram" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          Follow <span data-prop="instagramHandle">@stay.ryst</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const $ = s => document.querySelector(s);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function qp(name){ return new URLSearchParams(location.search).get(name) || ''; }
+// let, not const — a Google sign-in match (guest or admin-picked) can
+// resolve/overwrite these after the page has already loaded with none of
+// them set from the link's query params.
+let bookingNo = qp('no');
+let checkinTok = qp('t');
+// Stripped from the address bar the moment it's read — same reasoning as
+// guest.html's tryMagicLinkLogin: nothing on this page needs it to stay in
+// the URL/history any longer than it takes to load, and leaving it there
+// means a bookmark, a screenshot, a pasted-into-chat link, or synced
+// browser history keeps a live, unauthenticated bearer credential for this
+// booking around indefinitely.
+if(bookingNo && checkinTok) history.replaceState(null, '', location.pathname);
+// Everything else about the booking (guest name, dates, guest count, due
+// balance, phone, email, wallet token) is fetched fresh from
+// /checkin/lookup below rather than read off the URL — the link itself is
+// just ?no=&t= now. That's not only a shorter link: due in particular has
+// to reflect the CURRENT balance, so a guest who pays via Pay Balance Now
+// and reopens (or never left) this page sees what's actually still owed,
+// not a snapshot from whenever the WhatsApp message was sent.
+let guestPrefill = '';
+let checkinDate = '';
+let checkoutDate = '';
+let guestsOnBooking = '';
+let dueAmount = '';
+let guestPhone = '';
+let guestEmail = '';
+let walletTok = '';
+let walletAppleEnabled = true;
+let walletGoogleEnabled = true;
+
+function fmtDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso+'T00:00:00');
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+}
+// Short-month variant for the compact check-in/check-out grid in the
+// booking summary card — fmtDate's full "15 August 2026" is right for the
+// prose confirmation message but too wide for a 3-column cell.
+function fmtDateShort(iso){
+  if(!iso) return '';
+  const d = new Date(iso+'T00:00:00');
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+}
+
+// Guest count has no on-page control at all now — it's purely derived from
+// the booking record (guestsOnBooking) and shown as its own row in the
+// summary card below. Still submitted as-is, same single guestsCount
+// payload field.
+function guestCountLabel(){
+  const n = Number(guestsOnBooking);
+  if(!(n > 0)) return '';
+  return `${n} guest${n === 1 ? '' : 's'}`;
+}
+
+// Only shown when there's an actual balance — never fabricated, and never
+// shown as zero/"all paid" noise.
+function renderDueBanner(){
+  const el = $('#dueBanner');
+  const amt = Math.round(Number(dueAmount) || 0);
+  if(amt > 0){
+    el.style.display = '';
+    el.innerHTML = `
+      <p>Balance due: <strong>₹${amt.toLocaleString('en-IN')}</strong></p>
+      <button type="button" class="pay-balance-btn" id="payBalanceBtn">Pay Balance Now</button>
+      <p class="pay-balance-msg" id="payBalanceMsg" role="alert" aria-live="polite"></p>
+    `;
+    $('#payBalanceBtn').addEventListener('click', handlePayBalanceClick);
+  } else {
+    el.style.display = 'none';
+  }
+}
+// Creates (or reuses) a Razorpay Payment Link for the current balance via
+// the backend, then opens it in a new tab — same-tab would abandon
+// whatever the guest has already filled in on the check-in form below.
+async function handlePayBalanceClick(){
+  const btn = $('#payBalanceBtn');
+  const msgEl = $('#payBalanceMsg');
+  if(!btn || btn.disabled) return;
+  btn.disabled = true; btn.textContent = 'Preparing payment…';
+  if(msgEl) msgEl.textContent = '';
+  try{
+    const res = await fetch(PROXY_URL+'/checkin/balance-payment-link', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ no: bookingNo, t: checkinTok }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ throw new Error(data.error || 'Could not start payment.'); }
+    if(data.url){
+      window.open(data.url, '_blank', 'noopener');
+    } else if(msgEl){
+      msgEl.textContent = 'No balance is currently due.';
+    }
+  }catch(err){
+    if(msgEl) msgEl.textContent = err.message || 'Could not start payment — please try again or WhatsApp us.';
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'Pay Balance Now'; }
+  }
+}
+function walletUrl(){
+  return (bookingNo && walletTok && walletAppleEnabled) ? `${PROXY_URL}/booking/wallet/apple?no=${encodeURIComponent(bookingNo)}&t=${encodeURIComponent(walletTok)}` : '';
+}
+function googleWalletUrl(){
+  return (bookingNo && walletTok && walletGoogleEnabled) ? `${PROXY_URL}/booking/wallet/google?no=${encodeURIComponent(bookingNo)}&t=${encodeURIComponent(walletTok)}` : '';
+}
+const GOOGLE_G_ICON = `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>`;
+function renderSummary(){
+  const el = $('#staySummary');
+  if(checkinDate && checkoutDate){
+    el.style.display = '';
+    el.innerHTML = `
+      <div class="bc-name"><span class="bc-label">Guest</span><span class="bc-value">${esc(guestPrefill || 'Guest')}</span></div>
+      ${(guestPhone || guestEmail) ? `<div class="bc-contact">
+        ${guestPhone ? `<span>📞 ${esc(guestPhone)}</span>` : ''}
+        ${guestEmail ? `<span>📧 ${esc(guestEmail)}</span>` : ''}
+      </div>` : ''}
+      <div class="bc-divider"></div>
+      <div class="bc-grid">
+        <div class="bc-cell"><span class="bc-label">Check-in</span><span class="bc-value">${fmtDateShort(checkinDate)}</span></div>
+        <div class="bc-cell"><span class="bc-label">Check-out</span><span class="bc-value">${fmtDateShort(checkoutDate)}</span></div>
+        ${guestCountLabel() ? `<div class="bc-cell"><span class="bc-label">Guests</span><span class="bc-value">${esc(guestCountLabel())}</span></div>` : ''}
+      </div>
+      ${bookingNo ? `<div class="bc-id">🔖 ${esc(bookingNo)}</div>` : ''}
+      ${(walletUrl() || googleWalletUrl()) ? `<div class="wallet-links">
+        ${walletUrl() ? `<a class="apple" href="${walletUrl()}"><img src="/assets/apple-wallet-badge.png" alt="Add to Apple Wallet" width="142" height="44"></a>` : ''}
+        ${googleWalletUrl() ? `<a class="wallet-btn-google" href="${googleWalletUrl()}">${GOOGLE_G_ICON} Add to Google Wallet</a>` : ''}
+      </div>` : ''}
+    `;
+  } else {
+    el.style.display = 'none';
+  }
+  renderDueBanner();
+}
+renderSummary();
+
+// The link already tells us which booking this is — no need to detour
+// through sign-in. Only offer it when the guest arrived without one (lost
+// the link, bookmarked the page, or an admin needs to check someone in
+// from scratch).
+function showCiForm(){
+  $('#ciForm').style.display = '';
+  $('#gsiBlock').style.display = 'none';
+  $('#adminPicker').style.display = 'none';
+}
+// A guest reopening their check-in link (or signing in again) after already
+// submitting should see confirmation, not a blank form asking them to redo
+// it — same completion screen the live submit handler below shows, just
+// worded for "already done" instead of "just done".
+function showAlreadyCheckedIn(){
+  $('#formView').style.display = 'none';
+  $('#thanksView').style.display = 'block';
+  $('#thanksMsg').textContent = (checkinDate && checkoutDate)
+    ? `You're already checked in for your stay from ${fmtDate(checkinDate)} to ${fmtDate(checkoutDate)}. See you soon!`
+    : `You're already checked in. See you soon at ${PROPERTY.name}.`;
+}
+function renderSummaryLoading(){
+  const el = $('#staySummary');
+  el.style.display = '';
+  el.innerHTML = `<div class="bc-row"><span class="bc-icon" aria-hidden="true">⏳</span><span class="bc-text"><span class="bc-label">Loading</span><span class="bc-value">Fetching your booking…</span></span></div>`;
+}
+// Resolves the short no+t link into the actual booking fields via
+// /checkin/lookup — see the comment by the `let ...` declarations above for
+// why this replaced reading them straight off the URL.
+async function loadBookingLookup(){
+  renderSummaryLoading();
+  try{
+    const res = await fetch(PROXY_URL+'/checkin/lookup?no='+encodeURIComponent(bookingNo)+'&t='+encodeURIComponent(checkinTok));
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.ok){
+      // Invalid/expired direct link — fall back to Google sign-in rather
+      // than leaving the guest on a form with no booking context at all.
+      bookingNo = ''; checkinTok = '';
+      $('#ciForm').style.display = 'none';
+      $('#staySummary').style.display = 'none';
+      $('#gsiBlock').style.display = '';
+      const errEl = $('#gsiErr');
+      if(errEl) errEl.textContent = 'This check-in link has expired or is invalid — please sign in with Google to find your booking.';
+      return;
+    }
+    guestPrefill = data.guest || '';
+    checkinDate = data.checkin || '';
+    checkoutDate = data.checkout || '';
+    guestsOnBooking = data.guests || '';
+    dueAmount = data.due != null ? data.due : '';
+    guestPhone = data.phone || '';
+    guestEmail = data.email || '';
+    walletTok = data.wallet || '';
+    walletAppleEnabled = data.walletAppleEnabled !== false;
+    walletGoogleEnabled = data.walletGoogleEnabled !== false;
+    if(guestPrefill) $('#ci-name').value = guestPrefill;
+    if(data.alreadyCheckedIn){ showAlreadyCheckedIn(); return; }
+    renderSummary();
+  }catch(e){
+    // Network hiccup — leave the form usable (no+t are still good enough
+    // for the actual submit later), just without a populated summary card.
+    $('#staySummary').style.display = 'none';
+  }
+}
+if(bookingNo){
+  $('#ciForm').style.display = '';
+  $('#gsiBlock').style.display = 'none';
+  loadBookingLookup();
+} else {
+  $('#ciForm').style.display = 'none';
+}
+
+const GOOGLE_CLIENT_ID = '717827758789-99ugj40a6j2rr4r7db26shn0hivq0vv0.apps.googleusercontent.com';
+
+async function handleGoogleLogin(credentialResponse){
+  const errEl = $('#gsiErr');
+  errEl.textContent = 'Verifying…';
+  const idToken = credentialResponse.credential;
+  try{
+    const res = await fetch(PROXY_URL+'/auth/checkin', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ googleIdToken: idToken }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(data.ok){
+      bookingNo = data.no;
+      checkinTok = data.t || checkinTok;
+      guestPrefill = data.guest || guestPrefill;
+      checkinDate = data.checkin || checkinDate;
+      checkoutDate = data.checkout || checkoutDate;
+      guestsOnBooking = data.guests || guestsOnBooking;
+      dueAmount = data.due != null ? data.due : dueAmount;
+      guestPhone = data.phone || guestPhone;
+      guestEmail = data.email || guestEmail;
+      walletTok = data.wallet || walletTok;
+      walletAppleEnabled = data.walletAppleEnabled !== false;
+      walletGoogleEnabled = data.walletGoogleEnabled !== false;
+      if(guestPrefill) $('#ci-name').value = guestPrefill;
+      if(data.alreadyCheckedIn){ showAlreadyCheckedIn(); return; }
+      renderSummary();
+      $('#gsiBlock').innerHTML = `<p class="gsi-matched">✓ Signed in — matched your booking ${esc(bookingNo)}.</p>`;
+      showCiForm();
+      return;
+    }
+    // Not a guest match — this Google account might be staff instead.
+    tryStaffLogin(idToken);
+  }catch(e){
+    errEl.textContent = 'Could not reach the server — check your connection.';
+  }
+}
+
+async function tryStaffLogin(idToken){
+  const errEl = $('#gsiErr');
+  try{
+    const res = await fetch(PROXY_URL+'/auth', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ googleIdToken: idToken }),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(data.ok && data.token){
+      await loadAdminPicker(data.token);
+      return;
+    }
+    errEl.textContent = "We couldn't match this Google account to an upcoming booking or staff account. If you have a check-in link from WhatsApp, please use that instead.";
+  }catch(e){
+    errEl.textContent = 'Could not reach the server — check your connection.';
+  }
+}
+
+// The admin path reuses the exact same /stays the booking calendar already
+// reads — no new backend route needed, since a staff token already has
+// full read access to it.
+let adminStays = [];
+async function loadAdminPicker(token){
+  const errEl = $('#gsiErr');
+  try{
+    const res = await fetch(PROXY_URL+'/stays', { headers: { 'X-Token': token } });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ errEl.textContent = data.error || 'Could not load bookings.'; return; }
+    const today = new Date().toISOString().slice(0,10);
+    adminStays = (Array.isArray(data.stays) ? data.stays : [])
+      .filter(s => (s.type||'invoice') !== 'block' && s.checkin && s.checkout && s.checkout >= today)
+      .sort((a,b) => a.checkin.localeCompare(b.checkin));
+    if(!adminStays.length){
+      errEl.textContent = 'No upcoming bookings found to check in.';
+      return;
+    }
+    const sel = $('#adminGuestSelect');
+    sel.innerHTML = '<option value="">Choose a booking…</option>' + adminStays.map((s,i) =>
+      `<option value="${i}">${esc(s.guest||'—')} — ${esc(s.checkin)} → ${esc(s.checkout)} (${esc(s.no)})</option>`
+    ).join('');
+    errEl.textContent = '';
+    $('#gsiBlock').style.display = 'none';
+    $('#adminPicker').style.display = '';
+  }catch(e){
+    errEl.textContent = 'Could not reach the server — check your connection.';
+  }
+}
+
+// Mirrors bookings.html's toNum/grandTotal — /stays hands the admin picker
+// full stay records (items/discount/advance included), so the due amount
+// can be computed the same way here without a separate server round-trip.
+const toNumCI = v => { const n = parseFloat(String(v==null?'':v).replace(/[^0-9.-]/g,'')); return isFinite(n) ? n : 0; };
+function grandTotalCI(d){
+  const sub = (d.items||[]).reduce((s,it)=>s+toNumCI(it.rate)*toNumCI(it.qty),0);
+  return Math.max(0, sub - toNumCI(d.discount));
+}
+$('#adminGuestSelect').addEventListener('change', () => {
+  const idx = $('#adminGuestSelect').value;
+  if(idx === '') return;
+  const s = adminStays[Number(idx)];
+  if(!s) return;
+  bookingNo = s.no;
+  checkinTok = s.checkinToken || '';
+  guestPrefill = s.guest || '';
+  checkinDate = s.checkin;
+  checkoutDate = s.checkout;
+  guestsOnBooking = s.guests || '';
+  dueAmount = Math.max(0, Math.round(grandTotalCI(s) - toNumCI(s.advance)));
+  guestPhone = s.phone || '';
+  guestEmail = s.email || '';
+  walletTok = s.walletToken || '';
+  $('#ci-name').value = guestPrefill;
+  renderSummary();
+  showCiForm();
+});
+
+let gsiRendered = false;
+function initGoogleSignIn(){
+  if(gsiRendered) return;
+  if(typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+  const target = $('#googleSignInBtn');
+  if(!target) return;
+  gsiRendered = true;
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin, auto_select: false });
+  google.accounts.id.renderButton(target, { theme:'outline', size:'large', width: 280, text:'signin_with' });
+}
+window.onGoogleLibraryLoad = initGoogleSignIn;
+window.addEventListener('load', initGoogleSignIn);
+setTimeout(() => {
+  if(!gsiRendered && $('#gsiBlock').style.display !== 'none'){
+    const errEl = $('#gsiErr');
+    if(errEl) errEl.textContent = 'Could not load Google Sign-In — check your connection or disable ad blockers.';
+  }
+}, 8000);
+
+// ── ID PHOTO ── same compress pattern as the checklist/petty-cash photo
+// uploads: read the file, downscale to a sane max dimension, export as a
+// JPEG data URI. Keeps the upload small without needing a cropping UI.
+//
+// Two separate hidden inputs rather than one ambiguous tap target, because
+// neither approach alone is reliable inside WhatsApp's in-app browser
+// (where most guests actually open this link):
+//   - WITH capture="environment": some WhatsApp/Android WebView versions
+//     fail to open ANY picker at all — not just skip the gallery, the
+//     whole thing silently does nothing.
+//   - WITHOUT capture: works reliably for gallery selection everywhere,
+//     but some in-app browsers' file chooser doesn't surface a camera
+//     option on its own, so there's no way to snap a fresh photo.
+// Offering both as explicit buttons means whichever one a given browser
+// actually supports still works, instead of gambling on one blended input.
+let idPhotoDataUrl = null;
+const photoInputCamera = document.createElement('input');
+photoInputCamera.type = 'file'; photoInputCamera.accept = 'image/*'; photoInputCamera.setAttribute('capture', 'environment'); photoInputCamera.hidden = true;
+document.body.appendChild(photoInputCamera);
+const photoInputGallery = document.createElement('input');
+photoInputGallery.type = 'file'; photoInputGallery.accept = 'image/*'; photoInputGallery.hidden = true;
+document.body.appendChild(photoInputGallery);
+
+function compressImage(file){
+  return new Promise((resolve,reject)=>{
+    if(!file) return resolve(null);
+    if(!file.type || !file.type.startsWith('image/')) return reject(new Error('Please choose an image file'));
+    const reader=new FileReader();
+    reader.onload=()=>{ const img=new Image();
+      img.onload=()=>{ const maxDim=1400; let w=img.width,h=img.height;
+        if(w>maxDim||h>maxDim){ if(w>=h){ h=Math.round(h*maxDim/w); w=maxDim; } else { w=Math.round(w*maxDim/h); h=maxDim; } }
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(cv.toDataURL('image/jpeg',0.75)); };
+      img.onerror=()=>reject(new Error('Could not read image')); img.src=reader.result; };
+    reader.onerror=()=>reject(new Error('Could not read file')); reader.readAsDataURL(file);
+  });
+}
+
+function renderPhotoBox(){
+  const box = $('#photoBox');
+  if(idPhotoDataUrl){
+    box.classList.add('has-photo');
+    box.innerHTML = `<img src="${idPhotoDataUrl}" alt="ID photo preview">
+      <div class="photo-actions"><button type="button" id="photoRetake">Retake / re-upload</button></div>`;
+    $('#photoRetake').addEventListener('click', () => { idPhotoDataUrl = null; renderPhotoBox(); });
+  } else {
+    box.classList.remove('has-photo');
+    box.innerHTML = `<div class="photo-prompt" id="photoPrompt">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Add a photo of your ID
+      <div class="photo-choice">
+        <button type="button" class="photo-choice-btn" id="photoTakeBtn">📷 Take Photo</button>
+        <button type="button" class="photo-choice-btn" id="photoGalleryBtn">🖼 Choose from Gallery</button>
+      </div>
+    </div>`;
+    $('#photoTakeBtn').addEventListener('click', () => { photoInputCamera.value=''; photoInputCamera.click(); });
+    $('#photoGalleryBtn').addEventListener('click', () => { photoInputGallery.value=''; photoInputGallery.click(); });
+  }
+}
+// Shows a brief spinner state while the photo is read + downscaled — on an
+// older phone with a large camera photo this can take a moment, and a
+// silent gap right after picking a file reads as broken.
+function renderPhotoProcessing(){
+  const box = $('#photoBox');
+  box.classList.remove('has-photo');
+  box.innerHTML = `<div class="photo-processing"><span class="spinner" aria-hidden="true"></span>Processing your photo…</div>`;
+}
+async function handlePhotoFile(file){
+  if(!file) return;
+  renderPhotoProcessing();
+  try{ idPhotoDataUrl = await compressImage(file); renderPhotoBox(); }
+  catch(e){ $('#ciErr').textContent = e.message; renderPhotoBox(); }
+}
+photoInputCamera.addEventListener('change', () => handlePhotoFile(photoInputCamera.files[0]));
+photoInputGallery.addEventListener('change', () => handlePhotoFile(photoInputGallery.files[0]));
+renderPhotoBox();
+
+// ── SIGNATURE PAD ── plain canvas + pointer events. Sized to its own CSS
+// width in real device pixels (not just CSS pixels) so it isn't blurry on
+// high-DPI phone screens, which is where this will mostly be signed.
+const sigCanvas = $('#sigCanvas');
+const sigCtx = sigCanvas.getContext('2d');
+let sigHasDrawn = false, sigDrawing = false, sigLast = null;
+
+function sizeSigCanvas(){
+  const rect = sigCanvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  sigCanvas.width = rect.width * dpr;
+  sigCanvas.height = rect.height * dpr;
+  sigCtx.scale(dpr, dpr);
+  sigCtx.lineWidth = 2.2; sigCtx.lineCap = 'round'; sigCtx.lineJoin = 'round'; sigCtx.strokeStyle = '#0e2420';
+}
+sizeSigCanvas();
+window.addEventListener('resize', () => { const had = sigHasDrawn; sizeSigCanvas(); if(had){ /* canvas cleared by resize; require re-signing */ sigHasDrawn = false; } });
+
+function sigPoint(e){
+  const rect = sigCanvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+sigCanvas.addEventListener('pointerdown', e => {
+  sigDrawing = true; sigHasDrawn = true; sigLast = sigPoint(e);
+  sigCanvas.setPointerCapture(e.pointerId);
+});
+sigCanvas.addEventListener('pointermove', e => {
+  if(!sigDrawing) return;
+  const p = sigPoint(e);
+  sigCtx.beginPath(); sigCtx.moveTo(sigLast.x, sigLast.y); sigCtx.lineTo(p.x, p.y); sigCtx.stroke();
+  sigLast = p;
+});
+['pointerup','pointerleave','pointercancel'].forEach(ev => sigCanvas.addEventListener(ev, () => { sigDrawing = false; }));
+$('#sigClear').addEventListener('click', () => {
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  sigHasDrawn = false;
+});
+
+// Native <input type="time"> gives guests a proper keyboard-/thumb-friendly
+// picker; the payload still carries a plain human string ("6:00 PM") so the
+// backend field (a free-text, 40-char-clipped value) and everywhere it's
+// displayed (bookings.html, WhatsApp messages) are completely unaffected.
+function formatArrivalTime(hhmm){
+  if(!hhmm) return '';
+  const [hStr, mStr] = hhmm.split(':');
+  let h = parseInt(hStr, 10);
+  if(isNaN(h)) return '';
+  const m = mStr || '00';
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; if(h === 0) h = 12;
+  return `${h}:${m} ${ampm}`;
+}
+
+$('#ciForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('#ciSubmitBtn');
+  if(btn.disabled) return; // guard against a double-tap firing this twice
+
+  const errEl = $('#ciErr');
+  errEl.textContent = '';
+
+  const name = $('#ci-name').value.trim();
+  const idType = (document.querySelector('input[name="idType"]:checked') || {}).value || '';
+  if(!name){ errEl.textContent = 'Please enter your name.'; return; }
+  if(!idType){ errEl.textContent = 'Please select your ID type.'; return; }
+  if(!idPhotoDataUrl){ errEl.textContent = 'Please add a photo of your ID.'; return; }
+  if(!sigHasDrawn){ errEl.textContent = 'Please sign above.'; return; }
+  if(!$('#ci-agree').checked){ errEl.textContent = 'Please agree to the House Rules & Terms.'; return; }
+
+  btn.disabled = true; btn.classList.add('is-loading');
+  $('.submit-label').textContent = 'Submitting…';
+
+  const payload = {
+    no: bookingNo, t: checkinTok, name, idType,
+    idPhoto: idPhotoDataUrl,
+    signature: sigCanvas.toDataURL('image/png'),
+    address: '', // field removed from the form; key kept so the payload shape is unchanged
+    vehicleNumber: $('#ci-vehicle').value.trim(),
+    arrivalTime: formatArrivalTime($('#ci-arrival').value),
+    guestsCount: Number(guestsOnBooking) || null,
+    note: $('#ci-note').value.trim(),
+    website: $('#ci-website').value, // honeypot
+  };
+
+  try{
+    const ctrl = new AbortController();
+    const abortTimer = setTimeout(()=>ctrl.abort(), 75000);
+    const res = await fetch(PROXY_URL+'/checkin', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload), signal: ctrl.signal,
+    });
+    clearTimeout(abortTimer);
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ throw new Error(data.error || 'Something went wrong'); }
+    $('#formView').style.display = 'none';
+    $('#thanksView').style.display = 'block';
+    if(checkinDate && checkoutDate){
+      $('#thanksMsg').textContent = `We'll have everything ready for your stay from ${fmtDate(checkinDate)} to ${fmtDate(checkoutDate)}. See you soon!`;
+    }
+  }catch(err){
+    errEl.textContent = (err && err.name === 'AbortError')
+      ? 'The server is taking a while to respond — please try again in a moment.'
+      : (err.message || 'Could not submit — please try again.');
+    btn.disabled = false; btn.classList.remove('is-loading');
+    $('.submit-label').textContent = 'Check-in';
+  }
+});
+
+</script>
+</body>
+</html>

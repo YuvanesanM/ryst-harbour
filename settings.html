@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<title data-title="Rate Card &amp; Settings — {name}">Rate Card &amp; Settings — RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --danger:#c0584b;
+    --warn:#c98a2b; --warn-soft:#fbf3e6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;font-weight:400;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  input,textarea,select{font-family:inherit}
+
+  /* ---- HEADER ---- */
+  header.bar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;height:59px}
+  header.bar img.hdr-logo{height:36px;object-fit:contain}
+  .bar-title{font-size:14px;font-weight:600;color:var(--ink);flex:1}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:var(--panel);font-size:13px;font-weight:500;color:var(--ink);text-decoration:none;transition:.15s;cursor:pointer}
+  .btn:hover{border-color:var(--accent);color:var(--accent-d)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-d);border-color:var(--accent-d)}
+
+  /* ---- CONTENT ---- */
+  .cfg-body{max-width:1020px;margin:0 auto;padding:32px 32px 80px}
+  .sd{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .tabs{display:flex;gap:6px;margin:0 0 26px;border-bottom:1px solid var(--line);overflow-x:auto}
+  .tab-btn{background:transparent;border:none;padding:11px 16px;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:.15s;flex-shrink:0}
+  .tab-btn:hover{color:var(--ink)}
+  .tab-btn.active{color:var(--accent-d);border-bottom-color:var(--accent)}
+  .wa-hint{font-size:11.5px;color:var(--muted2);margin:0 0 6px;font-family:monospace}
+  .gh-mini{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-d);font-weight:700;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+  .gh-mini::after{content:"";flex:1;height:1px;background:var(--line)}
+  .gh-mini:first-of-type{margin-top:0}
+  .f{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+  .f span{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .t{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13.5px;background:var(--panel);color:var(--ink);outline:none;transition:.15s}
+  .t:focus{border-color:var(--accent);background:#fff}
+  textarea.t{resize:vertical;min-height:90px}
+
+  /* ---- RATE CARD TABLE ---- */
+  .rc-table-wrap{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:14px}
+  table.rc-table{width:100%;border-collapse:collapse;min-width:420px}
+  table.rc-table thead th{background:var(--panel2);border-bottom:2px solid var(--line);padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);font-weight:600;white-space:nowrap}
+  table.rc-table thead th.r{text-align:right}
+  table.rc-table tbody tr{border-bottom:1px solid var(--line)}
+  table.rc-table tbody tr:last-child{border-bottom:none}
+  table.rc-table tbody tr:hover td{background:var(--accent-soft)}
+  table.rc-table td{padding:4px 6px;vertical-align:middle}
+  table.rc-table td input{width:100%;background:transparent;border:1px solid transparent;border-radius:7px;padding:7px 9px;font-size:13px;font-family:inherit;color:var(--ink)}
+  table.rc-table td input:hover{border-color:var(--line);background:var(--panel2)}
+  table.rc-table td input:focus{outline:none;border-color:var(--accent);background:#fff}
+  table.rc-table td input.r{text-align:right}
+  .rc-del{background:transparent;border:1px solid var(--line);color:var(--muted2);border-radius:8px;width:30px;height:30px;font-size:16px;line-height:1;padding:0}
+  .rc-del:hover{border-color:var(--danger);color:var(--danger)}
+  .rc-foot{display:flex;gap:10px;margin-top:18px}
+  .rc-add{background:transparent;border:1px dashed #cdd1cb;color:var(--muted);padding:11px 16px;border-radius:9px;font-size:13px}
+  .rc-add:hover{border-color:var(--accent);color:var(--accent-d)}
+
+  /* ---- ICAL SYNC ---- */
+  .ical-row{display:flex;gap:8px;margin-bottom:8px}
+  .ical-row input{flex:1}
+  .ical-copy{display:flex;gap:8px}
+  .ical-copy input{flex:1;background:var(--panel2);color:var(--muted)}
+  .feed-row{display:grid;grid-template-columns:160px 1fr 34px;gap:8px;margin-bottom:8px}
+  .user-card{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;background:var(--panel2)}
+  .user-row{display:grid;grid-template-columns:1fr 130px 74px 34px;gap:8px;align-items:center}
+  .user-row .admin-chk{display:flex;align-items:center;justify-content:center;gap:5px;font-size:11.5px;color:var(--muted)}
+  .user-row .admin-chk input{width:auto}
+  .user-modules{display:flex;flex-wrap:wrap;gap:4px 14px;margin:10px 2px 2px;padding-top:8px;border-top:1px solid var(--line)}
+  .mod-chk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+  .mod-chk input{width:auto}
+  .user-tg{margin:10px 2px 2px;padding-top:8px;border-top:1px solid var(--line)}
+  .user-tg-id{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .user-tg-id span{font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .user-tg-id input.t{flex:1}
+  .user-tg-alerts{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+  .user-err{color:var(--danger);font-size:12.5px;min-height:16px;margin-top:2px}
+  .chk-toggle{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;white-space:nowrap}
+  .sync-results{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:12.5px}
+  .sync-result{display:flex;justify-content:space-between;gap:10px;padding:8px 11px;border-radius:8px;background:var(--panel2)}
+  .sync-result.err{background:#fbecea;color:var(--danger)}
+  .sync-result.warn{background:var(--warn-soft);color:var(--warn)}
+  .sync-result .note{display:block;font-size:11px;font-weight:500;opacity:.85;margin-top:2px}
+
+  /* Live Telegram-connectivity indicator — a colored, (when connected)
+     gently pulsing dot rather than plain text, since this is the one thing
+     on the page that reflects real-time external state (whether the bot
+     token/chat ID actually resolve) rather than saved settings. Auto-
+     refreshes on an interval — see loadWhatsAppStatus's setInterval call —
+     so "live" isn't just a label. */
+  .tg-status{display:flex;align-items:center;gap:10px;padding:13px 15px;border-radius:12px;background:var(--panel2);margin-bottom:14px;font-size:13.5px;font-weight:600}
+  .tg-status .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:var(--muted2)}
+  .tg-status .dot.on{background:var(--accent);animation:tg-pulse 2s infinite}
+  .tg-status .dot.off{background:var(--danger)}
+  .tg-status .meta{margin-left:auto;font-size:11px;font-weight:500;color:var(--muted2);white-space:nowrap}
+  @keyframes tg-pulse{
+    0%{box-shadow:0 0 0 0 rgba(61,155,105,.45)}
+    70%{box-shadow:0 0 0 7px rgba(61,155,105,0)}
+    100%{box-shadow:0 0 0 0 rgba(61,155,105,0)}
+  }
+
+  /* ---- TOAST ---- */
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#1d211c;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* Blocks Save until the real settings have loaded — without this, saving
+     from a fresh device/browser (empty localStorage cache) before the
+     background fetch resolves would overwrite the real bank details, PAN
+     and rate card with the bare STAY_DEFAULTS placeholders. */
+  #loader{position:fixed;inset:0;background:rgba(243,244,241,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:80;color:var(--muted)}
+  #loader.hide{display:none}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* ---- PIN GATE ---- */
+  .pin-overlay{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
+  .pin-overlay[hidden]{display:none}
+  .pin-card{width:min(320px,100%);text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .pin-card.shake{animation:pinShake .4s}
+  @keyframes pinShake{
+    10%,90%{transform:translateX(-2px)} 20%,80%{transform:translateX(4px)}
+    30%,50%,70%{transform:translateX(-8px)} 40%,60%{transform:translateX(8px)}
+  }
+  .pin-lock{font-size:32px;margin-bottom:4px}
+  .pin-card h1{font-size:19px;font-weight:600;margin:0}
+  .pin-sub{color:var(--muted);font-size:12.5px;margin:0 0 4px;max-width:260px}
+  .pin-dots{display:flex;gap:14px;margin:8px 0}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);background:transparent;transition:.15s}
+  .pin-dot.filled{background:var(--accent);border-color:var(--accent)}
+  .pin-err{color:var(--danger);font-size:12px;min-height:16px;margin-bottom:2px}
+  .pin-keys{display:grid;grid-template-columns:repeat(3,64px);gap:12px;margin-top:6px}
+  .pin-keys button{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:20px;font-weight:600;transition:.15s}
+  .pin-keys button:hover{border-color:var(--accent);color:var(--accent-d)}
+  .pin-keys button:active{background:var(--accent-soft)}
+  .pin-keys button.pin-blank{visibility:hidden;pointer-events:none}
+  .pin-keys button.pin-back{font-size:18px}
+
+  @media(max-width:680px){
+    .cfg-body{padding:20px 14px 60px}
+    .rc-table-wrap{border-radius:8px}
+  }
+  .onb{background:var(--panel);border:1.5px solid var(--accent, #3d9b69);border-radius:14px;padding:14px 16px;margin:0 0 18px}
+  .onb-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:15px}
+  .onb-x{background:none;border:none;color:var(--muted);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline}
+  .onb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .onb-list li{display:flex;align-items:center;gap:10px;font-size:13.5px}
+  .onb-list .ck{flex:0 0 20px;height:20px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px}
+  .onb-list li.done .ck{background:var(--accent, #3d9b69);border-color:var(--accent, #3d9b69);color:#fff}
+  .onb-list li.done span{color:var(--muted)}
+  .onb-list button{margin-left:auto;background:none;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink);white-space:nowrap}
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#0e2420">
+</head>
+<body>
+
+<div class="pin-overlay" id="pinOverlay" hidden>
+  <div class="pin-card" id="pinCard">
+    <div class="pin-lock">🔒</div>
+    <h1>Enter PIN</h1>
+    <p class="pin-sub">Enter the PIN to edit the rate card &amp; settings</p>
+    <div class="pin-dots" id="pinDots">
+      <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+    </div>
+    <div class="pin-err" id="pinErr">&nbsp;</div>
+    <div class="pin-keys" id="pinKeys">
+      <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+      <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+      <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+      <button type="button" class="pin-blank" tabindex="-1" disabled></button>
+      <button type="button" data-k="0">0</button>
+      <button type="button" class="pin-back" id="pinBack" aria-label="Backspace">⌫</button>
+    </div>
+  </div>
+</div>
+
+<header class="bar">
+  <img class="hdr-logo" src="/assets/stay-logo.webp" data-prop-src="logoUrl" alt="RYST 109A" data-prop-alt="name">
+  <span class="bar-title">Rate Card &amp; Settings</span>
+  <a class="btn" href="login.html">← Home</a>
+</header>
+
+<div class="cfg-body">
+  <p class="sd">Settings for the <b data-prop="fullName">RYST 109A Beach Villa</b> invoice / quote builder. Pricing, bank details and business info sync to the cloud and load automatically in the Stay builder.</p>
+
+  <div class="onb" id="onboard" hidden>
+    <div class="onb-head"><b>Get your villa ready</b><button type="button" class="onb-x" id="onbHide" aria-label="Hide">Hide</button></div>
+    <ol class="onb-list" id="onbList"></ol>
+  </div>
+
+  <div class="tabs" id="cfgTabs">
+    <button type="button" class="tab-btn active" data-tab="villa">Villa &amp; Business</button>
+    <button type="button" class="tab-btn" data-tab="ota">OTA Sync</button>
+    <button type="button" class="tab-btn" data-tab="whatsapp">WhatsApp Templates</button>
+    <button type="button" class="tab-btn" id="tabUserBtn" data-tab="users" style="display:none">User Access</button>
+  </div>
+
+  <div class="tab-panel" data-panel="villa">
+    <p class="gh-mini">Charge pricing</p>
+    <div class="rc-table-wrap">
+      <table class="rc-table">
+        <thead><tr>
+          <th>Charge description</th>
+          <th class="r" style="width:180px">Default rate (₹)</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="stayRcBody"></tbody>
+      </table>
+    </div>
+    <button class="rc-add" id="stayRcAdd">+ Add charge</button>
+
+    <p class="gh-mini">Peak pricing</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <label class="f"><span>Weekend hike — Fri/Sat/Sun nights (%)</span><input class="t" id="stayWeekendHike" type="number" min="0" step="1" placeholder="0"></label>
+      <label class="f"><span>Holiday hike (%)</span><input class="t" id="stayHolidayHike" type="number" min="0" step="1" placeholder="0"></label>
+    </div>
+    <div class="rc-table-wrap">
+      <table class="rc-table">
+        <thead><tr>
+          <th style="width:160px">Date</th>
+          <th>Label (optional)</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="stayHolBody"></tbody>
+      </table>
+    </div>
+    <button class="rc-add" id="stayHolAdd">+ Add holiday date</button>
+
+    <p class="gh-mini">Discounts</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <label class="f"><span>Full-payment discount — pay in full instead of advance (%)</span><input class="t" id="stayFullPayDiscount" type="number" min="0" max="100" step="1" placeholder="0"></label>
+      <label class="f"><span>Max manual discount on quotes/invoices (%)</span><input class="t" id="stayMaxDiscount" type="number" min="0" max="100" step="1" placeholder="20"></label>
+    </div>
+    <div class="rc-table-wrap">
+      <table class="rc-table">
+        <thead><tr>
+          <th style="width:160px">Coupon code</th>
+          <th class="r" style="width:180px">Discount (%)</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="stayCouponBody"></tbody>
+      </table>
+    </div>
+    <button class="rc-add" id="stayCouponAdd">+ Add coupon code</button>
+
+    <p class="gh-mini">Property profile</p>
+    <p class="sd" style="margin-bottom:12px">Everything that names or locates this property — used across the staff app, guest pages, messages, receipts, invoices and wallet passes.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+      <label class="f"><span>Property name <small style="color:var(--muted2);font-weight:400">— Short name — page titles, receipts, alerts</small></span><input class="t" id="prop_name" type="text" maxlength="500" required></label>
+      <label class="f"><span>Full name <small style="color:var(--muted2);font-weight:400">— Used in guest messages: "your stay at …"</small></span><input class="t" id="prop_fullName" type="text" maxlength="500"></label>
+      <label class="f"><span>Restaurant / kitchen name <small style="color:var(--muted2);font-weight:400">— Leave blank if you don't run one</small></span><input class="t" id="prop_restaurantName" type="text" maxlength="500"></label>
+      <label class="f"><span>Property type <small style="color:var(--muted2);font-weight:400">— Shown under the name on invoices, e.g. Beach Villa</small></span><input class="t" id="prop_typeLabel" type="text" maxlength="500"></label>
+      <label class="f"><span>Tagline <small style="color:var(--muted2);font-weight:400">— Invoice wordmark line, e.g. Private coastal retreat</small></span><input class="t" id="prop_tagline" type="text" maxlength="500"></label>
+      <label class="f"><span>Invoice signatory <small style="color:var(--muted2);font-weight:400">— Name printed under "For &lt;property&gt;"</small></span><input class="t" id="prop_signatory" type="text" maxlength="500"></label>
+      <label class="f"><span>Address (one line) <small style="color:var(--muted2);font-weight:400">— Receipts and wallet passes</small></span><input class="t" id="prop_address" type="text" maxlength="500"></label>
+      <label class="f"><span>Google Maps link <small style="color:var(--muted2);font-weight:400">— Directions buttons</small></span><input class="t" id="prop_mapLink" type="url" maxlength="500"></label>
+      <label class="f"><span>Website <small style="color:var(--muted2);font-weight:400">— e.g. https://yourvilla.com</small></span><input class="t" id="prop_website" type="url" maxlength="500"></label>
+      <label class="f"><span>Guest WhatsApp number <small style="color:var(--muted2);font-weight:400">— With country code, e.g. 919876543210</small></span><input class="t" id="prop_whatsapp" type="tel" maxlength="500"></label>
+      <label class="f"><span>Instagram handle <small style="color:var(--muted2);font-weight:400">— Without @ — leave blank to hide</small></span><input class="t" id="prop_instagram" type="text" maxlength="500"></label>
+      <label class="f"><span>Food receipt footer <small style="color:var(--muted2);font-weight:400">— e.g. Thank you for dining with us.</small></span><input class="t" id="prop_receiptNote" type="text" maxlength="500"></label>
+      <label class="f"><span>Logo image URL <small style="color:var(--muted2);font-weight:400">— Square PNG, shown on documents and passes</small></span><input class="t" id="prop_logoUrl" type="url" maxlength="500"></label>
+      <label class="f"><span>Cover photo URL <small style="color:var(--muted2);font-weight:400">— Wallet pass banner</small></span><input class="t" id="prop_coverUrl" type="url" maxlength="500"></label>
+      <label class="f"><span>Latitude <small style="color:var(--muted2);font-weight:400">— For wallet-pass arrival alerts</small></span><input class="t" id="prop_latitude" type="text" maxlength="500"></label>
+      <label class="f"><span>Longitude</span><input class="t" id="prop_longitude" type="text" maxlength="500"></label>
+      <label class="f"><span>Google Maps listing name <small style="color:var(--muted2);font-weight:400">— How the listing appears on Google, for the rating widget</small></span><input class="t" id="prop_googlePlaceQuery" type="text" maxlength="500"></label>
+    </div>
+    <p class="gh-mini">Business &amp; payment</p>
+    <label class="f"><span>Property address block (under the wordmark)</span><textarea class="t" id="stayCompany" rows="3"></textarea></label>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+      <label class="f"><span>PAN</span><input class="t" id="stayPan" placeholder="e.g. ABCDE1234F"></label>
+      <label class="f"><span>Invoice no. prefix</span><input class="t" id="stayInvPrefix" placeholder="e.g. VILLA/INV"></label>
+      <label class="f"><span>Quote no. prefix</span><input class="t" id="stayQtPrefix" placeholder="e.g. VILLA/QT"></label>
+      <label class="f"><span>Max guests (incl.)</span><input class="t" id="stayMaxGuests" type="number" min="0" step="1" placeholder="4"></label>
+      <label class="f"><span>Guest capacity (hard cap)</span><input class="t" id="stayGuestCapacity" type="number" min="0" step="1" placeholder="10"></label>
+      <label class="f"><span>Online booking advance (%)</span><input class="t" id="stayAdvancePercent" type="number" min="1" max="100" step="1" placeholder="30"></label>
+    </div>
+    <label class="f"><span>Bank / payment details block</span><textarea class="t" id="stayBank" rows="6"></textarea></label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <label class="f"><span>Wi-Fi network</span><input class="t" id="stayWifiNetwork" placeholder="e.g. Villa-Guest"></label>
+      <label class="f"><span>Wi-Fi voucher code</span><input class="t" id="stayWifiVoucher" placeholder="Welcome109"></label>
+    </div>
+    <p class="sd" style="margin:-6px 0 14px">Shown to signed-in guests on the Manage My Stay portal (guest.html).</p>
+    <p class="gh-mini">Wallet passes</p>
+    <p class="sd" style="margin-bottom:10px">Controls the "Add to Apple/Google Wallet" buttons everywhere they appear — the booking site, check-in page, and guest portal. Turning one off hides that button and blocks new passes of that kind from being issued; passes already saved to a guest's phone keep working.</p>
+    <div style="display:flex;gap:12px;margin-bottom:14px">
+      <label class="chk-toggle"><input type="checkbox" id="stayWalletApple"> Apple Wallet</label>
+      <label class="chk-toggle"><input type="checkbox" id="stayWalletGoogle"> Google Wallet</label>
+    </div>
+    <label class="f"><span>GST declaration</span><textarea class="t" id="stayDecl" rows="3"></textarea></label>
+    <label class="f"><span>Terms &amp; conditions (one per line)</span><textarea class="t" id="stayTerms" rows="7"></textarea></label>
+  </div>
+
+  <div class="tab-panel" data-panel="ota" style="display:none">
+    <p class="gh-mini">OTA calendar sync</p>
+    <p class="sd" style="margin-bottom:12px">Publish this villa's bookings to Airbnb/Booking.com, and pull their reservations in here so nothing double-books.</p>
+
+    <label class="f"><span>Export — paste each OTA's OWN link into that OTA's "import calendar" field</span></label>
+    <div id="icalChannelLinks" style="margin-bottom:6px"><p class="sd">Loading…</p></div>
+    <p class="sd" style="margin-bottom:12px">Each link has every direct booking and block, plus every OTA's reservations <em>except that OTA's own</em>. Giving an OTA its own closures back makes them bounce in and out on every sync (Booking.com especially), so don't use one shared link for all of them.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:8px"><button class="btn" id="icalWhoBtn">Which link is each OTA using?</button></div>
+    <div class="sync-results" id="icalWhoResults" style="margin-bottom:18px"></div>
+
+    <label class="f"><span>Master calendar (Google) — for viewing in Google Calendar; not for OTA import</span></label>
+    <div class="ical-copy" style="margin-bottom:6px">
+      <input class="t" id="gcalExportUrl" readonly value="Loading…">
+      <button type="button" class="btn" id="gcalCopyBtn">Copy</button>
+    </div>
+    <p class="sd" style="margin-bottom:18px" id="gcalHint">Kept in sync automatically each time "Sync now" below runs, with every source (direct bookings, Airbnb, Booking.com, Agoda) in one place.</p>
+
+    <label class="f"><span>Full export — every booking and block, for your own calendar apps (not for OTAs)</span></label>
+    <div class="ical-copy" style="margin-bottom:18px">
+      <input class="t" id="icalExportUrl" readonly value="Loading…">
+      <button type="button" class="btn" id="icalCopyBtn">Copy</button>
+    </div>
+
+    <label class="f"><span>Import — paste each OTA's exported calendar URL below</span></label>
+    <div id="icalFeedRows"></div>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:18px">
+      <button class="rc-add" id="icalFeedAdd">+ Add feed</button>
+      <button class="btn" id="icalSyncBtn">⟳ Sync now</button>
+    </div>
+    <div class="sync-results" id="icalSyncResults"></div>
+  </div>
+
+  <div class="rc-foot" id="stayGroupSave">
+    <button class="btn primary" id="staySave" disabled>Save stay settings</button>
+  </div>
+
+  <div class="tab-panel" data-panel="whatsapp" style="display:none">
+    <p class="gh-mini">Automated sending</p>
+    <p class="sd" style="margin-bottom:12px">When configured, the templates below go out automatically on a schedule (check-in requests, stay reminders, feedback requests, and booking confirmations) instead of needing a manual click from Bookings. A scenario with an Interakt template name set below (once that template is approved by Meta) sends for real, straight to the guest's WhatsApp — no tap needed. Every other scenario still falls back to a Telegram message with a one-tap link that opens WhatsApp pre-filled, so the actual send is you, from your own number.</p>
+    <div class="tg-status" id="tgStatusLive">
+      <span class="dot" id="tgStatusDot"></span>
+      <span id="tgStatusText">Checking Telegram connectivity…</span>
+      <span class="meta" id="tgStatusMeta"></span>
+    </div>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:22px">
+      <button class="btn" id="waStatusRefresh">⟳ Refresh now</button>
+      <button class="btn" id="waRunNowBtn">▶ Run now</button>
+    </div>
+    <div class="sync-results" id="waRunResults" style="margin-bottom:18px"></div>
+
+    <p class="gh-mini">Send a test message</p>
+    <p class="sd" style="margin-bottom:12px">Sends one real Interakt message with sample data (a made-up guest, dates, and links — never a real stay) to any phone number, using whichever scenario's template name is saved below. Useful to confirm a template + API key actually work without waiting for a real stay to fall into the right date window.</p>
+    <div class="feed-row" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+      <label class="f" style="margin-bottom:0"><span>Phone number</span><input class="t" id="waTestPhone" type="tel" placeholder="e.g. 9876543210 or 919876543210"></label>
+      <label class="f" style="margin-bottom:0"><span>Scenario</span>
+        <select class="t" id="waTestScenario">
+          <option value="reminder">Stay reminder</option>
+          <option value="checkinRequest">Check-in request</option>
+          <option value="feedbackRequest">Feedback request</option>
+          <option value="quoteReady">Quote ready</option>
+          <option value="bookingConfirmed">Booking confirmed</option>
+        </select>
+      </label>
+    </div>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:8px">
+      <button class="btn" id="waTestSendBtn">Send test message</button>
+    </div>
+    <div class="sync-results" id="waTestSendResults" style="margin-bottom:22px"></div>
+
+    <p class="gh-mini">Delivery status webhook</p>
+    <p class="sd" style="margin-bottom:12px">Interakt only says a message was <em>accepted</em>; whether it was actually delivered, read or failed comes later through this webhook. Paste the URL into Interakt → Settings → Developer Settings → Webhook, and tick the message API events (sent, delivered, read, failed). Bookings then shows Delivered ✓✓ / Read ✓✓ / Not delivered next to each send, and a failed send alerts Telegram with WhatsApp's reason. Keep this URL private — the key in it is what lets Interakt post here.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:8px">
+      <button class="btn" id="waWebhookBtn">Show webhook URL &amp; recent events</button>
+    </div>
+    <div class="sync-results" id="waWebhookResults" style="margin-bottom:22px"></div>
+
+    <p class="gh-mini">Telegram notify setup</p>
+    <p class="sd" style="margin-bottom:12px">One-time setup on Render: message <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> on Telegram, send <code>/newbot</code>, and set the token it gives you as <code>TELEGRAM_BOT_TOKEN</code> (a Render environment variable — not set from here). Each person who wants alerts then sends "hi" to the new bot from their own Telegram account, uses the button below to find their chat ID, and an admin enters it against their name in <b>Settings → User Access</b> — along with which of the 12 alert types they want to receive.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:10px">
+      <button class="btn" id="tgChatIdBtn">Find a chat ID</button>
+    </div>
+    <div class="sync-results" id="tgChatIdResults" style="margin-bottom:18px"></div>
+
+    <p class="gh-mini">WhatsApp templates</p>
+    <p class="sd" style="margin-bottom:12px">Wording for the WhatsApp messages the site and dashboard pre-fill. Use <code>{{token}}</code> placeholders — a line containing a token with no value for that message is left out automatically, so a field can be made optional just by giving it its own line.</p>
+
+    <label class="f"><span>Booking request — sent by a guest from the site's booking form</span></label>
+    <p class="wa-hint">{{name}} {{phone}} {{email}} {{checkin}} {{checkout}} {{nightsLabel}} {{guests}} {{occasion}} {{message}} {{quoteNo}}</p>
+    <textarea class="t" id="waBookingRequest" rows="10" style="margin-bottom:8px"></textarea>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button type="button" class="rc-add" data-reset="bookingRequest">Reset to default</button></div>
+
+    <label class="f"><span>Check-in request — sent by you well before arrival, asks the guest to complete digital check-in</span></label>
+    <p class="wa-hint">{{guest}} {{checkin}} {{checkout}} {{checkinLink}}</p>
+    <textarea class="t" id="waCheckinRequest" rows="7" style="margin-bottom:8px"></textarea>
+    <div class="feed-row" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+      <label class="f" style="margin-bottom:0"><span>Days before check-in</span><input class="t" id="waCheckinRequestDays" type="number" min="0" max="60" step="1"></label>
+      <label class="f" style="margin-bottom:0"><span>Send at (IST)</span><input class="t" id="waCheckinRequestTime" type="time"></label>
+    </div>
+    <label class="f" style="margin-bottom:8px">
+      <span>Interakt template name (optional) — once this is set and the template is approved by Meta, this sends for real over WhatsApp instead of just nudging staff on Telegram to send it</span>
+      <input class="t" id="waInteraktCheckinRequest" placeholder="e.g. checkin_request_v1" pattern="[a-z0-9_]*" maxlength="120">
+    </label>
+    <p class="wa-hint">The template's body must use placeholders 1 through 4, in this exact order: guest, check-in date, check-out date, check-in link.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button type="button" class="rc-add" data-reset="checkinRequest">Reset to default</button></div>
+
+    <label class="f"><span>Stay reminder — sent by you to a guest a few days before check-in</span></label>
+    <p class="wa-hint">{{guest}} {{checkin}} {{checkout}} {{portalLink}}</p>
+    <textarea class="t" id="waReminder" rows="7" style="margin-bottom:8px"></textarea>
+    <div class="feed-row" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+      <label class="f" style="margin-bottom:0"><span>Days before check-in</span><input class="t" id="waReminderDays" type="number" min="0" max="60" step="1"></label>
+      <label class="f" style="margin-bottom:0"><span>Send at (IST)</span><input class="t" id="waReminderTime" type="time"></label>
+    </div>
+    <label class="f" style="margin-bottom:8px">
+      <span>Interakt template name (optional) — once this is set and the template is approved by Meta, this reminder sends for real over WhatsApp instead of just nudging staff on Telegram to send it</span>
+      <input class="t" id="waInteraktReminder" placeholder="e.g. stay_reminder_v1" pattern="[a-z0-9_]*" maxlength="120">
+    </label>
+    <p class="wa-hint">The template's body must use placeholders 1 through 4, in this exact order: guest, check-in date, check-out date, portal link.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button type="button" class="rc-add" data-reset="reminder">Reset to default</button></div>
+
+    <label class="f"><span>Feedback request — sent by you to a guest after checkout</span></label>
+    <p class="wa-hint">{{guest}} {{feedbackLink}}</p>
+    <textarea class="t" id="waFeedbackRequest" rows="6" style="margin-bottom:8px"></textarea>
+    <div class="feed-row" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+      <label class="f" style="margin-bottom:0"><span>Days after check-out</span><input class="t" id="waFeedbackRequestDays" type="number" min="0" max="60" step="1"></label>
+      <label class="f" style="margin-bottom:0"><span>Send at (IST)</span><input class="t" id="waFeedbackRequestTime" type="time"></label>
+    </div>
+    <label class="f" style="margin-bottom:8px">
+      <span>Interakt template name (optional) — once this is set and the template is approved by Meta, this sends for real over WhatsApp instead of just nudging staff on Telegram to send it</span>
+      <input class="t" id="waInteraktFeedbackRequest" placeholder="e.g. feedback_request_v1" pattern="[a-z0-9_]*" maxlength="120">
+    </label>
+    <p class="wa-hint">The template's body must use placeholders 1 and 2, in this exact order: guest, feedback link.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button type="button" class="rc-add" data-reset="feedbackRequest">Reset to default</button></div>
+
+    <label class="f"><span>Quote ready — sent when staff tap "Send Quote" in the Stay Builder, no schedule needed</span></label>
+    <p class="wa-hint">{{quoteLink}}</p>
+    <textarea class="t" id="waQuoteReady" rows="7" style="margin-bottom:8px"></textarea>
+    <label class="f" style="margin-bottom:8px">
+      <span>Interakt template name (optional) — once this is set and the template is approved by Meta, this sends for real over WhatsApp instead of just nudging staff on Telegram to send it</span>
+      <input class="t" id="waInteraktQuoteReady" placeholder="e.g. quote_ready_v1" pattern="[a-z0-9_]*" maxlength="120">
+    </label>
+    <p class="wa-hint">The template's body must use a single placeholder 1: the link to the guest's quote-review page.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button type="button" class="rc-add" data-reset="quoteReady">Reset to default</button></div>
+
+    <label class="f"><span>Booking confirmed — sent automatically the instant a balance payment clears online (a direct booking's own payment, the quote-review link's pay-to-confirm, or a later remaining-balance payment), no schedule needed</span></label>
+    <p class="wa-hint">{{guest}} {{checkin}} {{checkout}} {{guests}} {{walletLink}}</p>
+    <textarea class="t" id="waBookingConfirmed" rows="12" style="margin-bottom:8px"></textarea>
+    <label class="f" style="margin-bottom:8px">
+      <span>Interakt template name (optional) — once this is set and the template is approved by Meta, this sends for real over WhatsApp instead of just nudging staff on Telegram to send it</span>
+      <input class="t" id="waInteraktBookingConfirmed" placeholder="e.g. booking_confirmation" pattern="[a-z0-9_]*" maxlength="120">
+    </label>
+    <p class="wa-hint">The template's body must use placeholders 1 through 5, in this exact order: guest, check-in date, check-out date, guest count, Apple Wallet link.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button type="button" class="rc-add" data-reset="bookingConfirmed">Reset to default</button></div>
+
+    <div class="rc-foot">
+      <button class="btn primary" id="waSave" disabled>Save WhatsApp templates</button>
+    </div>
+  </div>
+
+  <div class="tab-panel" data-panel="users" id="userAccessSection" style="display:none">
+    <p class="gh-mini">User access</p>
+    <p class="sd" style="margin-bottom:12px">Who can sign in, their role, and who's admin (can delete quotes, invoices and reimbursed expenses, and manage this list). Admin-only section.</p>
+    <div id="userRows"></div>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:4px">
+      <button class="rc-add" id="userAdd">+ Add user</button>
+    </div>
+    <div class="user-err" id="userErr"></div>
+    <div class="rc-foot">
+      <button class="btn primary" id="userSave" disabled>Save user access</button>
+    </div>
+
+    <div id="platformOnly">
+    <p class="gh-mini" style="margin-top:28px">Data storage</p>
+    <p class="sd" style="margin-bottom:12px">Where bookings, cash, inventory and settings are kept — moving from GitHub to the Supabase database. <b>Copy to Supabase</b> copies every data file across and checks each one arrived identical; <b>Compare</b> only checks. Neither changes where the app reads and saves — that's the <code>STORAGE_BACKEND</code> setting on Render.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:8px">
+      <button class="btn" id="storStatusBtn">Check status</button>
+      <button class="btn" id="storCompareBtn">Compare</button>
+      <button class="btn primary" id="storCopyBtn">Copy to Supabase</button>
+    </div>
+    <div class="sync-results" id="storResults" style="margin-bottom:14px"></div>
+    <p class="sd" style="margin-bottom:10px"><b>Photos</b> — receipts, guest ID photos, signatures and checklist photos move from the public website repository into Supabase's private storage. Links in the data are updated; pages keep showing them. <b>Preview</b> counts what would move and tests the private storage without changing anything.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:8px">
+      <button class="btn" id="photoPreviewBtn">Preview photo move</button>
+      <button class="btn primary" id="photoMoveBtn">Move photos to private storage</button>
+    </div>
+    <div class="sync-results" id="photoResults" style="margin-bottom:22px"></div>
+
+    <p class="gh-mini" style="margin-top:28px">Villas</p>
+    <p class="sd" style="margin-bottom:12px">Other villas on RYST Harbour. Each villa has its own bookings, cash, inventory, settings and staff — its admin signs in with the email below (Google or Telegram) and sees only that villa. WhatsApp, online payments and calendar sync stay connected to this villa only for now.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:8px"><button class="btn" id="villaListBtn">Show villas</button></div>
+    <div class="sync-results" id="villaResults" style="margin-bottom:14px"></div>
+    <div>
+      <label class="f" style="margin-bottom:8px"><span>Villa name</span><input class="t" id="villaName" maxlength="120" placeholder="e.g. Sea Breeze Villa" autocomplete="off"></label>
+      <label class="f" style="margin-bottom:8px"><span>Villa ID</span><input class="t" id="villaSlug" maxlength="40" placeholder="e.g. sea-breeze" pattern="[a-z0-9-]{2,40}" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+      <label class="f" style="margin-bottom:8px"><span>Admin email</span><input class="t" id="villaAdmin" type="email" maxlength="200" placeholder="owner@example.com" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+    </div>
+    <p class="wa-hint" style="margin:6px 0 10px">The villa ID can't be changed later: lowercase letters, numbers and dashes. The admin email must not already be a user here.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button class="btn primary" id="villaCreateBtn">Add villa</button></div>
+
+    <p class="sd" style="margin-bottom:10px"><b>Invite a villa owner</b> — they open the link, sign in with Google and set up their own villa (name, ID) themselves. The link works only for the Google account below.</p>
+    <label class="f" style="margin-bottom:8px"><span>Their Google account email</span><input class="t" id="invEmail" type="email" maxlength="200" placeholder="owner@gmail.com" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+    <label class="f" style="margin-bottom:8px"><span>Link valid for (days)</span><input class="t" id="invDays" type="number" min="1" max="60" value="14" inputmode="numeric"></label>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:8px"><button class="btn primary" id="invCreateBtn">Create invite link</button></div>
+    <div class="sync-results" id="invResult" style="margin-bottom:22px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="loader">
+  <div class="spin" id="loaderSpin"></div>
+  <div id="loaderMsg">Loading settings…</div>
+  <button class="btn" id="loaderRetry" style="display:none">Retry</button>
+</div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const K_STAY    = 'ryst_stay_settings' + ((window.RYST_VILLA && window.RYST_VILLA !== 'ryst-109a') ? ':' + window.RYST_VILLA : ''); // per villa, so one villa's cached settings never show (or save) in another's
+
+const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const PROPERTY_CODE = (PROPERTY.name || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase() || 'DOC';
+const STAY_DEFAULTS = {
+  company:"",
+  pan:"",
+  invPrefix:PROPERTY_CODE+"/INV",
+  qtPrefix:PROPERTY_CODE+"/QT",
+  bank:"",
+  wifiNetwork:"",
+  wifiVoucher:"",
+  walletAppleEnabled:true,
+  walletGoogleEnabled:true,
+  declaration:`Supplier is not registered under GST as the turnover is below the prescribed threshold limit under the GST Act. Hence, GST has not been charged on this invoice.`,
+  terms:[
+    "Full payment is due as per booking confirmation.",
+    "Security deposit, if collected, shall be refunded within 7–10 working days after check-out, subject to inspection of the property.",
+    "Any damage to the property, furnishings, fixtures or equipment may be deducted from the security deposit.",
+    "This document is issued by an individual owner and not by a GST-registered entity.",
+    "Jurisdiction shall be Chennai, Tamil Nadu."
+  ],
+  rates:[
+    {desc:"Villa Rental Charges",            rate:""},
+    {desc:"Additional Guest Charges",        rate:""},
+    {desc:"Cleaning & Maintenance Charges",  rate:""},
+    {desc:"Event / Gathering Charges",       rate:""},
+    {desc:"Other Charges",                   rate:""}
+  ],
+  maxGuests: 4,
+  guestCapacity: 10,
+  advancePercent: 30,
+  weekendHikePercent: 0,
+  holidayHikePercent: 0,
+  holidays: [],
+  fullPaymentDiscountPercent: 0,
+  maxDiscountPercent: 20,
+  coupons: [],
+  icalFeeds: []
+};
+// Mirrors TELEGRAM_ALERT_TYPES in the proxy's server.js — drives the
+// per-alert checkboxes on each user's row in User Access below. The key
+// each checkbox toggles has to match the `type` string each notify*/check*
+// function there passes to sendTelegramMessage exactly, or a disabled
+// checkbox here would silently do nothing server-side.
+const TELEGRAM_ALERT_TYPES = [
+  { key:"bookingRequest", label:"New booking request (public site)" },
+  { key:"payment", label:"Payment received" },
+  { key:"checkin", label:"Guest checked in" },
+  { key:"feedback", label:"Guest feedback submitted" },
+  { key:"foodOrder", label:"Food order placed / edited" },
+  { key:"quoteSaved", label:"Quote or invoice created / edited" },
+  { key:"expense", label:"Petty-cash expense logged" },
+  { key:"checklistCompleted", label:"Checklist completed" },
+  { key:"checklistMissing", label:"Checkout checklist missing" },
+  { key:"inventory", label:"Inventory low stock / expiring" },
+  { key:"staleQuote", label:"Quote going cold (5+ days, no advance)" },
+  { key:"otaSync", label:"OTA calendar sync failure/recovery" },
+  { key:"userAccess", label:"User access changed" },
+];
+let stay = JSON.parse(JSON.stringify(STAY_DEFAULTS));
+let stayRcDraft = [];
+let stayHolDraft = [];
+let stayCouponDraft = [];
+let icalFeedsDraft = [];
+let icalExportKey = null; // set once /stay-settings returns it; never guessed client-side
+let proxyToken = localStorage.getItem('ryst_proxy_token')||'';
+// Admin is assigned via this very section (data-driven, cached at login),
+// not a hardcoded email. Server-enforced on /users regardless — this only
+// controls whether the section renders.
+const IS_ADMIN = localStorage.getItem('ryst_user_admin') === 'true';
+
+// Owner always has full access. Coordinator/caretaker need the 'settings'
+// module granted in Settings → User Access (yes, granting someone access
+// to this page from within this page) — server-enforced on /stay-settings,
+// /ical-import and /whatsapp-templates regardless. The User Access tab
+// itself stays admin-only (IS_ADMIN above), independent of modules.
+function hasModule(mod){
+  const role = localStorage.getItem('ryst_user_role') || 'owner';
+  let modules;
+  try { modules = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { modules = null; }
+  if(!Array.isArray(modules)) modules = role === 'caretaker' ? ['petty-cash','inventory','checklist'] : [];
+  return role === 'owner' || modules.includes(mod);
+}
+
+/* ---------- AUTH ---------- */
+(async function boot(){
+  if(!proxyToken){ window.location.href='login.html'; return; }
+  if(!hasModule('settings')){ window.location.href='login.html'; return; }
+
+  // A cached copy on THIS browser is trusted immediately (same "cache-first"
+  // design as before) — Save unblocks right away and the fetch below just
+  // refreshes it in the background. With no cache at all (fresh device,
+  // cleared storage), Save stays disabled and the form is covered by the
+  // loader until the real settings actually arrive — otherwise saving the
+  // bare STAY_DEFAULTS placeholders would overwrite the real bank details,
+  // PAN and rate card on the server.
+  const hasCache = !!localStorage.getItem(K_STAY);
+  loadStayPanel();
+  // The keypad PIN is RYST 109A's; other villas rely on their sign-in alone.
+  if(!window.RYST_VILLA || window.RYST_VILLA==='ryst-109a') initPinGate();
+
+  const loader = document.getElementById('loader'), msgEl = document.getElementById('loaderMsg'), retryBtn = document.getElementById('loaderRetry');
+  const saveBtn = document.getElementById('staySave');
+  if(hasCache){ loader.classList.add('hide'); saveBtn.disabled = false; }
+
+  const ctrl = new AbortController();
+  const slowTimer = setTimeout(() => { if(!hasCache) msgEl.textContent = 'Waking up the server… this can take up to a minute.'; }, 4000);
+  const abortTimer = setTimeout(() => ctrl.abort(), 75000);
+  try{
+    const res = await fetch(PROXY_URL+'/stay-settings',{headers:{'X-Token':proxyToken}, signal: ctrl.signal});
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    if(!res.ok){ if(!hasCache) throw new Error('Server error ('+res.status+')'); return; }
+    const d = await res.json().catch(()=>null);
+    if(d && typeof d==='object'){
+      if(d.bank||d.rates||d.company||d.property||d.invPrefix) applyStay(d); // a new villa has only its profile + prefixes so far
+      renderOnboarding(d);
+      // icalExportKey is never cached/guessed client-side — always the value
+      // the server just computed, shown regardless of whether other fields
+      // are populated yet (a brand-new install still needs to see this).
+      // Path form (/calendar/<key>.ics) rather than query-string
+      // (/calendar.ics?key=...) — some OTA "import calendar" forms (Agoda's
+      // among them) do a naive client-side check that the pasted URL
+      // literally ends in .ics before ever trying to fetch it, which the
+      // query-string form fails. The server accepts both forms identically.
+      if(d.icalExportKey){ icalExportKey = d.icalExportKey; document.getElementById('icalExportUrl').value = PROXY_URL+'/calendar/'+d.icalExportKey+'.ics'; renderIcalChannelLinks(); }
+      const gcalInput = document.getElementById('gcalExportUrl');
+      if(d.googleCalendarConfigured && d.googleCalendarPublicUrl){
+        gcalInput.value = d.googleCalendarPublicUrl;
+        document.getElementById('gcalCopyBtn').disabled = false;
+      } else {
+        gcalInput.value = 'Not set up yet — ask Claude to finish wiring the Google Calendar sync';
+        document.getElementById('gcalCopyBtn').disabled = true;
+      }
+    } else if(!hasCache){
+      throw new Error('No settings found on the server yet');
+    }
+    loader.classList.add('hide');
+    saveBtn.disabled = false;
+  }catch(e){
+    if(!hasCache){
+      document.getElementById('loaderSpin').style.display = 'none';
+      msgEl.textContent = (e && e.name === 'AbortError')
+        ? 'Server timed out — please retry.'
+        : 'Could not load settings — ' + (e && e.message ? e.message : 'check your connection.');
+      retryBtn.style.display = '';
+    }
+  } finally {
+    clearTimeout(slowTimer); clearTimeout(abortTimer);
+  }
+
+  // Independent of the stay-settings load above (own endpoint, own file) —
+  // a failure loading one shouldn't block or hide the other.
+  if(IS_ADMIN){
+    document.getElementById('tabUserBtn').style.display = '';
+    loadUserAccess();
+  }
+  loadWaTemplates();
+  loadWhatsAppStatus();
+})();
+document.getElementById('loaderRetry').addEventListener('click', ()=>location.reload());
+
+/* ---------- GETTING STARTED (new villas) ----------
+   Shown to another villa's staff until hidden, or to anyone arriving from
+   signup (?welcome=1). Each step opens the tab where it's done. */
+async function renderOnboarding(d){
+  const villa = window.RYST_VILLA || '';
+  const isNewVilla = villa && villa !== 'ryst-109a';
+  const welcome = new URLSearchParams(location.search).has('welcome');
+  const HIDE_KEY = 'ryst_onboarding_hidden:' + (villa || 'ryst-109a');
+  let hidden = false; try{ hidden = localStorage.getItem(HIDE_KEY) === '1'; }catch(e){}
+  if(!(welcome || (isNewVilla && !hidden))) return;
+  const p = (d && d.property) || {};
+  let team = null;
+  if(localStorage.getItem('ryst_user_admin') === 'true'){
+    try{ const r = await fetch(PROXY_URL+'/users',{headers:{'X-Token':proxyToken}}); const u = await r.json(); team = Array.isArray(u.users) ? u.users.length : null; }catch(e){}
+  }
+  const rates = Array.isArray(d && d.rates) && d.rates.some(r => Number(r.rate) > 0);
+  const steps = [
+    { done: !!(p.address && p.whatsapp), text: 'Add your villa details — address, WhatsApp number, logo', tab: 'villa', anchor: 'propName' },
+    { done: rates && !!(d && d.bank), text: 'Set your rates and bank details for quotes and invoices', tab: 'villa' },
+    { done: team != null && team > 1, text: 'Add your caretaker and managers', tab: 'users' },
+    { done: Array.isArray(d && d.icalFeeds) && d.icalFeeds.length > 0, text: 'Connect your Airbnb / Booking.com calendars', tab: 'ota' },
+    { done: false, text: 'Give your OTAs your calendar export link (so they block your bookings)', tab: 'ota' },
+  ];
+  const list = document.getElementById('onbList');
+  list.innerHTML = steps.map((s,i)=>`<li class="${s.done?'done':''}"><span class="ck">${s.done?'✓':i+1}</span><span>${esc(s.text)}</span><button type="button" data-go="${s.tab}">${s.done?'Review':'Open'}</button></li>`).join('');
+  list.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+    const tabBtn = document.querySelector('.tab-btn[data-tab="'+b.dataset.go+'"]');
+    if(tabBtn && tabBtn.style.display === 'none'){ toast('Only an admin can open that section'); return; }
+    switchTab(b.dataset.go); document.getElementById('cfgTabs').scrollIntoView({ behavior:'smooth', block:'start' });
+  }));
+  document.getElementById('onbHide').onclick = () => { try{ localStorage.setItem(HIDE_KEY,'1'); }catch(e){} document.getElementById('onboard').hidden = true; };
+  document.getElementById('onboard').hidden = false;
+}
+
+/* ---------- TABS ---------- */
+function switchTab(tab){
+  document.querySelectorAll('.tab-panel').forEach(p=> p.style.display = (p.dataset.panel===tab) ? '' : 'none');
+  // The stay-settings save bar belongs to both the villa and OTA panels —
+  // they write the same document via the same button — so it isn't its own
+  // tab-panel, just shown/hidden alongside whichever of those two is active.
+  document.getElementById('stayGroupSave').style.display = (tab==='villa'||tab==='ota') ? '' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
+}
+document.getElementById('cfgTabs').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-tab]');
+  if(btn) switchTab(btn.dataset.tab);
+});
+
+/* ---------- PIN GATE ----------
+   A quick keypad lock in front of this page, not a real access boundary —
+   the actual security boundary is the Google sign-in + owner-role check
+   above. This just stops someone picking up an already-signed-in device
+   from casually opening rates/bank details. */
+function initPinGate(){
+  const RATE_PIN = '1991';
+  let entered = '';
+  const overlay = document.getElementById('pinOverlay');
+  const card    = document.getElementById('pinCard');
+  const errEl   = document.getElementById('pinErr');
+  const dots    = document.querySelectorAll('#pinDots .pin-dot');
+
+  overlay.hidden = false;
+
+  function renderDots(){
+    dots.forEach((d,i)=> d.classList.toggle('filled', i < entered.length));
+  }
+  function checkPin(){
+    if(entered === RATE_PIN){
+      overlay.hidden = true;
+    } else {
+      errEl.textContent = 'Incorrect PIN';
+      card.classList.add('shake');
+      setTimeout(()=>{ card.classList.remove('shake'); entered=''; renderDots(); }, 350);
+    }
+  }
+  function press(k){
+    if(entered.length >= 4) return;
+    errEl.textContent = '';
+    entered += k;
+    renderDots();
+    if(entered.length === 4) setTimeout(checkPin, 80);
+  }
+  function backspace(){
+    entered = entered.slice(0,-1);
+    errEl.textContent = '';
+    renderDots();
+  }
+
+  document.getElementById('pinKeys').querySelectorAll('[data-k]').forEach(b=>{
+    b.addEventListener('click', ()=> press(b.dataset.k));
+  });
+  document.getElementById('pinBack').addEventListener('click', backspace);
+  document.addEventListener('keydown', e=>{
+    if(overlay.hidden) return;
+    if(/^[0-9]$/.test(e.key)) press(e.key);
+    else if(e.key === 'Backspace') backspace();
+  });
+}
+
+/* ---------- LOAD ---------- */
+async function loadStayPanel(){
+  try{ stay=Object.assign({},STAY_DEFAULTS,JSON.parse(localStorage.getItem(K_STAY)||"{}")); }catch(e){ stay=JSON.parse(JSON.stringify(STAY_DEFAULTS)); }
+  if(!Array.isArray(stay.terms)||!stay.terms.length) stay.terms=STAY_DEFAULTS.terms.slice();
+  if(!Array.isArray(stay.rates)||!stay.rates.length) stay.rates=STAY_DEFAULTS.rates.map(r=>({...r}));
+  renderFromStay();
+}
+function applyStay(d){
+  stay=Object.assign({},STAY_DEFAULTS,d);
+  if(!Array.isArray(stay.terms)||!stay.terms.length) stay.terms=STAY_DEFAULTS.terms.slice();
+  if(!Array.isArray(stay.rates)||!stay.rates.length) stay.rates=STAY_DEFAULTS.rates.map(r=>({...r}));
+  if(!Array.isArray(stay.holidays)) stay.holidays=[];
+  localStorage.setItem(K_STAY,JSON.stringify(stay));
+  renderFromStay();
+}
+// Property profile — prefilled from the saved profile, else from the
+// effective one the pages already use (property.js), so the first save just
+// records today's values.
+// A function, not a const: renderFromStay() first runs (from the cached copy)
+// before this point in the script executes.
+function propKeys(){ return ["name", "fullName", "restaurantName", "typeLabel", "tagline", "signatory", "address", "mapLink", "website", "whatsapp", "instagram", "receiptNote", "logoUrl", "coverUrl", "latitude", "longitude", "googlePlaceQuery"]; }
+function renderPropertyProfile(){
+  const src = (stay.property && typeof stay.property === 'object' && stay.property.name) ? stay.property : (window.PROPERTY || {});
+  propKeys().forEach(k => { const el = document.getElementById('prop_'+k); if(el) el.value = src[k] != null ? src[k] : ''; });
+}
+function collectPropertyProfile(){
+  const p = {};
+  propKeys().forEach(k => { const el = document.getElementById('prop_'+k); p[k] = el ? el.value.trim() : ''; });
+  p.whatsapp = p.whatsapp.replace(/\D/g, '');
+  p.instagram = p.instagram.replace(/^@/, '');
+  ['latitude','longitude'].forEach(k => { p[k] = p[k] === '' ? null : (isFinite(Number(p[k])) ? Number(p[k]) : null); });
+  return p;
+}
+function renderFromStay(){
+  renderPropertyProfile();
+  stayRcDraft=stay.rates.map(r=>({...r}));
+  renderStayRates();
+  document.getElementById("stayCompany").value=stay.company||"";
+  document.getElementById("stayPan").value=stay.pan||"";
+  document.getElementById("stayInvPrefix").value=stay.invPrefix||"";
+  document.getElementById("stayQtPrefix").value=stay.qtPrefix||"";
+  document.getElementById("stayMaxGuests").value=stay.maxGuests!=null?stay.maxGuests:"";
+  document.getElementById("stayGuestCapacity").value=stay.guestCapacity!=null?stay.guestCapacity:"";
+  document.getElementById("stayAdvancePercent").value=stay.advancePercent!=null?stay.advancePercent:"";
+  document.getElementById("stayWeekendHike").value=stay.weekendHikePercent!=null?stay.weekendHikePercent:"";
+  document.getElementById("stayHolidayHike").value=stay.holidayHikePercent!=null?stay.holidayHikePercent:"";
+  stayHolDraft=(stay.holidays||[]).map(h=>({...h}));
+  renderStayHolidays();
+  document.getElementById("stayFullPayDiscount").value=stay.fullPaymentDiscountPercent!=null?stay.fullPaymentDiscountPercent:"";
+  document.getElementById("stayMaxDiscount").value=stay.maxDiscountPercent!=null?stay.maxDiscountPercent:"";
+  stayCouponDraft=(stay.coupons||[]).map(c=>({...c}));
+  renderStayCoupons();
+  document.getElementById("stayBank").value=stay.bank||"";
+  document.getElementById("stayWifiNetwork").value=stay.wifiNetwork||"";
+  document.getElementById("stayWifiVoucher").value=stay.wifiVoucher||"";
+  document.getElementById("stayWalletApple").checked=stay.walletAppleEnabled!==false;
+  document.getElementById("stayWalletGoogle").checked=stay.walletGoogleEnabled!==false;
+  document.getElementById("stayDecl").value=stay.declaration||"";
+  document.getElementById("stayTerms").value=(stay.terms||[]).join("\n");
+  icalFeedsDraft=(stay.icalFeeds||[]).map(f=>({...f}));
+  renderIcalFeeds();
+}
+
+/* ---------- ICAL FEEDS ---------- */
+function renderIcalFeeds(){
+  const wrap=document.getElementById("icalFeedRows");
+  wrap.innerHTML="";
+  if(!icalFeedsDraft.length){
+    wrap.innerHTML='<p class="sd" style="margin-bottom:8px">No OTA feeds added yet.</p>';
+  }
+  icalFeedsDraft.forEach((f,i)=>{
+    const row=document.createElement("div");
+    row.className="feed-row";
+    row.innerHTML=`
+      <input class="t" data-i="${i}" data-k="label" placeholder="e.g. Airbnb" value="${esc(f.label)}">
+      <input class="t" data-i="${i}" data-k="url" placeholder="https://www.airbnb.com/calendar/ical/....ics" value="${esc(f.url)}">
+      <button type="button" class="rc-del" data-del="${i}" title="Remove">×</button>`;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll("input[data-i]").forEach(inp=>{
+    inp.addEventListener("input",e=>{ const i=+e.target.dataset.i,k=e.target.dataset.k; icalFeedsDraft[i][k]=e.target.value; });
+  });
+  wrap.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",e=>{
+    icalFeedsDraft.splice(+e.target.dataset.del,1); renderIcalFeeds();
+  }));
+  renderIcalChannelLinks();
+}
+
+/* One export link per OTA feed: /calendar/<key>/<feedId>.ics leaves out the
+   blocks imported from that feed (server matches on the block's source feed
+   id), so an OTA never gets its own closures echoed back to it. Keyed on the
+   feed id rather than the label so renaming a feed can't silently break the
+   link an OTA already has. Path form ending in .ics, same reason as the full
+   export (Agoda's form rejects anything else). */
+function renderIcalChannelLinks(){
+  const wrap=document.getElementById("icalChannelLinks");
+  if(!wrap) return;
+  if(!icalExportKey){ wrap.innerHTML='<p class="sd">Loading…</p>'; return; }
+  const feeds=icalFeedsDraft.filter(f=>f.id&&(f.label||"").trim());
+  if(!feeds.length){ wrap.innerHTML='<p class="sd">Add each OTA under "Import" below first — its own export link will appear here.</p>'; return; }
+  wrap.innerHTML=feeds.map((f,i)=>`
+    <div class="ical-copy" style="margin-bottom:8px;align-items:center">
+      <span style="min-width:116px;font-weight:600">${esc(f.label)}</span>
+      <input class="t" readonly value="${esc(PROXY_URL+'/calendar/'+icalExportKey+'/'+f.id+'.ics')}" id="icalChan${i}">
+      <button type="button" class="btn" data-copy="icalChan${i}">Copy</button>
+    </div>`).join("");
+  wrap.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async e=>{
+    const inp=document.getElementById(e.target.dataset.copy);
+    try{ await navigator.clipboard.writeText(inp.value); toast("Link copied — paste it into that OTA's calendar import"); }
+    catch(err){ inp.select(); toast("Could not copy — select and copy manually"); }
+  }));
+}
+// Recent fetches of the export links (server keeps the last 60 since its
+// last restart): which link, and which OTA fetched it (from its user agent).
+function icalWhoGuess(agent){
+  const a=String(agent||'');
+  if(/booking\.com|bookingcom/i.test(a)) return 'Booking.com';
+  if(/airbnb/i.test(a)) return 'Airbnb';
+  if(/agoda/i.test(a)) return 'Agoda';
+  if(/goibibo|makemytrip|\bmmt\b|ingo/i.test(a)) return 'MakeMyTrip';
+  if(/google/i.test(a)) return 'Google';
+  return a ? a.slice(0,60) : 'unknown';
+}
+document.getElementById("icalWhoBtn").addEventListener("click", async ()=>{
+  const out=document.getElementById("icalWhoResults");
+  if(!proxyToken){ toast("Sign in required"); return; }
+  out.innerHTML='<div class="sync-result"><span>Checking…</span><span></span></div>';
+  try{
+    const res=await fetch(PROXY_URL+'/ical/export-log',{headers:{'X-Token':proxyToken},cache:'no-store'});
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('Error '+res.status));
+    const slug=v=>String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const label=v=>{ if(v==='full') return null; const f=icalFeedsDraft.find(f=>slug(f.id)===v||slug(f.label)===v); return f?f.label:v; };
+    const rows=(d.fetches||[]).filter(f=>f.method==='GET');
+    if(!rows.length){ out.innerHTML=`<div class="sync-result"><span>No OTA has fetched a calendar link since ${esc(new Date(d.since).toLocaleString('en-IN'))}</span><span>OTAs check every few hours — try again later</span></div>`; return; }
+    out.innerHTML=rows.slice(0,20).map(f=>{
+      const who=icalWhoGuess(f.agent), own=label(f.variant);
+      const bad=!own;
+      return `<div class="sync-result${bad?' err':''}"><span>${esc(new Date(f.at).toLocaleString('en-IN'))} · ${esc(who)}</span><span>${bad?'⚠ FULL link — switch this OTA to its own link':'✓ '+esc(own)+"'s own link"}</span></div>`;
+    }).join('');
+  }catch(e){ out.innerHTML=`<div class="sync-result err"><span>Could not load</span><span>${esc(e.message)}</span></div>`; }
+});
+
+document.getElementById("icalFeedAdd").addEventListener("click",()=>{
+  icalFeedsDraft.push({id:'feed_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6), label:'', url:''});
+  renderIcalFeeds();
+});
+document.getElementById("icalCopyBtn").addEventListener("click", async ()=>{
+  const val=document.getElementById("icalExportUrl").value;
+  if(!val||val==='Loading…') return;
+  try{ await navigator.clipboard.writeText(val); toast("Export link copied"); }
+  catch(e){ toast("Could not copy — select and copy manually"); }
+});
+document.getElementById("gcalCopyBtn").addEventListener("click", async ()=>{
+  const val=document.getElementById("gcalExportUrl").value;
+  if(!val||val.startsWith('Not set up') || val==='Loading…') return;
+  try{ await navigator.clipboard.writeText(val); toast("Master calendar link copied"); }
+  catch(e){ toast("Could not copy — select and copy manually"); }
+});
+document.getElementById("icalSyncBtn").addEventListener("click", async ()=>{
+  const btn=document.getElementById("icalSyncBtn");
+  const out=document.getElementById("icalSyncResults");
+  if(!proxyToken){ toast("Sign in required"); return; }
+  btn.disabled=true; btn.textContent="Syncing…";
+  out.innerHTML="";
+  try{
+    const res=await fetch(PROXY_URL+'/ical-import',{method:'POST',headers:{'X-Token':proxyToken}});
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok){ out.innerHTML=`<div class="sync-result err">${esc(data.error||'Sync failed')}</div>`; }
+    else {
+      let html = (!data.results || !data.results.length)
+        ? '<div class="sync-result">No feeds configured yet — add one above and save first.</div>'
+        : data.results.map(r=>{
+            if(!r.ok) return `<div class="sync-result err"><span>${esc(r.label)}</span><span>${esc(r.error)}</span></div>`;
+            if(r.count===0) return `<div class="sync-result warn"><span>${esc(r.label)}<span class="note">0 synced — this OTA may not export live reservations (only manual blocks, or none at all). Verify directly with the OTA and consider a manual block as a safety net.</span></span><span>0 reservations</span></div>`;
+            return `<div class="sync-result"><span>${esc(r.label)}</span><span>${r.count} reservation${r.count===1?'':'s'} synced</span></div>`;
+          }).join('');
+      const g = data.googleCalendar;
+      if(g){
+        if(g.skipped) html += `<div class="sync-result"><span>Google Calendar</span><span>Not set up yet</span></div>`;
+        else if(!g.ok) html += `<div class="sync-result err"><span>Google Calendar</span><span>${esc(g.error||'Sync failed')}</span></div>`;
+        else {
+          const parts=[];
+          if(g.created) parts.push(g.created+' added');
+          if(g.updated) parts.push(g.updated+' updated');
+          if(g.deleted) parts.push(g.deleted+' removed');
+          const summary = parts.length ? parts.join(', ') : 'Already up to date';
+          html += (g.errors && g.errors.length)
+            ? `<div class="sync-result warn"><span>Google Calendar<span class="note">${esc(g.errors.join('; '))}</span></span><span>${esc(summary)}</span></div>`
+            : `<div class="sync-result"><span>Google Calendar</span><span>${esc(summary)}</span></div>`;
+        }
+      }
+      out.innerHTML = html;
+    }
+  }catch(e){ out.innerHTML='<div class="sync-result err">Could not reach the server</div>'; }
+  finally{ btn.disabled=false; btn.textContent="⟳ Sync now"; }
+});
+
+/* ---------- TELEGRAM NOTIFY STATUS (owner) ----------
+   Telegram notify is the only automated-sending path now — direct WhatsApp
+   sending (the old Baileys bot connection) has been removed entirely, not
+   just hidden here. /whatsapp/status actually calls Telegram's getMe
+   server-side, so "connected" here reflects a just-verified live check, not
+   just "an env var happens to be set". Polls on an interval below so this
+   reads as live connectivity rather than a one-time page-load check. */
+let tgStatusLastCheck = null;
+async function loadWhatsAppStatus(){
+  const dot = document.getElementById('tgStatusDot');
+  const text = document.getElementById('tgStatusText');
+  if(!proxyToken){ dot.className='dot'; text.textContent = 'Sign in required'; return; }
+  try{
+    const res = await fetch(PROXY_URL+'/whatsapp/status', { headers: { 'X-Token': proxyToken }, cache: 'no-store' });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ dot.className='dot off'; text.textContent = data.error || 'Could not check status'; return; }
+    tgStatusLastCheck = new Date();
+    if(!data.configured){
+      dot.className = 'dot';
+      text.textContent = 'Telegram notify — not set up yet (see below)';
+    } else if(data.connected && !data.recipientCount){
+      dot.className = 'dot off';
+      text.textContent = 'Telegram notify — bot connected, but no one has a chat ID set yet (see User Access)';
+    } else if(data.connected){
+      dot.className = 'dot on';
+      const who = data.recipientCount===1 ? '1 person' : `${data.recipientCount} people`;
+      text.textContent = (data.botUsername ? `Telegram notify — connected (@${data.botUsername})` : 'Telegram notify — connected') + ` — ${who} set up to receive alerts`;
+    } else {
+      dot.className = 'dot off';
+      text.textContent = 'Telegram notify — configured, but not reachable: ' + (data.error || 'unknown error');
+    }
+    updateTgStatusMeta();
+  }catch(e){
+    dot.className = 'dot off';
+    text.textContent = 'Could not reach the server';
+    document.getElementById('tgStatusMeta').textContent = '';
+  }
+}
+function updateTgStatusMeta(){
+  const meta = document.getElementById('tgStatusMeta');
+  if(!tgStatusLastCheck){ meta.textContent = ''; return; }
+  const secs = Math.max(0, Math.round((Date.now()-tgStatusLastCheck.getTime())/1000));
+  meta.textContent = secs < 3 ? 'checked just now' : `checked ${secs}s ago`;
+}
+setInterval(updateTgStatusMeta, 1000);
+// Re-checks every 30s while this tab is actually visible — no point polling
+// a background tab nobody's looking at.
+setInterval(()=>{ if(!document.hidden) loadWhatsAppStatus(); }, 30000);
+document.getElementById('waStatusRefresh').addEventListener('click', loadWhatsAppStatus);
+document.getElementById('waRunNowBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('waRunNowBtn');
+  const out = document.getElementById('waRunResults');
+  if(!proxyToken){ toast('Sign in required'); return; }
+  btn.disabled = true; btn.textContent = 'Running…';
+  out.innerHTML = '';
+  try{
+    const res = await fetch(PROXY_URL+'/whatsapp/run-scheduled', { method:'POST', headers:{ 'X-Token': proxyToken } });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || data.ok===false){ out.innerHTML = `<div class="sync-result err"><span>Run now</span><span>${esc(data.error||'Failed')}</span></div>`; }
+    else if(data.skipped){ out.innerHTML = `<div class="sync-result"><span>Run now</span><span>${esc(data.reason||'Not enabled')}</span></div>`; }
+    else {
+      const parts = [`${data.sent||0} sent`];
+      if(data.sentViaInterakt) parts.push(`${data.sentViaInterakt} via Interakt`);
+      if(data.failed) parts.push(`${data.failed} failed`);
+      let html = `<div class="sync-result${data.failed?' warn':''}"><span>Run now</span><span>${esc(parts.join(', '))}</span></div>`;
+      if(data.warning) html += `<div class="sync-result warn"><span>Note</span><span>${esc(data.warning)}</span></div>`;
+      if(Array.isArray(data.errors)) data.errors.forEach(e=>{ html += `<div class="sync-result err"><span>Error</span><span>${esc(e)}</span></div>`; });
+      out.innerHTML = html;
+    }
+    loadWhatsAppStatus();
+  }catch(e){ out.innerHTML = '<div class="sync-result err">Could not reach the server</div>'; }
+  finally{ btn.disabled = false; btn.textContent = '▶ Run now'; }
+});
+document.getElementById('waTestSendBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('waTestSendBtn');
+  const out = document.getElementById('waTestSendResults');
+  const phone = document.getElementById('waTestPhone').value.trim();
+  const scenario = document.getElementById('waTestScenario').value;
+  if(!proxyToken){ toast('Sign in required'); return; }
+  if(!phone){ out.innerHTML = '<div class="sync-result err"><span>Send test message</span><span>Enter a phone number first</span></div>'; return; }
+  btn.disabled = true; btn.textContent = 'Sending…';
+  out.innerHTML = '';
+  try{
+    const res = await fetch(PROXY_URL+'/whatsapp/test-send', {
+      method:'POST', headers:{ 'X-Token': proxyToken, 'Content-Type':'application/json' },
+      body: JSON.stringify({ phone, scenario }),
+    });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || data.ok===false){ out.innerHTML = `<div class="sync-result err"><span>Send test message</span><span>${esc(data.error||'Failed')}</span></div>`; }
+    else { out.innerHTML = `<div class="sync-result"><span>Send test message</span><span>Sent via ${esc(data.templateName)} to ${esc(data.phone)}</span></div>`; }
+  }catch(e){ out.innerHTML = '<div class="sync-result err">Could not reach the server</div>'; }
+  finally{ btn.disabled = false; btn.textContent = 'Send test message'; }
+});
+
+document.getElementById('waWebhookBtn').addEventListener('click', async ()=>{
+  const out = document.getElementById('waWebhookResults');
+  if(!proxyToken){ toast('Sign in required'); return; }
+  out.innerHTML = '';
+  try{
+    const res = await fetch(PROXY_URL+'/whatsapp/webhook-info', { headers: { 'X-Token': proxyToken }, cache: 'no-store' });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.url){ out.innerHTML = `<div class="sync-result err"><span>Webhook URL</span><span>${esc(data.error||'Failed')}</span></div>`; return; }
+    out.innerHTML = `<div class="sync-result"><span style="word-break:break-all">${esc(data.url)}</span><span><button type="button" class="rc-add" id="waWebhookCopy">Copy</button></span></div>`;
+    const recent = Array.isArray(data.recent) ? data.recent : [];
+    out.innerHTML += recent.length
+      ? recent.map(r=>`<div class="sync-result"><span>${esc(new Date(r.at).toLocaleString('en-IN'))}</span><span>${esc(r.type)}${r.status?' · '+esc(r.status):''}${r.signatureHeaders&&r.signatureHeaders.length?' · signed ('+esc(r.signatureHeaders.join(', '))+')':''}</span></div>`).join('')
+      : '<div class="sync-result"><span>Last received</span><span>Nothing since the server last restarted — send a WhatsApp from Bookings, then check again</span></div>';
+    document.getElementById('waWebhookCopy').addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(data.url); toast('Webhook URL copied — paste it into Interakt'); }
+      catch(e){ toast('Could not copy — select the URL and copy it manually'); }
+    });
+  }catch(e){ out.innerHTML = '<div class="sync-result err">Could not reach the server</div>'; }
+});
+
+// ── Data storage (admin) ──
+const STOR_MODE = { github:'GitHub (current)', dual:'GitHub, mirrored to Supabase', supabase:'Supabase' };
+function storStatusRows(d){
+  const m = d.mirror || {};
+  const mode = d.mirroringToSupabase ? 'dual' : d.active;
+  const keysMissing = d.backend !== 'github' && !d.supabaseConfigured;
+  return `<div class="sync-result${keysMissing?' err':''}"><span>Reading &amp; saving</span><span>${esc(STOR_MODE[mode] || mode)}${keysMissing?' — STORAGE_BACKEND='+esc(d.backend)+' is set but the Supabase keys are missing':''}</span></div>`
+    + `<div class="sync-result${d.supabaseConfigured && d.supabaseKeyKind==='secret'?'':' err'}"><span>Supabase keys on Render</span><span>${!d.supabaseConfigured ? 'Not set — add SUPABASE_URL and SUPABASE_SERVICE_KEY' : d.supabaseKeyKind==='publishable' ? 'Wrong key — this is the publishable key; use the secret key (starts sb_secret_)' : d.supabaseKeyKind==='damaged' ? 'Key is damaged — ' + esc(d.supabaseKeyProblem||'') : d.supabaseKeyKind==='secret' ? 'Set (secret key)' : 'Set, but not recognised as a Supabase secret key'}</span></div>`
+    + (d.mirroringToSupabase ? `<div class="sync-result${m.failed?' err':''}"><span>Mirror since last restart</span><span>${m.ok||0} saved · ${m.failed||0} failed${m.lastError?' — '+esc(m.lastError):''}</span></div>` : '');
+}
+async function storCall(method, path){
+  const res = await fetch(PROXY_URL+path, { method, headers:{ 'X-Token': proxyToken }, cache:'no-store' });
+  if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; throw new Error('Session expired'); }
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || ('Error '+res.status));
+  return data;
+}
+async function storRun(btn, label, fn){
+  const out = document.getElementById('storResults');
+  const all = ['storStatusBtn','storCompareBtn','storCopyBtn'].map(id=>document.getElementById(id));
+  const orig = btn.textContent; all.forEach(b=>b.disabled=true); btn.textContent = label;
+  try { out.innerHTML = await fn(); }
+  catch(e){ out.innerHTML = `<div class="sync-result err"><span>Data storage</span><span>${esc(e.message)}</span></div>`; }
+  finally { all.forEach(b=>b.disabled=false); btn.textContent = orig; }
+}
+function storFileRows(d){
+  const rows = (d.results||[]).map(r=>`<div class="sync-result${r.match?'':' err'}"><span>${esc(r.name)}</span><span>${r.match?'✓ identical':'✗ '+esc(r.error||'differs')}${r.bytes!=null?' · '+(r.bytes/1024).toFixed(1)+' KB':''}</span></div>`).join('');
+  const head = `<div class="sync-result${d.ok?'':' err'}"><span>${d.compareOnly?'Compare':'Copy'}</span><span>${d.ok?'All '+(d.results||[]).length+' files match':'Some files need attention'}</span></div>`;
+  return head + rows;
+}
+async function photoRun(btn, dry){
+  const out=document.getElementById('photoResults');
+  const all=['photoPreviewBtn','photoMoveBtn'].map(id=>document.getElementById(id));
+  const orig=btn.textContent; all.forEach(b=>b.disabled=true); btn.textContent=dry?'Checking…':'Moving…';
+  try{
+    const d=await storCall('POST','/admin/photos/migrate'+(dry?'?dry=1':''));
+    const docs=(d.docs||[]).filter(x=>x.found||x.moved||(x.failed&&x.failed.length));
+    const total=(d.docs||[]).reduce((a,x)=>a+(dry?x.found:x.moved),0);
+    out.innerHTML=`<div class="sync-result${d.selfTestError?' err':''}"><span>Private storage test</span><span>${d.selfTestError?'✗ '+esc(d.selfTestError):'✓ upload, read and delete work'}</span></div>`
+      + `<div class="sync-result${d.ok===false?' err':''}"><span>${dry?'Would move':'Moved'}</span><span>${total} photo${total===1?'':'s'}${!docs.length?' — nothing left in the public repository':''}</span></div>`
+      + docs.map(x=>`<div class="sync-result${x.failed&&x.failed.length?' err':''}"><span>${esc(x.name)}</span><span>${dry?x.found+' to move':x.moved+' of '+x.found+' moved'}${x.failed&&x.failed.length?' — '+esc(x.failed.join('; ')):''}</span></div>`).join('');
+  }catch(e){ out.innerHTML=`<div class="sync-result err"><span>Photos</span><span>${esc(e.message)}</span></div>`; }
+  finally{ all.forEach(b=>b.disabled=false); btn.textContent=orig; }
+}
+document.getElementById('photoPreviewBtn').addEventListener('click', e=>photoRun(e.currentTarget, true));
+document.getElementById('photoMoveBtn').addEventListener('click', e=>{
+  if(!confirm('Move every photo into Supabase private storage and update the links in the data?\n\nRun "Preview photo move" first to check the count.')) return;
+  photoRun(e.currentTarget, false);
+});
+document.getElementById('storStatusBtn').addEventListener('click', e => storRun(e.currentTarget, 'Checking…', async ()=> storStatusRows(await storCall('GET','/admin/storage/status'))));
+document.getElementById('storCompareBtn').addEventListener('click', e => storRun(e.currentTarget, 'Comparing…', async ()=> storFileRows(await storCall('POST','/admin/storage/copy?compare=1'))));
+document.getElementById('storCopyBtn').addEventListener('click', e => {
+  if(!confirm('Copy every data file from GitHub to Supabase?\n\nThis overwrites what is in Supabase with the current GitHub copy. The app keeps reading and saving where it does now.')) return;
+  storRun(e.currentTarget, 'Copying…', async ()=> storFileRows(await storCall('POST','/admin/storage/copy')));
+});
+
+// ── Villas (platform owner = an admin of the original villa) ──
+function tokenVilla(){
+  try{ const b=proxyToken.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(atob(b+'==='.slice((b.length+3)%4))).tenant||'ryst-109a'; }
+  catch(e){ return 'ryst-109a'; }
+}
+if(tokenVilla()!=='ryst-109a') document.getElementById('platformOnly').style.display='none';
+function villaRows(list){
+  if(!list.length) return '<div class="sync-result"><span>Villas</span><span>None yet</span></div>';
+  return list.map(v=>`<div class="sync-result"><span>${esc(v.name)}${v.isDefault?' (this villa)':''}</span><span>${esc(v.slug)} · ${v.bookings} booking${v.bookings===1?'':'s'} · ${v.users} user${v.users===1?'':'s'} · ${esc(v.status)}</span></div>`).join('');
+}
+async function villaList(){
+  const out=document.getElementById('villaResults');
+  try{ const d=await storCall('GET','/platform/villas'); out.innerHTML=villaRows(d.villas||[]); }
+  catch(e){ out.innerHTML=`<div class="sync-result err"><span>Villas</span><span>${esc(e.message)}</span></div>`; }
+}
+document.getElementById('villaListBtn').addEventListener('click', async e=>{
+  const b=e.currentTarget, t=b.textContent; b.disabled=true; b.textContent='Loading…';
+  await villaList(); b.disabled=false; b.textContent=t;
+});
+document.getElementById('villaName').addEventListener('input', e=>{
+  const slug=document.getElementById('villaSlug');
+  if(slug.dataset.edited) return;
+  slug.value=e.target.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
+});
+document.getElementById('villaSlug').addEventListener('input', e=>{ e.target.dataset.edited='1'; });
+document.getElementById('villaCreateBtn').addEventListener('click', async e=>{
+  const name=document.getElementById('villaName').value.trim();
+  const slug=document.getElementById('villaSlug').value.trim().toLowerCase();
+  const adminEmail=document.getElementById('villaAdmin').value.trim().toLowerCase();
+  if(!name){ toast('Enter the villa name'); return; }
+  if(!/^[a-z0-9-]{2,40}$/.test(slug)){ toast('Villa ID: 2–40 lowercase letters, numbers or dashes'); return; }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adminEmail)){ toast('Enter a valid admin email'); return; }
+  if(!confirm(`Add "${name}" (${slug})?\n\n${adminEmail} will be its admin and can sign in right away. The villa ID can't be changed later.`)) return;
+  const b=e.currentTarget; b.disabled=true; b.textContent='Adding…';
+  try{
+    const res=await fetch(PROXY_URL+'/platform/villas',{ method:'POST', headers:{'X-Token':proxyToken,'Content-Type':'application/json'}, body:JSON.stringify({slug,name,adminEmail}) });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('Error '+res.status));
+    toast(`${name} added — ${adminEmail} can sign in now`);
+    ['villaName','villaSlug','villaAdmin'].forEach(id=>{ const el=document.getElementById(id); el.value=''; delete el.dataset.edited; });
+    villaList();
+  }catch(err){ toast(err.message); }
+  finally{ b.disabled=false; b.textContent='Add villa'; }
+});
+
+document.getElementById('invCreateBtn').addEventListener('click', async e=>{
+  const email=document.getElementById('invEmail').value.trim().toLowerCase();
+  const days=Number(document.getElementById('invDays').value)||14;
+  const out=document.getElementById('invResult');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast('Enter their Google account email'); return; }
+  const b=e.currentTarget; b.disabled=true; b.textContent='Creating…';
+  try{
+    const res=await fetch(PROXY_URL+'/platform/invites',{ method:'POST', headers:{'X-Token':proxyToken,'Content-Type':'application/json'}, body:JSON.stringify({email,days}) });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('Error '+res.status));
+    out.innerHTML=`<div class="sync-result"><span>Invite for ${esc(d.email)}</span><span>valid until ${esc(new Date(d.expires).toLocaleDateString())}</span></div>
+      <input class="t" readonly id="invLink" value="${esc(d.link)}" style="margin-top:8px">
+      <div class="rc-foot" style="margin-top:8px"><button type="button" class="btn" id="invCopy">Copy link</button></div>`;
+    document.getElementById('invCopy').addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(d.link); toast('Invite link copied — send it to them on WhatsApp or email'); }
+      catch(err){ document.getElementById('invLink').select(); toast('Select the link and copy it'); }
+    });
+  }catch(err){ out.innerHTML=`<div class="sync-result err"><span>Invite</span><span>${esc(err.message)}</span></div>`; }
+  finally{ b.disabled=false; b.textContent='Create invite link'; }
+});
+
+document.getElementById('tgChatIdBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('tgChatIdBtn');
+  const out = document.getElementById('tgChatIdResults');
+  if(!proxyToken){ toast('Sign in required'); return; }
+  btn.disabled = true; btn.textContent = 'Checking…';
+  out.innerHTML = '';
+  try{
+    const res = await fetch(PROXY_URL+'/telegram/chat-id', { headers: { 'X-Token': proxyToken }, cache: 'no-store' });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || data.error){ out.innerHTML = `<div class="sync-result err"><span>Chat ID</span><span>${esc(data.error||'Failed')}</span></div>`; return; }
+    if(!data.chats || !data.chats.length){ out.innerHTML = '<div class="sync-result"><span>Chat ID</span><span>No messages yet — send "hi" to your bot on Telegram, then try again</span></div>'; return; }
+    out.innerHTML = data.chats.map(c=>`<div class="sync-result"><span>${esc(c.name||'Chat')}</span><span>${esc(c.id)} <button type="button" class="rc-add" data-copy-chat-id="${esc(c.id)}" style="margin-left:8px">Copy</button></span></div>`).join('');
+    out.querySelectorAll('[data-copy-chat-id]').forEach(b=>b.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(b.dataset.copyChatId); toast('Chat ID copied — paste it into that person\'s row in User Access below'); }
+      catch(e){ toast('Could not copy — chat ID is ' + b.dataset.copyChatId); }
+    }));
+  }catch(e){ out.innerHTML = '<div class="sync-result err">Could not reach the server</div>'; }
+  finally{ btn.disabled = false; btn.textContent = 'Find a chat ID'; }
+});
+
+/* ---------- WHATSAPP TEMPLATES (any owner) ---------- */
+// Mirrors DEFAULT_WA_TEMPLATES in the proxy's server.js — used for "Reset to
+// default" and as the fallback if the fetch hasn't resolved yet.
+const WA_DEFAULTS = {
+  bookingRequest: `Hi! I'd like to request a stay at RYST 109A Beach Villa.\n\n*Name:* {{name}}\n*Phone:* {{phone}}\n*Email:* {{email}}\n\n*Check-in:* {{checkin}}\n*Check-out:* {{checkout}} ({{nightsLabel}})\n*Guests:* {{guests}}\n*Occasion:* {{occasion}}\n\n*Notes:* {{message}}\n\n*Reference:* {{quoteNo}}`,
+  checkinRequest: `Hi {{guest}}! Ahead of your stay at {{property}} from {{checkin}} to {{checkout}}, please complete a quick digital check-in so we have everything ready for you:\n\n{{checkinLink}}\n\nTakes about 2 minutes — a government ID and your signature on our house rules. See you soon!`,
+  reminder: `Hi {{guest}}! This is {{property}} confirming your upcoming stay from {{checkin}} to {{checkout}}. We're looking forward to hosting you.\n\nManage your stay any time — check your invoice, order food, and pay your balance — here: {{portalLink}}\n\nLet us know your expected arrival time, or reply here if you need directions or have any questions before you arrive. See you soon!`,
+  feedbackRequest: `Hi {{guest}}! Thank you for staying at {{property}}. We'd love to hear how your stay was — it only takes a minute:\n\n{{feedbackLink}}\n\nThanks so much, and hope to host you again soon!`,
+  quoteReady: `Dear guest, your personalized digital quote is ready for your review.\n\n📄 View Your Quote: {{quoteLink}}\n\nPlease verify the stay details and total amount. Once confirmed, you may proceed with the payment through the quote page to secure your reservation.\n\nWe look forward to welcoming you to {{propertyName}}. ✨`,
+  bookingConfirmed: `🌴 Your {{propertyName}} Booking is Confirmed!\nDear {{guest}} 👋\n\nThank you for choosing {{propertyName}}. Your reservation is confirmed, and we look forward to welcoming you. 🏡✨\n\n*📅 Check-in: {{checkin}}\n📅 Check-out: {{checkout}}\n👥 Guests: {{guests}}*\n\n📲 Add to Apple Wallet:\n{{walletLink}}\n\nWe look forward to hosting you at {{propertyName}}. 🌊`
+};
+let waTemplatesDraft = Object.assign({}, WA_DEFAULTS);
+// Per-scenario Interakt-approved template name — mirrors
+// INTERAKT_TEMPLATES_DEFAULT in the proxy's server.js. Empty string means
+// "not set up yet", same fallback-to-Telegram-nudge meaning as there.
+const INTERAKT_TEMPLATES_DEFAULT = { checkinRequest: '', reminder: '', feedbackRequest: '', quoteReady: '', bookingConfirmed: '' };
+let interaktTemplatesDraft = Object.assign({}, INTERAKT_TEMPLATES_DEFAULT);
+// Mirrors WA_AUTOMATION_DEFAULT/mergeWaAutomation in the proxy's server.js —
+// per-scenario day count (before check-in, or after check-out) + a specific
+// send time in IST. bookingConfirmed has no entry — it's sent as soon as a
+// direct online booking is due, not scheduled against a stay date.
+const WA_AUTOMATION_DEFAULT = {
+  checkinRequest:  { daysBefore: 7, sendTime: '19:00' },
+  reminder:        { daysBefore: 2, sendTime: '18:30' },
+  feedbackRequest: { daysAfter: 1, sendTime: '10:30' },
+};
+function mergeWaAutomation(saved){
+  const out = {};
+  for(const key of Object.keys(WA_AUTOMATION_DEFAULT)) out[key] = Object.assign({}, WA_AUTOMATION_DEFAULT[key], (saved && saved[key]) || {});
+  return out;
+}
+let waAutomationDraft = mergeWaAutomation({});
+async function loadWaTemplates(){
+  try{
+    const res = await fetch(PROXY_URL+'/whatsapp-templates', { cache: 'no-store', headers:{'X-Token':proxyToken} });
+    const data = await res.json().catch(()=>({}));
+    if(data && data.templates) waTemplatesDraft = Object.assign({}, WA_DEFAULTS, data.templates);
+    if(data && data.automation) waAutomationDraft = mergeWaAutomation(data.automation);
+    if(data && data.interaktTemplates) interaktTemplatesDraft = Object.assign({}, INTERAKT_TEMPLATES_DEFAULT, data.interaktTemplates);
+  }catch(e){ /* keeps the defaults already in waTemplatesDraft/waAutomationDraft/interaktTemplatesDraft */ }
+  renderWaTemplates();
+  document.getElementById('waSave').disabled = false;
+}
+function renderWaTemplates(){
+  document.getElementById('waBookingRequest').value = waTemplatesDraft.bookingRequest || '';
+  document.getElementById('waCheckinRequest').value = waTemplatesDraft.checkinRequest || '';
+  document.getElementById('waInteraktCheckinRequest').value = interaktTemplatesDraft.checkinRequest || '';
+  document.getElementById('waReminder').value = waTemplatesDraft.reminder || '';
+  document.getElementById('waInteraktReminder').value = interaktTemplatesDraft.reminder || '';
+  document.getElementById('waFeedbackRequest').value = waTemplatesDraft.feedbackRequest || '';
+  document.getElementById('waInteraktFeedbackRequest').value = interaktTemplatesDraft.feedbackRequest || '';
+  document.getElementById('waQuoteReady').value = waTemplatesDraft.quoteReady || '';
+  document.getElementById('waInteraktQuoteReady').value = interaktTemplatesDraft.quoteReady || '';
+  document.getElementById('waBookingConfirmed').value = waTemplatesDraft.bookingConfirmed || '';
+  document.getElementById('waInteraktBookingConfirmed').value = interaktTemplatesDraft.bookingConfirmed || '';
+  document.getElementById('waCheckinRequestDays').value = waAutomationDraft.checkinRequest.daysBefore;
+  document.getElementById('waCheckinRequestTime').value = waAutomationDraft.checkinRequest.sendTime;
+  document.getElementById('waReminderDays').value = waAutomationDraft.reminder.daysBefore;
+  document.getElementById('waReminderTime').value = waAutomationDraft.reminder.sendTime;
+  document.getElementById('waFeedbackRequestDays').value = waAutomationDraft.feedbackRequest.daysAfter;
+  document.getElementById('waFeedbackRequestTime').value = waAutomationDraft.feedbackRequest.sendTime;
+}
+document.querySelectorAll('[data-reset]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const key = b.dataset.reset;
+    waTemplatesDraft[key] = WA_DEFAULTS[key];
+    if(WA_AUTOMATION_DEFAULT[key]) waAutomationDraft[key] = Object.assign({}, WA_AUTOMATION_DEFAULT[key]);
+    renderWaTemplates();
+  });
+});
+document.getElementById('waSave').addEventListener('click', async ()=>{
+  const btn = document.getElementById('waSave');
+  waTemplatesDraft = {
+    bookingRequest: document.getElementById('waBookingRequest').value,
+    checkinRequest: document.getElementById('waCheckinRequest').value,
+    reminder: document.getElementById('waReminder').value,
+    feedbackRequest: document.getElementById('waFeedbackRequest').value,
+    quoteReady: document.getElementById('waQuoteReady').value,
+    bookingConfirmed: document.getElementById('waBookingConfirmed').value
+  };
+  waAutomationDraft = {
+    checkinRequest: { daysBefore: parseInt(document.getElementById('waCheckinRequestDays').value, 10) || 0, sendTime: document.getElementById('waCheckinRequestTime').value || WA_AUTOMATION_DEFAULT.checkinRequest.sendTime },
+    reminder: { daysBefore: parseInt(document.getElementById('waReminderDays').value, 10) || 0, sendTime: document.getElementById('waReminderTime').value || WA_AUTOMATION_DEFAULT.reminder.sendTime },
+    feedbackRequest: { daysAfter: parseInt(document.getElementById('waFeedbackRequestDays').value, 10) || 0, sendTime: document.getElementById('waFeedbackRequestTime').value || WA_AUTOMATION_DEFAULT.feedbackRequest.sendTime },
+  };
+  interaktTemplatesDraft = {
+    checkinRequest: document.getElementById('waInteraktCheckinRequest').value.trim().toLowerCase(),
+    reminder: document.getElementById('waInteraktReminder').value.trim().toLowerCase(),
+    feedbackRequest: document.getElementById('waInteraktFeedbackRequest').value.trim().toLowerCase(),
+    quoteReady: document.getElementById('waInteraktQuoteReady').value.trim().toLowerCase(),
+    bookingConfirmed: document.getElementById('waInteraktBookingConfirmed').value.trim().toLowerCase(),
+  };
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try{
+    const res = await fetch(PROXY_URL+'/whatsapp-templates', {
+      method:'PUT', headers:{'X-Token':proxyToken,'Content-Type':'application/json'},
+      body: JSON.stringify({ templates: waTemplatesDraft, automation: waAutomationDraft, interaktTemplates: interaktTemplatesDraft })
+    });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ toast(data.error || 'Save failed'); return; }
+    if(data.templates) waTemplatesDraft = Object.assign({}, WA_DEFAULTS, data.templates);
+    if(data.automation) waAutomationDraft = mergeWaAutomation(data.automation);
+    if(data.interaktTemplates) interaktTemplatesDraft = Object.assign({}, INTERAKT_TEMPLATES_DEFAULT, data.interaktTemplates);
+    renderWaTemplates();
+    toast('WhatsApp templates saved');
+  }catch(e){ toast('Could not reach the server'); }
+  finally{ btn.disabled = false; btn.textContent = 'Save WhatsApp templates'; }
+});
+
+/* ---------- USER ACCESS (admin only) ---------- */
+// Mirrors MODULES / defaultModulesFor in the proxy's server.js.
+const MODULE_DEFS = [
+  { id:'bookings',   label:'Bookings' },
+  { id:'petty-cash', label:'Petty Cash' },
+  { id:'inventory',  label:'Inventory' },
+  { id:'checklist',  label:'Checklist' },
+  { id:'feedback',   label:'Guest Feedback' },
+  { id:'reports',    label:'Reports' },
+  { id:'settings',   label:'Settings' },
+  { id:'restaurant', label:'Restaurant' },
+  { id:'guestRegister', label:'Guest Register' },
+];
+const LEGACY_CARETAKER_MODULES = ['petty-cash','inventory','checklist','guestRegister'];
+const isOwnerRole = r => r !== 'caretaker' && r !== 'coordinator';
+let usersDraft = [];
+async function loadUserAccess(){
+  const saveBtn = document.getElementById('userSave');
+  const errEl = document.getElementById('userErr');
+  errEl.textContent = '';
+  try{
+    const res = await fetch(PROXY_URL+'/users', { headers:{'X-Token':proxyToken} });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ errEl.textContent = data.error || 'Could not load user access'; return; }
+    usersDraft = Array.isArray(data.users) ? data.users.map(u=>({...u})) : [];
+    renderUserRows();
+    saveBtn.disabled = false;
+  }catch(e){ errEl.textContent = 'Could not reach the server'; }
+}
+// A row's effective modules — falls back to the legacy caretaker default
+// (matches what the server assumes for an account saved before per-user
+// module access existed) rather than showing every box unchecked for an
+// existing caretaker who actually still has full petty-cash/inventory/
+// checklist access.
+function effectiveModules(u){
+  if(Array.isArray(u.modules)) return u.modules;
+  return u.role==='caretaker' ? LEGACY_CARETAKER_MODULES.slice() : [];
+}
+function renderUserRows(){
+  const wrap = document.getElementById('userRows');
+  wrap.innerHTML = usersDraft.map((u,i)=>{
+    const ownerRow = isOwnerRole(u.role);
+    const mods = effectiveModules(u);
+    const modulesHtml = ownerRow ? '' : `
+      <div class="user-modules">
+        ${MODULE_DEFS.map(m=>`<label class="mod-chk"><input type="checkbox" data-i="${i}" data-mod="${m.id}" ${mods.includes(m.id)?'checked':''}> ${esc(m.label)}</label>`).join('')}
+      </div>`;
+    const tgDisabled = Array.isArray(u.telegramDisabledTypes) ? u.telegramDisabledTypes : [];
+    const tgHtml = `
+      <div class="user-tg">
+        <div class="user-tg-id"><span>Telegram chat ID</span><input class="t" data-i="${i}" data-k="telegramChatId" placeholder="optional — leave blank for no Telegram alerts" value="${esc(u.telegramChatId||'')}"></div>
+        <div class="user-tg-alerts">
+          ${TELEGRAM_ALERT_TYPES.map(t=>`<label class="mod-chk"><input type="checkbox" data-i="${i}" data-tg="${t.key}" ${!tgDisabled.includes(t.key)?'checked':''}> ${esc(t.label)}</label>`).join('')}
+        </div>
+      </div>`;
+    return `
+    <div class="user-card">
+      <div class="user-row">
+        <input class="t" data-i="${i}" data-k="email" placeholder="name@gmail.com" value="${esc(u.email)}">
+        <select data-i="${i}" data-k="role">
+          <option value="owner"${ownerRow?' selected':''}>Owner</option>
+          <option value="coordinator"${u.role==='coordinator'?' selected':''}>Coordinator</option>
+          <option value="caretaker"${u.role==='caretaker'?' selected':''}>Caretaker</option>
+        </select>
+        <label class="admin-chk"><input type="checkbox" data-i="${i}" data-k="admin" ${u.admin?'checked':''} ${ownerRow?'':'disabled'}> Admin</label>
+        <button type="button" class="rc-del" data-del="${i}" title="Remove">×</button>
+      </div>${modulesHtml}${tgHtml}
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('input[data-k="email"]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ usersDraft[+e.target.dataset.i].email = e.target.value; });
+  });
+  wrap.querySelectorAll('select[data-k="role"]').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      const i = +e.target.dataset.i;
+      const u = usersDraft[i];
+      u.role = e.target.value;
+      if(!isOwnerRole(u.role)) u.admin = false;
+      // Reset modules to the new role's baseline on every switch (not just
+      // when unset) — a caretaker gets its familiar default set, a
+      // coordinator starts fully custom (empty). Otherwise a row that
+      // started as a caretaker (which is pre-populated with that default so
+      // effectiveModules doesn't need to guess) would carry those same
+      // checked boxes straight through into "Coordinator", contradicting
+      // "fully custom, no default access".
+      u.modules = u.role==='caretaker' ? LEGACY_CARETAKER_MODULES.slice() : [];
+      renderUserRows();
+    });
+  });
+  wrap.querySelectorAll('input[data-k="admin"]').forEach(chk=>{
+    chk.addEventListener('change', e=>{ usersDraft[+e.target.dataset.i].admin = e.target.checked; });
+  });
+  wrap.querySelectorAll('.user-modules input[data-mod]').forEach(chk=>{
+    chk.addEventListener('change', e=>{
+      const i = +e.target.dataset.i, mod = e.target.dataset.mod;
+      const u = usersDraft[i];
+      const mods = effectiveModules(u).slice();
+      const idx = mods.indexOf(mod);
+      if(e.target.checked){ if(idx<0) mods.push(mod); }
+      else if(idx>=0) mods.splice(idx,1);
+      u.modules = mods;
+    });
+  });
+  wrap.querySelectorAll('input[data-k="telegramChatId"]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ usersDraft[+e.target.dataset.i].telegramChatId = e.target.value; });
+  });
+  wrap.querySelectorAll('.user-tg-alerts input[data-tg]').forEach(chk=>{
+    chk.addEventListener('change', e=>{
+      const i = +e.target.dataset.i, key = e.target.dataset.tg;
+      const u = usersDraft[i];
+      const list = (Array.isArray(u.telegramDisabledTypes) ? u.telegramDisabledTypes : []).slice();
+      const idx = list.indexOf(key);
+      if(e.target.checked){ if(idx>=0) list.splice(idx,1); }
+      else if(idx<0) list.push(key);
+      u.telegramDisabledTypes = list;
+    });
+  });
+  wrap.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', e=>{
+    usersDraft.splice(+e.target.dataset.del, 1); renderUserRows();
+  }));
+}
+document.getElementById('userAdd').addEventListener('click', ()=>{
+  usersDraft.push({ email:'', role:'caretaker', admin:false, modules:LEGACY_CARETAKER_MODULES.slice() });
+  renderUserRows();
+});
+document.getElementById('userSave').addEventListener('click', async ()=>{
+  const btn = document.getElementById('userSave');
+  const errEl = document.getElementById('userErr');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try{
+    // Resolve modules before sending — a row whose modules were never
+    // touched this session (untouched legacy caretaker) still has
+    // `u.modules === undefined`, and the server treats a missing array as
+    // "no modules" verbatim, which would silently strip that caretaker's
+    // implied petty-cash/inventory/checklist access on an unrelated save.
+    const payloadUsers = usersDraft.map(u => ({
+      ...u,
+      modules: isOwnerRole(u.role) ? (u.modules||[]) : effectiveModules(u),
+      telegramChatId: (u.telegramChatId||'').trim(),
+      telegramDisabledTypes: Array.isArray(u.telegramDisabledTypes) ? u.telegramDisabledTypes : [],
+    }));
+    const res = await fetch(PROXY_URL+'/users', {
+      method:'PUT', headers:{'X-Token':proxyToken,'Content-Type':'application/json'},
+      body: JSON.stringify({ version:1, users: payloadUsers })
+    });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ errEl.textContent = data.error || 'Save failed'; return; }
+    usersDraft = Array.isArray(data.users) ? data.users.map(u=>({...u})) : usersDraft;
+    renderUserRows();
+    toast('User access saved');
+  }catch(e){ errEl.textContent = 'Could not reach the server'; }
+  finally{ btn.disabled = false; btn.textContent = 'Save user access'; }
+});
+
+/* ---------- RATE TABLE ---------- */
+function renderStayRates(){
+  const body=document.getElementById("stayRcBody"); body.innerHTML="";
+  stayRcDraft.forEach((r,i)=>{
+    const row=document.createElement("tr");
+    row.innerHTML=`
+      <td><input data-i="${i}" data-k="desc" placeholder="Charge description" value="${esc(r.desc)}" style="min-width:200px"></td>
+      <td><input class="r" data-i="${i}" data-k="rate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0" value="${esc(r.rate)}"></td>
+      <td><button class="rc-del" data-del="${i}" title="Remove">×</button></td>`;
+    body.appendChild(row);
+  });
+  body.querySelectorAll("input[data-i]").forEach(inp=>{
+    inp.addEventListener("input",e=>{ const i=+e.target.dataset.i,k=e.target.dataset.k; stayRcDraft[i][k]=e.target.value; });
+  });
+  body.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",e=>{
+    stayRcDraft.splice(+e.target.dataset.del,1); renderStayRates();
+  }));
+}
+document.getElementById("stayRcAdd").addEventListener("click",()=>{ stayRcDraft.push({desc:"",rate:""}); renderStayRates(); });
+
+/* ---------- HOLIDAY DATES ---------- */
+function renderStayHolidays(){
+  const body=document.getElementById("stayHolBody"); body.innerHTML="";
+  stayHolDraft.forEach((h,i)=>{
+    const row=document.createElement("tr");
+    row.innerHTML=`
+      <td><input data-i="${i}" data-k="date" type="date" value="${esc(h.date)}"></td>
+      <td><input data-i="${i}" data-k="label" placeholder="e.g. Diwali" value="${esc(h.label)}"></td>
+      <td><button class="rc-del" data-del="${i}" title="Remove">×</button></td>`;
+    body.appendChild(row);
+  });
+  body.querySelectorAll("input[data-i]").forEach(inp=>{
+    inp.addEventListener("input",e=>{ const i=+e.target.dataset.i,k=e.target.dataset.k; stayHolDraft[i][k]=e.target.value; });
+  });
+  body.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",e=>{
+    stayHolDraft.splice(+e.target.dataset.del,1); renderStayHolidays();
+  }));
+}
+document.getElementById("stayHolAdd").addEventListener("click",()=>{ stayHolDraft.push({date:"",label:""}); renderStayHolidays(); });
+
+/* ---------- COUPON CODES ---------- */
+function renderStayCoupons(){
+  const body=document.getElementById("stayCouponBody"); body.innerHTML="";
+  stayCouponDraft.forEach((c,i)=>{
+    const row=document.createElement("tr");
+    row.innerHTML=`
+      <td><input data-i="${i}" data-k="code" placeholder="e.g. WELCOME10" value="${esc(c.code)}" style="text-transform:uppercase"></td>
+      <td><input class="r" data-i="${i}" data-k="discountPercent" type="number" min="0" max="100" step="1" placeholder="0" value="${esc(c.discountPercent)}"></td>
+      <td><button class="rc-del" data-del="${i}" title="Remove">×</button></td>`;
+    body.appendChild(row);
+  });
+  body.querySelectorAll("input[data-i]").forEach(inp=>{
+    inp.addEventListener("input",e=>{ const i=+e.target.dataset.i,k=e.target.dataset.k; stayCouponDraft[i][k]=e.target.value; });
+  });
+  body.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",e=>{
+    stayCouponDraft.splice(+e.target.dataset.del,1); renderStayCoupons();
+  }));
+}
+document.getElementById("stayCouponAdd").addEventListener("click",()=>{ stayCouponDraft.push({code:"",discountPercent:""}); renderStayCoupons(); });
+
+/* ---------- SAVE ---------- */
+async function saveStay(){
+  const btn=document.getElementById("staySave");
+  const prop = collectPropertyProfile();
+  if(!prop.name){ toast("Property name is required"); document.getElementById('prop_name').focus(); return; }
+  stay.property = prop;
+  btn.disabled=true; btn.textContent="Saving…";
+  stay.rates = stayRcDraft
+    .filter(r=>(r.desc||"").trim()!=="")
+    .map(r=>({desc:r.desc.trim(), rate:(r.rate===""||r.rate==null)?"":parseFloat(r.rate)}));
+  if(!stay.rates.length) stay.rates=STAY_DEFAULTS.rates.map(r=>({...r}));
+  stay.company=document.getElementById("stayCompany").value;
+  stay.pan=(document.getElementById("stayPan").value||"").trim();
+  stay.invPrefix=(document.getElementById("stayInvPrefix").value||"").trim()||STAY_DEFAULTS.invPrefix;
+  stay.qtPrefix=(document.getElementById("stayQtPrefix").value||"").trim()||STAY_DEFAULTS.qtPrefix;
+  const mgVal=document.getElementById("stayMaxGuests").value;
+  stay.maxGuests = mgVal!=="" ? parseInt(mgVal)||0 : STAY_DEFAULTS.maxGuests;
+  const gcVal=document.getElementById("stayGuestCapacity").value;
+  stay.guestCapacity = gcVal!=="" ? parseInt(gcVal)||0 : STAY_DEFAULTS.guestCapacity;
+  if(stay.maxGuests > 0 && stay.guestCapacity > 0 && stay.maxGuests > stay.guestCapacity){
+    toast("⚠️ Max included guests ("+stay.maxGuests+") exceeds guest capacity ("+stay.guestCapacity+") — additional charge line can never appear");
+  }
+  const apVal=document.getElementById("stayAdvancePercent").value;
+  stay.advancePercent = apVal!=="" ? Math.min(100, Math.max(1, parseInt(apVal)||STAY_DEFAULTS.advancePercent)) : STAY_DEFAULTS.advancePercent;
+  const whVal=document.getElementById("stayWeekendHike").value;
+  stay.weekendHikePercent = whVal!=="" ? Math.max(0, parseFloat(whVal)||0) : 0;
+  const hhVal=document.getElementById("stayHolidayHike").value;
+  stay.holidayHikePercent = hhVal!=="" ? Math.max(0, parseFloat(hhVal)||0) : 0;
+  stay.holidays = stayHolDraft
+    .filter(h=>(h.date||"").trim()!=="")
+    .map(h=>({date:h.date.trim(), label:(h.label||"").trim()}));
+  const fpVal=document.getElementById("stayFullPayDiscount").value;
+  stay.fullPaymentDiscountPercent = fpVal!=="" ? Math.min(100, Math.max(0, parseFloat(fpVal)||0)) : 0;
+  const mdVal=document.getElementById("stayMaxDiscount").value;
+  stay.maxDiscountPercent = mdVal!=="" ? Math.min(100, Math.max(0, parseFloat(mdVal)||0)) : STAY_DEFAULTS.maxDiscountPercent;
+  stay.coupons = stayCouponDraft
+    .filter(c=>(c.code||"").trim()!=="")
+    .map(c=>({code:c.code.trim().toUpperCase(), discountPercent:(c.discountPercent===""||c.discountPercent==null)?0:Math.min(100,Math.max(0,parseFloat(c.discountPercent)||0))}));
+  stay.bank=document.getElementById("stayBank").value;
+  stay.wifiNetwork=document.getElementById("stayWifiNetwork").value.trim();
+  stay.wifiVoucher=document.getElementById("stayWifiVoucher").value.trim();
+  stay.walletAppleEnabled=document.getElementById("stayWalletApple").checked;
+  stay.walletGoogleEnabled=document.getElementById("stayWalletGoogle").checked;
+  stay.declaration=document.getElementById("stayDecl").value;
+  stay.terms=(document.getElementById("stayTerms").value||"").split("\n").map(t=>t.trim()).filter(Boolean);
+  if(!stay.terms.length) stay.terms=STAY_DEFAULTS.terms.slice();
+  stay.icalFeeds=icalFeedsDraft
+    .filter(f=>(f.url||"").trim()!=="")
+    .map(f=>({id:f.id, label:(f.label||"").trim()||f.id, url:f.url.trim()}));
+  localStorage.setItem(K_STAY,JSON.stringify(stay));
+  if(proxyToken){
+    try{
+      const res=await fetch(PROXY_URL+'/stay-settings',{method:'PUT',
+        headers:{'X-Token':proxyToken,'Content-Type':'application/json'},
+        body:JSON.stringify(Object.assign({version:1},stay))});
+      if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+      if(!res.ok) toast("Saved locally — cloud sync failed ("+res.status+")");
+      else {
+        toast("Stay settings saved");
+        // Pages brand themselves from this cache first — update it now so the
+        // new profile shows everywhere without waiting for the next refresh.
+        try { localStorage.setItem(window.PROPERTY_CACHE_KEY || 'ryst_property', JSON.stringify(Object.assign({}, window.PROPERTY_DEFAULTS, prop))); } catch(e) {}
+      }
+    }catch(e){ toast("Saved locally — cloud unreachable"); }
+  } else { toast("Saved locally"); }
+  btn.disabled=false; btn.textContent="Save stay settings";
+  stayRcDraft=stay.rates.map(r=>({...r}));
+  renderStayRates();
+  stayHolDraft=stay.holidays.map(h=>({...h}));
+  renderStayHolidays();
+  stayCouponDraft=stay.coupons.map(c=>({...c}));
+  renderStayCoupons();
+}
+document.getElementById("staySave").addEventListener("click",saveStay);
+
+/* ---------- TOAST ---------- */
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2400);
+}
+</script>
+</body>
+</html>

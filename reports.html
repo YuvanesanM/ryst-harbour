@@ -1,0 +1,1462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<title data-title="Reports · {name}">Reports · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     1. ROOT TOKENS — same palette as bookings.html/petty-cash.html/
+     checklist.html/login.html (verified identical), plus a small
+     "chart tokens" block added for this page. Chart colors are
+     validated with the dataviz skill's OKLCH/CVD checker, not
+     eyeballed — see the comments beside each token below for what
+     was checked and why alternatives (e.g. --danger for expenses)
+     were rejected.
+  ============================================================ */
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097;
+    --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6;
+    --qt:#c0922f; --qt-soft:#fbf0d8;
+    --ota-airbnb:#e8484f; --ota-booking:#003580; --ota-agoda:#d97706; --ota-vrbo:#1a9e8f;
+
+    /* Chart tokens — validated via dataviz's validate_palette.js.
+       Revenue vs Expenses: #3d9b69/#9c4136 passes every check (CVD ΔE
+       11.9). --danger (#c0584b) was tried first and FAILS red-on-green
+       CVD separation — the classic colorblind failure — so expenses use
+       #9c4136 instead (already in this file as the old .bar gradient
+       end, not a new brand color). */
+    --c-rev:#3d9b69; --c-exp:#9c4136;
+    /* Online vs Manual: #3d9b69/#c0922f — WARNs on CVD (6.9, "legal only
+       with secondary encoding") and on contrast (#c0922f 2.77:1). Both
+       uses below carry direct segment labels + a data-table fallback,
+       which is the required mitigation — never used as text-only color. */
+    --c-online:#3d9b69; --c-manual:#c0922f;
+    /* 4-step single-hue ordinal ramp (payment mix / occupancy heatmap).
+       Passes --ordinal validation (monotone L, gaps >=0.06, light end
+       clears 2:1 contrast). Do NOT reuse --accent-soft here — it fails
+       the ordinal light-end floor at 1.10:1. */
+    --ramp-1:#6ebd8f; --ramp-2:#459470; --ramp-3:#2d7752; --ramp-4:#1a4d33;
+    /* OTA nights chart — same 4 hues pass categorical CVD cleanly.
+       --ota-booking (#003580) is too dark/low-lightness for a *chart
+       fill* (fails the lightness band) — kept for calendar-pill text
+       elsewhere, but charts use this lighter navy instead. */
+    --ota-booking-chart:#3a6fb0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  button,input,select{font-family:inherit}
+  button{cursor:pointer}
+  a{color:var(--accent-d)}
+  b,strong{font-weight:700}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:18px 16px 60px}
+
+  /* ── Top bar ── */
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 18px}
+  header.top img{height:38px;object-fit:contain}
+  header.top .ttl{font-weight:700;font-size:18px;letter-spacing:.2px}
+  header.top .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px}
+  header.top .spacer{flex:1}
+  .tbtn{background:var(--panel);border:1.5px solid var(--line);color:var(--muted);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;transition:.15s;position:relative}
+  .tbtn:hover{border-color:var(--accent);color:var(--accent-d)}
+  .tbtn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .tbtn.primary:hover{background:var(--accent-d);color:#fff}
+  .dd{position:relative;display:inline-block}
+  .dd-menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(30,40,30,.14);min-width:200px;z-index:40;display:none;overflow:hidden}
+  .dd.open .dd-menu{display:block}
+  .dd-item{display:block;width:100%;text-align:left;padding:10px 14px;background:none;border:none;font-size:12.5px;color:var(--ink);font-weight:600}
+  .dd-item:hover{background:var(--panel2)}
+  .dd-item small{display:block;font-weight:500;color:var(--muted2);font-size:10.5px;margin-top:1px}
+
+  /* ── Filter bar ── */
+  #filterBar{position:sticky;top:8px;z-index:30;display:flex;flex-direction:column;gap:10px;padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:18px;box-shadow:0 6px 18px rgba(40,50,40,.05)}
+  .fb-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .seg{display:flex;background:var(--panel2);border-radius:9px;padding:3px;gap:2px}
+  .seg button{background:none;border:none;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+  .seg button.on{background:var(--panel);color:var(--accent-d);box-shadow:0 1px 4px rgba(30,40,30,.12)}
+  .period-nav{display:flex;gap:6px}
+  .period-nav button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:14px;display:flex;align-items:center;justify-content:center}
+  .period-nav button:hover{border-color:var(--accent);color:var(--accent-d)}
+  .period-nav button:disabled{opacity:.35;cursor:not-allowed}
+  .period-label{font-size:14.5px;font-weight:700;min-width:130px}
+  .fb-row .spacer{flex:1}
+  .fb-row input[type=date]{padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:12.5px;color:var(--ink)}
+  .fb-row select{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:12.5px;color:var(--ink)}
+  .fchip{font-size:11px;font-weight:600;color:var(--muted2)}
+  .fresetbtn{background:none;border:none;color:var(--muted2);font-size:12px;text-decoration:underline;font-weight:600}
+  .facet-note{display:flex;align-items:center;gap:8px;background:var(--warn-soft);color:var(--warn);border-radius:9px;padding:8px 12px;font-size:11.5px;font-weight:600;line-height:1.4}
+
+  /* ── KPI cards ── */
+  .kpi-band{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 15px;box-shadow:0 6px 18px rgba(40,50,40,.04);position:relative;overflow:hidden}
+  .card .lbl{font-size:11px;font-weight:600;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+  .card .val{font-size:24px;font-weight:700;margin-top:7px;letter-spacing:-.5px}
+  .card .sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+  .card .delta{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:700;margin-top:6px;padding:2px 8px;border-radius:20px}
+  .card .delta.good{background:var(--accent-soft);color:var(--accent-d)}
+  .card .delta.bad{background:var(--danger-soft);color:var(--danger)}
+  .card .delta.flat{background:var(--panel2);color:var(--muted2)}
+  .card.hero{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-d) 100%);border:none;color:#fff}
+  .card.hero .lbl,.card.hero .sub{color:#dff0e6}
+  .card.hero .delta.good{background:rgba(255,255,255,.22);color:#fff}
+  .card.hero .delta.bad{background:rgba(255,255,255,.22);color:#fff}
+  .card.hero .spark{stroke:#fff}
+  .card.unfiltered{border-top:2.5px solid var(--warn)}
+  .card .spark{display:block;margin-top:8px}
+  @media(max-width:960px){ .kpi-band{grid-template-columns:1fr 1fr} }
+  @media(max-width:420px){ .kpi-band{grid-template-columns:1fr} }
+
+  /* ── Panels / layout ── */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 18px rgba(40,50,40,.04);padding:16px 18px;margin-bottom:16px}
+  .panel h2{font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted2);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .panel .phint{font-size:11.5px;color:var(--muted2);margin-bottom:12px}
+  .panel h2 .spacer{flex:1}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:960px){ .grid-2{grid-template-columns:1fr} }
+  .mini-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  @media(max-width:680px){ .mini-row{grid-template-columns:1fr} }
+  .mini-tile{background:var(--panel2);border-radius:10px;padding:10px 12px}
+  .mini-tile .l{font-size:10.5px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+  .mini-tile .v{font-size:16px;font-weight:700;margin-top:3px}
+  .mini-tile .v small{font-weight:500;font-size:11px;color:var(--muted)}
+
+  /* ── Chart chrome ── */
+  .chart-host{width:100%}
+  svg.chart{display:block;overflow:visible}
+  svg.chart .grid-line{stroke:var(--line);stroke-width:1}
+  svg.chart .axis-lbl{font-size:10px;fill:var(--muted2);font-family:"Outfit",sans-serif}
+  svg.chart .val-lbl{font-size:10.5px;fill:var(--ink);font-weight:700;font-family:"Outfit",sans-serif}
+  svg.chart .mark{cursor:pointer}
+  svg.chart .mark:hover,svg.chart .mark:focus{filter:brightness(1.08)}
+  svg.chart .mark:focus{outline:none}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:11.5px;color:var(--muted)}
+  .legend .lk{display:inline-flex;align-items:center;gap:5px}
+  .legend .lk .sw{width:9px;height:9px;border-radius:3px;display:inline-block}
+  #chartTip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;padding:8px 11px;border-radius:9px;font-size:11.5px;line-height:1.5;z-index:80;opacity:0;transition:opacity .1s;box-shadow:0 10px 26px rgba(0,0,0,.22);max-width:220px}
+  #chartTip.show{opacity:1}
+  #chartTip .tt-title{font-weight:700;margin-bottom:2px}
+  #chartTip .tt-row{display:flex;align-items:center;gap:6px}
+  #chartTip .tt-sw{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+  /* ── Occupancy heatmap ── */
+  .hm-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .hm-dow{font-size:9.5px;color:var(--muted2);text-align:center;font-weight:700;padding-bottom:2px}
+  .hm-cell{aspect-ratio:1;border-radius:5px;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9.5px;color:var(--muted2);position:relative;cursor:pointer}
+  .hm-cell.out{opacity:.3;pointer-events:none}
+  .hm-cell.today{box-shadow:inset 0 0 0 2px var(--accent)}
+  .hm-cell.tentative{background:var(--qt-soft);border:1.5px dashed var(--qt);color:var(--qt)}
+  .hm-cell.blocked{background:var(--panel2);color:var(--muted2);background-image:repeating-linear-gradient(45deg,rgba(107,114,128,.18) 0 3px,transparent 3px 7px)}
+  .hm-cell:hover,.hm-cell:focus{outline:2px solid var(--accent-d);outline-offset:1px}
+  .hm-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:10.5px;color:var(--muted)}
+  .hm-legend .lk{display:inline-flex;align-items:center;gap:5px}
+  .hm-legend .sw{width:11px;height:11px;border-radius:3px;display:inline-block;border:1px solid var(--line)}
+  .hm-months{display:grid;grid-template-columns:1fr;gap:16px}
+  .hm-months.multi{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .hm-mon-lbl{font-size:11.5px;font-weight:700;margin-bottom:6px;color:var(--ink)}
+
+  /* ── Category bars (existing pattern) ── */
+  .bars{display:flex;flex-direction:column;gap:9px}
+  .bar{display:grid;grid-template-columns:150px 1fr auto;align-items:center;gap:10px;font-size:12.5px}
+  .bar .name{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar .track{display:block;height:9px;background:var(--panel2);border-radius:6px;overflow:hidden}
+  .bar .fill{display:block;height:100%;background:var(--c-exp);border-radius:6px}
+  .bar .bamt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* ── Trend table ── */
+  table.trend{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.trend th{text-align:right;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted2);padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.trend th:first-child{text-align:left}
+  table.trend td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--panel2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.trend td:first-child{text-align:left;font-weight:600}
+  table.trend tr:last-child td{border-bottom:none}
+  table.trend tr.current td{background:var(--accent-soft)}
+  table.trend td.rev{color:var(--c-rev)}
+  table.trend td.exp{color:var(--c-exp)}
+  table.trend td.net.pos{color:var(--accent-d);font-weight:700}
+  table.trend td.net.neg{color:var(--danger);font-weight:700}
+
+  /* ── Insights ── */
+  .ins-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+  .ins-card{display:flex;gap:10px;padding:12px 13px;border-radius:11px;background:var(--panel2);font-size:12.5px;line-height:1.5}
+  .ins-card.good{background:var(--accent-soft)}
+  .ins-card.warn{background:var(--warn-soft)}
+  .ins-card .ic{font-size:15px;flex-shrink:0}
+
+  /* ── More detail disclosure ── */
+  details.more{margin-bottom:0}
+  details.more summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:12px 4px;font-size:13px;font-weight:700;color:var(--accent-d)}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more summary .car{transition:transform .15s}
+  details.more[open] summary .car{transform:rotate(90deg)}
+
+  .empty{color:var(--muted2);font-size:13px;text-align:center;padding:26px 20px}
+  .foot-notes{font-size:11px;color:var(--muted2);line-height:1.7;padding:14px 4px 0}
+
+  #loader{position:fixed;inset:0;background:rgba(243,244,241,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:90;color:var(--muted)}
+  #loader.hide{display:none}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media(max-width:960px){
+    .kpi-band{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:680px){
+    .wrap{padding:14px 12px 60px}
+    .bar{grid-template-columns:98px 1fr auto}
+    #filterBar{position:static}
+  }
+
+  /* ── Print / PDF export — window.print(), no library. Extends the
+     hide-chrome / white-background / no-shadow pattern already used in
+     petty-cash.html's @media print. ── */
+  @media print{
+    header.top .tbtn, #filterBar, #chartTip, #loader{ display:none !important }
+    body{ background:#fff }
+    .panel,.card{ box-shadow:none; break-inside:avoid; border-color:#ddd }
+    .card.hero{ background:#fff !important; color:var(--ink) !important; border:1.5px solid var(--line) !important }
+    .card.hero .lbl,.card.hero .sub{ color:var(--muted2) !important }
+    .card.hero .delta.good,.card.hero .delta.bad{ background:var(--accent-soft) !important; color:var(--accent-d) !important }
+    details.more{ display:block !important }
+    details.more > *{ display:revert }
+    details.more summary{ display:none }
+    .grid-2{ grid-template-columns:1fr 1fr }
+    .print-title{ display:block !important; font-size:16px;font-weight:700;margin-bottom:10px }
+    @page{ margin:12mm; size:A4 landscape }
+  }
+  .print-title{ display:none }
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#0e2420">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img id="logo" alt="RYST" src="/assets/stay-logo.webp" />
+    <div class="ttl">Reports<small><span data-prop="name">RYST 109A</span> · Executive dashboard</small></div>
+    <div class="spacer"></div>
+    <button class="tbtn" onclick="window.location.href='login.html'">⌂ Home</button>
+    <div class="dd" id="exportDd">
+      <button class="tbtn" id="exportBtn">⤓ Export CSV ▾</button>
+      <div class="dd-menu">
+        <button class="dd-item" id="expSummary">Summary by period<small>Revenue, expenses, occupancy per bucket</small></button>
+        <button class="dd-item" id="expBookings">Bookings (filtered)<small>One row per quote/invoice in view</small></button>
+        <button class="dd-item" id="expExpenses">Expenses<small>Petty cash entries in range</small></button>
+      </div>
+    </div>
+    <button class="tbtn" id="printBtn">🖶 Print / PDF</button>
+  </header>
+
+  <div class="print-title" id="printTitle"></div>
+
+  <div id="filterBar">
+    <div class="fb-row">
+      <div class="seg" id="fGran">
+        <button data-g="month">Month</button>
+        <button data-g="quarter">Quarter</button>
+        <button data-g="year">Year</button>
+        <button data-g="custom">Custom</button>
+      </div>
+      <div class="period-nav" id="periodNav">
+        <button id="prevBtn" aria-label="Previous period">‹</button>
+        <button id="todayBtn">Today</button>
+        <button id="nextBtn" aria-label="Next period">›</button>
+      </div>
+      <div class="period-label" id="periodLabel">—</div>
+      <div id="customRange" style="display:none;gap:6px;align-items:center">
+        <input type="date" id="fFrom"> <span style="color:var(--muted2);font-size:12px">to</span> <input type="date" id="fTo">
+      </div>
+      <div class="spacer"></div>
+      <span class="fchip" id="genStamp"></span>
+    </div>
+    <div class="fb-row">
+      <select id="fChannel">
+        <option value="all">All sources</option>
+        <option value="online">Online (Website)</option>
+        <option value="manual">Manually entered</option>
+      </select>
+      <select id="fStatus">
+        <option value="all">All bookings</option>
+        <option value="invoice">Invoices only</option>
+        <option value="quote">Quotes only</option>
+      </select>
+      <select id="fPay">
+        <option value="all">Any payment status</option>
+        <option value="unpaid">Unpaid</option>
+        <option value="partial">Partial</option>
+        <option value="paid">Paid in full</option>
+      </select>
+      <button class="fresetbtn" id="fReset">✕ Reset filters</button>
+      <div class="spacer"></div>
+    </div>
+    <div class="facet-note" id="facetNote" style="display:none">
+      ⚠ Booking filters are active — Expenses, Net Profit and Margin below are <b>not</b> filtered by them (petty-cash entries aren't tied to a specific booking).
+    </div>
+  </div>
+
+  <div class="kpi-band" id="kpiFinance"></div>
+  <div class="kpi-band" id="kpiBookings"></div>
+  <div class="kpi-band" id="kpiSecondary"></div>
+  <div class="kpi-band" id="kpiExtra" style="grid-template-columns:repeat(3,1fr)"></div>
+
+  <div class="panel">
+    <h2>Revenue trend</h2>
+    <p class="phint" id="trendHint">Stays (by check-in date) + food sales</p>
+    <div class="chart-host" id="chTrend" data-desc="Revenue over time"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h2>Revenue vs Expenses</h2>
+      <p class="phint">Per period, same buckets as the trend above</p>
+      <div class="chart-host" id="chPnl" data-desc="Revenue vs expenses by period"></div>
+      <div class="legend" id="lgPnl"></div>
+    </div>
+    <div class="panel">
+      <h2>Monthly comparison <span class="spacer"></span><span class="fchip">last 12 months</span></h2>
+      <p class="phint">Net profit, independent of the period filter above</p>
+      <div class="chart-host" id="chYoy" data-desc="Monthly net profit, last 12 months"></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h2>Booking source</h2>
+      <p class="phint">Real revenue split — see footnote on OTA channels</p>
+      <div class="chart-host" id="chSource" data-desc="Revenue by booking source"></div>
+    </div>
+    <div class="panel">
+      <h2>Payment status</h2>
+      <p class="phint">Across bookings in the selected period</p>
+      <div class="chart-host" id="chPay" data-desc="Bookings by payment status"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Occupancy</h2>
+    <p class="phint" id="occHint"></p>
+    <div class="grid-2">
+      <div>
+        <div class="hm-months" id="hmMonths"></div>
+        <div class="hm-legend" id="hmLegend"></div>
+      </div>
+      <div>
+        <div class="mini-row" id="occTiles" style="grid-template-columns:1fr 1fr;margin-top:0"></div>
+        <h2 style="margin-top:16px">OTA nights held<span class="spacer"></span><span class="fchip">nights only — no revenue tracked</span></h2>
+        <div class="chart-host" id="chOta" data-desc="Nights blocked by OTA platform"></div>
+      </div>
+    </div>
+  </div>
+
+  <details class="more" id="moreDetails">
+    <summary><span class="car">▶</span> More detail — pricing, expenses, monthly table</summary>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h2>ADR trend</h2>
+        <p class="phint">Average daily rate, same buckets as the revenue trend</p>
+        <div class="chart-host" id="chAdr" data-desc="Average daily rate over time"></div>
+      </div>
+      <div class="panel">
+        <h2>Weekend vs Weekday pricing</h2>
+        <p class="phint">Friday, Saturday &amp; Sunday nights counted as weekend</p>
+        <div class="chart-host" id="chWkd" data-desc="Weekend vs weekday ADR"></div>
+        <div class="mini-row" id="pricingTiles"></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h2>Expense breakdown <span class="spacer"></span><span id="expTotal"></span></h2>
+        <div class="bars" id="catBars"></div>
+      </div>
+      <div class="panel">
+        <h2>Monthly expense trend</h2>
+        <div class="chart-host" id="chExpTrend" data-desc="Expenses by month"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Monthly P&amp;L</h2>
+      <div style="overflow-x:auto">
+        <table class="trend" id="trendTable">
+          <thead><tr><th>Period</th><th>Revenue</th><th>Expenses</th><th>Net</th><th>Occ %</th><th>ADR</th></tr></thead>
+          <tbody id="trendBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <div class="panel">
+    <h2>Business insights</h2>
+    <div class="ins-grid" id="insights"></div>
+  </div>
+
+  <div class="foot-notes" id="footNotes"></div>
+</div>
+
+<div id="loader">
+  <div class="spin" id="loaderSpin"></div>
+  <div id="loaderMsg">Loading reports…</div>
+  <button class="tbtn" id="loaderRetry" style="display:none">Retry</button>
+</div>
+<div id="chartTip"></div>
+
+<script>
+/* ============================================================
+   1. CONFIG & AUTH — unchanged from the previous reports.html
+   ============================================================ */
+const PROXY_URL = 'https://data.ryst.in';
+const TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const ROLE  = localStorage.getItem('ryst_user_role') || 'owner';
+
+function hasModule(mod){
+  let modules;
+  try { modules = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { modules = null; }
+  if(!Array.isArray(modules)) modules = ROLE === 'caretaker' ? ['petty-cash','inventory','checklist'] : [];
+  return ROLE === 'owner' || modules.includes(mod);
+}
+if(!TOKEN){ window.location.href = 'login.html'; }
+if(!hasModule('reports')){ window.location.href = 'login.html'; }
+
+/* ============================================================
+   2. UTIL
+   ============================================================ */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = n => '₹'+Math.round(n||0).toLocaleString('en-IN');
+// toISOString() converts through UTC — for IST (ahead of UTC), a locally-
+// built midnight Date lands on the PREVIOUS UTC day, silently shifting
+// month boundaries back by one. Every date derived in this file goes
+// through this instead — never toISOString().slice(0,10).
+const dateOnly = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const toNum = v => { const n = parseFloat(String(v==null?'':v).replace(/[^0-9.-]/g,'')); return isFinite(n) ? n : 0; };
+const addDays = (iso,n) => { const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return dateOnly(d); };
+const dowOf = iso => new Date(iso+'T00:00:00').getDay(); // 0=Sun..6=Sat
+const isWeekendNight = dow => dow===5 || dow===6 || dow===0; // Fri+Sat+Sun — matches the weekend tariff hike in settings/server
+const firstOfMonth = d => { const x=new Date(d); x.setDate(1); x.setHours(0,0,0,0); return x; };
+const todayISO = () => dateOnly(new Date());
+
+const FMT = {
+  money: v => money(v),
+  moneyK: v => (v==null) ? '—' : (Math.abs(v)>=100000 ? '₹'+(v/100000).toFixed(1)+'L' : money(v)),
+  int: v => Math.round(v||0).toLocaleString('en-IN'),
+  pct: v => (v==null?'—':Math.round(v)+'%'),
+  pct1: v => (v==null?'—':v.toFixed(1)+'%'),
+  days: v => (v==null?'—':Math.round(v)+' d'),
+  nights: v => Math.round(v||0)+' n',
+};
+
+/* ============================================================
+   3. DOMAIN — nightsBetween/isConvertedQuote copied verbatim from
+   bookings.html (same source data, same rules); channelOf/payStatusOf/
+   otaPlatformOf/leadDaysOf are new, small, pure.
+   ============================================================ */
+function nightsBetween(a,b){ if(!a||!b) return 0; return Math.max(0, Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000)); }
+function lineAmt(it){ return toNum(it.rate)*toNum(it.qty); }
+function grandTotal(s){ const sub=(s.items||[]).reduce((sum,it)=>sum+lineAmt(it),0); return Math.max(0, sub-toNum(s.discount)); }
+
+// A quote turned into an invoice (stay.html's "Load from quote") stays in
+// stays.json as its own record — without this it double-counts as a
+// second booking alongside the invoice it became. Copied verbatim from
+// bookings.html:523-530 (same matching rule, needs the full STAYS array).
+function isConvertedQuote(d, STAYS){
+  if((d.type||'invoice')!=='quote') return false;
+  const email = (d.email||'').trim().toLowerCase();
+  const guest = (d.guest||'').trim().toLowerCase();
+  return STAYS.some(s=>
+    (s.type||'invoice')==='invoice' && s.checkin===d.checkin && s.checkout===d.checkout &&
+    (email ? (s.email||'').trim().toLowerCase()===email : (guest && (s.guest||'').trim().toLowerCase()===guest)));
+}
+// A quote is a proposal, nobody's paid anything — it shouldn't count as an
+// occupied/confirmed night until it has real payment against it. Same rule
+// as isNonBlockingStay in bookings.html and stayBlocksDates in the proxy's
+// server.js (advance>0 covers both a partial advance and paid-in-full).
+function isCommitted(d){
+  if((d.type||'invoice')==='block') return false;
+  if((d.type||'invoice')==='quote') return toNum(d.advance) > 0;
+  return true; // invoice
+}
+// channel field shipped with this dashboard — see stay.html/server.js.
+// Historical records (before it existed) fall back to 'Website' only when
+// we KNOW for certain (Razorpay-paid — that can only happen through the
+// site's own booking widget); everything else historical is honestly
+// 'Not tagged' rather than guessed.
+function channelOf(s){
+  if(s.channel) return s.channel;
+  if(s.mode==='Razorpay') return 'Website';
+  return 'Not tagged';
+}
+function channelBucket(s){ return channelOf(s)==='Website' ? 'online' : (channelOf(s)==='Not tagged' ? 'unknown' : 'manual'); }
+// Universal payment-status derivation — paymentMode ('advance'/'full')
+// only exists on Razorpay-paid rows, so advance-vs-total is the one rule
+// that works for both online and staff-entered bookings.
+function payStatusOf(s){
+  const t = grandTotal(s), a = toNum(s.advance);
+  if(a<=0) return 'unpaid';
+  return a >= t-1 ? 'paid' : 'partial'; // ₹1 tolerance for rounding
+}
+// Refactor of bookings.html's otaBlockColor — same substring match, but
+// returns a key (for chart/token lookup) instead of a CSS color directly.
+function otaPlatformOf(label){
+  const l = (label||'').toLowerCase();
+  if(l.includes('airbnb')) return 'airbnb';
+  if(l.includes('booking')) return 'booking';
+  if(l.includes('agoda')) return 'agoda';
+  if(l.includes('vrbo')||l.includes('homeaway')) return 'vrbo';
+  return 'other';
+}
+const OTA_LABEL = { airbnb:'Airbnb', booking:'Booking.com', agoda:'Agoda', vrbo:'VRBO', other:'Other holds' };
+const OTA_COLOR = { airbnb:'var(--ota-airbnb)', booking:'var(--ota-booking-chart)', agoda:'var(--ota-agoda)', vrbo:'var(--ota-vrbo)', other:'var(--muted2)' };
+// Lead time — checkin minus the date the booking was actually first
+// created. savedAt is reliable ONLY for server-created records
+// (confirmBooking/Razorpay, /public-quote) — stay.html's collect()
+// resets savedAt on every staff edit, so it's not a real "created at" for
+// manually-entered bookings. Null it out there rather than show a
+// misleading number.
+function leadDaysOf(s){
+  if(!(s.source==='public' || s.mode==='Razorpay')) return null;
+  if(!s.savedAt || !s.checkin) return null;
+  const created = dateOnly(new Date(s.savedAt));
+  const d = nightsBetween(created, s.checkin);
+  return (d>=0 && d<=730) ? d : null; // clamp obvious typos / backdated entries
+}
+
+/* ============================================================
+   4. ENRICH — one pass per load(), never per render
+   ============================================================ */
+let STAYS = [], EXPENSES = [], ORDERS = [];
+let ROWS = [];       // enriched stays (quotes/invoices/blocks)
+let NIGHTS = new Map(); // ISO -> night record
+
+function buildRows(){
+  ROWS = STAYS.map(s=>{
+    const type = s.type||'invoice';
+    const nights = nightsBetween(s.checkin, s.checkout);
+    const total = type==='block' ? 0 : grandTotal(s);
+    const advance = toNum(s.advance);
+    return {
+      raw: s, no: s.no, type, guest: s.guest||'', email: s.email||'', phone: s.phone||'',
+      ref: s.ref||'', mode: s.mode||'', source: s.source||'',
+      guestCount: toNum(s.guests),
+      checkin: s.checkin, checkout: s.checkout, nights,
+      total, advance, discount: toNum(s.discount), deposit: toNum(s.deposit),
+      outstanding: Math.max(0, total-advance),
+      adr: nights ? total/nights : 0,
+      channel: channelOf(s), channelBucket: channelBucket(s),
+      payStatus: type==='block' ? null : payStatusOf(s),
+      otaPlatform: type==='block' ? otaPlatformOf(s.guest) : null,
+      savedAt: s.savedAt||null, leadDays: leadDaysOf(s),
+      converted: isConvertedQuote(s, STAYS),
+      committed: isCommitted(s),
+    };
+  });
+}
+
+function buildNightIndex(){
+  NIGHTS = new Map();
+  for(const r of ROWS){
+    if(r.converted || r.nights<=0) continue;
+    const n = Math.min(r.nights, 400); // typo guard — mirrors bookings.html's calendar clipping
+    for(let i=0;i<n;i++){
+      const iso = addDays(r.checkin, i);
+      let rec = NIGHTS.get(iso);
+      if(!rec){ rec = { iso, dow: dowOf(iso), rows:[], committed:false, blocked:false, tentative:false, rate:0, otaPlatform:null }; NIGHTS.set(iso, rec); }
+      rec.rows.push(r);
+      if(r.type==='block'){ rec.blocked = true; rec.otaPlatform = r.otaPlatform; }
+      else if(r.committed){ rec.committed = true; rec.rate = Math.max(rec.rate, r.adr); }
+      else rec.tentative = true; // unpaid quote — visible, never counted as occupied
+    }
+  }
+}
+
+/* ============================================================
+   5. RANGE — resolves the filter's period into concrete dates,
+   a comparable "previous period", and chart buckets.
+   ============================================================ */
+function bucketsFor(startISO, endISO){
+  const days = nightsBetween(startISO, endISO);
+  const out = [];
+  if(days<=45){
+    for(let iso=startISO; iso<endISO; iso=addDays(iso,1)){
+      out.push({ key:iso, label: new Date(iso+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}), startISO:iso, endISO:addDays(iso,1) });
+    }
+  } else if(days<=200){
+    // Monday-start weeks
+    let cur = startISO;
+    const dow = dowOf(cur); const back = (dow+6)%7;
+    cur = addDays(cur, -back);
+    while(cur<endISO){
+      const wEnd = addDays(cur,7);
+      out.push({ key:cur, label:'Wk '+new Date(cur+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}), startISO: cur<startISO?startISO:cur, endISO: wEnd>endISO?endISO:wEnd });
+      cur = wEnd;
+    }
+  } else {
+    let cur = new Date(startISO+'T00:00:00'); cur.setDate(1);
+    while(dateOnly(cur)<endISO){
+      const next = new Date(cur); next.setMonth(next.getMonth()+1);
+      const bs = dateOnly(cur)<startISO?startISO:dateOnly(cur);
+      const be = dateOnly(next)>endISO?endISO:dateOnly(next);
+      out.push({ key:dateOnly(cur), label: cur.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}), startISO:bs, endISO:be });
+      cur = next;
+    }
+  }
+  return out;
+}
+
+function resolveRange(F){
+  let startISO, endISO, label, prevStart, prevEnd, prevLabel;
+  if(F.gran==='month'){
+    const y=F.anchor.getFullYear(), m=F.anchor.getMonth();
+    startISO = dateOnly(new Date(y,m,1)); endISO = dateOnly(new Date(y,m+1,1));
+    label = F.anchor.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+    prevStart = dateOnly(new Date(y,m-1,1)); prevEnd = startISO;
+    prevLabel = new Date(y,m-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  } else if(F.gran==='quarter'){
+    const y=F.anchor.getFullYear(), q=Math.floor(F.anchor.getMonth()/3);
+    startISO = dateOnly(new Date(y,q*3,1)); endISO = dateOnly(new Date(y,q*3+3,1));
+    label = 'Q'+(q+1)+' '+y;
+    prevStart = dateOnly(new Date(y,q*3-3,1)); prevEnd = startISO;
+    const pq = ((q-1)+4)%4, py = q===0?y-1:y;
+    prevLabel = 'Q'+(pq+1)+' '+py;
+  } else if(F.gran==='year'){
+    const y=F.anchor.getFullYear();
+    startISO = dateOnly(new Date(y,0,1)); endISO = dateOnly(new Date(y+1,0,1));
+    label = String(y);
+    prevStart = dateOnly(new Date(y-1,0,1)); prevEnd = startISO;
+    prevLabel = String(y-1);
+  } else { // custom
+    startISO = F.fromISO || todayISO(); endISO = addDays(F.toISO || F.fromISO || todayISO(), 1);
+    label = new Date(startISO+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) + ' – ' + new Date(addDays(endISO,-1)+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+    const span = nightsBetween(startISO,endISO)||1;
+    prevEnd = startISO; prevStart = addDays(startISO,-span);
+    prevLabel = 'previous '+span+'-day period';
+  }
+  const days = nightsBetween(startISO,endISO);
+  return {
+    startISO, endISO, label, days,
+    prev: { startISO: prevStart, endISO: prevEnd, label: prevLabel },
+    buckets: bucketsFor(startISO, endISO),
+  };
+}
+
+function stepAnchor(F, dir){
+  const a = new Date(F.anchor);
+  if(F.gran==='month') a.setMonth(a.getMonth()+dir);
+  else if(F.gran==='quarter') a.setMonth(a.getMonth()+3*dir);
+  else if(F.gran==='year') a.setFullYear(a.getFullYear()+dir);
+  return a;
+}
+
+/* ============================================================
+   6. METRICS — slicing + one computeMetrics function called twice
+   (current + previous period), which is what gives every KPI card
+   its delta for free.
+   ============================================================ */
+function passRow(r, F){
+  if(r.type==='block') return false;
+  if(r.converted) return false;
+  if(F.channel!=='all' && r.channelBucket!==F.channel) return false;
+  if(F.status!=='all' && r.type!==F.status) return false;
+  if(F.pay!=='all' && r.payStatus!==F.pay) return false;
+  return true;
+}
+const facetsActive = F => F.channel!=='all' || F.status!=='all' || F.pay!=='all';
+const inRange = (iso,a,b) => iso>=a && iso<b;
+function sliceStays(a,b,F){ return ROWS.filter(r=> r.type!=='block' && !r.converted && passRow(r,F) && inRange(r.checkin,a,b)); }
+function sliceExpenses(a,b){ return EXPENSES.filter(e=> inRange(e.date,a,b)); }
+
+function computeMetrics(startISO, endISO, F){
+  const rows = sliceStays(startISO, endISO, F);
+  const invoices = rows.filter(r=>r.type==='invoice');
+  const committed = rows.filter(r=>r.committed);
+  const quotesAll = rows.filter(r=>r.type==='quote'); // quotes under current facets
+  // Conversion needs the FULL (unfiltered) quote set for this range, since
+  // isConvertedQuote already strips converted quotes out of ROWS entirely —
+  // ROWS itself is the "still open OR converted-and-removed" ledger, so we
+  // recompute against raw STAYS-derived rows without the passRow facets.
+  const allQuotesInRange = ROWS.filter(r=>r.type==='quote' && inRange(r.checkin,startISO,endISO));
+  const convertedInRange = allQuotesInRange.filter(r=> r.converted || r.advance>0);
+
+  // stayRevenue/stayCollected: room-only, invoice-derived — the figure
+  // ADR/RevPAN/avgBookingValue need, since those are per-night or per-
+  // booking room-pricing metrics that food sales would distort. The
+  // headline "revenue"/"collected" below fold food sales in on top —
+  // same accrual-vs-cash split as stays: an order counts as revenue the
+  // moment it's placed (status!=='cancelled'), same way an invoice counts
+  // regardless of payment status, but only a 'settled' order has actually
+  // been collected — an 'open' one is exactly as uncollected as an
+  // invoice's unpaid balance, and folds into "outstanding" the same way.
+  // Doesn't account for food cost of goods sold (tracked separately in
+  // the Restaurant module's own inventory/purchases, not here) — Net
+  // Profit below is still just revenue minus petty-cash expenses, same
+  // simplification already in place for room revenue.
+  const stayRevenue = invoices.reduce((s,r)=>s+r.total,0);
+  const stayCollected = invoices.reduce((s,r)=>s+r.advance,0);
+  const foodOrders = ORDERS.filter(o=>o.status!=='cancelled' && o.date && inRange(o.date,startISO,endISO));
+  const foodRevenue = foodOrders.reduce((s,o)=>s+toNum(o.total),0);
+  const foodCollected = foodOrders.filter(o=>o.status==='settled').reduce((s,o)=>s+toNum(o.total),0);
+  const revenue = stayRevenue + foodRevenue;
+  const collected = stayCollected + foodCollected;
+  const outstanding = Math.max(0, revenue-collected);
+  const expenses = sliceExpenses(startISO,endISO).filter(e=>e.type==='expense').reduce((s,e)=>s+toNum(e.amount),0);
+  const net = revenue-expenses;
+  const marginPct = revenue>0 ? (net/revenue)*100 : null;
+
+  const days = nightsBetween(startISO,endISO) || 1;
+  let nightsBooked=0, weekendNights=0, weekendAvail=0, weekdayAvail=0, weekendRevSum=0, weekdayRevSum=0;
+  let highestBooking=null, lowestBooking=null;
+  for(let iso=startISO; iso<endISO; iso=addDays(iso,1)){
+    const rec = NIGHTS.get(iso);
+    const weekend = isWeekendNight(dowOf(iso));
+    if(weekend) weekendAvail++; else weekdayAvail++;
+    if(rec && rec.committed && rec.rows.some(r=>passRow(r,F))){
+      nightsBooked++;
+      if(weekend){ weekendNights++; weekendRevSum += rec.rate; } else { weekdayRevSum += rec.rate; }
+    }
+  }
+  for(const r of invoices){
+    if(!highestBooking || r.total>highestBooking.total) highestBooking = r;
+    if(!lowestBooking || r.total<lowestBooking.total) lowestBooking = r;
+  }
+  const occupancyPct = (nightsBooked/days)*100;
+  const weekendOccPct = weekendAvail ? (weekendNights/weekendAvail)*100 : null;
+  const weekdayOccPct = weekdayAvail ? ((nightsBooked-weekendNights)/weekdayAvail)*100 : null;
+  const weekendADR = weekendNights ? weekendRevSum/weekendNights : null;
+  const weekdayADR = (nightsBooked-weekendNights)>0 ? weekdayRevSum/(nightsBooked-weekendNights) : null;
+
+  // committedRevenue: contracted value of every real commitment (invoice OR
+  // quote-with-advance) — used for ADR, the internally-consistent pricing
+  // metric. "revenue"/RevPAN above stay invoice-only (accounting-grade).
+  const committedRevenue = committed.reduce((s,r)=>s+r.total,0);
+  const adr = nightsBooked ? committedRevenue/nightsBooked : 0;
+  const revPAN = stayRevenue/days;
+
+  const leadVals = rows.filter(r=>r.leadDays!=null).map(r=>r.leadDays);
+  const leadTimeAvg = leadVals.length>=3 ? leadVals.reduce((s,v)=>s+v,0)/leadVals.length : null;
+
+  const onlineRows = committed.filter(r=>r.channelBucket==='online');
+  const manualRows = committed.filter(r=>r.channelBucket==='manual');
+  const unknownRows = committed.filter(r=>r.channelBucket==='unknown');
+
+  const payMix = { unpaid:{n:0,amt:0}, partial:{n:0,amt:0}, paid:{n:0,amt:0} };
+  for(const r of rows){ if(r.payStatus){ payMix[r.payStatus].n++; payMix[r.payStatus].amt += r.total; } }
+
+  const cats = {};
+  sliceExpenses(startISO,endISO).filter(e=>e.type==='expense').forEach(e=>{ const c=e.category||'Miscellaneous'; cats[c]=(cats[c]||0)+toNum(e.amount); });
+  const expByCat = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const topCat = expByCat[0]||null;
+  const topCatPct = topCat && expenses>0 ? (topCat[1]/expenses)*100 : null;
+
+  const otaNights = { airbnb:0, booking:0, agoda:0, vrbo:0, other:0 };
+  for(let iso=startISO; iso<endISO; iso=addDays(iso,1)){
+    const rec = NIGHTS.get(iso);
+    if(rec && rec.blocked && rec.otaPlatform) otaNights[rec.otaPlatform] = (otaNights[rec.otaPlatform]||0)+1;
+  }
+
+  const pendingQuotes = quotesAll.reduce((s,r)=>s+r.total,0);
+
+  return {
+    revenue, collected, outstanding, expenses, net, marginPct,
+    stayRevenue, foodRevenue,
+    bookings: invoices.length, quotesTotal: allQuotesInRange.length, quotesConverted: convertedInRange.length,
+    conversionPct: allQuotesInRange.length>=3 ? (convertedInRange.length/allQuotesInRange.length)*100 : null,
+    avgBookingValue: invoices.length ? stayRevenue/invoices.length : 0,
+    avgStayNights: committed.length ? committed.reduce((s,r)=>s+r.nights,0)/committed.length : 0,
+    avgPartySize: committed.length ? committed.reduce((s,r)=>s+r.guestCount,0)/committed.length : 0,
+    totalGuests: committed.reduce((s,r)=>s+r.guestCount,0),
+    daysInRange: days, nightsBooked, occupancyPct,
+    weekendNights, weekendAvail, weekendOccPct, weekendADR,
+    weekdayNights: nightsBooked-weekendNights, weekdayAvail, weekdayOccPct, weekdayADR,
+    adr, revPAN, highestBooking, lowestBooking,
+    leadTimeAvg, leadTimeN: leadVals.length,
+    onlineRevenue: onlineRows.reduce((s,r)=>s+r.total,0), manualRevenue: manualRows.reduce((s,r)=>s+r.total,0), unknownRevenue: unknownRows.reduce((s,r)=>s+r.total,0),
+    onlineCount: onlineRows.length, manualCount: manualRows.length, unknownCount: unknownRows.length,
+    payMix, expByCat, topCat, topCatPct, otaNights,
+    pendingQuotes, pendingQuoteCount: quotesAll.length,
+  };
+}
+
+function computeSeries(R, F){
+  return R.buckets.map(b=>{
+    const m = computeMetrics(b.startISO, b.endISO, F);
+    return { ...b, revenue:m.revenue, expenses:m.expenses, net:m.net, nights:m.nightsBooked, occPct:m.occupancyPct, adr:m.adr };
+  });
+}
+
+/* ============================================================
+   7. SVG KIT — the first real chart code in this repo. Built with
+   createElementNS + textContent throughout (never innerHTML) since
+   guest names / expense categories / OTA labels are user-typed.
+   ============================================================ */
+const NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs, parent){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) if(attrs[k]!=null) e.setAttribute(k, attrs[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+function svgText(parent, x, y, str, cls, anchor){
+  const t = svgEl('text',{x,y,class:cls||'axis-lbl','text-anchor':anchor||'middle'},parent);
+  t.textContent = str;
+  return t;
+}
+function mkChart(host, h){
+  host.innerHTML = '';
+  const w = Math.max(260, host.clientWidth||260);
+  const pad = { l:46, r:12, t:10, b:24 };
+  const svg = svgEl('svg',{width:w, height:h, viewBox:`0 0 ${w} ${h}`, class:'chart', role:'img', 'aria-label':host.dataset.desc||''}, host);
+  return { svg, w, h, pad, iw: Math.max(20,w-pad.l-pad.r), ih: Math.max(20,h-pad.t-pad.b) };
+}
+function scaleFn(dMin,dMax,rMin,rMax){ const s=(dMax-dMin)||1; return v => rMin + (v-dMin)/s*(rMax-rMin); }
+function niceMax(max){ if(max<=0) return 1; const mag=Math.pow(10,Math.floor(Math.log10(max))); const n=max/mag; const step=[1,2,2.5,5,10].find(m=>m>=n)||10; return step*mag; }
+function niceTicks(max, count){ if(max<=0) return [0,1]; const top=niceMax(max); const step=top/count; const out=[]; for(let v=0;v<=top+step*0.001;v+=step) out.push(Math.round(v*100)/100); return out; }
+function linePath(pts){ return pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' '); }
+function areaPath(pts, y0){ if(!pts.length) return ''; return linePath(pts)+` L${pts[pts.length-1].x.toFixed(1)} ${y0} L${pts[0].x.toFixed(1)} ${y0} Z`; }
+
+const TIP = {
+  el: null,
+  init(){ this.el = $('#chartTip'); },
+  show(rows, title, x, y){
+    let html = `<div class="tt-title"></div>`;
+    this.el.innerHTML = '';
+    const t = document.createElement('div'); t.className='tt-title'; t.textContent = title; this.el.appendChild(t);
+    rows.forEach(r=>{
+      const row = document.createElement('div'); row.className='tt-row';
+      if(r.color){ const sw=document.createElement('span'); sw.className='tt-sw'; sw.style.background=r.color; row.appendChild(sw); }
+      const label = document.createElement('span'); label.textContent = r.label+': '; row.appendChild(label);
+      const val = document.createElement('b'); val.textContent = r.value; row.appendChild(val);
+      this.el.appendChild(row);
+    });
+    const tipW = 220, tipH = 20+rows.length*18;
+    let left = x+14, top = y+14;
+    if(left+tipW > window.innerWidth) left = x-tipW-14;
+    if(top+tipH > window.innerHeight) top = y-tipH-14;
+    this.el.style.left = left+'px'; this.el.style.top = top+'px';
+    this.el.classList.add('show');
+  },
+  hide(){ if(this.el) this.el.classList.remove('show'); },
+};
+
+/* ============================================================
+   8. CHARTS
+   ============================================================ */
+function drawGridY(fr, ticks, yScale, fmt){
+  ticks.forEach(t=>{
+    const y = yScale(t);
+    svgEl('line',{x1:fr.pad.l,x2:fr.pad.l+fr.iw,y1:y,y2:y,class:'grid-line'},fr.svg);
+    svgText(fr.svg, fr.pad.l-8, y+3, fmt(t), 'axis-lbl', 'end');
+  });
+}
+
+function drawLineChart(hostSel, opt){
+  const host = $(hostSel);
+  if(!opt.series.length || !opt.series[0].values.length){ host.innerHTML='<div class="empty">No data in this period.</div>'; return; }
+  const fr = mkChart(host, opt.height||220);
+  const allY = opt.series.flatMap(s=>s.values.map(v=>v.y));
+  const maxY = Math.max(1, ...allY);
+  const ticks = niceTicks(maxY, 4);
+  const yScale = scaleFn(0, ticks[ticks.length-1], fr.pad.t+fr.ih, fr.pad.t);
+  const n = opt.series[0].values.length;
+  const xScale = scaleFn(0, Math.max(1,n-1), fr.pad.l, fr.pad.l+fr.iw);
+  drawGridY(fr, ticks, yScale, opt.fmtY||FMT.moneyK);
+  svgEl('line',{x1:fr.pad.l,x2:fr.pad.l+fr.iw,y1:fr.pad.t+fr.ih,y2:fr.pad.t+fr.ih,class:'grid-line'},fr.svg);
+
+  const allPts = [];
+  opt.series.forEach(s=>{
+    const pts = s.values.map((v,i)=>({x:xScale(i), y:yScale(v.y), label:v.label, raw:v.y}));
+    allPts.push({key:s.key,label:s.label,color:s.color,pts});
+    if(opt.area){
+      const ap = svgEl('path',{d:areaPath(pts, fr.pad.t+fr.ih), fill:s.color, opacity:0.1, stroke:'none'}, fr.svg);
+    }
+    svgEl('path',{d:linePath(pts), fill:'none', stroke:s.color, 'stroke-width':2, 'stroke-linejoin':'round','stroke-linecap':'round'}, fr.svg);
+    // endpoint marker + label
+    if(pts.length){
+      const last = pts[pts.length-1];
+      svgEl('circle',{cx:last.x,cy:last.y,r:4,fill:s.color,stroke:'var(--panel)','stroke-width':2},fr.svg);
+      svgText(fr.svg, last.x, last.y-9, (opt.fmtY||FMT.moneyK)(last.raw), 'val-lbl', last.x>fr.pad.l+fr.iw-30?'end':'middle');
+    }
+  });
+
+  // x-axis labels — thin out if too many
+  const step = Math.max(1, Math.ceil(n/8));
+  opt.series[0].values.forEach((v,i)=>{ if(i%step===0 || i===n-1) svgText(fr.svg, xScale(i), fr.pad.t+fr.ih+16, v.label, 'axis-lbl'); });
+
+  // hover capture
+  const capture = svgEl('rect',{x:fr.pad.l,y:fr.pad.t,width:fr.iw,height:fr.ih,fill:'transparent',tabindex:0},fr.svg);
+  const crosshair = svgEl('line',{y1:fr.pad.t,y2:fr.pad.t+fr.ih,stroke:'var(--muted2)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0},fr.svg);
+  function moveTo(clientX){
+    const rect = fr.svg.getBoundingClientRect();
+    const px = clientX - rect.left;
+    let idx = Math.round((px-fr.pad.l)/((fr.iw)/(Math.max(1,n-1))));
+    idx = Math.max(0, Math.min(n-1, idx));
+    const cx = xScale(idx);
+    crosshair.setAttribute('x1',cx); crosshair.setAttribute('x2',cx); crosshair.setAttribute('opacity',1);
+    const rows = allPts.map(s=>({ label:s.label, color:s.color, value:(opt.fmtY||FMT.moneyK)(s.pts[idx].raw) }));
+    return { cx, idx, rows };
+  }
+  capture.addEventListener('pointermove', e=>{
+    const {rows} = moveTo(e.clientX);
+    TIP.show(rows, opt.series[0].values[Math.max(0,Math.min(n-1,Math.round((e.clientX-fr.svg.getBoundingClientRect().left-fr.pad.l)/(fr.iw/Math.max(1,n-1)))))].label, e.clientX, e.clientY);
+  });
+  capture.addEventListener('pointerleave', ()=>{ crosshair.setAttribute('opacity',0); TIP.hide(); });
+
+  if(opt.legend!==false && opt.series.length>1){
+    const lg = document.createElement('div'); lg.className='legend';
+    opt.series.forEach(s=>{ lg.innerHTML += `<span class="lk"><span class="sw" style="background:${s.color}"></span>${esc(s.label)}</span>`; });
+    host.parentElement.querySelectorAll('.legend').forEach(x=>x.remove());
+    host.appendChild(lg);
+  }
+}
+
+function drawColumnChart(hostSel, opt){
+  const host = $(hostSel);
+  if(!opt.groups.length){ host.innerHTML='<div class="empty">No data in this period.</div>'; return; }
+  const fr = mkChart(host, opt.height||220);
+  const maxY = Math.max(1, ...opt.groups.flatMap(g=>g.bars.map(b=>b.value)));
+  const ticks = niceTicks(maxY,4);
+  const yScale = scaleFn(0, ticks[ticks.length-1], fr.pad.t+fr.ih, fr.pad.t);
+  drawGridY(fr, ticks, yScale, opt.fmtY||FMT.moneyK);
+  svgEl('line',{x1:fr.pad.l,x2:fr.pad.l+fr.iw,y1:fr.pad.t+fr.ih,y2:fr.pad.t+fr.ih,class:'grid-line'},fr.svg);
+
+  const n = opt.groups.length;
+  const gw = fr.iw/n;
+  const barsPerGroup = opt.groups[0].bars.length;
+  const barW = Math.min(26, (gw*0.62)/barsPerGroup);
+  const gap = 2;
+  // x-axis labels — thin out if too many, same rule drawLineChart already
+  // uses just above (max ~8 labels, always including the last one), so a
+  // month's worth of daily groups doesn't render all 30+ labels stacked
+  // illegibly on top of each other.
+  const step = Math.max(1, Math.ceil(n/8));
+  opt.groups.forEach((g,gi)=>{
+    const gx = fr.pad.l + gi*gw + gw/2;
+    const totalW = barsPerGroup*barW + (barsPerGroup-1)*gap;
+    g.bars.forEach((b,bi)=>{
+      const bx = gx - totalW/2 + bi*(barW+gap);
+      const y0 = fr.pad.t+fr.ih, y1 = yScale(b.value);
+      const h = Math.max(0, y0-y1);
+      const rect = svgEl('path',{ d: roundedTopRect(bx, y1, barW, h, 3), fill:b.color, class:'mark', tabindex:0, 'aria-label':`${b.label}: ${(opt.fmtY||FMT.moneyK)(b.value)}` }, fr.svg);
+      const tipHandler = (ev)=> TIP.show([{label:b.label, color:b.color, value:(opt.fmtY||FMT.moneyK)(b.value)}], g.label, ev.clientX, ev.clientY);
+      rect.addEventListener('pointerenter', tipHandler); rect.addEventListener('pointermove', tipHandler);
+      rect.addEventListener('pointerleave', ()=>TIP.hide());
+      rect.addEventListener('focus', ()=> TIP.show([{label:b.label,color:b.color,value:(opt.fmtY||FMT.moneyK)(b.value)}], g.label, bx+fr.svg.getBoundingClientRect().left, y1+fr.svg.getBoundingClientRect().top));
+      rect.addEventListener('blur', ()=>TIP.hide());
+    });
+    if(gi%step===0 || gi===n-1) svgText(fr.svg, gx, fr.pad.t+fr.ih+16, g.label, 'axis-lbl');
+  });
+
+  if(opt.legend!==false && barsPerGroup>1){
+    const lg = document.createElement('div'); lg.className='legend';
+    opt.groups[0].bars.forEach(b=>{ lg.innerHTML += `<span class="lk"><span class="sw" style="background:${b.color}"></span>${esc(b.label)}</span>`; });
+    host.appendChild(lg);
+  }
+}
+function roundedTopRect(x,y,w,h,r){
+  r = Math.min(r, w/2, Math.max(0,h));
+  if(h<=0) return `M${x} ${y+h} h${w} v0 h${-w} Z`;
+  return `M${x} ${y+h} L${x} ${y+r} Q${x} ${y} ${x+r} ${y} L${x+w-r} ${y} Q${x+w} ${y} ${x+w} ${y+r} L${x+w} ${y+h} Z`;
+}
+
+function drawStackedBar(hostSel, segments, opt){
+  opt = opt||{};
+  const host = $(hostSel);
+  const total = segments.reduce((s,x)=>s+x.value,0);
+  if(total<=0){ host.innerHTML='<div class="empty">No data in this period.</div>'; return; }
+  host.innerHTML = '';
+  const w = Math.max(260, host.clientWidth||260), h = 34;
+  const svg = svgEl('svg',{width:w,height:h,viewBox:`0 0 ${w} ${h}`,class:'chart'},host);
+  let x = 0; const gap=2;
+  segments.filter(s=>s.value>0).forEach(seg=>{
+    const segW = Math.max(0, (seg.value/total)*w - gap);
+    const rect = svgEl('rect',{x,y:0,width:segW,height:h,rx:5,fill:seg.color,class:'mark',tabindex:0,'aria-label':`${seg.label}: ${money(seg.value)} (${Math.round(seg.value/total*100)}%)`},svg);
+    const tipFn = ev => TIP.show([{label:seg.label,color:seg.color,value:money(seg.value)+' · '+Math.round(seg.value/total*100)+'%'}], opt.title||'', ev.clientX, ev.clientY);
+    rect.addEventListener('pointerenter',tipFn); rect.addEventListener('pointermove',tipFn); rect.addEventListener('pointerleave',()=>TIP.hide());
+    if(segW>46){ svgText(svg, x+segW/2, h/2+4, Math.round(seg.value/total*100)+'%', 'val-lbl'); svg.lastChild.style.fill = luminanceOf(seg.color)<0.55 ? '#fff':'var(--ink)'; }
+    x += segW+gap;
+  });
+  const lg = document.createElement('div'); lg.className='legend';
+  segments.forEach(seg=>{ lg.innerHTML += `<span class="lk"><span class="sw" style="background:${seg.color}"></span>${esc(seg.label)} — ${money(seg.value)}</span>`; });
+  host.appendChild(lg);
+}
+function luminanceOf(cssColor){
+  // resolves a var(--x) against :root computed style, then WCAG relative luminance
+  let hex = cssColor;
+  if(cssColor.startsWith('var(')){
+    const name = cssColor.slice(4,-1).trim();
+    hex = getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888888';
+  }
+  const m = hex.replace('#','');
+  const r=parseInt(m.substr(0,2),16)/255, g=parseInt(m.substr(2,2),16)/255, b=parseInt(m.substr(4,2),16)/255;
+  const lin = c => c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4);
+  return 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b);
+}
+
+function drawHBars(hostSel, items, opt){
+  opt = opt||{};
+  const host = $(hostSel);
+  const filtered = items.filter(i=>i.value>0);
+  if(!filtered.length){ host.innerHTML='<div class="empty">No OTA-synced holds in this period.</div>'; return; }
+  host.innerHTML = '';
+  const w = Math.max(260, host.clientWidth||260);
+  const rowH = 26, h = filtered.length*rowH+8;
+  const svg = svgEl('svg',{width:w,height:h,viewBox:`0 0 ${w} ${h}`,class:'chart'},host);
+  const maxV = Math.max(1,...filtered.map(i=>i.value));
+  const labelW = 96;
+  const scale = scaleFn(0,maxV,0,w-labelW-46);
+  filtered.forEach((it,i)=>{
+    const y = i*rowH+4;
+    svgText(svg, labelW-8, y+15, it.label, 'axis-lbl','end');
+    const bw = Math.max(3, scale(it.value));
+    const rect = svgEl('rect',{x:labelW,y:y+2,width:bw,height:16,rx:4,fill:it.color,class:'mark',tabindex:0,'aria-label':`${it.label}: ${it.value} nights`},svg);
+    const tipFn = ev => TIP.show([{label:it.label,color:it.color,value:it.value+' nights'}],'',ev.clientX,ev.clientY);
+    rect.addEventListener('pointerenter',tipFn); rect.addEventListener('pointermove',tipFn); rect.addEventListener('pointerleave',()=>TIP.hide());
+    svgText(svg, labelW+bw+6, y+15, it.value+'n', 'val-lbl', 'start');
+  });
+}
+
+// 42-cell Sunday-aligned month grid — same generation approach as
+// bookings.html's renderCalendar (bookings.html:1085-1099).
+function buildMonthGrid(year, month){
+  const firstOfMon = new Date(year, month, 1);
+  const startOffset = firstOfMon.getDay();
+  const gridStart = new Date(year, month, 1-startOffset);
+  const cells = [];
+  for(let i=0;i<42;i++){
+    const d = new Date(gridStart); d.setDate(gridStart.getDate()+i);
+    cells.push({ date:d, iso:dateOnly(d), inMonth: d.getMonth()===month });
+  }
+  return cells;
+}
+function adrQuartiles(nightsInRange){
+  const rates = nightsInRange.filter(n=>n && n.committed && n.rate>0).map(n=>n.rate).sort((a,b)=>a-b);
+  if(!rates.length) return [0,0,0];
+  const q = p => rates[Math.min(rates.length-1, Math.floor(p*rates.length))];
+  return [q(0.25), q(0.5), q(0.75)];
+}
+function rampStepFor(rate, q){
+  if(rate<=q[0]) return 'var(--ramp-1)';
+  if(rate<=q[1]) return 'var(--ramp-2)';
+  if(rate<=q[2]) return 'var(--ramp-3)';
+  return 'var(--ramp-4)';
+}
+function drawHeatmap(hostSel, startISO, endISO, gran){
+  const host = $(hostSel);
+  host.innerHTML = '';
+  const DOW = ['S','M','T','W','T','F','S'];
+  const rangeNights = []; for(let iso=startISO; iso<endISO; iso=addDays(iso,1)) rangeNights.push(NIGHTS.get(iso));
+  const q = adrQuartiles(rangeNights);
+  const today = todayISO();
+
+  let months = [];
+  let cur = new Date(startISO+'T00:00:00'); cur.setDate(1);
+  const endD = new Date(endISO+'T00:00:00');
+  while(cur<endD){ months.push({y:cur.getFullYear(), m:cur.getMonth()}); cur.setMonth(cur.getMonth()+1); }
+  months = months.slice(0, gran==='year'?12:(gran==='quarter'?3:1));
+  host.className = months.length>1 ? 'hm-months multi' : 'hm-months';
+
+  months.forEach(({y,m})=>{
+    const wrap = document.createElement('div');
+    if(months.length>1){ const lbl = document.createElement('div'); lbl.className='hm-mon-lbl'; lbl.textContent = new Date(y,m,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'}); wrap.appendChild(lbl); }
+    const grid = document.createElement('div'); grid.className='hm-grid';
+    DOW.forEach(d=>{ const el=document.createElement('div'); el.className='hm-dow'; el.textContent=d; grid.appendChild(el); });
+    buildMonthGrid(y,m).forEach(cell=>{
+      const el = document.createElement('div');
+      const rec = NIGHTS.get(cell.iso);
+      let cls = 'hm-cell'; let bg = null; let title = new Date(cell.iso+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+      if(!cell.inMonth) cls += ' out';
+      if(cell.iso===today) cls += ' today';
+      if(rec && rec.blocked){ cls += ' blocked'; title += ' · '+(OTA_LABEL[rec.otaPlatform]||'Blocked'); }
+      else if(rec && rec.committed){ bg = rampStepFor(rec.rate, q); const g = rec.rows.find(r=>r.committed); title += g ? ' · '+g.guest+' · '+money(rec.rate) : ''; }
+      else if(rec && rec.tentative){ cls += ' tentative'; const g = rec.rows[0]; title += g ? ' · quote: '+g.guest : ' · quote pending'; }
+      el.className = cls;
+      if(bg) el.style.background = bg;
+      el.title = title; el.tabIndex = cell.inMonth?0:-1; el.setAttribute('aria-label', title);
+      if(cell.inMonth) el.textContent = cell.date.getDate();
+      el.addEventListener('pointerenter', ev=> TIP.show([{label:title,value:''}].filter(r=>r.label), '', ev.clientX, ev.clientY));
+      el.addEventListener('mouseleave', ()=>TIP.hide());
+      grid.appendChild(el);
+    });
+    wrap.appendChild(grid);
+    host.appendChild(wrap);
+  });
+
+  const lg = $('#hmLegend'); lg.innerHTML = '';
+  const legendItems = [
+    ['No booking','var(--panel2)'],
+    [`≤${FMT.moneyK(q[0])}`, 'var(--ramp-1)'], [`≤${FMT.moneyK(q[1])}`,'var(--ramp-2)'], [`≤${FMT.moneyK(q[2])}`,'var(--ramp-3)'], [`>${FMT.moneyK(q[2])}`,'var(--ramp-4)'],
+    ['Quote (unpaid)','var(--qt-soft)'], ['Blocked / OTA','var(--panel2)'],
+  ];
+  legendItems.forEach(([label,color])=>{ lg.innerHTML += `<span class="lk"><span class="sw" style="background:${color}"></span>${esc(label)}</span>`; });
+}
+
+/* ============================================================
+   9. KPI CARDS
+   ============================================================ */
+function sparkPath(vals, w, h){
+  if(!vals.length) return '';
+  const max = Math.max(1,...vals), min = Math.min(0,...vals);
+  const xs = scaleFn(0, Math.max(1,vals.length-1), 2, w-2);
+  const ys = scaleFn(min, max, h-2, 2);
+  return linePath(vals.map((v,i)=>({x:xs(i),y:ys(v)})));
+}
+function deltaChip(value, prev, invert){
+  if(value==null) return '';
+  if(prev==null) return '';
+  if(prev===0 && value>0) return `<span class="delta good">▲ new</span>`;
+  if(prev===0 && value===0) return `<span class="delta flat">● —</span>`;
+  let pct = ((value-prev)/Math.abs(prev))*100;
+  pct = Math.max(-999, Math.min(999, pct));
+  const good = invert ? pct<0 : pct>0;
+  if(Math.abs(pct)<0.5) return `<span class="delta flat">● flat</span>`;
+  const arrow = pct>0 ? '▲' : '▼';
+  return `<span class="delta ${good?'good':'bad'}">${arrow} ${Math.abs(Math.round(pct))}%</span>`;
+}
+function kpiCard(c){
+  const valStr = c.na ? '—' : (FMT[c.fmt]||FMT.money)(c.value);
+  const spark = c.spark && c.spark.length>1 ? `<svg class="spark" width="100%" height="28" viewBox="0 0 120 28" preserveAspectRatio="none"><path d="${sparkPath(c.spark,120,28)}" fill="none" stroke="${c.hero?'#fff':'var(--accent)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="${c.hero?0.85:0.55}"/></svg>` : '';
+  return `<div class="card ${c.hero?'hero':''} ${c.unfiltered?'unfiltered':''}" title="${esc(c.prevLabel?('vs '+c.prevLabel+(c.prev!=null?': '+(FMT[c.fmt]||FMT.money)(c.prev):'')):'')}">
+    <div class="lbl">${esc(c.label)}</div>
+    <div class="val">${valStr}</div>
+    ${c.na ? '' : deltaChip(c.value, c.prev, c.invert)}
+    ${c.sub?`<div class="sub">${esc(c.sub)}</div>`:''}
+    ${spark}
+  </div>`;
+}
+
+/* ============================================================
+   10. INSIGHTS — ordered pure rules, each gated by a minimum sample
+   so nothing fires off 1-2 records. Every number is computed from
+   cur/prev/S — never a hardcoded sentence.
+   ============================================================ */
+const INSIGHT_RULES = [
+  ({cur,prev,R}) => (cur.revenue>0 && prev.revenue>0 && cur.marginPct!=null && prev.marginPct!=null && Math.abs(cur.marginPct-prev.marginPct)>=5)
+    ? { tone: cur.marginPct>prev.marginPct?'good':'warn', icon: cur.marginPct>prev.marginPct?'▲':'▼', text:`Margin ${cur.marginPct>prev.marginPct?'rose':'fell'} from ${Math.round(prev.marginPct)}% to ${Math.round(cur.marginPct)}% vs ${R.prev.label}.` } : null,
+  ({cur,prev,R}) => (prev.revenue>0 && Math.abs((cur.revenue-prev.revenue)/prev.revenue*100)>=15)
+    ? { tone: cur.revenue>prev.revenue?'good':'warn', icon: cur.revenue>prev.revenue?'▲':'▼', text:`Revenue is ${Math.abs(Math.round((cur.revenue-prev.revenue)/prev.revenue*100))}% ${cur.revenue>prev.revenue?'up':'down'} on ${R.prev.label} (${money(cur.revenue)} vs ${money(prev.revenue)}).` } : null,
+  ({cur}) => (cur.outstanding>=10000 && cur.revenue>0 && cur.outstanding/(cur.revenue||1)>=0.1)
+    ? { tone:'warn', icon:'⚑', text:`${money(cur.outstanding)} is still uncollected across this period's bookings.` } : null,
+  ({cur}) => (cur.expenses>=5000 && cur.topCat && cur.topCatPct>=30)
+    ? { tone:'neutral', icon:'●', text:`${cur.topCat[0]} is ${Math.round(cur.topCatPct)}% of this period's spend (${money(cur.topCat[1])} of ${money(cur.expenses)}).` } : null,
+  ({cur,prev}) => (cur.weekendNights>=8 && cur.weekdayNights>=8 && cur.weekendADR && cur.weekdayADR && cur.weekendADR/cur.weekdayADR>=1.15)
+    ? { tone:'good', icon:'▲', text:`Weekend nights earn ${Math.round((cur.weekendADR/cur.weekdayADR-1)*100)}% more per night than weekdays (${money(cur.weekendADR)} vs ${money(cur.weekdayADR)}).` } : null,
+  ({cur}) => (cur.weekendAvail>=8 && cur.weekdayAvail>=8 && cur.weekendOccPct!=null && cur.weekdayOccPct!=null && (cur.weekendOccPct-cur.weekdayOccPct)>=15)
+    ? { tone:'neutral', icon:'●', text:`Weekends run at ${Math.round(cur.weekendOccPct)}% occupancy against ${Math.round(cur.weekdayOccPct)}% midweek — weekday promotions could help close that gap.` } : null,
+  ({cur}) => (cur.daysInRange>=28 && cur.occupancyPct<40)
+    ? { tone:'warn', icon:'⚑', text:`Occupancy is ${Math.round(cur.occupancyPct)}% this period — ${Math.round(cur.daysInRange-cur.nightsBooked)} nights went unsold.` } : null,
+  ({S}) => { if(S.length<3) return null; const vals=S.map(b=>b.revenue); const max=Math.max(...vals); const med=[...vals].sort((a,b)=>a-b)[Math.floor(vals.length/2)]; if(max<=0 || med<=0 || max<med*1.5) return null; const peak=S.find(b=>b.revenue===max); return { tone:'good', icon:'●', text:`${peak.label} was the strongest period at ${money(max)}.` }; },
+  ({cur,prev,R}) => (cur.quotesTotal>=5) ? { tone: cur.conversionPct>=40?'good':'neutral', icon:'●', text:`${cur.quotesConverted} of ${cur.quotesTotal} quotes converted to real bookings this period (${Math.round(cur.conversionPct)}%)${prev.quotesTotal>=5?`, vs ${Math.round(prev.conversionPct)}% in ${R.prev.label}`:''}.` } : null,
+  ({cur}) => (cur.leadTimeN>=5) ? { tone:'neutral', icon:'●', text:`Online guests book ${Math.round(cur.leadTimeAvg)} days ahead on average, based on ${cur.leadTimeN} website/online-paid booking${cur.leadTimeN===1?'':'s'}.` } : null,
+  ({cur}) => { const total=cur.onlineRevenue+cur.manualRevenue; if(cur.bookings<5 || total<=0) return null; const onlineShare=cur.onlineRevenue/total*100; if(onlineShare<60 && onlineShare>20) return null; return { tone:'neutral', icon:'●', text:`${Math.round(onlineShare)}% of revenue came in through the website's own online payment.` }; },
+  ({cur}) => { const ota=cur.otaNights; const totalOta=Object.values(ota).reduce((s,v)=>s+v,0); if(totalOta<3) return null; const top=Object.entries(ota).sort((a,b)=>b[1]-a[1])[0]; return { tone:'neutral', icon:'●', text:`${totalOta} night${totalOta===1?'':'s'} were held via OTA calendars (mostly ${OTA_LABEL[top[0]]}). Blocked dates carry no amount, so they aren't counted in revenue.` }; },
+  ({cur}) => (cur.avgBookingValue>0 && cur.bookings>=3) ? { tone:'neutral', icon:'●', text:`Average booking value this period is ${money(cur.avgBookingValue)} across ${cur.bookings} invoice${cur.bookings===1?'':'s'}.` } : null,
+];
+function renderInsights(ctx){
+  const out = [];
+  for(const rule of INSIGHT_RULES){
+    let ins = null;
+    try { ins = rule(ctx); } catch(e){ ins = null; }
+    if(ins) out.push(ins);
+    if(out.length===5) break;
+  }
+  const el = $('#insights');
+  if(!out.length){ el.innerHTML = '<div class="empty">Not enough activity in this period to call out a trend yet.</div>'; return; }
+  el.innerHTML = out.map(i=>`<div class="ins-card ${i.tone}"><span class="ic">${i.icon}</span><span></span></div>`).join('');
+  el.querySelectorAll('.ins-card > span:last-child').forEach((span,i)=>{ span.textContent = out[i].text; });
+}
+
+/* ============================================================
+   11. RENDER — one pipeline, called by setFilter
+   ============================================================ */
+let F = { gran:'month', anchor: firstOfMonth(new Date()), fromISO:null, toISO:null, channel:'all', status:'all', pay:'all' };
+try{
+  const saved = JSON.parse(localStorage.getItem('ryst_reports_filters')||'null');
+  if(saved && typeof saved==='object') F = Object.assign(F, saved, {anchor: firstOfMonth(new Date())});
+}catch(e){}
+let LAST = null;
+
+function persistFilters(){
+  try{ localStorage.setItem('ryst_reports_filters', JSON.stringify({gran:F.gran,channel:F.channel,status:F.status,pay:F.pay})); }catch(e){}
+}
+function setFilter(patch){ Object.assign(F, patch); persistFilters(); render(); }
+
+function renderFilterBar(R){
+  $$('#fGran button').forEach(b=> b.classList.toggle('on', b.dataset.g===F.gran));
+  $('#periodLabel').textContent = R.label;
+  $('#periodNav').style.display = F.gran==='custom' ? 'none' : '';
+  $('#customRange').style.display = F.gran==='custom' ? 'flex' : 'none';
+  if(F.gran==='custom'){
+    $('#fFrom').value = F.fromISO||R.startISO; $('#fTo').value = F.toISO||addDays(R.endISO,-1);
+    // Same "To can't precede From" guard as the checkin/checkout pickers
+    // elsewhere — a native min, not just a filter that quietly matches
+    // nothing when inverted.
+    $('#fTo').min = $('#fFrom').value || '';
+  }
+  $('#genStamp').textContent = 'Generated '+new Date().toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const active = facetsActive(F);
+  $('#facetNote').style.display = active ? 'flex' : 'none';
+  $('#printTitle').textContent = PROPERTY.name + ' · Reports · '+R.label;
+}
+
+function renderKpis(cur, prev, S, R){
+  const unfiltered = facetsActive(F);
+  const financeCards = [
+    { label:'Revenue', value:cur.revenue, prev:prev.revenue, fmt:'money', hero:true, sub:'stays (by check-in) + food sales', spark:S.map(b=>b.revenue), prevLabel:R.prev.label },
+    { label:'Expenses', value:cur.expenses, prev:prev.expenses, fmt:'money', invert:true, sub:'petty cash, all statuses', unfiltered, prevLabel:R.prev.label },
+    { label:'Net Profit', value:cur.net, prev:prev.net, fmt:'money', sub:'revenue − expenses', unfiltered, prevLabel:R.prev.label },
+    { label:'Profit Margin', value:cur.marginPct, prev:prev.marginPct, fmt:'pct', na: cur.marginPct==null, sub:'net ÷ revenue', unfiltered, prevLabel:R.prev.label },
+  ];
+  const bookingCards = [
+    { label:'Confirmed Bookings', value:cur.bookings, prev:prev.bookings, fmt:'int', sub:'invoiced this period', prevLabel:R.prev.label },
+    { label:'Nights Booked', value:cur.nightsBooked, prev:prev.nightsBooked, fmt:'int', sub: cur.daysInRange+' nights available', prevLabel:R.prev.label },
+    { label:'Villa Occupancy', value:cur.occupancyPct, prev:prev.occupancyPct, fmt:'pct', sub: R.endISO>todayISO() ? 'includes unsold future nights' : '', prevLabel:R.prev.label },
+    { label:'ADR', value:cur.adr, prev:prev.adr, fmt:'money', na: cur.nightsBooked===0, sub:'avg. contracted rate per night', prevLabel:R.prev.label },
+  ];
+  const secondaryCards = [
+    { label:'Revenue / Available Night', value:cur.revPAN, prev:prev.revPAN, fmt:'money', sub:'RevPAN', prevLabel:R.prev.label },
+    { label:'Avg Booking Value', value:cur.avgBookingValue, prev:prev.avgBookingValue, fmt:'money', na: cur.bookings===0, prevLabel:R.prev.label },
+    { label:'Avg Length of Stay', value:cur.avgStayNights, prev:prev.avgStayNights, fmt:'nights', na: cur.nightsBooked===0, prevLabel:R.prev.label },
+    { label:'Outstanding Payments', value:cur.outstanding, prev:prev.outstanding, fmt:'money', invert:true, unfiltered, prevLabel:R.prev.label },
+  ];
+  const extraCards = [
+    { label:'Total Guests', value:cur.totalGuests, prev:prev.totalGuests, fmt:'int', prevLabel:R.prev.label },
+    { label:'Avg Guests / Booking', value:cur.avgPartySize, prev:prev.avgPartySize, fmt:'int', na: cur.nightsBooked===0, prevLabel:R.prev.label },
+    { label:'Pending Quotations', value:cur.pendingQuotes, prev:prev.pendingQuotes, fmt:'money', sub: cur.pendingQuoteCount+' quote'+(cur.pendingQuoteCount===1?'':'s')+' — not yet confirmed', prevLabel:R.prev.label },
+    { label:'Food Sales', value:cur.foodRevenue, prev:prev.foodRevenue, fmt:'money', sub:(PROPERTY.restaurantName||'Restaurant')+', all orders except cancelled', prevLabel:R.prev.label },
+  ];
+  $('#kpiFinance').innerHTML = financeCards.map(kpiCard).join('');
+  $('#kpiBookings').innerHTML = bookingCards.map(kpiCard).join('');
+  $('#kpiSecondary').innerHTML = secondaryCards.map(kpiCard).join('');
+  $('#kpiExtra').innerHTML = extraCards.map(kpiCard).join('');
+}
+
+function renderCharts(S, cur, R){
+  drawLineChart('#chTrend', { series:[{key:'rev',label:'Revenue',color:'var(--c-rev)',values:S.map(b=>({label:b.label,y:b.revenue}))}], area:true, fmtY:FMT.moneyK, legend:false });
+  $('#trendHint').textContent = 'Stays (by check-in date) + food sales · '+ (S.length<=45?'daily':(S.length<=200?'weekly':'monthly')) + ' buckets';
+
+  drawColumnChart('#chPnl', { groups: S.map(b=>({label:b.label, bars:[
+    {label:'Revenue',color:'var(--c-rev)',value:b.revenue},
+    {label:'Expenses',color:'var(--c-exp)',value:b.expenses},
+  ]})), fmtY:FMT.moneyK, legend:false });
+  $('#lgPnl').innerHTML = `<span class="lk"><span class="sw" style="background:var(--c-rev)"></span>Revenue</span><span class="lk"><span class="sw" style="background:var(--c-exp)"></span>Expenses</span>`;
+
+  // Monthly comparison — always the trailing 12 real months, independent of the period filter
+  const yoyBuckets = []; { const now=new Date(); for(let i=11;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); const s=dateOnly(d), e=dateOnly(new Date(d.getFullYear(),d.getMonth()+1,1)); const m=computeMetrics(s,e,{channel:'all',status:'all',pay:'all'}); yoyBuckets.push({label:d.toLocaleDateString('en-IN',{month:'short'}), y:m.net}); } }
+  drawLineChart('#chYoy', { series:[{key:'net',label:'Net profit',color:'var(--accent-d)',values:yoyBuckets}], area:true, fmtY:FMT.moneyK, legend:false, height:200 });
+
+  drawStackedBar('#chSource', [
+    { label:'Online (Website)', color:'var(--c-online)', value:cur.onlineRevenue },
+    { label:'Manually entered', color:'var(--c-manual)', value:cur.manualRevenue },
+    { label:'Not tagged (legacy)', color:'var(--muted2)', value:cur.unknownRevenue },
+  ], { title:'Revenue by source' });
+
+  drawStackedBar('#chPay', [
+    { label:'Unpaid', color:'var(--ramp-1)', value:cur.payMix.unpaid.amt },
+    { label:'Partial', color:'var(--ramp-3)', value:cur.payMix.partial.amt },
+    { label:'Paid in full', color:'var(--ramp-4)', value:cur.payMix.paid.amt },
+  ], { title:'Payment status' });
+
+  drawHeatmap('#hmMonths', R.startISO, R.endISO, F.gran);
+  $('#occHint').textContent = `${cur.nightsBooked} of ${cur.daysInRange} nights booked this period · ADR-based color scale`;
+  $('#occTiles').innerHTML = [
+    ['Weekend occupancy', cur.weekendOccPct!=null?Math.round(cur.weekendOccPct)+'%':'—', cur.weekendNights+' of '+cur.weekendAvail+' nights'],
+    ['Weekday occupancy', cur.weekdayOccPct!=null?Math.round(cur.weekdayOccPct)+'%':'—', cur.weekdayNights+' of '+cur.weekdayAvail+' nights'],
+    ['Avg lead time', cur.leadTimeAvg!=null?Math.round(cur.leadTimeAvg)+' days':'—', cur.leadTimeN+' online booking'+(cur.leadTimeN===1?'':'s')+' sampled'],
+    ['Quote → booking', cur.conversionPct!=null?Math.round(cur.conversionPct)+'%':'—', cur.quotesConverted+' of '+cur.quotesTotal+' quotes'],
+  ].map(([l,v,s])=>`<div class="mini-tile"><div class="l">${esc(l)}</div><div class="v">${v}</div><div class="v"><small>${esc(s)}</small></div></div>`).join('');
+
+  drawHBars('#chOta', Object.entries(cur.otaNights).map(([k,v])=>({label:OTA_LABEL[k],value:v,color:OTA_COLOR[k]})));
+
+  drawLineChart('#chAdr', { series:[{key:'adr',label:'ADR',color:'var(--qt)',values:S.map(b=>({label:b.label,y:b.adr}))}], area:true, fmtY:FMT.moneyK, legend:false, height:190 });
+
+  drawColumnChart('#chWkd', { groups:[{label:'This period', bars:[
+    {label:'Weekday',color:'var(--c-manual)',value:cur.weekdayADR||0},
+    {label:'Weekend',color:'var(--c-online)',value:cur.weekendADR||0},
+  ]}], fmtY:FMT.moneyK, height:190 });
+  $('#pricingTiles').innerHTML = [
+    ['Highest booking', cur.highestBooking?money(cur.highestBooking.total):'—', cur.highestBooking?esc(cur.highestBooking.guest):''],
+    ['Lowest booking', cur.lowestBooking?money(cur.lowestBooking.total):'—', cur.lowestBooking?esc(cur.lowestBooking.guest):''],
+    ['Revenue / occupied night', money(cur.revPAN * (cur.daysInRange/(cur.nightsBooked||1)) )>0 ? money(cur.nightsBooked?cur.stayRevenue/cur.nightsBooked:0) : '—', 'room revenue only, excludes food'],
+  ].map(([l,v,s])=>`<div class="mini-tile"><div class="l">${esc(l)}</div><div class="v">${v}</div><div class="v"><small>${esc(s)}</small></div></div>`).join('');
+
+  $('#expTotal').textContent = cur.expByCat.length ? money(cur.expenses)+' total' : '';
+  $('#catBars').innerHTML = cur.expByCat.length ? cur.expByCat.map(([c,v])=>{
+    const max = cur.expByCat[0][1];
+    return `<div class="bar"><span class="name" title="${esc(c)}">${esc(c)}</span><span class="track"><span class="fill" style="width:${max?Math.max(4,v/max*100):0}%"></span></span><span class="bamt">${money(v)}</span></div>`;
+  }).join('') : '<div class="empty">No expenses this period.</div>';
+
+  drawColumnChart('#chExpTrend', { groups: S.map(b=>({label:b.label, bars:[{label:'Expenses',color:'var(--c-exp)',value: (function(){ const m=computeMetrics(b.startISO,b.endISO,F); return m.expenses; })() }] })), fmtY:FMT.moneyK, legend:false, height:190 });
+}
+
+function renderTable(S){
+  $('#trendBody').innerHTML = S.map((b,i)=>{
+    const net = b.revenue-b.expenses;
+    return `<tr class="${i===S.length-1?'current':''}">
+      <td>${esc(b.label)}</td><td class="rev">${money(b.revenue)}</td><td class="exp">${money(b.expenses)}</td>
+      <td class="net ${net>=0?'pos':'neg'}">${money(net)}</td><td>${Math.round(b.occPct)}%</td><td>${money(b.adr)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">No data.</td></tr>';
+}
+
+function renderFootnotes(cur){
+  $('#footNotes').innerHTML = `
+    <b>Data notes:</b>
+    Booking Channel is a new field — bookings entered before it shipped show as "Not tagged" (except online/website
+    payments, which are inferred with certainty). OTA platforms (Airbnb, Booking.com, etc.) only exist in this system
+    as blocked calendar dates with no amount attached, so they appear as nights held, never as revenue.
+    Booking lead time only includes online/website bookings — staff-entered bookings don't have a reliable creation
+    timestamp (it updates on every edit). Cancellation rate isn't shown: this system has no record of cancelled
+    bookings (deleting one leaves no trace).
+    Revenue includes ${esc(PROPERTY.restaurantName || 'restaurant')} food sales (every order except a cancelled one, counted on its order date) alongside
+    stay invoices — Net Profit and Margin subtract petty-cash expenses only, not food's own ingredient cost, so
+    they run a little rich wherever food sales are a meaningful share of the period.
+  `;
+}
+
+function render(){
+  const R = resolveRange(F);
+  const cur = computeMetrics(R.startISO, R.endISO, F);
+  const prev = computeMetrics(R.prev.startISO, R.prev.endISO, F);
+  const S = computeSeries(R, F);
+  LAST = { R, cur, prev, S };
+
+  renderFilterBar(R);
+  renderKpis(cur, prev, S, R);
+  renderCharts(S, cur, R);
+  renderInsights({ cur, prev, S, R, F });
+  renderTable(S);
+  renderFootnotes(cur);
+}
+
+let rzTimer;
+window.addEventListener('resize', ()=>{ clearTimeout(rzTimer); rzTimer=setTimeout(()=>{ if(LAST) renderCharts(LAST.S, LAST.cur, LAST.R); }, 150); });
+window.addEventListener('beforeprint', ()=>{ if(LAST) renderCharts(LAST.S, LAST.cur, LAST.R); });
+
+/* ============================================================
+   12. EXPORT — CSV (Excel opens these fine — no fake ".xlsx" claim
+   anywhere in the UI) + print/PDF via window.print().
+   Blob/anchor/quoting pattern copied from petty-cash.html:815-829.
+   ============================================================ */
+function csvCell(v){ const s=String(v==null?'':v); return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
+function downloadCSV(filename, rows){
+  const lines = rows.map(r=>r.map(csvCell).join(','));
+  const blob = new Blob([lines.join('\n')], { type:'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function exportSummaryCSV(){
+  if(!LAST) return;
+  const head = ['Period','Revenue','Expenses','Net','Margin %','Nights Booked','Occupancy %','ADR'];
+  const rows = LAST.S.map(b=>{ const m=computeMetrics(b.startISO,b.endISO,F); return [b.label, m.revenue, m.expenses, m.net, m.marginPct==null?'':Math.round(m.marginPct), m.nightsBooked, Math.round(m.occupancyPct), Math.round(m.adr)]; });
+  downloadCSV(`ryst-summary-${LAST.R.startISO}_${LAST.R.endISO}.csv`, [head, ...rows]);
+}
+function exportBookingsCSV(){
+  if(!LAST) return;
+  const head = ['No','Type','Guest','Check-in','Check-out','Nights','Guests','Channel','Payment Method','Payment Status','Total','Advance','Outstanding','Lead Days'];
+  const rows = sliceStays(LAST.R.startISO, LAST.R.endISO, F).map(r=>[r.no,r.type,r.guest,r.checkin,r.checkout,r.nights,r.guestCount,r.channel,r.mode,r.payStatus,r.total,r.advance,r.outstanding,r.leadDays==null?'':r.leadDays]);
+  downloadCSV(`ryst-bookings-${LAST.R.startISO}_${LAST.R.endISO}.csv`, [head, ...rows]);
+}
+function exportExpensesCSV(){
+  if(!LAST) return;
+  const head = ['Date','Category','Note','Amount','Status','Added by'];
+  const rows = sliceExpenses(LAST.R.startISO, LAST.R.endISO).filter(e=>e.type==='expense').map(e=>[e.date,e.category||'',e.note||'',e.amount,e.status||'',e.createdBy||'']);
+  downloadCSV(`ryst-expenses-${LAST.R.startISO}_${LAST.R.endISO}.csv`, [head, ...rows]);
+}
+
+/* ============================================================
+   13. WIRE UP + LOAD
+   ============================================================ */
+TIP.init();
+$$('#fGran button').forEach(b=> b.addEventListener('click', ()=> setFilter({gran:b.dataset.g, anchor:firstOfMonth(new Date())})));
+$('#prevBtn').addEventListener('click', ()=> setFilter({anchor: stepAnchor(F,-1)}));
+$('#nextBtn').addEventListener('click', ()=> setFilter({anchor: stepAnchor(F,1)}));
+$('#todayBtn').addEventListener('click', ()=> setFilter({anchor: firstOfMonth(new Date())}));
+$('#fFrom').addEventListener('change', e=>{
+  const from = e.target.value;
+  const patch = { fromISO: from };
+  // Bump an already-picked To forward if From just moved past it, rather
+  // than leaving a now-inverted (always-empty) range sitting in the state.
+  if(from && F.toISO && F.toISO < from) patch.toISO = from;
+  setFilter(patch);
+});
+$('#fTo').addEventListener('change', e=> setFilter({toISO:e.target.value}));
+$('#fChannel').addEventListener('change', e=> setFilter({channel:e.target.value}));
+$('#fStatus').addEventListener('change', e=> setFilter({status:e.target.value}));
+$('#fPay').addEventListener('change', e=> setFilter({pay:e.target.value}));
+$('#fReset').addEventListener('click', ()=> setFilter({channel:'all',status:'all',pay:'all'}));
+
+const exportDd = $('#exportDd');
+$('#exportBtn').addEventListener('click', e=>{ e.stopPropagation(); exportDd.classList.toggle('open'); });
+document.addEventListener('click', ()=> exportDd.classList.remove('open'));
+$('#expSummary').addEventListener('click', ()=>{ exportSummaryCSV(); exportDd.classList.remove('open'); });
+$('#expBookings').addEventListener('click', ()=>{ exportBookingsCSV(); exportDd.classList.remove('open'); });
+$('#expExpenses').addEventListener('click', ()=>{ exportExpensesCSV(); exportDd.classList.remove('open'); });
+$('#printBtn').addEventListener('click', ()=> window.print());
+
+async function load(){
+  const loader = $('#loader'), msgEl = $('#loaderMsg'), retryBtn = $('#loaderRetry');
+  loader.classList.remove('hide');
+  $('#loaderSpin').style.display = '';
+  retryBtn.style.display = 'none';
+  msgEl.textContent = 'Loading reports…';
+
+  const ctrl = new AbortController();
+  const slowTimer = setTimeout(() => { msgEl.textContent = 'Waking up the server… this can take up to a minute.'; }, 4000);
+  const abortTimer = setTimeout(() => ctrl.abort(), 75000);
+  try{
+    // /restaurant is fetched alongside the two required sources, but its
+    // absence is never fatal to the page — food sales are an enhancement
+    // to the revenue figure, not a prerequisite. A user without the
+    // 'restaurant' module gets a 403 here, or a fetch itself can just
+    // fail; either way this settles rather than rejects, and ORDERS
+    // simply stays empty (food revenue reads as ₹0, not an error).
+    const [staysRes, pcRes, rsRes] = await Promise.all([
+      fetch(PROXY_URL+'/stays', { headers:{'X-Token':TOKEN}, signal: ctrl.signal }),
+      fetch(PROXY_URL+'/petty-cash', { headers:{'X-Token':TOKEN}, signal: ctrl.signal }),
+      fetch(PROXY_URL+'/restaurant', { headers:{'X-Token':TOKEN}, signal: ctrl.signal }).catch(()=>null),
+    ]);
+    if(staysRes.status===401 || pcRes.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    if(!staysRes.ok || !pcRes.ok) throw new Error('Server error');
+    const staysData = await staysRes.json().catch(()=>({}));
+    const pcData = await pcRes.json().catch(()=>({}));
+    const rsData = (rsRes && rsRes.ok) ? await rsRes.json().catch(()=>({})) : {};
+    STAYS = Array.isArray(staysData.stays) ? staysData.stays.filter(s=>s.checkin && s.checkout) : [];
+    EXPENSES = Array.isArray(pcData.entries) ? pcData.entries.filter(e=>e.date) : [];
+    ORDERS = Array.isArray(rsData.orders) ? rsData.orders.filter(o=>o.date) : [];
+    buildRows();
+    buildNightIndex();
+    render();
+    loader.classList.add('hide');
+  }catch(e){
+    $('#loaderSpin').style.display = 'none';
+    msgEl.textContent = (e && e.name === 'AbortError')
+      ? 'Server timed out — please retry.'
+      : 'Could not load reports — ' + (e && e.message ? e.message : 'check your connection.');
+    retryBtn.style.display = '';
+  } finally {
+    clearTimeout(slowTimer); clearTimeout(abortTimer);
+  }
+}
+$('#loaderRetry').addEventListener('click', load);
+
+// Logo from settings (shared with other tools)
+(function(){
+  try{ const s=JSON.parse(localStorage.getItem('ryst_quote_settings')||'null'); if(s&&s.logo){ $('#logo').src=s.logo; return; } }catch(e){}
+})();
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,1439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<title data-title="{name} — Stay Invoice / Quote">RYST 109A — Stay Invoice / Quote</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#eef2f2; --panel:#ffffff; --panel2:#f5f8f8;
+    --line:#dde4e3; --accent:#0e7c86; --accent-d:#0a5b63; --accent-soft:#e3f1f1;
+    --ink:#15201f; --muted:#566461; --muted2:#93a09d; --danger:#c0584b; --good:#3a8a5e;
+    --sea:#0e7c86; --sea-d:#0a5b63; --sand:#c0922f; --navy:#143b44;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;font-weight:400;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  input,textarea,select{font-family:inherit}
+
+  /* ---------- APP SHELL ---------- */
+  #app[hidden]{display:none}
+  header.bar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+  .bar-left{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .bar .brand-mini{font-weight:700;font-size:15px;color:var(--sea-d);letter-spacing:.3px}
+  .bar .brand-mini span{color:var(--sand)}
+  .bar .sub{color:var(--muted2);font-size:12px;border-left:1px solid var(--line);padding-left:12px}
+  .conn-dot{width:8px;height:8px;border-radius:50%;background:#d4d8d3;flex-shrink:0;transition:background .4s;cursor:default}
+  .conn-dot.ok{background:var(--accent)}
+  .conn-dot.err{background:var(--danger)}
+  .bar-actions{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;margin-left:auto}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 13px;border-radius:9px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap}
+  .btn:hover{border-color:var(--accent);color:var(--accent-d)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  .btn.primary:hover{background:var(--accent-d);color:#fff}
+  .btn.primary:disabled{opacity:.38;cursor:not-allowed;background:var(--accent);border-color:var(--accent)}
+  .btn.icon-btn{padding:0;width:34px;height:34px;justify-content:center;flex-shrink:0}
+  .bar-sep{width:1px;height:22px;background:var(--line);flex-shrink:0;margin:0 2px}
+  /* Wallet dropdown — one toolbar slot instead of a second full button,
+     since .bar-actions is flex-wrap:nowrap and this toolbar is already
+     fairly packed. Same shape as reports.html's export dropdown. */
+  .dd{position:relative;display:inline-block}
+  .dd-menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:0 12px 30px rgba(30,40,30,.14);min-width:170px;z-index:40;display:none;overflow:hidden}
+  .dd.open .dd-menu{display:block}
+  .dd-item{display:block;width:100%;text-align:left;padding:9px 13px;background:none;border:none;font-size:12.5px;color:var(--ink);font-weight:500;font-family:inherit;cursor:pointer}
+  .dd-item:hover{background:var(--panel2)}
+  .dd-item:disabled{opacity:.4;cursor:not-allowed}
+  .hide{display:none !important}
+
+  main.work{display:grid;grid-template-columns:minmax(360px,460px) 1fr;gap:0;height:calc(100vh - 59px)}
+  .form{overflow-y:auto;padding:22px 22px 80px;border-right:1px solid var(--line);background:var(--panel)}
+  .form::-webkit-scrollbar,.preview::-webkit-scrollbar{width:10px}
+  .form::-webkit-scrollbar-thumb,.preview::-webkit-scrollbar-thumb{background:#cfd6d4;border-radius:6px}
+  .group{margin-bottom:24px}
+  .group > .gh{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent-d);margin:0 0 12px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .group > .gh::after{content:"";flex:1;height:1px;background:var(--line)}
+  label.f{display:block;margin-bottom:12px}
+  label.f span{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+  input.t.err{border-color:var(--danger)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  input.t,textarea.t,select.t{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:10px 12px;font-size:13.5px;font-weight:400}
+  textarea.t{resize:vertical;min-height:60px;line-height:1.5}
+  input.t:focus,textarea.t:focus,select.t:focus{outline:none;border-color:var(--accent);background:#fff}
+  input.locked{background:#eef0ec;color:var(--muted);cursor:not-allowed;border-style:dashed}
+
+  /* doc-type segmented toggle */
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel2)}
+  .seg button{flex:1;border:none;background:transparent;padding:10px;font-size:13px;font-weight:600;color:var(--muted)}
+  .seg button.on{background:var(--accent);color:#fff}
+
+  .li-head,.li-row{display:grid;grid-template-columns:1fr 50px 84px 92px 30px;gap:8px;align-items:start}
+  .li-head{font-size:11px;color:var(--muted2);letter-spacing:.4px;margin-bottom:7px;padding:0 2px;align-items:center}
+  .li-head .num{text-align:center}
+  .li-row{margin-bottom:8px}
+  .li-row input,.li-row select{padding:9px 10px;font-size:13px}
+  .li-row input.num{text-align:center}
+  .li-row input.tot{background:var(--accent-soft);border-color:#cbe6e6;color:var(--accent-d);font-weight:600;text-align:right}
+  .li-del{background:transparent;border:1px solid var(--line);color:var(--muted2);border-radius:8px;height:34px;font-size:16px;line-height:1;margin-top:2px}
+  .li-del:hover{border-color:var(--danger);color:var(--danger)}
+  .li-desc-wrap{display:flex;flex-direction:column;gap:4px}
+  .add-li{margin-top:4px;width:100%;background:transparent;border:1px dashed #c3ccca;color:var(--muted);padding:10px;border-radius:9px;font-size:13px}
+  .add-li:hover{border-color:var(--accent);color:var(--accent-d)}
+
+  .totals-mini{margin-top:14px;padding:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;font-size:13px}
+  .totals-mini div{display:flex;justify-content:space-between;align-items:center;padding:3px 0;color:var(--muted)}
+  .totals-mini div.grand{color:var(--ink);font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:9px}
+  .hint{display:block;font-size:11.5px;color:var(--muted2);line-height:1.5;margin-top:6px}
+  .hint.err{color:var(--danger)}
+  .send-result.err{color:var(--danger)}
+  .send-result.ok{color:var(--good)}
+
+  .preview{overflow:auto;background:#d9e0df;padding:30px;display:flex;justify-content:center;align-items:flex-start}
+
+  /* ============ STAY DOCUMENT ============ */
+  .doc{width:210mm;min-height:297mm;background:#fff;color:#1c2422;padding:12mm 13mm 9mm;font-family:"Outfit",sans-serif;font-weight:400;box-shadow:0 18px 50px rgba(20,40,40,.22);position:relative;display:flex;flex-direction:column}
+  .d-foot{margin-top:auto;padding-top:10px}
+
+  .d-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+  .d-brand{display:flex;align-items:center;gap:10px}
+  .d-brand-logo{height:116px;width:auto;display:block;object-fit:contain;align-self:center}
+  .d-brand-logo[src=""]{display:none}
+  .d-brand-text{align-self:center}
+  .d-brand-text .bt-name{font-weight:700;font-size:30px;letter-spacing:1px;color:var(--navy);line-height:1.05}
+  .d-brand-text .bt-name span{color:var(--sand)}
+  .d-brand-text .bt-villa{font-weight:600;font-size:17px;letter-spacing:6px;color:var(--sea-d);margin-top:1px}
+  .d-brand-text .bt-tag{font-size:10.5px;letter-spacing:3px;color:var(--muted);margin-top:4px}
+  .co-ig{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:4px;font-size:11px;color:#c96a3b;text-decoration:none;letter-spacing:.3px}
+  .d-co{text-align:right;color:#33433f;font-size:12.5px;line-height:1.6;padding-top:24px}
+  .addr-link{color:inherit;text-decoration:none;cursor:pointer}
+
+  .d-title{text-align:center;color:#fff;background:var(--sea);font-weight:700;font-size:22px;letter-spacing:4px;padding:8px;border-radius:6px;margin:14px 0 14px}
+
+  .d-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .panel{border:1px solid #d7e2e0;border-radius:8px;overflow:hidden}
+  .panel-h{background:var(--accent-soft);color:var(--sea-d);font-weight:700;font-size:12px;letter-spacing:1.5px;padding:7px 12px;border-bottom:1px solid #d7e2e0}
+  .panel .kv{display:flex;justify-content:space-between;gap:12px;padding:3px 12px;font-size:13px;line-height:1.3}
+  .panel .kv span{color:#6a7a76}
+  .panel .kv b{color:#1c2a27;font-weight:600;text-align:right}
+
+  .d-mid{display:grid;grid-template-columns:1fr 188px;gap:14px;align-items:start;margin-bottom:14px}
+  table.d-table{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.d-table th{background:var(--sea);color:#fff;text-align:left;padding:9px 12px;font-weight:600;font-size:12.5px}
+  table.d-table th.num,table.d-table td.num{text-align:center}
+  table.d-table th.amt,table.d-table td.amt{text-align:right}
+  table.d-table td{padding:7px 12px;color:#2c3633;background:#f4f7f6;vertical-align:middle}
+  table.d-table tr:nth-child(even) td{background:#eef3f2}
+  table.d-table tfoot td{background:#fff;border-top:1px solid #d7e2e0;font-weight:600;color:#1c2a27}
+  table.d-table tfoot tr.sub td{font-weight:600}
+  table.d-table tfoot tr.gst td{color:#6a7a76;font-weight:500}
+  table.d-table tfoot tr.grand td{background:var(--sea);color:#fff;font-weight:700;font-size:14.5px}
+
+  .d-side{display:flex;flex-direction:column;gap:10px}
+  .side-box{border:1px solid #d7e2e0;border-radius:8px;padding:9px 12px}
+  .side-box .sb-l{font-size:10.5px;font-weight:700;letter-spacing:.6px;color:#6a7a76;text-transform:uppercase}
+  .side-box .sb-l small{font-weight:500;text-transform:none;letter-spacing:0}
+  .side-box .sb-v{font-size:16px;font-weight:700;color:var(--sea-d);margin-top:3px}
+  .side-box.bal{background:var(--accent-soft);border-color:#bfe0e0}
+  .side-box.bal .sb-v{color:var(--navy)}
+
+  .d-pay{display:grid;grid-template-columns:1fr auto;gap:14px;margin-bottom:12px;align-items:start}
+  .d-pay-qr{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .d-pay-qr img{width:135px;height:135px;display:block;border:1px solid #d7e2e0;border-radius:6px;padding:3px}
+  .d-pay-qr .qr-label{font-size:9px;letter-spacing:.8px;color:#6a7a76;text-transform:uppercase;text-align:center;margin-top:3px}
+  .pb-h{font-weight:700;font-size:12px;letter-spacing:1.2px;color:var(--sea-d);margin-bottom:6px}
+  .pb-body{font-size:12.5px;line-height:1.7;color:#2c3633}
+  .decl{font-size:11.5px;line-height:1.55;color:#52605c}
+
+  .d-terms{margin-bottom:10px}
+  .d-terms ol{margin:0;padding-left:18px;font-size:11.5px;color:#42504c;line-height:1.6}
+  .d-terms ol li{margin-bottom:2px}
+
+  .d-decl{margin-bottom:10px}
+  .d-decl .decl{font-size:11.5px;line-height:1.55;color:#52605c;margin-top:4px}
+  .d-sign-row{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-top:6px}
+  .d-sign{display:flex;flex-direction:column;align-items:flex-end;text-align:right;margin-left:auto}
+  .d-sign.guest{align-items:flex-start;text-align:left;margin-left:0}
+  .d-sign.guest[hidden]{display:none}
+  .d-sign .sign-for{font-size:12px;color:#52605c;margin-bottom:2px}
+  .d-sign .sign-name-cursive{font-family:"Dancing Script",cursive;font-size:30px;color:var(--sand);line-height:1;margin:2px 0}
+  .d-sign .sign-name{font-size:12.5px;font-weight:700;color:#1c2a27;letter-spacing:.3px}
+  .d-sign .sign-blank{height:38px;border-bottom:1px solid #bbb;width:140px;margin:8px 0 4px}
+  .d-sign .sign-role{font-size:11px;color:var(--muted);letter-spacing:1px}
+  .warn-rate{border-color:#e0a030 !important;background:#fffbee !important}
+
+  .d-foot{text-align:center;font-size:11.5px;font-weight:600;letter-spacing:2px;color:var(--sea-d);border-top:1px solid #dde4e3;padding-top:9px;margin-top:10px}
+
+  /* modals */
+  .modal{position:fixed;inset:0;background:rgba(20,35,33,.42);display:flex;align-items:center;justify-content:center;z-index:40;padding:20px}
+  .modal[hidden]{display:none}
+  .modal-card{width:min(560px,100%);max-height:86vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;box-shadow:0 24px 60px rgba(20,40,40,.18)}
+  .modal-card h2{font-weight:600;margin:0 0 4px;font-size:20px}
+  .modal-card .sd{color:var(--muted);font-size:12.5px;margin:0 0 20px}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+  /* Search-to-open dropdown under the quote/invoice no. field — replaces
+     the old Saved modal's list, same si-no/si-tag/si-sub row shape, now a
+     single clickable row instead of a row + separate Open button. */
+  .no-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:30;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,40,40,.15);max-height:280px;overflow-y:auto}
+  .no-dd[hidden]{display:none}
+  .no-dd-item{display:block;width:100%;text-align:left;padding:9px 12px;border:none;border-bottom:1px solid var(--line);background:var(--panel);font-size:13px;font-family:inherit;cursor:pointer}
+  .no-dd-item:last-child{border-bottom:none}
+  .no-dd-item:hover{background:var(--panel2)}
+  .no-dd-item .si-no{color:var(--accent-d);font-weight:600}
+  .no-dd-item .si-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;padding:1px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
+  .no-dd-item .si-tag.inv{background:#e3f1f1;color:var(--sea-d)}
+  .no-dd-item .si-tag.qt{background:#fbf0d8;color:var(--sand)}
+  .no-dd-item .si-sub{display:block;color:var(--muted);font-size:11.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .empty{color:var(--muted2);font-size:13px;text-align:center;padding:18px}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#15201f;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* Blocks all interaction (including Save) until the existing bookings have
+     actually loaded — without this, Save can fire while staysCache is still
+     empty and silently wipe every other invoice/quote/block on the server. */
+  #loader{position:fixed;inset:0;background:rgba(238,242,242,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:80;color:var(--muted)}
+  #loader.hide{display:none}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media (max-width:900px){
+    /* The toolbar's buttons in one no-wrap row pushed the page past a
+       phone's width — let them wrap under the title instead. */
+    .bar-actions{flex-wrap:wrap;margin-left:0;justify-content:flex-start}
+    main.work{grid-template-columns:1fr;height:auto}
+    .preview{padding:14px}
+    .doc{width:100%;min-height:auto;padding:18px 16px}
+  }
+
+  /* ============ PRINT → SAVE AS PDF ============ */
+  @page{ size:A4; margin:7mm 5mm 6mm }
+  @media print{
+    html,body{ width:210mm !important; min-width:0 !important; margin:0 !important; padding:0 !important; background:#fff !important }
+    header.bar, .form, .modal, .toast{ display:none !important }
+    #app{ display:block !important }
+    main.work{ display:block !important; height:auto !important; grid-template-columns:none !important }
+    .preview{ display:block !important; height:auto !important; margin:0 !important; padding:0 !important;
+              background:#fff !important; overflow:visible !important; }
+    /* Print the approved on-screen layout, scaled by one uniform zoom so the
+       whole villa document fits a single A4 page. min-height fills the page so
+       the footer pins to the bottom; @page top margin avoids desktop top-crop. */
+    .doc{
+      position:static !important; width:210mm !important; min-height:300mm !important;
+      margin:0 auto !important; padding:6mm 13mm 6mm !important;
+      box-shadow:none !important; border:none !important; overflow:visible !important;
+      zoom:0.93 !important;
+      display:flex !important; flex-direction:column !important;
+    }
+    .doc, .doc *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important }
+  }
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#0e2420">
+</head>
+<body>
+
+<div id="app" hidden>
+  <header class="bar">
+    <div class="bar-left">
+      <div class="brand-mini" id="hdrBrand" style="cursor:pointer" title="Home" data-prop-split="name">RYST <span>109A</span></div>
+      <div class="sub" id="viewLabel">Stay invoice / quote</div>
+      <span class="conn-dot" id="connDot" title="Cloud sync"></span>
+    </div>
+    <div class="bar-actions">
+      <button class="btn icon-btn" id="btnHome" title="Home">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.25 7.5 2l5.5 5.25"/><path d="M3.25 6.5V13h8.5V6.5"/><path d="M6 13V9h3v4"/></svg>
+      </button>
+      <button class="btn icon-btn" id="btnBookings" title="Booking calendar">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="12" height="11" rx="1.5"/><path d="M1.5 6.5h12M5 1v3M10 1v3"/></svg>
+      </button>
+      <div class="bar-sep"></div>
+      <button class="btn" id="btnNew">+ New</button>
+      <button class="btn primary" id="btnPdf">PDF</button>
+      <div class="dd" id="walletDd">
+        <button class="btn" id="btnWallet" disabled title="Save the document first, then share to Wallet">Wallet ▾</button>
+        <div class="dd-menu">
+          <button type="button" class="dd-item" id="btnWalletApple">🍎 Apple Wallet</button>
+          <button type="button" class="dd-item" id="btnWalletGoogle">Google Wallet</button>
+        </div>
+      </div>
+      <button class="btn" id="btnPortalLink" disabled title="Save the document first, then copy a guest link">🔗 Guest Portal</button>
+      <button class="btn" id="btnSendQuote" disabled title="Save the quote first, then send it to the guest" style="display:none">💬 Send Quote</button>
+    </div>
+  </header>
+
+  <main class="work">
+    <section class="form">
+      <div class="group">
+        <p class="gh">Document</p>
+        <div class="seg" id="typeSeg">
+          <button data-type="quote" class="on">Quotation</button>
+          <button data-type="invoice">Invoice</button>
+        </div>
+        <div class="row2" style="margin-top:12px">
+          <label class="f" style="position:relative"><span id="noLbl">Quote no. (auto)</span><input class="t" id="no" autocomplete="off" placeholder="Auto-generated — or type to search"><div class="no-dd" id="noDropdown" hidden></div></label>
+          <label class="f"><span id="dateLbl">Quote date</span><input class="t" id="date" type="date"></label>
+        </div>
+        <label class="f" id="loadQuoteRow" style="display:none"><span>Load from quote</span>
+          <select class="t" id="loadQuoteSel"><option value="">— pick a quote —</option></select>
+        </label>
+        <label class="f"><span>Booking reference <span style="color:var(--muted2)">(optional)</span></span><input class="t" id="ref" placeholder="e.g. WhatsApp / Airbnb #"></label>
+        <label class="f"><span>Booking channel <span style="color:var(--muted2)">(for reports — optional)</span></span>
+          <select class="t" id="channel">
+            <option value="">—</option>
+            <option>Website</option>
+            <option>WhatsApp / Phone</option>
+            <option>Walk-in</option>
+            <option>Airbnb</option>
+            <option>Booking.com</option>
+            <option>MakeMyTrip</option>
+            <option>Agoda</option>
+            <option>Referral</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="group">
+        <p class="gh">Guest</p>
+        <label class="f"><span>Guest name</span><input class="t" id="guest" placeholder="Mr. / Ms. ..."></label>
+        <div class="row2">
+          <label class="f"><span>Email ID</span><input class="t" id="email" placeholder="guest@email.com"></label>
+          <label class="f"><span>Phone</span><input class="t" id="phone" inputmode="tel" type="tel" placeholder="+919876543210"><small class="hint" id="phoneHint"></small></label>
+        </div>
+        <label class="f"><span>No. of guests</span><input class="t" id="guests" type="number" min="1" step="1" inputmode="numeric" placeholder="2"></label>
+      </div>
+
+      <div class="group">
+        <p class="gh">Stay details</p>
+        <div class="row2">
+          <label class="f"><span>Check-in</span><input class="t" id="checkin" type="date"></label>
+          <label class="f"><span>Check-out</span><input class="t" id="checkout" type="date"></label>
+        </div>
+        <div class="row2">
+          <label class="f"><span>No. of nights (auto)</span><input class="t locked" id="nights" readonly tabindex="-1"></label>
+          <label class="f"><span>Payment mode</span>
+            <select class="t" id="mode">
+              <option>Razorpay</option>
+              <option selected>UPI</option>
+              <option>Bank Transfer</option>
+              <option>Cash</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="group">
+        <p class="gh">Charges</p>
+        <div class="li-head"><div>Description</div><div class="num">Qty</div><div class="num">Rate</div><div class="num">Amount</div><div></div></div>
+        <div id="liBody"></div>
+        <button class="add-li" id="addLi">+ Add charge</button>
+
+        <div class="totals-mini">
+          <div><span>Subtotal</span><b id="mSub">₹0</b></div>
+
+          <div style="align-items:center">
+            <span>Discount</span>
+            <input id="discountInp" type="number" min="0" step="1" inputmode="decimal" placeholder="0"
+              style="width:90px;padding:5px 8px;font-size:12.5px;text-align:right;border:1px solid var(--line);border-radius:7px;background:var(--panel2)">
+          </div>
+          <div class="grand"><span>Grand Total</span><b id="mGrand">₹0</b></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <p class="gh">Deposit & advance</p>
+        <div class="row2">
+          <label class="f"><span>Security deposit (refundable)</span><input class="t" id="deposit" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></label>
+          <label class="f"><span>Booking advance received</span><input class="t" id="advance" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></label>
+        </div>
+        <p class="hint">Balance due = Grand total − Advance received. Security deposit is collected separately and refundable.</p>
+      </div>
+
+      <div class="group" style="margin-bottom:0">
+        <button class="btn primary" id="btnSave" disabled style="width:100%;justify-content:center;padding:12px">Save</button>
+      </div>
+    </section>
+
+    <section class="preview">
+      <div class="doc" id="stayDoc">
+        <div class="d-top">
+          <div class="d-brand">
+            <img class="d-brand-logo" src="/assets/stay-logo.png" data-prop-src="logoUrl" alt="RYST 109A" data-prop-alt="name">
+            <div class="d-brand-text">
+              <div class="bt-name" data-prop-split="name">RYST <span>109A</span></div>
+              <div class="bt-villa" data-prop="typeLabel" style="text-transform:uppercase">BEACH&nbsp;VILLA</div>
+              <div class="bt-tag" data-prop="tagline" style="text-transform:uppercase">PRIVATE COASTAL RETREAT</div>
+            </div>
+          </div>
+          <div class="d-co" id="coBlock"></div>
+        </div>
+
+        <div class="d-title" id="pTitle">INVOICE</div>
+
+        <div class="d-panels">
+          <div class="panel">
+            <div class="panel-h">BILL TO</div>
+            <div class="kv"><span>Guest Name</span><b id="pGuest"></b></div>
+            <div class="kv"><span>Email ID</span><b id="pEmail"></b></div>
+            <div class="kv"><span>Phone</span><b id="pPhone"></b></div>
+            <div class="kv"><span>No. of Guests</span><b id="pGuests"></b></div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">STAY DETAILS</div>
+            <div class="kv"><span id="pNoLbl">Invoice No</span><b id="pNo"></b></div>
+            <div class="kv"><span id="pDateLbl">Invoice Date</span><b id="pDate"></b></div>
+            <div class="kv"><span>Booking Ref</span><b id="pRef"></b></div>
+            <div class="kv"><span>Check-in</span><b id="pIn"></b></div>
+            <div class="kv"><span>Check-out</span><b id="pOut"></b></div>
+            <div class="kv"><span>No. of Nights</span><b id="pNights"></b></div>
+            <div class="kv"><span>Payment Mode</span><b id="pMode"></b></div>
+          </div>
+        </div>
+
+        <div class="d-mid">
+          <table class="d-table">
+            <thead><tr><th>Description</th><th class="num">Qty</th><th class="amt">Rate (₹)</th><th class="amt">Amount (₹)</th></tr></thead>
+            <tbody id="pRows"></tbody>
+            <tfoot>
+              <tr class="sub"><td colspan="3">SUBTOTAL</td><td class="amt" id="pSub"></td></tr>
+
+              <tr class="grand"><td colspan="3">GRAND TOTAL</td><td class="amt" id="pGrand"></td></tr>
+            </tfoot>
+          </table>
+          <div class="d-side">
+            <div class="side-box"><div class="sb-l">Booking Advance Received</div><div class="sb-v" id="pAdvance"></div></div>
+            <div class="side-box"><div class="sb-l">Security Deposit <small>(refundable, collected separately)</small></div><div class="sb-v" id="pDeposit"></div></div>
+            <div class="side-box bal"><div class="sb-l">Balance Due <small>(if any)</small></div><div class="sb-v" id="pBalance"></div></div>
+          </div>
+        </div>
+
+        <div class="d-pay">
+          <div>
+            <div class="pb-h">PAYMENT / BANK DETAILS</div>
+            <div class="pb-body" id="pBank"></div>
+          </div>
+          <div class="d-pay-qr" id="payQr">
+            <img src="/assets/stay-payment-qr.png" alt="Scan to pay">
+            <div class="qr-label">Scan to Pay</div>
+          </div>
+        </div>
+
+        <div class="d-terms">
+          <div class="pb-h">TERMS &amp; CONDITIONS</div>
+          <ol id="pTerms"></ol>
+        </div>
+
+        <div class="d-decl">
+          <div class="pb-h">DECLARATION</div>
+          <div class="decl" id="pDecl"></div>
+        </div>
+
+        <div class="d-sign-row">
+          <div class="d-sign guest" id="pGuestSign">
+            <div class="sign-for">Accepted by (Guest)</div>
+            <div class="sign-blank"></div>
+            <div class="sign-name" id="pGuestSignName">Guest Signature &amp; Date</div>
+          </div>
+          <div class="d-sign">
+            <div class="sign-for" data-prop-tpl="For {name}">For RYST 109A</div>
+            <div class="sign-blank"></div>
+            <div class="sign-name" data-prop="signatory">YUVANESAN M</div>
+          </div>
+        </div>
+
+        <div class="d-foot" id="pFoot"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- bookings modal -->
+<div class="modal" id="bookingsModal" hidden>
+  <div class="modal-card" style="width:min(620px,100%)">
+    <h2>Booking Calendar</h2>
+    <p class="sd">Confirmed check-in / check-out dates from saved invoices &amp; quotes.</p>
+    <div id="bookingsList" style="display:flex;flex-direction:column;gap:8px;margin-top:4px"></div>
+    <div class="modal-foot"><button class="btn" id="bookingsClose">Close</button></div>
+  </div>
+</div>
+
+<!-- send quote modal -->
+<div class="modal" id="sendQuoteModal" hidden>
+  <div class="modal-card">
+    <h2>Send quote to guest?</h2>
+    <p class="sd" id="sendQuoteBody">This sends the quoteReady WhatsApp message with a link to review and pay.</p>
+    <div class="send-result" id="sendQuoteResult" style="font-size:12.5px;margin:-8px 0 8px"></div>
+    <div class="modal-foot">
+      <button class="btn" id="sendQuoteCancel">Cancel</button>
+      <button class="btn primary" id="sendQuoteConfirm">Send</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="loader">
+  <div class="spin" id="loaderSpin"></div>
+  <div id="loaderMsg">Loading bookings…</div>
+  <button class="btn" id="loaderRetry" style="display:none">Retry</button>
+</div>
+
+<script>
+/* =========================================================================
+   CONFIG
+   ========================================================================= */
+const PROXY_URL = 'https://data.ryst.in';
+const GUEST_PORTAL_URL = guestSiteUrl() + '/guest.html';
+// new Date().toISOString() converts through UTC — for any timezone ahead
+// of UTC (IST included), this reports "yesterday" during the first few
+// hours after local midnight. Read the local calendar fields directly.
+const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+let proxyToken = localStorage.getItem('ryst_proxy_token') || '';
+const MYEMAIL = localStorage.getItem('ryst_user_email') || '';
+
+// Owner always has full access. Coordinator/caretaker need the 'bookings'
+// module granted in Settings → User Access — server-enforced on /stays
+// regardless, this just avoids loading a page the user can't actually use.
+function hasModule(mod){
+  const role = localStorage.getItem('ryst_user_role') || 'owner';
+  let modules;
+  try { modules = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { modules = null; }
+  if(!Array.isArray(modules)) modules = role === 'caretaker' ? ['petty-cash','inventory','checklist'] : [];
+  return role === 'owner' || modules.includes(mod);
+}
+
+// The UPI QR image is RYST 109A's own — never on another villa's documents.
+if(window.RYST_VILLA && window.RYST_VILLA!=='ryst-109a'){ const q=document.getElementById('payQr'); if(q) q.remove(); }
+const K_SET = "ryst_stay_settings" + ((window.RYST_VILLA && window.RYST_VILLA !== 'ryst-109a') ? ':' + window.RYST_VILLA : '');   // local cache (per villa); master copy synced via proxy /stay-settings
+
+// Villa business info, bank & pricing. These are the built-in defaults — the
+// live values are configured in settings.html (Stay tab) and synced through the
+// proxy /stay-settings endpoint. Keep this object identical to settings.html.
+// Numbering prefix from the property name ("RYST 109A" → "RYST109A/INV").
+const PROPERTY_CODE = (PROPERTY.name || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase() || 'DOC';
+const DEFAULTS = {
+  company: "",
+  pan: "",
+  invPrefix: PROPERTY_CODE + "/INV",
+  qtPrefix:  PROPERTY_CODE + "/QT",
+  bank: "",
+  declaration:
+`Supplier is not registered under GST as the turnover is below the prescribed threshold limit under the GST Act. Hence, GST has not been charged on this invoice.`,
+  terms: [
+    "Full payment is due as per booking confirmation.",
+    "Security deposit, if collected, shall be refunded within 7–10 working days after check-out, subject to inspection of the property.",
+    "Any damage to the property, furnishings, fixtures or equipment may be deducted from the security deposit.",
+    "This document is issued by an individual owner and not by a GST-registered entity.",
+    "Jurisdiction shall be Chennai, Tamil Nadu."
+  ],
+  // Pricing catalog — description + default per-unit rate. Picking a charge in
+  // the builder auto-fills its rate; the rate stays editable per document.
+  rates: [
+    {desc:"Villa Rental Charges",            rate:""},
+    {desc:"Additional Guest Charges",        rate:""},
+    {desc:"Cleaning & Maintenance Charges",  rate:""},
+    {desc:"Event / Gathering Charges",       rate:""},
+    {desc:"Other Charges",                   rate:""}
+  ],
+  maxGuests: 4,
+  guestCapacity: 10,
+  maxDiscountPercent: 20
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const inr = n => Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});
+const money = n => "₹"+inr(n);
+
+/* ---------- PHONE (E.164 — country code, no spaces) ----------
+   WhatsApp sends only ever go through as the right number if the phone on
+   the record is unambiguous: sendWhatsAppTemplate (proxy) splits whatever
+   digits it's given into country code + local number purely by length, so
+   a bare 10-digit local number, a stray leading 0, or spaces/dashes in the
+   middle can all silently produce a wrong split — the message either fails
+   or reaches the wrong person. Every phone here is forced to full E.164
+   (+<countrycode><number>, digits only, no separators) before it's ever
+   saved. PHONE_RE matches a genuine E.164 number: + then 8-15 digits,
+   first digit non-zero. */
+const PHONE_RE = /^\+[1-9]\d{7,14}$/;
+function normalizePhoneStrict(raw){
+  let s = String(raw||"").trim();
+  if(!s) return { ok:true, value:"" }; // phone is optional — nothing to enforce on an empty field
+  const hadPlus = s[0]==="+";
+  let digits = s.replace(/[^\d]/g,"");
+  if(!hadPlus){
+    // No country code typed at all — same default the proxy's own
+    // normalizePhoneWA already assumes for a bare number: this villa's
+    // country. A stray leading 0 (a common typo/paste artifact) is
+    // stripped first so it isn't mistaken for part of the country code.
+    digits = digits.replace(/^0+/,"");
+    if(digits.length===10) digits = "91"+digits;
+  }
+  const value = "+"+digits;
+  return { ok: PHONE_RE.test(value), value: digits ? value : "" };
+}
+function syncPhoneValidity(){
+  const el = $("#phone"), hint = $("#phoneHint");
+  if(!el || !hint) return;
+  const v = el.value.trim();
+  const invalid = v.length > 0 && !PHONE_RE.test(v);
+  el.classList.toggle("err", invalid);
+  hint.classList.toggle("err", invalid);
+  hint.textContent = invalid ? "Needs a country code and no spaces, e.g. +919876543210" : "";
+  return !invalid;
+}
+
+function loadSettings(){
+  try{
+    const s = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(K_SET)||"{}"));
+    if(!Array.isArray(s.terms) || !s.terms.length) s.terms = DEFAULTS.terms.slice();
+    if(!Array.isArray(s.rates) || !s.rates.length) s.rates = DEFAULTS.rates.map(r=>({...r}));
+    return s;
+  }catch(e){ return JSON.parse(JSON.stringify(DEFAULTS)); }
+}
+// Pull the master stay settings (business info, bank, pricing) from the proxy.
+async function fetchStaySettings(){
+  if(!proxyToken) return;
+  try{
+    const res = await fetch(PROXY_URL+'/stay-settings',{headers:{'X-Token':proxyToken}});
+    if(!res.ok) return;
+    const d = await res.json();
+    if(d && typeof d==='object'){
+      settings = Object.assign({}, DEFAULTS, d);
+      if(!Array.isArray(settings.terms) || !settings.terms.length) settings.terms = DEFAULTS.terms.slice();
+      if(!Array.isArray(settings.rates) || !settings.rates.length) settings.rates = DEFAULTS.rates.map(r=>({...r}));
+      try{ localStorage.setItem(K_SET, JSON.stringify(settings)); }catch(e){}
+      applyGuestCap();
+    }
+  }catch(e){ console.warn('Could not load stay settings', e); }
+}
+function applyGuestCap(){
+  const cap = parseInt(settings.guestCapacity) || 0;
+  const inp = $("#guests");
+  if(!inp) return;
+  inp.max = cap > 0 ? String(cap) : "";
+  if(cap > 0 && parseInt(inp.value||0) > cap){ inp.value = String(cap); syncGuestCharges(); render(); }
+}
+function rateFor(desc){
+  const hit=(settings.rates||[]).find(r=>r.desc===desc);
+  return hit && hit.rate!=="" && hit.rate!=null ? String(hit.rate) : "";
+}
+let settings = loadSettings();
+
+/* ---------- STATE ---------- */
+let docType = "quote";             // "invoice" | "quote"
+let items = [];                   // {desc, qty, rate}
+let staysCache = [];              // loaded from proxy
+let editingKey = null;
+let curNo = "", curDateISO = "";
+
+/* ---------- CLOUD ---------- */
+async function fetchStaysFromProxy(){
+  if(!proxyToken) return false;
+  try{
+    const res = await fetch(PROXY_URL+'/stays',{headers:{'X-Token':proxyToken}});
+    if(res.status===401){ handleExpired(); return false; }
+    if(!res.ok) return false;
+    const d = await res.json();
+    staysCache = Array.isArray(d.stays) ? d.stays : [];
+    return true;
+  }catch(e){ console.warn('Could not load stays from proxy', e); return false; }
+}
+let lastPushError = '';
+async function pushStays(){
+  lastPushError = '';
+  if(!proxyToken) return false;
+  try{
+    const res = await fetch(PROXY_URL+'/stays',{
+      method:'PUT', headers:{'X-Token':proxyToken,'Content-Type':'application/json'},
+      body: JSON.stringify({version:1, stays: staysCache})
+    });
+    if(res.status===401){ handleExpired(); return false; }
+    if(!res.ok){
+      const data = await res.json().catch(()=>({}));
+      lastPushError = data.error || ('Error '+res.status);
+      console.error('Stay save error HTTP', res.status, lastPushError);
+      return false;
+    }
+    return true;
+  }catch(e){ console.error('Stay push failed', e); return false; }
+}
+function setConnected(ok){ const d=$("#connDot"); if(d){ d.classList.toggle("ok",ok); d.classList.toggle("err",!ok); d.title=ok?"Connected to cloud storage":"Disconnected"; } }
+function handleExpired(){ proxyToken=''; localStorage.removeItem('ryst_proxy_token'); setConnected(false); window.location.href='login.html'; }
+function getStays(){ return staysCache; }
+// The record currently open in the builder, or null on a blank/new
+// document — the same "find by editingKey" lookup every syncXBtn()/save/
+// send handler below needs, named once instead of repeated inline.
+function currentStay(){ return editingKey ? getStays().find(s=>s.no===editingKey) : null; }
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+function fmtDate(iso){ if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
+function lineAmt(it){ return (parseFloat(it.rate)||0)*(parseFloat(it.qty)||0); }
+function nightsBetween(inISO,outISO){
+  if(!inISO||!outISO) return 0;
+  const a=new Date(inISO+'T00:00:00'), b=new Date(outISO+'T00:00:00');
+  const n=Math.round((b-a)/86400000);
+  return n>0?n:0;
+}
+
+function typePrefix(t){ return t==="quote" ? settings.qtPrefix : settings.invPrefix; }
+function nextNo(t){
+  const yr=new Date().getFullYear(), pre=typePrefix(t);
+  const re=new RegExp("^"+pre.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\/"+yr+"\\/(\\d+)$");
+  // Every record's number counts, whatever its type now: a quote switched to
+  // invoice keeps its QT number, and counting only quotes handed that number
+  // out again (27 Sep: a new quote overwrote Prachi's QT/2026/034).
+  let max=0; getStays().forEach(s=>{ const m=(s.no||"").match(re); if(m) max=Math.max(max,parseInt(m[1],10)); });
+  return `${pre}/${yr}/${String(max+1).padStart(3,"0")}`;
+}
+
+/* ---------- BOOT ---------- */
+(async function bootAuth(){
+  if(!proxyToken){ window.location.href='login.html'; return; }
+  if(!hasModule('bookings')){ window.location.href='login.html'; return; }
+  init();
+  $("#app").hidden = false;
+  initApp();
+})();
+
+// Save stays disabled ($('#btnSave') starts disabled in markup) until this
+// completes successfully — Save does a full-array PUT of staysCache, so
+// enabling it before the existing bookings have actually loaded would let a
+// quick save silently overwrite every other invoice/quote/block on the
+// server with just the one new document.
+async function initApp(){
+  const loader = $('#loader'), msgEl = $('#loaderMsg'), retryBtn = $('#loaderRetry');
+  loader.classList.remove('hide');
+  $('#loaderSpin').style.display = '';
+  retryBtn.style.display = 'none';
+  msgEl.textContent = 'Loading bookings…';
+
+  const ctrl = new AbortController();
+  const slowTimer = setTimeout(() => { msgEl.textContent = 'Waking up the server… this can take up to a minute.'; }, 4000);
+  const abortTimer = setTimeout(() => ctrl.abort(), 75000);
+  try{
+    const res = await fetch(PROXY_URL+'/stays', {headers:{'X-Token':proxyToken}, signal: ctrl.signal});
+    if(res.status===401){ handleExpired(); return; }
+    if(!res.ok) throw new Error('Server error ('+res.status+')');
+    const d = await res.json();
+    staysCache = Array.isArray(d.stays) ? d.stays : [];
+    await fetchStaySettings(); // best-effort — falls back to cached/default settings, not data-destructive
+    setConnected(true);
+    renderItems();
+    // refresh the auto number (prefixes may come from settings) now that data is known
+    if(!editingKey){ curNo=nextNo(docType); $("#no").value=curNo; }
+    if(docType==="invoice"){ populateLoadQuoteSel(); $("#loadQuoteRow").style.display=""; }
+    render();
+    // Deep link from the booking calendar dashboard: stay.html?open=<no>
+    const openNo = new URLSearchParams(location.search).get('open');
+    if(openNo) loadDoc(openNo);
+    loader.classList.add('hide');
+    $('#btnSave').disabled = false;
+  }catch(e){
+    $('#loaderSpin').style.display = 'none';
+    msgEl.textContent = (e && e.name === 'AbortError')
+      ? 'Server timed out — please retry.'
+      : 'Could not load bookings — ' + (e && e.message ? e.message : 'check your connection.');
+    retryBtn.style.display = '';
+  } finally {
+    clearTimeout(slowTimer); clearTimeout(abortTimer);
+  }
+}
+$('#loaderRetry').addEventListener('click', initApp);
+
+function init(){
+  newDoc();
+  bind();
+}
+
+function bind(){
+  ["guest","email","ref","mode","deposit","advance"].forEach(id=> $("#"+id).addEventListener("input", render));
+  $("#phone").addEventListener("input", e=>{
+    // Strip spaces/dashes/parens/dots AS TYPED — a WhatsApp send (Interakt,
+    // via the proxy) splits this into country code + bare number purely by
+    // digit count, so any stray separator character shifts that split and
+    // silently sends to the wrong number. Only a leading + and digits ever
+    // survive; cursor stays at the end, same as how a card-number field
+    // would behave.
+    const raw = e.target.value;
+    const cleaned = (raw.trim().startsWith("+") ? "+" : "") + raw.replace(/[^\d]/g,"");
+    if(cleaned !== raw) e.target.value = cleaned;
+    syncPhoneValidity();
+    render();
+  });
+  $("#phone").addEventListener("blur", ()=>{
+    const n = normalizePhoneStrict($("#phone").value);
+    if(n.value !== $("#phone").value) $("#phone").value = n.value;
+    syncPhoneValidity();
+  });
+  $("#guests").addEventListener("input", ()=>{
+    const cap = parseInt(settings.guestCapacity) || 0;
+    if(cap > 0 && parseInt($("#guests").value||0) > cap){
+      $("#guests").value = String(cap);
+      toast("Maximum capacity is "+cap+" guests");
+    }
+    syncGuestCharges(); render();
+  });
+  $("#date").addEventListener("input", e=>{ curDateISO=e.target.value; render(); });
+  $("#checkin").addEventListener("input", syncNights);
+  $("#checkout").addEventListener("input", syncNights);
+  $("#discountInp").addEventListener("input", render);
+  $("#addLi").addEventListener("click", ()=>{ items.push({desc:"",qty:"1",rate:""}); renderItems(); render(); });
+  $("#typeSeg").querySelectorAll("button").forEach(b=> b.addEventListener("click", ()=> setType(b.dataset.type)));
+  $("#hdrBrand").addEventListener("click", ()=> window.location.href='login.html');
+  $("#btnHome").addEventListener("click", ()=> window.location.href='login.html');
+  $("#btnNew").addEventListener("click", ()=>{ if(confirm("Start a new blank document?")) newDoc(); });
+  $("#btnSave").addEventListener("click", saveDoc);
+  $("#btnPdf").addEventListener("click", downloadPdf);
+  $("#btnBookings").addEventListener("click", openBookings);
+  $("#bookingsClose").addEventListener("click", ()=> $("#bookingsModal").hidden=true);
+  $("#loadQuoteSel").addEventListener("change", e=>{ if(e.target.value) loadFromQuote(e.target.value); });
+  // The no. field doubles as a search-to-open combobox — see
+  // renderNoDropdown/closeNoDropdown below for the shared open/close logic
+  // every one of these funnels through.
+  $("#no").addEventListener("focus", e=>{ e.target.select(); renderNoDropdown(""); });
+  $("#no").addEventListener("input", e=> renderNoDropdown(e.target.value));
+  $("#no").addEventListener("blur", closeNoDropdown);
+  $("#no").addEventListener("keydown", e=>{ if(e.key==="Escape") e.target.blur(); });
+}
+
+function setType(t){
+  if(t===docType) return;
+  docType=t;
+  $("#typeSeg").querySelectorAll("button").forEach(b=> b.classList.toggle("on", b.dataset.type===t));
+  const isInv = t==="invoice";
+  $("#noLbl").textContent   = isInv ? "Invoice no. (auto)" : "Quote no. (auto)";
+  $("#dateLbl").textContent = isInv ? "Invoice date" : "Quote date";
+  // regenerate number for the new type only if this is a fresh (unsaved) doc
+  if(!editingKey){ curNo=nextNo(t); $("#no").value=curNo; }
+  const row = $("#loadQuoteRow");
+  if(row){ row.style.display = isInv ? "" : "none"; if(isInv) populateLoadQuoteSel(); }
+  render();
+}
+// A quote that already has a matching invoice (same dates + same guest
+// identity) has already been converted to a real booking — offering it
+// again in "Load from quote" would let staff load it a second time into
+// another invoice, double-booking the same dates. Mirrors bookings.html/
+// reports.html's isConvertedQuote exactly (exact checkin+checkout match,
+// then email else guest-name match against invoice records).
+function isConvertedQuote(d, stays){
+  if((d.type||"invoice")!=="quote") return false;
+  const email = (d.email||"").trim().toLowerCase();
+  const guest = (d.guest||"").trim().toLowerCase();
+  return stays.some(s=>
+    (s.type||"invoice")==="invoice" && s.checkin===d.checkin && s.checkout===d.checkout &&
+    (email ? (s.email||"").trim().toLowerCase()===email : (guest && (s.guest||"").trim().toLowerCase()===guest)));
+}
+function populateLoadQuoteSel(){
+  const sel = $("#loadQuoteSel"); if(!sel) return;
+  const stays = getStays();
+  const quotes = stays
+    .filter(d=> (d.no||"").startsWith(settings.qtPrefix||DEFAULTS.qtPrefix) && !isConvertedQuote(d, stays))
+    .sort((a,b)=>b.no.localeCompare(a.no));
+  sel.innerHTML = `<option value="">— pick a quote —</option>`
+    + quotes.map(d=>`<option value="${esc(d.no)}">${esc(d.no)} · ${esc(d.guest||"?")}${d.checkin?" ("+fmtDate(d.checkin)+")":""}</option>`).join("");
+}
+function loadFromQuote(qno){
+  const d = getStays().find(s=>s.no===qno); if(!d) return;
+  $("#guest").value   = d.guest||"";
+  $("#email").value   = d.email||"";
+  $("#phone").value   = d.phone||"";
+  syncPhoneValidity();
+  $("#guests").value  = d.guests||"";
+  $("#checkin").value = d.checkin||"";
+  $("#checkout").value= d.checkout||"";
+  syncNights();
+  $("#mode").value    = d.mode||"";
+  $("#channel").value = d.channel||"";
+  $("#ref").value     = d.ref||"";
+  $("#deposit").value = d.deposit||"";
+  $("#advance").value = d.advance||"";
+  $("#discountInp").value = d.discount!=null ? String(d.discount) : "";
+  items = d.items ? JSON.parse(JSON.stringify(d.items)) : [];
+  syncGuestCharges(); renderItems(); render();
+  $("#loadQuoteSel").value = "";
+}
+
+// Keeps the check-out picker from ever offering a date before whatever
+// check-in currently holds — native `min` attribute, not just a post-hoc
+// validation message, so an invalid range can't be selected in the first
+// place. Bumps an already-picked check-out up to match if check-in just
+// moved past it, rather than leaving a now-invalid value sitting there.
+function syncCheckoutMin(){
+  const co = $("#checkout");
+  co.min = $("#checkin").value || "";
+  if(co.min && co.value && co.value < co.min) co.value = co.min;
+}
+function syncNights(){
+  syncCheckoutMin();
+  curDateISO = curDateISO || $("#date").value;
+  const n = nightsBetween($("#checkin").value, $("#checkout").value);
+  $("#nights").value = n ? String(n) : "";
+  // keep villa rental line qty in sync with nights count whenever dates change
+  if(n){
+    const villaIdx = items.findIndex(it=> it._villaRow);
+    if(villaIdx>=0){ items[villaIdx].qty = String(n); }
+  }
+  // additional-guest qty is per-guest per-night, so it also depends on nights
+  syncGuestCharges();
+  render();
+}
+
+function syncGuestCharges(){
+  const guests = parseInt($("#guests").value) || 0;
+  const max = parseInt(settings.maxGuests) || 0;
+  const extra = max > 0 ? Math.max(0, guests - max) : 0;
+  const nights = nightsBetween($("#checkin").value, $("#checkout").value) || 1;
+  const qty = extra * nights;
+  // Matches by description alone, not description+_autoLocked — a staff
+  // member can create a line with this exact text manually (it's a real
+  // catalog entry, selectable whenever guests<=maxGuests or via "Other…"),
+  // and requiring _autoLocked too meant this function wouldn't recognize
+  // that row as "the" guest-charge line, so raising guest count later would
+  // push a SECOND "Additional Guest Charges" row instead of reusing it —
+  // billing the surcharge twice. Taking ownership (below) once a match is
+  // found closes that off for good.
+  const idx = items.findIndex(it=> /additional.*guest/i.test(it.desc||""));
+  if(extra > 0){
+    if(idx >= 0){
+      items[idx].qty = String(qty);
+      items[idx]._autoLocked = true;
+    } else {
+      items.push({desc:"Additional Guest Charges", qty:String(qty), rate:rateFor("Additional Guest Charges"), _autoLocked:true});
+    }
+  } else {
+    if(idx >= 0) items.splice(idx, 1);
+  }
+  renderItems();
+}
+
+/* ---------- NEW DOC ---------- */
+function newDoc(){
+  editingKey=null; syncPdfBtn(); syncWalletBtn(); syncPortalBtn(); syncSendQuoteBtn();
+  curNo=nextNo(docType); curDateISO=todayISO();
+  $("#no").value=curNo; $("#date").value=curDateISO;
+  ["guest","email","phone","guests","ref","checkin","checkout","nights","deposit","advance"].forEach(id=> $("#"+id).value="");
+  syncPhoneValidity();
+  syncCheckoutMin();
+  $("#discountInp").value="";
+  $("#mode").value="UPI"; // matches the <select>'s own default-selected option
+  $("#channel").value="";
+  items=[{desc:"Villa Rental Charges",qty:"1",rate:rateFor("Villa Rental Charges"),_villaRow:true}];
+  if(docType==="invoice"){ populateLoadQuoteSel(); $("#loadQuoteRow").style.display=""; }
+  renderItems(); render();
+}
+
+/* ---------- LINE ITEMS ---------- */
+function renderItems(){
+  const body=$("#liBody"); body.innerHTML="";
+  const allSugg = (settings.rates||[]).map(r=>r.desc);
+  const autoDescs = new Set(items.filter(it=>it._villaRow||it._autoLocked).map(it=>it.desc));
+  const manualSugg = allSugg.filter(s=> !autoDescs.has(s));
+  items.forEach((it,i)=>{
+    const isAutoRow = !!(it._villaRow || it._autoLocked);
+    const inList = allSugg.includes(it.desc);
+    const isCustom = !inList && it.desc!=="";
+    const opts = manualSugg.map(s=>`<option value="${esc(s)}"${s===it.desc?" selected":""}>${esc(s)}</option>`).join("");
+    const row=document.createElement("div"); row.className="li-row";
+    // The catalog rate assumes a stay up to maxGuests — once the actual
+    // party is smaller than that, a reduced villa rate is an expected
+    // discount, not a mistake, so don't floor/warn against it on this row.
+    // Every other line (and the villa row itself at full occupancy) keeps
+    // the usual catalog-minimum warning unchanged.
+    const guestsNow = parseInt($("#guests").value) || 0;
+    const maxGNow = parseInt(settings.maxGuests) || 0;
+    const noFloor = it._villaRow && maxGNow>0 && guestsNow>0 && guestsNow < maxGNow;
+    const minRate = noFloor ? "" : rateFor(it.desc);
+    const rateWarn = minRate!=="" && parseFloat(it.rate||0) < parseFloat(minRate) && it.rate!=="";
+    const rateTitle = minRate!=="" ? `Min catalog price: ₹${inr(minRate)}` : (noFloor ? `Reduced rate allowed — fewer than ${maxGNow} guests` : "");
+    row.innerHTML=`
+      <div class="li-desc-wrap">
+        ${isAutoRow
+          ? `<input class="t li-sel locked" value="${esc(it.desc)}" readonly tabindex="-1" title="Auto-managed">`
+          : `<select class="t li-sel" data-i="${i}">
+              <option value="">— choose —</option>
+              ${opts}
+              <option value="__custom"${isCustom?" selected":""}>Other…</option>
+            </select>
+            <input class="t custom-desc${isCustom?"":" hide"}" data-i="${i}" placeholder="Custom description" value="${esc(isCustom?it.desc:"")}">` }
+      </div>
+      ${(/villa.*rental/i.test(it.desc||"") || it._autoLocked)?
+        `<input class="t num locked" data-i="${i}" data-k="qty" type="number" value="${esc(it.qty)}" readonly tabindex="-1" title="${it._autoLocked?"Auto-calculated: extra guests × nights":"Auto-calculated from nights"}">`
+        :`<input class="t num" data-i="${i}" data-k="qty" type="number" min="0" step="1" inputmode="numeric" placeholder="1" value="${esc(it.qty)}">`}
+      <input class="t num${rateWarn?" warn-rate":""}" data-i="${i}" data-k="rate" data-min="${esc(minRate)}" type="number" min="0" step="0.01" inputmode="decimal" placeholder="${esc(minRate||"0")}" title="${esc(rateTitle)}" value="${esc(it.rate)}">
+      <input class="t tot" value="${money(lineAmt(it))}" readonly tabindex="-1">
+      ${isAutoRow?`<span class="li-del" style="visibility:hidden">×</span>`:`<button class="li-del" data-del="${i}" title="Remove">×</button>`}`;
+    body.appendChild(row);
+  });
+  body.querySelectorAll("select.li-sel").forEach(sel=>{
+    sel.addEventListener("change", e=>{
+      const i=+e.target.dataset.i, val=e.target.value;
+      const wrap=e.target.closest(".li-desc-wrap");
+      const customInp=wrap.querySelector(".custom-desc");
+      if(val==="__custom"){ customInp.classList.remove("hide"); customInp.focus(); items[i].desc=customInp.value||""; }
+      else {
+        customInp.classList.add("hide"); items[i].desc=val;
+        // auto-fill the catalog rate if this line has no rate yet
+        if(val && (items[i].rate===""||items[i].rate==null)){
+          const r=rateFor(val);
+          if(r!==""){ items[i].rate=r; }
+        }
+        renderItems();
+      }
+      render();
+    });
+  });
+  body.querySelectorAll(".custom-desc").forEach(inp=>{
+    inp.addEventListener("input", e=>{ items[+e.target.dataset.i].desc=e.target.value; render(); });
+  });
+  body.querySelectorAll("input[data-k=\"qty\"],input[data-k=\"rate\"]").forEach(inp=>{
+    inp.addEventListener("input", e=>{
+      const i=+e.target.dataset.i, k=e.target.dataset.k; items[i][k]=e.target.value;
+      if(k==="rate"){
+        const min=parseFloat(e.target.dataset.min||0);
+        e.target.classList.toggle("warn-rate", min>0 && parseFloat(e.target.value||0)<min && e.target.value!=="");
+      }
+      const cell=e.target.closest(".li-row").querySelector(".tot");
+      if(cell) cell.value=money(lineAmt(items[i]));
+      render();
+    });
+    if(inp.dataset.k==="rate"){
+      inp.addEventListener("blur", e=>{
+        const min=parseFloat(e.target.dataset.min||0);
+        if(min>0 && parseFloat(e.target.value||0)<min && e.target.value!==""){
+          // snap back to minimum catalog rate
+          const i=+e.target.dataset.i;
+          items[i].rate=String(min); e.target.value=String(min);
+          e.target.classList.remove("warn-rate");
+          const cell=e.target.closest(".li-row").querySelector(".tot");
+          if(cell) cell.value=money(lineAmt(items[i]));
+          render(); toast("Rate snapped to minimum catalog price ₹"+inr(min));
+        }
+      });
+    }
+  });
+  body.querySelectorAll("[data-del]").forEach(b=>{
+    b.addEventListener("click", e=>{
+      items.splice(+e.target.dataset.del,1);
+      if(!items.length) items.push({desc:"",qty:"1",rate:""});
+      renderItems(); render();
+    });
+  });
+}
+
+/* ---------- RENDER PREVIEW ---------- */
+function render(){
+  const isInv = docType==="invoice";
+  $("#pTitle").textContent  = isInv ? "INVOICE" : "QUOTATION";
+  $("#pNoLbl").textContent  = isInv ? "Invoice No" : "Quote No";
+  $("#pDateLbl").textContent= isInv ? "Invoice Date" : "Quote Date";
+
+  $("#coBlock").innerHTML = (PROPERTY.mapLink ? `<a href="${esc(PROPERTY.mapLink)}" target="_blank" rel="noopener" class="addr-link">${esc(settings.company).replace(/\n/g,"<br>")}</a>` : `<span class="addr-link">${esc(settings.company).replace(/\n/g,"<br>")}</span>`)
+    + (PROPERTY.instagram ? `<a href="${esc(PROPERTY.instagramUrl)}" target="_blank" rel="noopener" class="co-ig"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>${esc(PROPERTY.instagramHandle)}</a>` : '');
+
+  $("#pGuest").textContent  = $("#guest").value || "—";
+  $("#pEmail").textContent  = $("#email").value || "—";
+  $("#pPhone").textContent  = $("#phone").value || "—";
+  $("#pGuests").textContent = $("#guests").value || "—";
+
+  $("#pNo").textContent   = curNo;
+  $("#pDate").textContent = fmtDate(curDateISO);
+  $("#pRef").textContent  = $("#ref").value || "—";
+  $("#pIn").textContent   = fmtDate($("#checkin").value) || "—";
+  $("#pOut").textContent  = fmtDate($("#checkout").value) || "—";
+  const nights = nightsBetween($("#checkin").value,$("#checkout").value);
+  $("#pNights").textContent = nights ? (nights+" Night"+(nights>1?"s":"")) : "—";
+  $("#pMode").textContent = $("#mode").value || "—";
+
+  const active = items.filter(it=> it.desc!=="" || it.rate!=="");
+  $("#pRows").innerHTML = active.length ? active.map(it=>`<tr>
+      <td>${esc(it.desc)}</td>
+      <td class="num">${it.qty!==""?esc(it.qty):""}</td>
+      <td class="amt">${it.rate!==""?inr(it.rate):""}</td>
+      <td class="amt">${inr(lineAmt(it))}</td></tr>`).join("")
+    : `<tr><td colspan="4" style="color:#aaa">Add charges…</td></tr>`;
+
+  const sub = items.reduce((s,it)=>s+lineAmt(it),0);
+  const maxDiscPct = parseFloat(settings.maxDiscountPercent);
+  const maxDisc = Math.floor(sub * ((isFinite(maxDiscPct) ? maxDiscPct : 20) / 100));
+  let discount = parseFloat($("#discountInp").value)||0;
+  if(discount > maxDisc){ discount = maxDisc; $("#discountInp").value = String(maxDisc); }
+  if(discount < 0){ discount = 0; $("#discountInp").value = "0"; }
+  const grand = Math.max(0, sub - discount);
+  const deposit = parseFloat($("#deposit").value)||0;
+  const advance = parseFloat($("#advance").value)||0;
+  const balance = Math.max(0, grand - advance);
+
+  $("#discountInp").placeholder = maxDisc > 0 ? String(maxDisc) : "0";
+
+  $("#pSub").textContent     = money(sub);
+  $("#pGrand").textContent   = money(grand);
+  $("#pDeposit").textContent = money(deposit);
+  $("#pAdvance").textContent = money(advance);
+  $("#pBalance").textContent = money(balance);
+
+  // update table tfoot: insert discount row if applicable
+  const tfootEl = document.querySelector("#stayDoc .d-table tfoot");
+  if(tfootEl){
+    const discRow = tfootEl.querySelector(".disc-row");
+    if(discount>0 && !discRow){
+      const tr = document.createElement("tr"); tr.className="disc-row";
+      tr.innerHTML=`<td colspan="3" style="color:#6a7a76;font-weight:500">DISCOUNT</td><td class="amt" style="color:#6a7a76">− ${money(discount)}</td>`;
+      tfootEl.querySelector("tr.grand").before(tr);
+    } else if(discount>0 && discRow){
+      discRow.querySelector(".amt").textContent="− "+money(discount);
+    } else if(discount===0 && discRow){
+      discRow.remove();
+    }
+  }
+
+  $("#mSub").textContent   = money(sub);
+  $("#mGrand").textContent = money(grand);
+
+  $("#pBank").innerHTML = esc(settings.bank).replace(/\n/g,"<br>") + `<div style="margin-top:6px;font-weight:600;color:var(--sea-d)">PAN: ${esc(settings.pan)}</div>`;
+  $("#pDecl").textContent = settings.declaration;
+  $("#pTerms").innerHTML = settings.terms.map(t=>`<li>${esc(t)}</li>`).join("");
+
+  $("#pFoot").textContent = docType==="invoice"
+    ? `Thank you for joining us at ${PROPERTY.fullName}!`
+    : "PLEASE JOIN US FOR A RELAXING, WARM & WONDERFUL STAY";
+
+  // Guest acceptance signature shown on both invoice and quote
+  $("#pGuestSign").style.display = "flex";
+  $("#pGuestSignName").textContent = ($("#guest").value || "Guest") + ($("#date").value ? "  " + fmtDate($("#date").value) : "");
+}
+
+/* ---------- SAVE / LOAD ---------- */
+// Starts from the EXISTING stored record (when editing one) rather than
+// building a bare object from just the form's own fields. Every /stays PUT
+// is a full-array overwrite (see server.js's validateStaysPut comment),
+// and several other routes write fields onto a stay record directly —
+// checkinInfo (POST /checkin), the *SentAt WhatsApp-automation dedup flags
+// (/whatsapp/run-scheduled), balancePaymentLink/foodPaymentLink including
+// .paidAt (/checkin/balance-payment-link, /portal/*-payment-link),
+// source:'public' (/public-quote) — none of which this form has an input
+// for. Without the spread below, saving here after any of those had
+// already run would silently erase whichever one it was: a guest's
+// submitted check-in, a payment link's paid status, or an automation
+// dedup flag that then lets a reminder/request go out a second time.
+function collect(){
+  const existing = currentStay();
+  return {
+    ...(existing||{}),
+    type: docType, no: curNo, date: curDateISO,
+    guest:$("#guest").value, email:$("#email").value, phone:$("#phone").value, guests:$("#guests").value,
+    ref:$("#ref").value, checkin:$("#checkin").value, checkout:$("#checkout").value, mode:$("#mode").value,
+    channel:$("#channel").value,
+    deposit: parseFloat($("#deposit").value)||0, advance: parseFloat($("#advance").value)||0,
+    discount: parseFloat($("#discountInp").value)||0,
+    items: items.map(({desc,qty,rate,_villaRow,_autoLocked})=>({desc,qty,rate,...(_villaRow&&{_villaRow:true}),...(_autoLocked&&{_autoLocked:true})})),
+    savedAt: Date.now()
+  };
+}
+async function saveDoc(){
+  // Refreshed right before merging, not whatever staysCache happened to
+  // hold from whenever this page loaded — narrows (doesn't fully close,
+  // a save could still race a write landing in the same instant) the
+  // window where collect()'s merge above would be working from a stale
+  // copy of the very fields it's trying to protect.
+  // A new document needs the latest list too, so its number isn't one that
+  // was taken since this page opened.
+  await fetchStaysFromProxy();
+  // Normalize + validate the phone before it's ever written — see
+  // normalizePhoneStrict's comment. Blocks the save rather than silently
+  // saving something the WhatsApp send would later choke on.
+  const phoneNorm = normalizePhoneStrict($("#phone").value);
+  $("#phone").value = phoneNorm.value;
+  if(!syncPhoneValidity()){ toast("Phone needs a country code and no spaces, e.g. +919876543210"); $("#phone").focus(); return; }
+  const doc=collect(); if(!doc.no){ toast("No document number"); return; }
+  if(!doc.guest.trim()){ toast("Add a guest name first"); return; }
+  if(!editingKey && getStays().some(x=>x.no===doc.no)){
+    doc.no=curNo=nextNo(docType); $("#no").value=curNo; // number taken meanwhile → next free one
+  }
+  const all=getStays(); const key=editingKey||doc.no; const idx=all.findIndex(x=>x.no===key);
+  if(idx>=0) all[idx]=doc; else all.push(doc);
+  const wasEditing=editingKey;
+  staysCache=all; editingKey=doc.no; syncPdfBtn();
+  if(!(await pushStays())){
+    editingKey=wasEditing; syncPdfBtn();
+    await fetchStaysFromProxy(); // drop the unsaved copy from this page's list
+    alert("Not saved — "+(lastPushError||"check your connection and try again"));
+    return;
+  }
+  // Re-fetch so this doc's walletToken (a server-side HMAC, not something
+  // the client can compute) comes back decorated, then the Wallet button
+  // can actually be enabled.
+  await fetchStaysFromProxy();
+  syncWalletBtn(); syncPortalBtn(); syncSendQuoteBtn();
+  toast((doc.type==="invoice"?"Invoice":"Quote")+" saved");
+}
+function loadDoc(no){
+  const d=getStays().find(x=>x.no===no); if(!d) return;
+  // type:'block' records are OTA calendar holds (Airbnb/Booking.com/...),
+  // never real documents — nothing here to view/edit, and saving one back
+  // would corrupt the booking number (see openBookings' filter comment for
+  // the real incident this is guarding against). This is the one choke
+  // point every load path goes through — the Bookings viewer already
+  // excludes blocks from its list, but a manually-typed/pasted
+  // ?open=<no> deep link wouldn't, so the guard belongs here too.
+  if((d.type||'invoice')==='block'){ toast("That's an OTA calendar hold, not an editable booking"); return; }
+  editingKey=d.no; syncPdfBtn(); syncWalletBtn(); syncPortalBtn(); syncSendQuoteBtn();
+  docType = (d.type==="quote") ? "quote" : "invoice";
+  $("#typeSeg").querySelectorAll("button").forEach(b=> b.classList.toggle("on", b.dataset.type===docType));
+  const isInv = docType==="invoice";
+  $("#noLbl").textContent   = isInv ? "Invoice no. (auto)" : "Quote no. (auto)";
+  $("#dateLbl").textContent = isInv ? "Invoice date" : "Quote date";
+  curNo=d.no; curDateISO=d.date||todayISO();
+  $("#no").value=curNo; $("#date").value=curDateISO;
+  $("#guest").value=d.guest||""; $("#email").value=d.email||""; $("#phone").value=d.phone||""; $("#guests").value=d.guests||"";
+  syncPhoneValidity(); // flags an old record's phone if it predates this format check — doesn't block loading it
+  $("#ref").value=d.ref||""; $("#checkin").value=d.checkin||""; $("#checkout").value=d.checkout||""; $("#mode").value=d.mode||"";
+  $("#channel").value=d.channel||"";
+  $("#deposit").value=d.deposit||""; $("#advance").value=d.advance||"";
+  $("#discountInp").value=d.discount!=null ? String(d.discount) : "";
+  syncCheckoutMin();
+  $("#nights").value = nightsBetween(d.checkin,d.checkout)||"";
+  items = (d.items&&d.items.length)? d.items.map(x=>({desc:x.desc||"",qty:(x.qty!=null?x.qty:"1"),rate:x.rate||"",...(x._villaRow&&{_villaRow:true}),...(x._autoLocked&&{_autoLocked:true})})) : [{desc:"",qty:"1",rate:""}];
+  syncGuestCharges(); renderItems(); render(); toast("Loaded "+d.no);
+}
+
+/* ---------- QUOTE/INVOICE SEARCH ----------
+   The no. field doubles as a search-to-open combobox — replaces the old
+   Saved modal. Matches by number, guest name, or check-in/out date; blocks
+   are excluded, same reasoning openBookings' own filter already uses (an
+   OTA calendar hold isn't a real, openable document). Deleting a stay
+   still lives in bookings.html (admin-only there already) — nothing here
+   needs to duplicate that. */
+function matchingStays(q){
+  const all = getStays().filter(d=>(d.type||'invoice')!=='block').slice().sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
+  const needle = q.trim().toLowerCase();
+  if(!needle) return all.slice(0,30);
+  return all.filter(d=>{
+    const hay = [d.no, d.guest, fmtDate(d.checkin), fmtDate(d.checkout)].filter(Boolean).join(" ").toLowerCase();
+    return hay.includes(needle);
+  }).slice(0,30);
+}
+function renderNoDropdown(q){
+  const dd = $("#noDropdown"); if(!dd) return;
+  const matches = matchingStays(q);
+  dd.innerHTML = matches.length ? matches.map(d=>{
+      const t=(d.type==="quote")?"qt":"inv", tl=(d.type==="quote")?"QUOTE":"INVOICE";
+      const sub=[esc(d.guest||"—"), d.checkin?fmtDate(d.checkin):"", d.checkout?("→ "+fmtDate(d.checkout)):""].filter(Boolean).join(" ");
+      return `<button type="button" class="no-dd-item" data-load="${esc(d.no)}">
+        <span class="si-no">${esc(d.no)}<span class="si-tag ${t}">${tl}</span></span>
+        <span class="si-sub">${sub}</span></button>`;
+    }).join("")
+    : `<div class="empty">${q.trim() ? "No matches" : "No saved documents yet"}</div>`;
+  // mousedown (not click) + preventDefault — fires before the input's own
+  // blur would otherwise close this dropdown out from under the click.
+  dd.querySelectorAll("[data-load]").forEach(b=> b.addEventListener("mousedown", e=>{
+    e.preventDefault();
+    loadDoc(b.dataset.load);
+    $("#no").blur(); // closeNoDropdown (below) finishes the cleanup
+  }));
+  dd.hidden = false;
+}
+// Whatever was typed while searching was never a real edit to this
+// document's own number — always revert to the actual current value
+// (loadDoc already updated curNo/#no itself when a result was picked).
+function closeNoDropdown(){
+  const dd = $("#noDropdown"); if(dd) dd.hidden = true;
+  $("#no").value = curNo;
+}
+
+/* ---------- BOOKING VIEWER ---------- */
+async function openBookings(){
+  const list=$("#bookingsList");
+  list.innerHTML=`<div class="empty">Loading…</div>`;
+  $("#bookingsModal").hidden=false;
+  await fetchStaysFromProxy();
+  // type:'block' entries are OTA calendar holds, not real documents — they
+  // have no items/pricing/guest details to view here, and belong to the
+  // OTA sync (never manually edited). Excluded so they can't get opened
+  // and accidentally re-saved as a quote/invoice under the block's own
+  // `no` — that exact corruption is what happened before this filter
+  // existed: a block got loaded, saved, and left two records sharing one
+  // booking number (calendar sync then correctly refused to touch it,
+  // fearing data loss, until the duplicate was found and cleaned up).
+  const all=getStays().filter(d=> d.checkin && d.checkout && (d.type||'invoice')!=='block')
+    .slice().sort((a,b)=> a.checkin.localeCompare(b.checkin));
+  if(!all.length){
+    list.innerHTML=`<div class="empty">No bookings with dates found.</div>`; return;
+  }
+  const today = todayISO();
+  list.innerHTML = all.map(d=>{
+    const nights = nightsBetween(d.checkin,d.checkout);
+    const isPast = d.checkout < today;
+    const isCurrent = d.checkin <= today && d.checkout > today;
+    const tag = isCurrent ? `<span style="background:#e3f1f1;color:#0a5b63;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:6px">NOW</span>`
+              : isPast    ? `<span style="background:#f0f0f0;color:#93a09d;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:6px">PAST</span>`
+                          : `<span style="background:#fbf0d8;color:#c0922f;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:6px">UPCOMING</span>`;
+    return `<div class="saved-item">
+      <div class="si-main">
+        <div class="si-no">${esc(d.no)}${tag}</div>
+        <div style="font-size:13px;font-weight:600;margin-top:4px">${esc(d.guest||"—")}</div>
+        <div class="si-sub">${esc(fmtDate(d.checkin))} → ${esc(fmtDate(d.checkout))} · ${nights} night${nights!==1?"s":""}</div>
+      </div>
+      <button data-load="${esc(d.no)}" onclick="document.getElementById('bookingsModal').hidden=true">Open</button>
+    </div>`;
+  }).join("");
+  list.querySelectorAll("[data-load]").forEach(b=> b.addEventListener("click", ()=> loadDoc(b.dataset.load)));
+}
+
+/* ---------- PDF ---------- */
+function syncPdfBtn(){
+  const b=$("#btnPdf"); if(!b) return;
+  b.disabled=!editingKey;
+  b.title=editingKey?"Download PDF":"Save the document first, then download PDF";
+}
+
+/* ---------- WALLET ----------
+   walletToken only exists once the document has been saved AND a fresh
+   /stays GET has decorated it (the token is an HMAC computed server-side,
+   not something the client can derive) — so this stays disabled until
+   both have happened, same shape as syncPdfBtn but gated on the token
+   rather than just editingKey. Works for quotes and invoices alike. */
+function syncWalletBtn(){
+  const b=$("#btnWallet"); if(!b) return;
+  const stay = currentStay();
+  const tok = stay && stay.walletToken;
+  // Settings → Stay tab's Apple/Google Wallet toggles gate each item
+  // independently — a token alone isn't enough once either platform is
+  // turned off site-wide.
+  const appleOk = tok && settings.walletAppleEnabled !== false;
+  const googleOk = tok && settings.walletGoogleEnabled !== false;
+  b.disabled = !(appleOk || googleOk);
+  b.title = (appleOk || googleOk) ? "Share this stay as a wallet pass" : (!tok ? "Save the document first, then share to Wallet" : "Apple and Google Wallet are both turned off in Settings");
+  $("#btnWalletApple").disabled = !appleOk;
+  $("#btnWalletGoogle").disabled = !googleOk;
+  $("#btnWalletApple").dataset.walletUrl = appleOk ? `${PROXY_URL}/booking/wallet/apple?no=${encodeURIComponent(editingKey)}&t=${encodeURIComponent(tok)}` : '';
+  $("#btnWalletGoogle").dataset.walletUrl = googleOk ? `${PROXY_URL}/booking/wallet/google?no=${encodeURIComponent(editingKey)}&t=${encodeURIComponent(tok)}` : '';
+}
+const walletDd = $("#walletDd");
+$("#btnWallet").addEventListener("click", e=>{ e.stopPropagation(); if(!$("#btnWallet").disabled) walletDd.classList.toggle("open"); });
+document.addEventListener("click", ()=> walletDd.classList.remove("open"));
+["#btnWalletApple","#btnWalletGoogle"].forEach(sel=>{
+  $(sel).addEventListener("click", ()=>{
+    const url = $(sel).dataset.walletUrl;
+    if(url) window.open(url, '_blank');
+    walletDd.classList.remove("open");
+  });
+});
+
+/* ---------- GUEST PORTAL LINK ----------
+   For a guest with no Google account to sign in with — a magic link
+   (?no=&t=) that logs them straight into guest.html, same no-account-needed
+   idea as the checkin-request link already sent via WhatsApp. Works with NO
+   email on the record at all — that's the whole point of this door: proving
+   possession of the link (the token) is the credential, same as
+   checkinToken elsewhere, not a match against a stored email. Just needs a
+   saved+refetched portalToken (same gating as Wallet above) and the stay
+   actually being "committed" — an invoice, or a quote with some advance
+   paid — so staff never hand out a link that's just going to fail the
+   moment the guest taps it. */
+function syncPortalBtn(){
+  const b=$("#btnPortalLink"); if(!b) return;
+  const stay = currentStay();
+  const tok = stay && stay.portalToken;
+  const isBlock = stay && (stay.type||"invoice")==="block";
+  const committed = stay && ((stay.type||"invoice")!=="quote" || Number(stay.advance)>0);
+  // A quote's link now works too — the guest lands on a review-and-pay
+  // screen instead of the full portal (guest.html branches on
+  // /portal/me's committed flag), and the SAME link just starts working
+  // as a normal portal link the moment they pay, no new link needed.
+  const ready = !!(tok && stay && !isBlock);
+  b.disabled = !ready;
+  b.title = ready
+    ? (committed ? "Copy a guest portal link for this booking (no Google account needed)"
+                 : "Copy a link for the guest to review this quote and pay online to confirm it")
+    : !tok ? "Save the document first, then copy a guest link"
+    : "Not available for a blocked date";
+  b.dataset.portalUrl = ready ? `${GUEST_PORTAL_URL}?no=${encodeURIComponent(editingKey)}&t=${encodeURIComponent(tok)}${villaLinkParam()}` : '';
+}
+$("#btnPortalLink").addEventListener("click", async ()=>{
+  const url = $("#btnPortalLink").dataset.portalUrl;
+  if(!url) return;
+  try{ await navigator.clipboard.writeText(url); toast("Guest portal link copied"); }
+  catch(e){ toast("Could not copy — long-press to select the link instead"); }
+});
+
+/* ---------- SEND QUOTE (WhatsApp) ----------
+   Manual, staff-clicked send of the quoteReady WhatsApp template — never
+   automatic. Only shown at all for a saved quote (not an invoice — those
+   get their confirmation sent the usual way) with a phone number on file;
+   the actual send only happens after the confirmation dialog below. */
+function syncSendQuoteBtn(){
+  const b=$("#btnSendQuote"); if(!b) return;
+  const stay = currentStay();
+  const isQuote = stay && (stay.type||"invoice")==="quote";
+  b.style.display = isQuote ? "" : "none";
+  if(!isQuote) return;
+  const hasPhone = !!(stay.phone && stay.phone.trim());
+  b.disabled = !hasPhone;
+  b.title = hasPhone ? "Send this quote to the guest over WhatsApp" : "Add a phone number first, then send this quote to the guest";
+  b.textContent = stay.quoteReadySentAt ? "💬 Resend Quote" : "💬 Send Quote";
+}
+$("#btnSendQuote").addEventListener("click", ()=>{
+  const stay = currentStay();
+  if(!stay) return;
+  $("#sendQuoteBody").innerHTML = `Send the quote-ready WhatsApp message to <b>${esc(stay.guest||"this guest")}</b> at <b>${esc(stay.phone||"")}</b>, with a link to review and pay quote <b>${esc(stay.no)}</b>?`
+    + (stay.quoteReadySentAt ? `<br><span style="color:var(--muted2)">Already sent ${new Date(stay.quoteReadySentAt).toLocaleString('en-IN')}.</span>` : '');
+  $("#sendQuoteResult").textContent = ""; $("#sendQuoteResult").classList.remove("ok","err");
+  $("#sendQuoteConfirm").disabled = false; $("#sendQuoteConfirm").textContent = "Send";
+  $("#sendQuoteModal").hidden = false;
+});
+$("#sendQuoteCancel").addEventListener("click", ()=> $("#sendQuoteModal").hidden = true);
+$("#sendQuoteConfirm").addEventListener("click", async ()=>{
+  const stay = currentStay();
+  if(!stay) return;
+  const btn = $("#sendQuoteConfirm"), out = $("#sendQuoteResult");
+  btn.disabled = true; btn.textContent = "Sending…"; out.textContent = "";
+  try{
+    const res = await fetch(PROXY_URL+'/whatsapp/send-quote', {
+      method:'POST', headers:{'X-Token':proxyToken,'Content-Type':'application/json'},
+      body: JSON.stringify({ no: stay.no })
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || data.error){
+      out.classList.add('err');
+      out.textContent = data.error || "Could not send — please try again";
+      btn.disabled = false; btn.textContent = "Send";
+      return;
+    }
+    out.classList.add('ok');
+    out.textContent = data.via === 'interakt' ? "Sent — the guest's WhatsApp got the message directly." : "Could not send directly — a Telegram nudge was sent so a staff member can tap through instead.";
+    btn.textContent = "Sent ✓";
+    await fetchStaysFromProxy();
+    syncSendQuoteBtn();
+    toast("Quote sent");
+    setTimeout(()=>{ $("#sendQuoteModal").hidden = true; }, 1400);
+  }catch(e){
+    out.classList.add('err');
+    out.textContent = "Could not reach the server — please try again";
+    btn.disabled = false; btn.textContent = "Send";
+  }
+});
+async function downloadPdf(){
+  try{ await document.fonts.ready; }catch(e){}
+  const prevTitle=document.title;
+  document.title=(curNo||"stay").replace(/[\/\\]/g,"-");
+  const restore=()=>{ document.title=prevTitle; window.removeEventListener("afterprint",restore); };
+  window.addEventListener("afterprint",restore);
+  window.print();
+  setTimeout(restore,1500);
+}
+</script>
+</body>
+</html>

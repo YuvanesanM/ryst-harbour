@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<title data-title="Petty Cash · {name}">Petty Cash · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097;
+    --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6;
+    --credit:#2f7d54; --debit:#b8483b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  button,input,select,textarea{font-family:inherit}
+  button{cursor:pointer}
+  a{color:var(--accent-d)}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+
+  /* ── Top bar ── */
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 18px}
+  header.top img{height:38px;object-fit:contain}
+  header.top .ttl{font-weight:700;font-size:18px;letter-spacing:.2px}
+  header.top .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px}
+  header.top .spacer{flex:1}
+  .badge{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase}
+  .badge.owner{background:var(--accent-soft);color:var(--accent-d)}
+  .badge.caretaker{background:var(--warn-soft);color:var(--warn)}
+  .who{font-size:12px;color:var(--muted);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tbtn{background:var(--panel);border:1.5px solid var(--line);color:var(--muted);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;transition:.15s}
+  .tbtn:hover{border-color:var(--accent);color:var(--accent-d)}
+
+  /* ── Summary cards ── */
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 15px;box-shadow:0 6px 18px rgba(40,50,40,.04)}
+  .card .lbl{font-size:11.5px;font-weight:600;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+  .card .val{font-size:25px;font-weight:700;margin-top:7px;letter-spacing:-.5px}
+  .card .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .card.hero{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-d) 100%);border:none;color:#fff}
+  .card.hero .lbl{color:#dff0e6}
+  .card.hero .sub{color:#dff0e6}
+  .card.pending .val{color:var(--warn)}
+
+  /* ── Action bar ── */
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .btn{border:none;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:600;letter-spacing:.2px;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-d)}
+  .btn.ghost{background:var(--panel);border:1.5px solid var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent-d)}
+  .btn.warn{background:var(--warn-soft);color:var(--warn);border:1.5px solid #f0dcb8}
+  .btn.warn:hover{background:#f7ead2}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ── Filters ── */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+  .filters label{font-size:11.5px;font-weight:600;color:var(--muted2);display:flex;flex-direction:column;gap:4px}
+  .filters select,.filters input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:13px;color:var(--ink);outline:none}
+  .filters select:focus,.filters input:focus{border-color:var(--accent)}
+  .filters .grow{flex:1;min-width:120px}
+
+  /* ── Ledger ── */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(40,50,40,.04)}
+  .panel h2{font-size:13px;font-weight:700;letter-spacing:.3px;padding:15px 16px 0;color:var(--ink)}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+  th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2);padding:12px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:11px 12px;border-bottom:1px solid var(--panel2);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr.credit td{background:#f4faf6}
+  .amt{font-weight:700;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .amt.debit{color:var(--debit)}
+  .amt.credit{color:var(--credit)}
+  .chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:12px;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap}
+  .chip.pending{background:var(--warn-soft);color:var(--warn)}
+  .chip.reimbursed{background:var(--accent-soft);color:var(--accent-d)}
+  .chip.na{background:var(--panel2);color:var(--muted)}
+  .chip.cash{background:#eef1fb;color:#4a5aa8}
+  .cat{font-size:11px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);padding:2px 8px;border-radius:8px;white-space:nowrap}
+  .note{color:var(--muted);font-size:12.5px}
+  .rcpt{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid var(--line);cursor:pointer;display:block}
+  /* A visible fill+border at rest (not just on :hover) so each icon reads
+     as its own tappable button instead of bare floating glyphs — the
+     fixed width/height gives a predictable touch target regardless of
+     which emoji glyph is inside. */
+  .rowbtn{background:var(--panel2);border:1px solid var(--line);color:var(--muted2);width:30px;height:30px;border-radius:8px;line-height:0;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .rowbtn:hover{color:var(--accent-d);background:var(--accent-soft);border-color:var(--accent-soft)}
+  .rowbtn.del:hover{color:var(--danger);background:var(--danger-soft);border-color:var(--danger-soft)}
+  .td-actions{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+  .empty{padding:40px 16px;text-align:center;color:var(--muted2);font-size:13.5px}
+  .selbar{display:none;align-items:center;gap:12px;padding:11px 16px;background:var(--accent-soft);border-bottom:1px solid #cfe6d8;font-size:13px;font-weight:600;color:var(--accent-d)}
+  .selbar.show{display:flex}
+
+  /* ── Reports ── */
+  .reports{margin-top:18px}
+  .repgrid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+  .bars{display:flex;flex-direction:column;gap:9px;padding:15px 16px}
+  .bar{display:grid;grid-template-columns:120px 1fr auto;align-items:center;gap:10px;font-size:12.5px}
+  .bar .name{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar .track{display:block;height:9px;background:var(--panel2);border-radius:6px;overflow:hidden}
+  .bar .fill{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-d));border-radius:6px}
+  .bar .bamt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .repsum{padding:15px 16px;display:flex;flex-direction:column;gap:11px}
+  .repsum .row{display:flex;justify-content:space-between;font-size:13.5px}
+  .repsum .row .k{color:var(--muted)}
+  .repsum .row .v{font-weight:700;font-variant-numeric:tabular-nums}
+  .repsum .row.total{border-top:1px solid var(--line);padding-top:11px;font-size:15px}
+
+  /* ── Modal ── */
+  .overlay{position:fixed;inset:0;background:rgba(29,33,28,.5);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel);border-radius:16px;width:min(460px,100%);max-height:92vh;overflow-y:auto;box-shadow:0 24px 70px rgba(20,30,20,.28)}
+  .modal.wide{width:min(680px,100%)}
+  .modal h3{font-size:16px;font-weight:700;padding:20px 22px 0}
+  .mbody{padding:16px 22px 22px;display:flex;flex-direction:column;gap:13px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:12px;font-weight:600;color:var(--muted)}
+  .field input,.field select,.field textarea{padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:14px;color:var(--ink);outline:none;width:100%}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+  .field textarea{resize:vertical;min-height:52px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .catgrid{display:flex;flex-wrap:wrap;gap:8px}
+  .catchip{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border:1.5px solid var(--line);border-radius:20px;background:var(--panel2);font-size:13px;font-weight:600;color:var(--ink);transition:.15s}
+  .catchip .emo{font-size:16px;line-height:1}
+  .catchip:hover{border-color:var(--accent)}
+  .catchip.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-d)}
+  .rcpt-drop{border:1.5px dashed var(--line);border-radius:10px;padding:14px;text-align:center;color:var(--muted2);font-size:13px;cursor:pointer;transition:.15s}
+  .rcpt-drop:hover{border-color:var(--accent);color:var(--accent-d);background:var(--accent-soft)}
+  .rcpt-prev{position:relative;margin-top:8px}
+  .rcpt-prev img{width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid var(--line);background:var(--panel2)}
+  .rcpt-prev .rm{position:absolute;top:8px;right:8px;background:rgba(29,33,28,.72);color:#fff;border:none;border-radius:8px;padding:5px 9px;font-size:11.5px;font-weight:600}
+  .mfoot{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+  .merr{color:var(--danger);font-size:12.5px;min-height:16px}
+  .lightbox img{max-width:min(92vw,760px);max-height:88vh;border-radius:12px}
+  .lightbox .lbtns{display:flex;gap:10px;justify-content:center;margin-top:12px}
+
+  /* ── Toast + loader ── */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:11px;font-size:13.5px;font-weight:500;opacity:0;pointer-events:none;transition:.25s;z-index:80;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{background:var(--danger)}
+  #loader{position:fixed;inset:0;background:rgba(243,244,241,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:90;color:var(--muted)}
+  #loader.hide{display:none}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media(max-width:820px){
+    .cards{grid-template-columns:1fr 1fr}
+    .repgrid{grid-template-columns:1fr}
+    .bar{grid-template-columns:96px 1fr auto}
+  }
+  @media(max-width:520px){
+    header.top .who{display:none}
+    .card .val{font-size:21px}
+    .bar{grid-template-columns:76px 1fr auto}
+  }
+
+  /* ── Mobile (≤680px): action buttons as a tappable grid, inputs at 16px to
+     stop iOS Safari auto-zooming on focus, bigger touch targets ── */
+  @media(max-width:680px){
+    .wrap{padding:14px 12px 60px}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .actions .btn{width:100%;justify-content:center;padding:12px 10px}
+    .filters select,.filters input,.field input,.field select,.field textarea{font-size:16px}
+    .rowbtn{width:36px;height:36px}
+    .selchk{width:20px;height:20px}
+    .rcpt{width:40px;height:40px}
+    /* Category picker as an even 3-col x 2-row grid instead of flex-wrap
+       chips that size themselves by label length. */
+    .catgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .catchip{flex-direction:column;justify-content:center;text-align:center;white-space:normal;line-height:1.25;padding:10px 6px;gap:4px;min-width:0;width:100%}
+  }
+  @media(max-width:380px){
+    .two{grid-template-columns:1fr}
+  }
+
+  /* ── Ledger as a compact list below 680px — a table forces sideways
+     scrolling on a phone. Each <tr> becomes a two-line flex row instead
+     of a boxed card: category + amount on line one, note/date/status on
+     line two, separated by a hairline rather than a bordered block. ── */
+  @media(max-width:680px){
+    .tablewrap{overflow-x:visible}
+    table{display:block; width:100%; min-width:0}
+    thead{display:none}
+    tbody{display:block}
+    tr{
+      display:flex; flex-wrap:wrap; align-items:center;
+      column-gap:10px; row-gap:2px;
+      padding:11px 4px; border-bottom:1px solid var(--line);
+    }
+    tbody tr:last-child{border-bottom:none}
+    tr.credit{background:#f4faf6; margin:0 -6px; padding-left:10px; padding-right:10px}
+    td{padding:0; border:none; display:block; min-width:0}
+    td::before{content:none}
+    td:empty:not(.td-break){display:none}
+
+    /* Forces a clean wrap between line 1 and line 2 regardless of how long
+       the category/note text is — a zero-basis flexible item can't be used
+       to gauge the line-wrap point (its hypothetical size is 0, so the
+       browser never wraps around it and the row silently overflows
+       instead). A 100%-wide, zero-height spacer sidesteps that. */
+    .td-break{order:6; flex:0 0 100%; height:0}
+
+    .td-sel{order:1; flex:0 0 auto}
+    .td-rcpt{order:2; flex:0 0 auto}
+    .td-cat{order:3; flex:1 1 0; min-width:0; font-weight:600; font-size:13.5px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .td-cat .cat{background:none; border:none; padding:0; font: inherit; color:inherit}
+    .td-amt{order:4; flex:0 0 auto; white-space:nowrap}
+    .td-actions{order:5; flex:0 0 auto}
+
+    .td-note{order:7; flex:1 1 0; min-width:0; font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .td-date{order:8; flex:0 0 auto; font-size:11.5px; color:var(--muted2)}
+    .td-status{order:9; flex:0 0 auto}
+
+    .rcpt{width:32px; height:32px}
+  }
+  @media print{
+    header.top .tbtn,.actions,.filters,.rowbtn,.selbar,#loader,#toast,.rcpt{display:none!important}
+    body{background:#fff}
+    .panel,.card{box-shadow:none}
+  }
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#0e2420">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img id="logo" alt="RYST" src="" />
+    <div class="ttl">Petty Cash<small><span data-prop="name">RYST 109A</span> · Caretaker ledger</small></div>
+    <div class="spacer"></div>
+    <span id="roleBadge" class="badge owner">Owner</span>
+    <span id="whoami" class="who"></span>
+    <button class="tbtn" onclick="window.location.href='login.html'">⌂ Home</button>
+    <button class="tbtn" id="logoutBtn">⎋ Log out</button>
+  </header>
+
+  <div class="cards">
+    <div class="card hero">
+      <div class="lbl">Cash in hand</div>
+      <div class="val" id="cCash">—</div>
+      <div class="sub" id="cCashSub">what the caretaker holds now</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Float target</div>
+      <div class="val" id="cFloat">—</div>
+      <div class="sub" id="cFloatSub">authorised advance</div>
+    </div>
+    <div class="card pending">
+      <div class="lbl">Pending reimbursement</div>
+      <div class="val" id="cPending">—</div>
+      <div class="sub" id="cPendingSub">owed back to caretaker</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Spent this month</div>
+      <div class="val" id="cMonth">—</div>
+      <div class="sub" id="cMonthSub"></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn primary" id="addBtn">＋ Add expense</button>
+    <button class="btn warn owner-only" id="reimburseBtn">↺ Reimburse pending</button>
+    <button class="btn ghost owner-only" id="topupBtn">＋ Add cash / top-up</button>
+    <button class="btn ghost owner-only" id="withdrawBtn">− Collect cash back</button>
+    <button class="btn ghost owner-only" id="floatBtn">⚑ Set float</button>
+    <button class="btn ghost" id="csvBtn">⤓ Export CSV</button>
+    <button class="btn ghost" id="printBtn">⎙ Print report</button>
+  </div>
+
+  <div class="filters">
+    <label>Month<select id="fMonth"></select></label>
+    <label>Category<select id="fCat"></select></label>
+    <label>Status<select id="fStatus">
+      <option value="All">All</option>
+      <option value="pending">Pending</option>
+      <option value="reimbursed">Reimbursed</option>
+      <option value="na">No reimbursement</option>
+    </select></label>
+    <label class="grow">Search<input id="fSearch" placeholder="note or category…" /></label>
+  </div>
+
+  <div class="panel">
+    <div class="selbar" id="selbar">
+      <span id="selInfo"></span>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn warn" id="reimburseSelBtn" style="padding:7px 14px">Reimburse selected</button>
+      <button class="tbtn" id="selClear">Clear</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th id="thSel" style="width:34px"></th>
+          <th style="width:96px">Date</th>
+          <th>Category</th>
+          <th>Note</th>
+          <th style="width:56px">Receipt</th>
+          <th style="width:110px;text-align:right">Amount</th>
+          <th style="width:104px">Status</th>
+          <th style="width:70px"></th>
+        </tr></thead>
+        <tbody id="ledger"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="emptyState" style="display:none">No entries for this filter.</div>
+  </div>
+
+  <div class="reports">
+    <div class="repgrid">
+      <div class="panel">
+        <h2>Spend by category</h2>
+        <div class="bars" id="catBars"></div>
+      </div>
+      <div class="panel">
+        <h2>Period summary</h2>
+        <div class="repsum" id="repSum"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Expense add/edit modal -->
+<div class="overlay" id="expOverlay">
+  <div class="modal">
+    <h3 id="expTitle">Add expense</h3>
+    <div class="mbody">
+      <div class="two">
+        <div class="field"><label>Date</label><input type="date" id="eDate" /></div>
+        <div class="field"><label>Amount (₹)</label><input type="number" id="eAmount" min="0" step="1" inputmode="numeric" placeholder="0" /></div>
+      </div>
+      <div class="field"><label>Category</label><div class="catgrid" id="eCatGrid"></div></div>
+      <label class="chk-row owner-only" id="eNoReimbRow" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">
+        <input type="checkbox" id="eNoReimb" style="width:auto"> Already paid directly — no reimbursement needed
+      </label>
+      <div class="field"><label>Note</label><textarea id="eNote" placeholder="What was this for?"></textarea></div>
+      <div class="field">
+        <label>Receipt <span style="color:var(--danger)">*</span></label>
+        <div class="rcpt-drop" id="rcptDrop">📷 Tap to add a photo of the bill</div>
+        <input type="file" id="rcptInput" accept="image/*" capture="environment" hidden />
+        <div class="rcpt-prev" id="rcptPrev" style="display:none">
+          <img id="rcptImg" alt="receipt" />
+          <button class="rm" id="rcptRm" type="button">Remove</button>
+        </div>
+      </div>
+      <div class="merr" id="expErr"></div>
+      <div class="mfoot">
+        <button class="btn ghost" id="expCancel">Cancel</button>
+        <button class="btn primary" id="expSave">Save expense</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Generic owner modal (float / topup / reimburse) -->
+<div class="overlay" id="genOverlay">
+  <div class="modal">
+    <h3 id="genTitle"></h3>
+    <div class="mbody" id="genBody"></div>
+  </div>
+</div>
+
+<!-- Receipt lightbox -->
+<div class="overlay lightbox" id="lbOverlay">
+  <div style="text-align:center">
+    <img id="lbImg" alt="receipt" />
+    <div class="lbtns">
+      <a class="btn ghost" id="lbDownload" download="receipt.jpg">⤓ Download</a>
+      <button class="btn primary" id="lbClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="loader"><div class="spin" id="loaderSpin"></div><div id="loaderMsg">Loading ledger…</div><button class="tbtn" id="loaderRetry" style="display:none">Retry</button></div>
+<div id="toast"></div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const MYEMAIL = localStorage.getItem('ryst_user_email') || '';
+const ROLE = localStorage.getItem('ryst_user_role') || 'owner';
+const isOwner = ROLE === 'owner';
+// Admin is assigned via Settings → User Access (data-driven, cached at
+// login), not a hardcoded email. Server-enforced in the proxy's
+// /petty-cash delete-entry command regardless — this only controls
+// whether the button renders.
+const IS_ADMIN = localStorage.getItem('ryst_user_admin') === 'true';
+
+// Owner always has full access. Coordinator/caretaker need the 'petty-cash'
+// module granted in Settings → User Access — server-enforced on
+// /petty-cash regardless, this just avoids loading a page the user can't
+// actually use. A caretaker signed in before per-user module access existed
+// has no ryst_user_modules cached yet — fall back to the legacy default the
+// server assumes for them (petty-cash/inventory/checklist).
+function hasModule(mod){
+  let modules;
+  try { modules = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { modules = null; }
+  if(!Array.isArray(modules)) modules = ROLE === 'caretaker' ? ['petty-cash','inventory','checklist'] : [];
+  return ROLE === 'owner' || modules.includes(mod);
+}
+
+if(!TOKEN){ window.location.href = 'login.html'; }
+if(!hasModule('petty-cash')){ window.location.href = 'login.html'; }
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const INR = new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0});
+const money = n => INR.format(Number(n)||0);
+// new Date().toISOString() converts through UTC — for any timezone ahead of
+// UTC (IST included), this reports "yesterday" during the first few hours
+// after local midnight. Read the local calendar fields directly instead.
+const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const monthOf = d => (d||'').slice(0,7);
+const monthLabel = m => { const [y,mo]=m.split('-'); return new Date(y, mo-1, 1).toLocaleDateString('en-IN',{month:'short',year:'numeric'}); };
+
+let DOC = { float:0, categories:[], entries:[] };
+let FILTERS = { month: monthOf(todayISO()), category:'All', status:'All', q:'' };
+const selected = new Set();
+
+// ── Logo from settings (shared with other tools) ──
+(function(){
+  try{ const s=JSON.parse(localStorage.getItem('ryst_quote_settings')||'null'); if(s&&s.logo){ $('#logo').src=s.logo; return; } }catch(e){}
+  const l=localStorage.getItem('ryst_logo'); if(l) $('#logo').src=l; else $('#logo').style.display='none';
+})();
+
+// ── Role UI ──
+$('#roleBadge').textContent = isOwner ? 'Owner' : 'Caretaker';
+$('#roleBadge').className = 'badge ' + (isOwner ? 'owner' : 'caretaker');
+$('#whoami').textContent = MYEMAIL;
+if(!isOwner){ $$('.owner-only').forEach(el=>el.style.display='none'); $('#thSel').style.display='none'; }
+
+// ── Toast ──
+let toastT;
+function toast(msg, isErr){
+  const t=$('#toast'); t.textContent=msg; t.className='show'+(isErr?' err':'');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.className='',3200);
+}
+
+// ── API ──
+async function api(method, payload){
+  const ctrl=new AbortController();
+  const slow=setTimeout(()=>{ $('#loaderMsg').textContent='Waking up the server… up to a minute.'; }, 4000);
+  const abort=setTimeout(()=>ctrl.abort(), 75000);
+  try{
+    const opts={ method, headers:{'X-Token':TOKEN}, signal:ctrl.signal };
+    if(payload){ opts.headers['Content-Type']='application/json'; opts.body=JSON.stringify(payload); }
+    const res=await fetch(PROXY_URL+'/petty-cash', opts);
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; throw new Error('Session expired'); }
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error || ('Error '+res.status));
+    return data;
+  } finally { clearTimeout(slow); clearTimeout(abort); }
+}
+
+function showLoader(msg){ $('#loaderMsg').textContent=msg||'Loading…'; $('#loaderSpin').style.display=''; $('#loaderRetry').style.display='none'; $('#loader').className=''; }
+function hideLoader(){ $('#loader').className='hide'; }
+
+async function load(){
+  showLoader('Loading ledger…');
+  try{
+    DOC = normalize(await api('GET'));
+    render();
+    hideLoader();
+  }catch(e){
+    // Unlike command(), this is the very first load — there's no prior
+    // ledger to fall back to, so leave the loader up with a retry option
+    // instead of silently revealing an empty ledger with only a fading toast.
+    $('#loaderSpin').style.display = 'none';
+    $('#loaderMsg').textContent = 'Could not load — ' + (e.message || 'check your connection.');
+    $('#loaderRetry').style.display = '';
+    toast(e.message||'Could not load', true);
+  }
+}
+$('#loaderRetry').addEventListener('click', load);
+
+async function command(payload, okMsg){
+  showLoader('Saving…');
+  try{
+    DOC = normalize(await api('POST', payload));
+    render();
+    if(okMsg) toast(okMsg);
+    return true;
+  }catch(e){ toast(e.message||'Save failed', true); return false; }
+  finally{ hideLoader(); }
+}
+
+function normalize(doc){
+  doc = doc || {};
+  return {
+    float: Number(doc.float)||0,
+    categories: Array.isArray(doc.categories)&&doc.categories.length ? doc.categories : ['Groceries & Guest Supplies','Housekeeping','Utilities','Repairs & Maintenance','Transport','Miscellaneous'],
+    entries: Array.isArray(doc.entries) ? doc.entries : [],
+  };
+}
+
+// ── Derived totals (all-time) ──
+// 'na' (no reimbursement needed) expenses were paid directly by the owner,
+// never out of the caretaker's float — they must count toward total spend
+// (monthSpend/P&L) but NOT toward floatExpenses, or "Cash in hand" would
+// understate what the caretaker is actually holding.
+function totals(){
+  let topups=0, withdrawals=0, floatExpenses=0, allExpenses=0, pending=0, monthSpend=0;
+  const nowM = monthOf(todayISO());
+  for(const e of DOC.entries){
+    const amt=Number(e.amount)||0;
+    if(e.type==='topup') topups+=amt;
+    else if(e.type==='withdrawal') withdrawals+=amt;
+    else if(e.type==='expense'){
+      allExpenses+=amt;
+      if(e.status!=='na') floatExpenses+=amt;
+      if(e.status==='pending') pending+=amt;
+      if(monthOf(e.date)===nowM) monthSpend+=amt;
+    }
+  }
+  return { cash: topups-withdrawals-floatExpenses, topups, withdrawals, expenses: allExpenses, floatExpenses, pending, monthSpend };
+}
+
+// ── Filtering for ledger + reports ──
+function passFilter(e){
+  if(FILTERS.month!=='All' && monthOf(e.date)!==FILTERS.month) return false;
+  const q=FILTERS.q.trim().toLowerCase();
+  if(e.type==='topup' || e.type==='withdrawal'){
+    // Cash movements only shown when not narrowing to a category/status.
+    if(FILTERS.category!=='All' || FILTERS.status!=='All') return false;
+    if(q && !((e.note||'').toLowerCase().includes(q))) return false;
+    return true;
+  }
+  if(FILTERS.category!=='All' && e.category!==FILTERS.category) return false;
+  if(FILTERS.status!=='All' && e.status!==FILTERS.status) return false;
+  if(q && !((e.note||'').toLowerCase().includes(q) || (e.category||'').toLowerCase().includes(q))) return false;
+  return true;
+}
+
+function render(){
+  const t=totals();
+  $('#cCash').textContent = money(t.cash);
+  $('#cFloat').textContent = money(DOC.float);
+  $('#cPending').textContent = money(t.pending);
+  $('#cMonth').textContent = money(t.monthSpend);
+  // A shortfall below float is almost never ALL pending reimbursement — the
+  // rest is simply net cash movement (manual top-ups vs. withdrawals) that
+  // hasn't kept pace with the float target, which is entirely normal (e.g.
+  // topping up extra for a big spend, then withdrawing the leftover after).
+  // Collapsing both into one "below float" number reads as "that much is
+  // unreimbursed spend", which it isn't — spell out the split instead.
+  const shortfall = DOC.float - t.cash;
+  const otherGap = shortfall - t.pending; // whatever the gap isn't pending reimbursement
+  $('#cCashSub').textContent = DOC.float<=0 ? 'what the caretaker holds now'
+    : shortfall<=0 ? 'at / above float'
+    : t.pending<=0 ? `${money(shortfall)} below float — nothing pending, just net cash withdrawn`
+    : otherGap>0.5 ? `${money(shortfall)} below float (${money(t.pending)} pending + ${money(otherGap)} net withdrawn)`
+    : otherGap<-0.5 ? `${money(shortfall)} below float (${money(t.pending)} pending, offset by ${money(-otherGap)} topped up above float)`
+    : `${money(shortfall)} below float — all of it pending reimbursement`;
+  $('#cPendingSub').textContent = t.pending>0 ? 'owed back to caretaker' : 'all settled';
+  $('#cMonthSub').textContent = monthLabel(monthOf(todayISO()));
+
+  renderMonthOptions();
+  renderCatOptions();
+  renderLedger();
+  renderReports();
+  renderSelbar();
+}
+
+function renderMonthOptions(){
+  const months = new Set(DOC.entries.map(e=>monthOf(e.date)).filter(Boolean));
+  months.add(monthOf(todayISO()));
+  const opts = ['All', ...[...months].sort().reverse()];
+  const sel=$('#fMonth');
+  if(!opts.includes(FILTERS.month)) FILTERS.month='All';
+  sel.innerHTML = opts.map(m=>`<option value="${m}"${m===FILTERS.month?' selected':''}>${m==='All'?'All months':esc(monthLabel(m))}</option>`).join('');
+}
+function renderCatOptions(){
+  // Union of the current, editable category list (DOC.categories — what's
+  // offered when logging a NEW expense) and whatever category strings
+  // actually appear on existing entries — same reasoning as
+  // renderMonthOptions above. Without this, renaming or removing a category
+  // in Settings silently drops older expenses still filed under the old
+  // name out of every filtered view (though never out of the unfiltered
+  // totals, which sum by type, not category).
+  const seen = new Set(DOC.categories);
+  const cats = [...DOC.categories];
+  DOC.entries.forEach(e=>{ if(e.category && !seen.has(e.category)){ seen.add(e.category); cats.push(e.category); } });
+  const sel=$('#fCat');
+  sel.innerHTML = ['All',...cats].map(c=>`<option value="${esc(c)}"${c===FILTERS.category?' selected':''}>${c==='All'?'All categories':esc(c)}</option>`).join('');
+}
+
+function statusLabel(s){ return s==='na' ? 'No reimbursement' : s; }
+function canEdit(e){ return e.type==='expense' && e.status==='pending' && (isOwner || e.createdBy===MYEMAIL); }
+// Money already changed hands on a reimbursed expense, a reimbursement
+// record, or a cash top-up — only the admin can remove any of those;
+// everyone else (including other owners) can still delete their own/any
+// pending expense as before.
+function canDelete(e){
+  if(e.type==='topup' || e.type==='withdrawal') return IS_ADMIN;
+  return e.type==='expense' && (e.status==='reimbursed' ? IS_ADMIN : (isOwner || e.createdBy===MYEMAIL));
+}
+
+function renderLedger(){
+  const rows = DOC.entries.filter(passFilter).sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
+  const tb=$('#ledger');
+  if(!rows.length){ tb.innerHTML=''; $('#emptyState').style.display='block'; return; }
+  $('#emptyState').style.display='none';
+  tb.innerHTML = rows.map(e=>{
+    if(e.type==='topup'){
+      const kind = e.subtype==='reimbursement' ? 'Reimbursement' : 'Cash top-up';
+      return `<tr class="credit">
+        <td class="td-plain td-sel"></td>
+        <td class="td-date" data-label="Date">${esc(e.date||'')}</td>
+        <td class="td-cat" data-label="Type"><span class="chip cash">${esc(kind)}</span></td>
+        <td class="note td-note" data-label="Note">${esc(e.note||'')}</td>
+        <td class="td-plain td-rcpt"></td>
+        <td class="amt credit td-amt" data-label="Amount">+${money(e.amount)}</td>
+        <td class="td-plain td-status"></td>
+        <td class="td-plain td-actions">${canDelete(e) ? `<button class="rowbtn del" data-id="${e.id}" title="Delete">🗑</button>` : ''}</td>
+        <td class="td-break"></td>
+      </tr>`;
+    }
+    if(e.type==='withdrawal'){
+      return `<tr>
+        <td class="td-plain td-sel"></td>
+        <td class="td-date" data-label="Date">${esc(e.date||'')}</td>
+        <td class="td-cat" data-label="Type"><span class="chip cash">Cash collected</span></td>
+        <td class="note td-note" data-label="Note">${esc(e.note||'')}</td>
+        <td class="td-plain td-rcpt"></td>
+        <td class="amt debit td-amt" data-label="Amount">−${money(e.amount)}</td>
+        <td class="td-plain td-status"></td>
+        <td class="td-plain td-actions">${canDelete(e) ? `<button class="rowbtn del" data-id="${e.id}" title="Delete">🗑</button>` : ''}</td>
+        <td class="td-break"></td>
+      </tr>`;
+    }
+    const canE = canEdit(e), canD = canDelete(e);
+    const selBox = (isOwner && e.status==='pending') ? `<input type="checkbox" class="selchk" data-id="${e.id}" ${selected.has(e.id)?'checked':''}/>` : '';
+    const rcpt = e.receipt ? `<img class="rcpt" src="${e.receipt}" data-id="${e.id}" alt="receipt"/>` : '<span class="note">—</span>';
+    return `<tr>
+      <td class="td-sel" data-label="Select">${selBox}</td>
+      <td class="td-date" data-label="Date">${esc(e.date||'')}</td>
+      <td class="td-cat" data-label="Category"><span class="cat">${esc(e.category||'—')}</span></td>
+      <td class="note td-note" data-label="Note">${esc(e.note||'')}</td>
+      <td class="td-rcpt" data-label="Receipt">${rcpt}</td>
+      <td class="amt debit td-amt" data-label="Amount">−${money(e.amount)}</td>
+      <td class="td-status" data-label="Status"><span class="chip ${e.status}">${esc(statusLabel(e.status))}</span></td>
+      <td class="td-plain td-actions">${(isOwner && e.status==='pending') ? `<button class="rowbtn waive" data-id="${e.id}" title="No reimbursement needed">🚫</button>`:''}${canE ? `<button class="rowbtn edit" data-id="${e.id}" title="Edit">✎</button>`:''}${canD ? `<button class="rowbtn del" data-id="${e.id}" title="Delete">🗑</button>`:''}</td>
+      <td class="td-break"></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderReports(){
+  const exps = DOC.entries.filter(e=>e.type==='expense' && passFilter(e));
+  const byCat={};
+  let total=0, pending=0, reimbursed=0, direct=0;
+  for(const e of exps){
+    const a=Number(e.amount)||0; total+=a;
+    byCat[e.category||'—']=(byCat[e.category||'—']||0)+a;
+    if(e.status==='pending') pending+=a;
+    else if(e.status==='na') direct+=a;
+    else reimbursed+=a;
+  }
+  const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const max=cats.length?cats[0][1]:0;
+  $('#catBars').innerHTML = cats.length ? cats.map(([c,v])=>`
+    <div class="bar"><span class="name" title="${esc(c)}">${esc(c)}</span>
+      <span class="track"><span class="fill" style="width:${max?Math.max(4,v/max*100):0}%"></span></span>
+      <span class="bamt">${money(v)}</span></div>`).join('')
+    : '<div class="empty" style="padding:22px 0">No expenses in this period.</div>';
+
+  const label = FILTERS.month==='All' ? 'All time' : monthLabel(FILTERS.month);
+  $('#repSum').innerHTML = `
+    <div class="row"><span class="k">Period</span><span class="v">${esc(label)}</span></div>
+    <div class="row"><span class="k">Expenses</span><span class="v">${exps.length}</span></div>
+    <div class="row"><span class="k">Pending</span><span class="v" style="color:var(--warn)">${money(pending)}</span></div>
+    <div class="row"><span class="k">Reimbursed</span><span class="v" style="color:var(--accent-d)">${money(reimbursed)}</span></div>
+    <div class="row"><span class="k">No reimbursement needed</span><span class="v" style="color:var(--muted)">${money(direct)}</span></div>
+    <div class="row total"><span class="k">Total spent</span><span class="v">${money(total)}</span></div>`;
+}
+
+function renderSelbar(){
+  const bar=$('#selbar');
+  if(!isOwner || selected.size===0){ bar.className='selbar'; return; }
+  let sum=0; selected.forEach(id=>{ const e=DOC.entries.find(x=>x.id===id); if(e) sum+=Number(e.amount)||0; });
+  $('#selInfo').textContent = `${selected.size} selected · ${money(sum)}`;
+  bar.className='selbar show';
+}
+
+// ── Receipt compression ──
+function compressImage(file){
+  return new Promise((resolve,reject)=>{
+    if(!file) return resolve(null);
+    if(!file.type || !file.type.startsWith('image/')) return reject(new Error('Please choose an image file'));
+    const reader=new FileReader();
+    reader.onload=()=>{ const img=new Image();
+      img.onload=()=>{ const maxDim=1400; let w=img.width,h=img.height;
+        if(w>maxDim||h>maxDim){ if(w>=h){ h=Math.round(h*maxDim/w); w=maxDim; } else { w=Math.round(w*maxDim/h); h=maxDim; } }
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(cv.toDataURL('image/jpeg',0.6)); };
+      img.onerror=()=>reject(new Error('Could not read image')); img.src=reader.result; };
+    reader.onerror=()=>reject(new Error('Could not read file')); reader.readAsDataURL(file);
+  });
+}
+
+// ── Expense modal ──
+const CAT_EMOJI = {
+  'Groceries & Guest Supplies':'🛒', 'Housekeeping':'🧹', 'Utilities':'💡',
+  'Repairs & Maintenance':'🔧', 'Transport':'🚗', 'Miscellaneous':'📦',
+};
+function catEmoji(c){ return CAT_EMOJI[c] || '🏷️'; }
+
+let editingId=null, pendingReceipt=null, receiptTouched=false, selectedCat=null;
+function renderCatGrid(active){
+  selectedCat = active;
+  $('#eCatGrid').innerHTML = DOC.categories.map(c=>
+    `<button type="button" class="catchip${c===selectedCat?' active':''}" data-cat="${esc(c)}"><span class="emo">${catEmoji(c)}</span>${esc(c)}</button>`
+  ).join('');
+  $('#eCatGrid').querySelectorAll('.catchip').forEach(b=>b.addEventListener('click',()=>{
+    selectedCat = b.dataset.cat;
+    $('#eCatGrid').querySelectorAll('.catchip').forEach(x=>x.classList.toggle('active', x===b));
+  }));
+}
+function openExpense(entry){
+  editingId = entry ? entry.id : null;
+  pendingReceipt = entry ? (entry.receipt||null) : null;
+  receiptTouched = false;
+  $('#expTitle').textContent = entry ? 'Edit expense' : 'Add expense';
+  $('#eDate').value = entry ? (entry.date||todayISO()) : todayISO();
+  $('#eAmount').value = entry ? entry.amount : '';
+  renderCatGrid(entry ? (entry.category||DOC.categories[0]) : DOC.categories[0]);
+  $('#eNote').value = entry ? (entry.note||'') : '';
+  // The no-reimbursement flag is only ever set at creation time (or via the
+  // ledger's "Waive" action on an existing pending expense) — editing an
+  // expense doesn't change it, so this checkbox is new-expense-only.
+  $('#eNoReimbRow').style.display = (entry || !isOwner) ? 'none' : '';
+  $('#eNoReimb').checked = false;
+  $('#expErr').textContent='';
+  renderReceiptPrev();
+  $('#expOverlay').className='overlay show';
+  setTimeout(()=>$('#eAmount').focus(),50);
+}
+function renderReceiptPrev(){
+  if(pendingReceipt){ $('#rcptImg').src=pendingReceipt; $('#rcptPrev').style.display='block'; $('#rcptDrop').style.display='none'; }
+  else { $('#rcptPrev').style.display='none'; $('#rcptDrop').style.display='block'; }
+}
+$('#rcptDrop').onclick=()=>$('#rcptInput').click();
+$('#rcptInput').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{ $('#rcptDrop').textContent='Compressing…'; pendingReceipt=await compressImage(f); receiptTouched=true; renderReceiptPrev(); }
+  catch(err){ toast(err.message,true); }
+  finally{ $('#rcptDrop').textContent='📷 Tap to add a photo of the bill'; $('#rcptInput').value=''; }
+};
+$('#rcptRm').onclick=()=>{ pendingReceipt=null; receiptTouched=true; renderReceiptPrev(); };
+$('#expCancel').onclick=()=>$('#expOverlay').className='overlay';
+$('#expSave').onclick=async()=>{
+  const amount=Math.round(parseFloat($('#eAmount').value));
+  const date=$('#eDate').value;
+  if(!date){ $('#expErr').textContent='Please pick a date.'; return; }
+  if(!(amount>0)){ $('#expErr').textContent='Amount must be greater than 0.'; return; }
+  if(!selectedCat){ $('#expErr').textContent='Please choose a category.'; return; }
+  if(!pendingReceipt){ $('#expErr').textContent='Please add a photo of the receipt.'; return; }
+  const payload = editingId
+    ? { action:'edit-expense', id:editingId, date, amount, category:selectedCat, note:$('#eNote').value }
+    : { action:'add-expense', date, amount, category:selectedCat, note:$('#eNote').value, receipt:pendingReceipt,
+        reimbursable: !(isOwner && $('#eNoReimb').checked) };
+  if(editingId && receiptTouched) payload.receipt = pendingReceipt;
+  const ok=await command(payload, editingId?'Expense updated':'Expense added');
+  if(ok) $('#expOverlay').className='overlay';
+};
+
+// ── Ledger row actions (delegated) ──
+$('#ledger').addEventListener('click', e=>{
+  const editB=e.target.closest('.edit'); const delB=e.target.closest('.del'); const rc=e.target.closest('.rcpt'); const chk=e.target.closest('.selchk'); const waiveB=e.target.closest('.waive');
+  if(editB){ const en=DOC.entries.find(x=>x.id===editB.dataset.id); if(en) openExpense(en); }
+  else if(delB){ const en=DOC.entries.find(x=>x.id===delB.dataset.id); if(en) confirmDelete(en); }
+  else if(rc){ const en=DOC.entries.find(x=>x.id===rc.dataset.id); if(en&&en.receipt) openLightbox(en.receipt); }
+  else if(chk){ if(chk.checked) selected.add(chk.dataset.id); else selected.delete(chk.dataset.id); renderSelbar(); }
+  else if(waiveB){ const en=DOC.entries.find(x=>x.id===waiveB.dataset.id); if(en) confirmWaive(en); }
+});
+
+function confirmWaive(en){
+  openGen('Waive reimbursement?', `
+    <p style="color:var(--muted);font-size:13.5px">Marks <b>${esc(en.category)}</b> · ${money(en.amount)} (${esc(en.date)}) as already paid directly — it stops counting as owed to the caretaker, but stays in the ledger and P&amp;L.</p>
+    <div class="mfoot"><button class="btn ghost" id="gCancel">Cancel</button><button class="btn primary" id="gDo">Waive</button></div>`);
+  $('#gDo').onclick=async()=>{ const ok=await command({action:'waive-reimbursement', id:en.id}, 'Reimbursement waived'); if(ok) closeGen(); };
+  $('#gCancel').onclick=closeGen;
+}
+
+function confirmDelete(en){
+  const isCashMove = en.type==='topup' || en.type==='withdrawal';
+  const label = en.type==='topup' ? (en.subtype==='reimbursement' ? 'Reimbursement' : 'Cash top-up')
+    : en.type==='withdrawal' ? 'Cash collected' : en.category;
+  openGen(isCashMove ? 'Delete this entry?' : 'Delete expense?', `
+    <p style="color:var(--muted);font-size:13.5px">This removes <b>${esc(label)}</b> · ${money(en.amount)} (${esc(en.date)}). This can’t be undone.</p>
+    <div class="mfoot"><button class="btn ghost" id="gCancel">Cancel</button><button class="btn primary" id="gDo" style="background:var(--danger)">Delete</button></div>`);
+  $('#gDo').onclick=async()=>{ const ok=await command({action:'delete-entry',id:en.id}, isCashMove ? 'Entry deleted' : 'Expense deleted'); if(ok) closeGen(); };
+  $('#gCancel').onclick=closeGen;
+}
+
+// ── Lightbox ──
+function openLightbox(src){ $('#lbImg').src=src; $('#lbDownload').href=src; $('#lbOverlay').className='overlay lightbox show'; }
+$('#lbClose').onclick=()=>$('#lbOverlay').className='overlay lightbox';
+$('#lbOverlay').onclick=e=>{ if(e.target===$('#lbOverlay')) $('#lbOverlay').className='overlay lightbox'; };
+
+// ── Generic owner modal ──
+function openGen(title, html){ $('#genTitle').textContent=title; $('#genBody').innerHTML=html; $('#genOverlay').className='overlay show'; }
+function closeGen(){ $('#genOverlay').className='overlay'; }
+$('#genOverlay').onclick=e=>{ if(e.target===$('#genOverlay')) closeGen(); };
+
+// ── Owner: reimburse ──
+function reimburse(ids){
+  const targets = DOC.entries.filter(e=>e.type==='expense'&&e.status==='pending'&&(!ids||ids.includes(e.id)));
+  if(!targets.length){ toast('No pending expenses to reimburse', true); return; }
+  const total=targets.reduce((s,e)=>s+(Number(e.amount)||0),0);
+  openGen('Reimburse caretaker', `
+    <p style="color:var(--muted);font-size:13.5px">Reimbursing <b>${targets.length}</b> expense(s) totalling <b>${money(total)}</b>. This records a cash top-up and marks them reimbursed, restoring the float.</p>
+    <div class="field"><label>Date paid</label><input type="date" id="gDate" value="${todayISO()}" /></div>
+    <div class="field"><label>Note (optional)</label><input id="gNote" placeholder="e.g. paid by UPI" /></div>
+    <div class="merr" id="gErr"></div>
+    <div class="mfoot"><button class="btn ghost" id="gCancel">Cancel</button><button class="btn warn" id="gDo">Reimburse ${money(total)}</button></div>`);
+  $('#gCancel').onclick=closeGen;
+  $('#gDo').onclick=async()=>{
+    const ok=await command({action:'reimburse', entryIds:targets.map(t=>t.id), date:$('#gDate').value, note:$('#gNote').value}, 'Reimbursed '+money(total));
+    if(ok){ selected.clear(); closeGen(); }
+  };
+}
+
+// ── Owner: top-up ──
+function openTopup(){
+  openGen('Add cash / top-up', `
+    <p style="color:var(--muted);font-size:13.5px">Record cash handed to the caretaker (e.g. to open or replenish the float), not tied to specific expenses.</p>
+    <div class="two"><div class="field"><label>Date</label><input type="date" id="gDate" value="${todayISO()}" /></div>
+    <div class="field"><label>Amount (₹)</label><input type="number" id="gAmt" min="0" step="1" inputmode="numeric" placeholder="0" /></div></div>
+    <div class="field"><label>Note</label><input id="gNote" placeholder="e.g. opening float" /></div>
+    <div class="merr" id="gErr"></div>
+    <div class="mfoot"><button class="btn ghost" id="gCancel">Cancel</button><button class="btn primary" id="gDo">Add cash</button></div>`);
+  $('#gCancel').onclick=closeGen;
+  $('#gDo').onclick=async()=>{ const a=Math.round(parseFloat($('#gAmt').value)); if(!(a>0)){ $('#gErr').textContent='Enter a valid amount.'; return; }
+    const ok=await command({action:'topup', amount:a, date:$('#gDate').value, note:$('#gNote').value}, 'Cash added'); if(ok) closeGen(); };
+}
+
+// ── Owner: withdraw (collect cash back) ──
+function openWithdraw(){
+  openGen('Collect cash back', `
+    <p style="color:var(--muted);font-size:13.5px">Record cash you're taking back from the caretaker — e.g. shrinking the float, or pulling out a surplus. This reduces cash in hand; use "Set float" separately if the target itself should change too.</p>
+    <div class="two"><div class="field"><label>Date</label><input type="date" id="gDate" value="${todayISO()}" /></div>
+    <div class="field"><label>Amount (₹)</label><input type="number" id="gAmt" min="0" step="1" inputmode="numeric" placeholder="0" /></div></div>
+    <div class="field"><label>Note</label><input id="gNote" placeholder="e.g. reducing float" /></div>
+    <div class="merr" id="gErr"></div>
+    <div class="mfoot"><button class="btn ghost" id="gCancel">Cancel</button><button class="btn primary" id="gDo">Collect cash</button></div>`);
+  $('#gCancel').onclick=closeGen;
+  $('#gDo').onclick=async()=>{ const a=Math.round(parseFloat($('#gAmt').value)); if(!(a>0)){ $('#gErr').textContent='Enter a valid amount.'; return; }
+    const ok=await command({action:'withdraw', amount:a, date:$('#gDate').value, note:$('#gNote').value}, 'Cash collected'); if(ok) closeGen(); };
+}
+
+// ── Owner: set float ──
+function openFloat(){
+  openGen('Set float target', `
+    <p style="color:var(--muted);font-size:13.5px">The authorised cash advance the caretaker should hold. Used as the target when reimbursing.</p>
+    <div class="field"><label>Float amount (₹)</label><input type="number" id="gAmt" min="0" step="1" inputmode="numeric" value="${DOC.float||''}" placeholder="0" /></div>
+    <div class="merr" id="gErr"></div>
+    <div class="mfoot"><button class="btn ghost" id="gCancel">Cancel</button><button class="btn primary" id="gDo">Save float</button></div>`);
+  $('#gCancel').onclick=closeGen;
+  $('#gDo').onclick=async()=>{ const a=Math.round(parseFloat($('#gAmt').value)); if(!(a>=0)){ $('#gErr').textContent='Enter a valid amount.'; return; }
+    const ok=await command({action:'set-float', float:a}, 'Float updated'); if(ok) closeGen(); };
+}
+
+// ── CSV export ──
+function exportCSV(){
+  const rows=DOC.entries.filter(passFilter).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const head=['Date','Type','Category','Note','Amount','Status','Added by'];
+  const lines=[head.join(',')];
+  for(const e of rows){
+    const type = e.type==='topup' ? (e.subtype==='reimbursement'?'Reimbursement':'Top-up') : e.type==='withdrawal' ? 'Withdrawal' : 'Expense';
+    const amt = e.type==='topup' ? e.amount : -e.amount;
+    const cells=[e.date||'', type, e.category||'', (e.note||'').replace(/"/g,'""'), amt, e.status||'', e.createdBy||''];
+    lines.push(cells.map(c=>/[",\n]/.test(String(c))?`"${c}"`:c).join(','));
+  }
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`petty-cash-${FILTERS.month==='All'?'all':FILTERS.month}.csv`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+// ── Wire up ──
+$('#addBtn').onclick=()=>openExpense(null);
+$('#reimburseBtn').onclick=()=>reimburse(null);
+$('#topupBtn').onclick=openTopup;
+$('#withdrawBtn').onclick=openWithdraw;
+$('#floatBtn').onclick=openFloat;
+$('#csvBtn').onclick=exportCSV;
+$('#printBtn').onclick=()=>window.print();
+$('#reimburseSelBtn').onclick=()=>reimburse([...selected]);
+$('#selClear').onclick=()=>{ selected.clear(); renderLedger(); renderSelbar(); };
+$('#logoutBtn').onclick=()=>{ ['ryst_proxy_token','ryst_user_email','ryst_user_role'].forEach(k=>localStorage.removeItem(k)); window.location.href='login.html'; };
+$('#fMonth').onchange=e=>{ FILTERS.month=e.target.value; render(); };
+$('#fCat').onchange=e=>{ FILTERS.category=e.target.value; render(); };
+$('#fStatus').onchange=e=>{ FILTERS.status=e.target.value; render(); };
+$('#fSearch').oninput=e=>{ FILTERS.q=e.target.value; renderLedger(); renderReports(); };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ $$('.overlay').forEach(o=>o.className=o.className.replace(' show','')); } });
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title data-title="Guest Register · {name}">Guest Register · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097;
+    --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6;
+    --qt:#c0922f; --qt-soft:#fbf0d8; --good:#3a8a5e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  button,input,select{font-family:inherit}
+  button{cursor:pointer}
+  a{color:var(--accent-d)}
+
+  .wrap{max-width:820px;margin:0 auto;padding:18px 16px 60px}
+
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px 18px}
+  header.top img{height:38px;object-fit:contain}
+  header.top .ttl{font-weight:700;font-size:18px;letter-spacing:.2px}
+  header.top .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px}
+  header.top .spacer{flex:1}
+  .badge{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase}
+  .badge.owner{background:var(--accent-soft);color:var(--accent-d)}
+  .badge.caretaker{background:var(--warn-soft);color:var(--warn)}
+  .who{font-size:12px;color:var(--muted);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tbtn{background:var(--panel);border:1.5px solid var(--line);color:var(--muted);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;transition:.15s}
+  .tbtn:hover{border-color:var(--accent);color:var(--accent-d)}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 6px 18px rgba(40,50,40,.04);text-align:center}
+  .stat .val{font-size:22px;font-weight:700;letter-spacing:-.5px}
+  .stat .lbl{font-size:10.5px;font-weight:600;color:var(--muted2);letter-spacing:.3px;text-transform:uppercase;margin-top:3px}
+
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .toolbar input{flex:1;min-width:160px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);font-size:14px;color:var(--ink);outline:none}
+  .toolbar input:focus{border-color:var(--accent)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{background:var(--panel);border:1.5px solid var(--line);color:var(--muted);padding:7px 12px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
+  .chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  .list{display:flex;flex-direction:column;gap:10px}
+  .g-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 6px 18px rgba(40,50,40,.04);line-height:1.45}
+  .g-top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .g-name{font-weight:700;font-size:17.5px}
+  .g-no{font-size:12px;color:var(--muted2);font-weight:500;margin-left:auto}
+  .g-tag{font-size:10px;font-weight:700;letter-spacing:.4px;padding:3px 9px;border-radius:20px;text-transform:uppercase}
+  .g-tag.invoice{background:var(--accent-soft);color:var(--accent-d)}
+  .g-tag.quote{background:var(--qt-soft);color:var(--qt)}
+  /* Wide two-column body — a card's actual text (dates, a couple of
+     badges) rarely fills the panel's full width on anything wider than a
+     phone, so the right column (call pill + arrival countdown) sits
+     beside it instead of leaving that space empty. Wraps to a row below
+     .g-main on a narrow viewport (media query further down). */
+  .g-body{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-top:8px}
+  .g-main{flex:1;min-width:220px}
+  .g-side{display:flex;flex-direction:column;align-items:flex-end;gap:9px;flex-shrink:0;padding-top:1px}
+  .g-dates{font-size:16px;font-weight:600;color:var(--ink)}
+  .g-dates .arrow{color:var(--muted2);margin:0 5px}
+  .g-sub{font-size:14.5px;font-weight:500;color:var(--ink);margin-top:3px}
+  .g-phone-pill{background:var(--accent);color:#fff;padding:9px 16px;border-radius:20px;font-weight:700;font-size:14.5px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap}
+  .g-phone-pill:hover{background:var(--accent-d)}
+  .g-countdown{font-size:12.5px;font-weight:700;padding:6px 13px;border-radius:20px;white-space:nowrap;background:var(--panel2);color:var(--muted)}
+  .g-countdown.today{background:var(--warn-soft);color:var(--warn)}
+  .g-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+  .g-badge{font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:20px;white-space:nowrap}
+  .g-badge.paid{background:var(--accent-soft);color:var(--accent-d)}
+  .g-badge.partial{background:var(--warn-soft);color:var(--warn)}
+  .g-badge.unpaid{background:var(--danger-soft);color:var(--danger)}
+  .g-badge.unconfirmed{background:var(--panel2);color:var(--muted)}
+  .g-badge.none{background:var(--panel2);color:var(--muted2)}
+  .g-checkin{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);font-size:14px;color:var(--muted)}
+  .g-checkin.done{color:var(--accent-d)}
+  .g-checkin .note{color:var(--ink);margin-top:4px;font-style:italic}
+  .g-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .g-meta span{font-size:12px;color:var(--muted2);background:var(--panel2);padding:4px 9px;border-radius:20px}
+
+  .empty{color:var(--muted2);font-size:13px;text-align:center;padding:40px 20px}
+
+  #loader{position:fixed;inset:0;background:rgba(243,244,241,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:90;color:var(--muted)}
+  #loader.hide{display:none}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media(max-width:680px){
+    .wrap{padding:14px 12px 60px}
+    header.top .who{display:none}
+    .stats{grid-template-columns:repeat(3,1fr);gap:8px}
+    .stat{padding:10px 8px}
+    .stat .val{font-size:18px}
+    .g-side{flex-direction:row;align-items:center;width:100%;justify-content:flex-start;margin-top:8px}
+  }
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#0e2420">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img id="logo" alt="RYST" src="/assets/stay-logo.webp" />
+    <div class="ttl">Guest Register<small><span data-prop="name">RYST 109A</span> · Who's coming, who's here</small></div>
+    <div class="spacer"></div>
+    <span id="roleBadge" class="badge owner">Owner</span>
+    <span id="whoami" class="who"></span>
+    <button class="tbtn" onclick="window.location.href='login.html'">⌂ Home</button>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="val" id="statMonth">—</div><div class="lbl">This month</div></div>
+    <div class="stat"><div class="val" id="statUpcoming">—</div><div class="lbl">Upcoming</div></div>
+    <div class="stat"><div class="val" id="statFillRate">—</div><div class="lbl">Fill rate</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input id="q" type="text" placeholder="Search name, phone or booking no…">
+  </div>
+  <div class="chips" id="chips" style="margin-bottom:10px">
+    <button class="chip on" data-f="all">All</button>
+    <button class="chip" data-f="arriving">Arriving</button>
+    <button class="chip" data-f="inhouse">In-house</button>
+    <button class="chip" data-f="unpaid">Balance due</button>
+    <button class="chip" data-f="foodDue">Food due</button>
+    <button class="chip" data-f="notCheckedIn">Not checked in</button>
+  </div>
+  <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:14px">
+    <input type="checkbox" id="showUnconfirmed" style="width:auto">
+    Show unconfirmed quotes (drafts with no advance paid)
+  </label>
+
+  <div class="list" id="list"></div>
+  <div class="empty" id="empty" style="display:none">Nothing matches — try a different search or filter.</div>
+</div>
+
+<div id="loader">
+  <div class="spin" id="loaderSpin"></div>
+  <div id="loaderMsg">Loading guest register…</div>
+  <button class="tbtn" id="loaderRetry" style="display:none">Retry</button>
+</div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const ROLE  = localStorage.getItem('ryst_user_role') || 'owner';
+const isOwner = ROLE === 'owner';
+
+// Owner always has full access. Coordinator/caretaker need the
+// 'guestRegister' module granted in Settings → User Access — server-
+// enforced on GET /guest-register regardless, this just avoids loading a
+// page the signed-in user can't actually use.
+function hasModule(mod){
+  let modules;
+  try { modules = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { modules = null; }
+  if(!Array.isArray(modules)) modules = ROLE === 'caretaker' ? ['petty-cash','inventory','checklist','guestRegister'] : [];
+  return ROLE === 'owner' || modules.includes(mod);
+}
+
+if(!TOKEN){ window.location.href = 'login.html'; }
+if(!hasModule('guestRegister')){ window.location.href = 'login.html'; }
+
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = n => '₹' + Math.round(Number(n)||0).toLocaleString('en-IN');
+
+$('#roleBadge').textContent = isOwner ? 'Owner' : (ROLE === 'coordinator' ? 'Coordinator' : 'Caretaker');
+$('#roleBadge').className = 'badge ' + (isOwner ? 'owner' : 'caretaker');
+$('#whoami').textContent = localStorage.getItem('ryst_user_email') || '';
+
+function fmtDate(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  const dt = new Date(iso+'T00:00:00');
+  if(isNaN(dt)) return iso;
+  return dt.toLocaleDateString('en-IN', { day:'numeric', month:'short' }) + (y !== String(new Date().getFullYear()) ? ` '${y.slice(2)}` : '');
+}
+function fmtPhone(p){
+  return String(p||'').replace(/\s+/g,'');
+}
+
+let ENTRIES = [];
+let TODAY = '';
+let FILTER = 'all';
+let Q = '';
+let SHOW_UNCONFIRMED = false; // unconfirmed quotes (draft, no advance paid) hidden by default
+
+async function load(){
+  const loader = $('#loader'), msgEl = $('#loaderMsg'), retryBtn = $('#loaderRetry');
+  loader.classList.remove('hide');
+  $('#loaderSpin').style.display = '';
+  retryBtn.style.display = 'none';
+  msgEl.textContent = 'Loading guest register…';
+
+  const ctrl = new AbortController();
+  const slowTimer = setTimeout(() => { msgEl.textContent = 'Waking up the server… this can take up to a minute.'; }, 4000);
+  const abortTimer = setTimeout(() => ctrl.abort(), 75000);
+  try{
+    const res = await fetch(PROXY_URL+'/guest-register', { headers:{'X-Token':TOKEN}, signal: ctrl.signal });
+    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
+    if(res.status===403){ window.location.href='login.html'; return; }
+    if(!res.ok) throw new Error('Server error ('+res.status+')');
+    const data = await res.json().catch(()=>({}));
+    ENTRIES = Array.isArray(data.entries) ? data.entries : [];
+    TODAY = data.today || '';
+    render();
+    loader.classList.add('hide');
+  }catch(e){
+    $('#loaderSpin').style.display = 'none';
+    msgEl.textContent = (e && e.name === 'AbortError')
+      ? 'Server timed out — please retry.'
+      : 'Could not load the register — ' + (e && e.message ? e.message : 'check your connection.');
+    retryBtn.style.display = '';
+  } finally {
+    clearTimeout(slowTimer); clearTimeout(abortTimer);
+  }
+}
+$('#loaderRetry').addEventListener('click', load);
+
+function stayStatusLabel(s){
+  if(s.stayStatus==='paid') return 'Stay paid in full';
+  if(s.stayStatus==='partial') return 'Stay: ' + money(s.stayDue) + ' due';
+  if(s.stayStatus==='unconfirmed') return 'Unconfirmed quote';
+  return 'Stay: ' + money(s.stayDue) + ' due';
+}
+function foodStatusLabel(s){
+  if(s.foodStatus==='none') return 'No food orders';
+  if(s.foodStatus==='paid') return 'Food paid (' + money(s.foodPaid) + ')';
+  if(s.foodStatus==='partial') return 'Food: ' + money(s.foodDue) + ' due';
+  return 'Food: ' + money(s.foodDue) + ' due';
+}
+// Arrival countdown while the guest hasn't checked in yet, departure
+// countdown once they're in-house — both answer "how soon does this need
+// my attention", which the plain dates row doesn't at a glance. `days`
+// math mirrors the server's own nights calc (date-only ISO strings, so no
+// time-of-day/timezone skew between the two ends of the subtraction).
+function countdownInfo(s){
+  // Once actually checked in, always show a departure countdown — an
+  // "Arriving today" badge next to "✓ Checked in" would read as
+  // contradictory even if the checkin DATE is technically today.
+  if(!s.checkedIn && s.checkin === TODAY) return { text:'Arriving today', cls:'today' };
+  if(!s.checkedIn && TODAY < s.checkin){
+    const days = Math.round((new Date(s.checkin) - new Date(TODAY)) / 86400000);
+    return { text: days===1 ? 'Arrives tomorrow' : `In ${days} days`, cls:'' };
+  }
+  if(TODAY <= s.checkout){
+    const days = Math.round((new Date(s.checkout) - new Date(TODAY)) / 86400000);
+    if(days<=0) return { text:'Departs today', cls:'today' };
+    return { text: days===1 ? 'Departs tomorrow' : `Departs in ${days}d`, cls:'' };
+  }
+  return null; // shouldn't happen — the list is already scoped to checkout >= today
+}
+
+function matchesFilter(s){
+  if(FILTER==='arriving') return s.checkin === TODAY;
+  if(FILTER==='inhouse') return s.checkin <= TODAY && TODAY <= s.checkout;
+  if(FILTER==='unpaid') return s.stayStatus==='unpaid' || s.stayStatus==='partial' || s.stayStatus==='unconfirmed';
+  if(FILTER==='foodDue') return s.foodStatus==='unpaid' || s.foodStatus==='partial';
+  if(FILTER==='notCheckedIn') return !s.checkedIn;
+  return true;
+}
+function matchesSearch(s){
+  if(!Q) return true;
+  const hay = (s.guest+' '+s.phone+' '+s.no).toLowerCase();
+  return hay.includes(Q);
+}
+
+// [monthStart, nextMonthStart) as real Date objects, for the fill-rate
+// night-overlap math below. 'YYYY-MM' in, exclusive end so a night that
+// starts on the last day of the month is still counted once, correctly.
+function monthRange(monthPrefix){
+  const [y, m] = monthPrefix.split('-').map(Number);
+  return [new Date(y, m-1, 1), new Date(y, m, 1)];
+}
+// How many of a stay's nights fall inside [rangeStart, rangeEnd) — a stay
+// spanning a month boundary (e.g. checked in in August, checking out in
+// September) must only contribute the nights that actually land in the
+// month being measured, not its full length.
+function nightsOverlap(checkinISO, checkoutISO, rangeStart, rangeEnd){
+  if(!checkinISO || !checkoutISO) return 0;
+  const ci = new Date(checkinISO+'T00:00:00');
+  const co = new Date(checkoutISO+'T00:00:00');
+  const start = ci > rangeStart ? ci : rangeStart;
+  const end = co < rangeEnd ? co : rangeEnd;
+  return Math.max(0, Math.round((end-start)/86400000));
+}
+
+function render(){
+  const list = $('#list');
+  // The register's own list only ever shows stays still checkout>=today —
+  // /guest-register also returns anything that already departed earlier
+  // this month (for the "this month" KPI below), but that's never meant
+  // to show up here, just to be counted. Unconfirmed quotes (a draft with
+  // no advance paid, per stayStatus) are hidden unless the checkbox is on.
+  const visible = ENTRIES.filter(s =>
+    s.checkout >= TODAY &&
+    (SHOW_UNCONFIRMED || s.stayStatus !== 'unconfirmed') &&
+    matchesFilter(s) && matchesSearch(s));
+
+  // Single villa, one stay at a time — "arriving/in-house/departing today"
+  // is always 0 or 1 and tells a caretaker nothing useful. These three
+  // instead answer "how busy are we".
+  //
+  // "Confirmed" = every invoice, plus any quote that's actually had an
+  // advance paid against it (stayStatus other than 'unconfirmed' — the
+  // same "does this actually reserve the villa" test stayBlocksDates and
+  // the proxy's checklist-missing alert both use server-side). A bare
+  // draft quote with nothing paid isn't a booking yet; a quote WITH a
+  // real advance on it is, even before staff formally convert it to an
+  // invoice. Same rule for all three tiles below — "This month" just
+  // narrows it to bookings starting in the current calendar month.
+  const confirmed = ENTRIES.filter(s => s.stayStatus !== 'unconfirmed');
+  const monthPrefix = TODAY.slice(0, 7);
+  $('#statMonth').textContent = confirmed.filter(s => s.checkin && s.checkin.slice(0, 7) === monthPrefix).length;
+  $('#statUpcoming').textContent = confirmed.filter(s => s.checkout >= TODAY).length;
+
+  const [monthStart, monthEnd] = monthRange(monthPrefix);
+  const daysInMonth = Math.round((monthEnd - monthStart) / 86400000);
+  const occupiedNights = confirmed.reduce((sum, s) => sum + nightsOverlap(s.checkin, s.checkout, monthStart, monthEnd), 0);
+  $('#statFillRate').textContent = daysInMonth ? Math.round(occupiedNights / daysInMonth * 100) + '%' : '—';
+
+  $('#empty').style.display = visible.length ? 'none' : 'block';
+  list.innerHTML = visible.map(s => {
+    const nightsStr = s.nights!=null ? (s.nights+' night'+(s.nights===1?'':'s')) : '';
+    const guestsStr = s.guests ? ' · '+esc(s.guests)+' guest'+(String(s.guests)==='1'?'':'s') : '';
+    const checkinBlock = s.checkedIn
+      ? `<div class="g-checkin done">✓ Checked in${s.arrivalTime ? ' · arrived '+esc(s.arrivalTime) : ''}${s.vehicleNumber ? ' · '+esc(s.vehicleNumber) : ''}${s.checkinGuestsCount!=null ? ' · '+s.checkinGuestsCount+' guest'+(s.checkinGuestsCount===1?'':'s')+' on arrival' : ''}${s.checkinNote ? '<div class="note">"'+esc(s.checkinNote)+'"</div>' : ''}</div>`
+      : `<div class="g-checkin">Not checked in yet</div>`;
+    const metaTags = [s.channel, s.mode].filter(Boolean).map(t=>`<span>${esc(t)}</span>`).join('');
+    const cd = countdownInfo(s);
+    return `<div class="g-card">
+      <div class="g-top">
+        <span class="g-name">${esc(s.guest||'Guest')}</span>
+        <span class="g-tag ${s.type}">${s.type==='quote'?'Quote':'Invoice'}</span>
+        <span class="g-no">${esc(s.no)}</span>
+      </div>
+      <div class="g-body">
+        <div class="g-main">
+          <div class="g-dates">${esc(fmtDate(s.checkin))}<span class="arrow">→</span>${esc(fmtDate(s.checkout))}</div>
+          <div class="g-sub">${esc(nightsStr)}${guestsStr}</div>
+          <div class="g-badges">
+            <span class="g-badge ${s.stayStatus}">${esc(stayStatusLabel(s))}</span>
+            <span class="g-badge ${s.foodStatus}">${esc(foodStatusLabel(s))}</span>
+          </div>
+          ${metaTags ? `<div class="g-meta">${metaTags}</div>` : ''}
+        </div>
+        <div class="g-side">
+          ${s.phone ? `<a class="g-phone-pill" href="tel:${esc(fmtPhone(s.phone))}">📞 ${esc(s.phone)}</a>` : ''}
+          ${cd ? `<span class="g-countdown ${cd.cls}">${esc(cd.text)}</span>` : ''}
+        </div>
+      </div>
+      ${checkinBlock}
+    </div>`;
+  }).join('');
+}
+
+$('#q').addEventListener('input', e => { Q = e.target.value.trim().toLowerCase(); render(); });
+$('#showUnconfirmed').addEventListener('change', e => { SHOW_UNCONFIRMED = e.target.checked; render(); });
+$('#chips').addEventListener('click', e => {
+  const btn = e.target.closest('.chip');
+  if(!btn) return;
+  FILTER = btn.dataset.f;
+  $$('.chip').forEach(c=>c.classList.toggle('on', c===btn));
+  render();
+});
+
+load();
+</script>
+</body>
+</html>

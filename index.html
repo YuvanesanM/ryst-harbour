@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
+<title>RYST Harbour · Villa management</title>
+<meta name="description" content="RYST Harbour: bookings, guest check-in, petty cash, inventory and your villa team in one app.">
+<link rel="icon" href="/assets/staff-icon-192.png">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<link rel="manifest" href="/staff.webmanifest">
+<meta name="theme-color" content="#0e2420">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --deep:#0e2420; --sand:#e3c486;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+  a{color:inherit}
+  .hero{background:var(--deep);color:#f6f1e6;padding:56px 16px 64px}
+  .wrap{max-width:960px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:600;letter-spacing:.3px}
+  .brand img{width:44px;height:44px;border-radius:11px}
+  h1{font-size:clamp(30px,6vw,46px);line-height:1.12;font-weight:600;margin:36px 0 14px;max-width:16ch}
+  .lead{font-size:clamp(16px,2.4vw,19px);opacity:.85;max-width:52ch}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;padding:13px 22px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;border:1.5px solid transparent}
+  .btn.primary{background:var(--sand);color:#1a2c33}
+  .btn.ghost{border-color:rgba(246,241,230,.35);color:#f6f1e6}
+  .note{margin-top:16px;font-size:13.5px;opacity:.7}
+  main{padding:44px 16px 20px}
+  h2{font-size:22px;font-weight:600;margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card h3{font-size:16px;font-weight:600;margin-bottom:6px}
+  .card p{font-size:14px;color:var(--muted)}
+  .ico{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);color:var(--accent-d);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+  .ico svg{width:20px;height:20px}
+  .how{margin-top:40px}
+  .steps{list-style:none;display:grid;gap:10px;counter-reset:s}
+  .steps li{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 52px;position:relative;font-size:14.5px}
+  .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:16px;top:13px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center}
+  footer{padding:32px 16px 40px;color:var(--muted2);font-size:13px}
+  footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;border-top:1px solid var(--line);padding-top:18px}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div class="brand"><img src="/assets/staff-icon-192.png" alt=""> RYST Harbour</div>
+    <h1>Run your villa from your phone.</h1>
+    <p class="lead">Bookings and OTA calendars, guest check-in and portal, petty cash, inventory, checklists and your whole team, in one app built by villa owners.</p>
+    <div class="cta">
+      <a class="btn primary" href="/login.html">Sign in</a>
+      <a class="btn ghost" href="#how">How to join</a>
+    </div>
+    <p class="note">Villa owners join by invitation while we run our pilot.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h2>Everything the villa runs on</h2>
+    <div class="grid">
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Bookings &amp; OTA sync</h3><p>Quotes, invoices and one calendar kept in step with Airbnb, Booking.com and others.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><h3>Guest check-in &amp; portal</h3><p>Guests send ID and details before arrival, then find Wi-Fi, food orders and their booking in one link.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Petty cash</h3><p>Caretaker expenses with receipt photos, reimbursements and a clear running balance.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg></div><h3>Inventory &amp; kitchen</h3><p>Stock, expiry alerts and the in-villa restaurant menu with guest food orders.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Checklists</h3><p>Turnover and maintenance checklists with photos, so nothing is missed between guests.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Your team, your access</h3><p>Caretakers and managers see only the sections you give them. Alerts arrive on Telegram.</p></div>
+    </div>
+
+    <section class="how" id="how">
+      <h2>How to join</h2>
+      <ol class="steps">
+        <li>Ask for an invite. It's made for the Google account you'll use.</li>
+        <li>Open the invite link, name your villa and continue with Google.</li>
+        <li>Add your details, rates, team and OTA calendars from the checklist in Settings.</li>
+      </ol>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>RYST Harbour</span>
+    <span>From the team behind <a href="https://stay.ryst.in">RYST 109A</a></span>
+  </div>
+</footer>
+</body>
+</html>
