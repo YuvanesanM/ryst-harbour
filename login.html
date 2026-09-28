@@ -436,6 +436,11 @@ function demoSignIn(){
   const u = document.getElementById('demoUser').value.trim().toLowerCase();
   const p = document.getElementById('demoPass').value;
   if(u !== DEMO_USER || p !== DEMO_PASS){ document.getElementById('demoErr').textContent = 'Incorrect username or password.'; return; }
+  enterDemo();
+}
+// Also opened straight from the home page's "Try the demo" (?demo=1): the
+// same sample-data mode, no credentials needed since nothing real is reachable.
+function enterDemo(){
   localStorage.setItem('ryst_demo', '1');
   localStorage.setItem('ryst_proxy_token', 'demo');
   localStorage.setItem('ryst_user_email', 'reviewer@example.com');
@@ -445,6 +450,11 @@ function demoSignIn(){
   location.reload(); // reload so staff-demo.js is active from the first request
 }
 document.getElementById('demoLoginBtn').addEventListener('click', demoSignIn);
+if(new URLSearchParams(location.search).get('demo') === '1'){
+  history.replaceState(null, '', location.pathname);
+  try{ sessionStorage.setItem('ryst_demo_from', 'home'); }catch(e){}
+  if(localStorage.getItem('ryst_demo') !== '1') enterDemo();
+}
 document.getElementById('demoPass').addEventListener('keydown', e=>{ if(e.key==='Enter') demoSignIn(); });
 
 function logout(){

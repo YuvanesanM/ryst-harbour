@@ -33,7 +33,7 @@
   var FIX = {
     '/property': { name:'Demo Villa', fullName:'Demo Beach Villa', restaurantName:'Demo Kitchen', address:'1 Sample Road, Coastal Town - 600000',
       mapLink:'', website:'', whatsapp:'', instagram:'', signatory:'Villa Manager', typeLabel:'Beach Villa', tagline:'Sample property',
-      receiptNote:'Thank you for dining with us.', logoUrl:'https://stay.ryst.in/assets/staff-icon-512.png', coverUrl:'', latitude:null, longitude:null, googlePlaceQuery:'' },
+      receiptNote:'Thank you for dining with us.', logoUrl:'https://harbour.ryst.in/assets/staff-icon-512.png', coverUrl:'', latitude:null, longitude:null, googlePlaceQuery:'' },
     '/stays': { version:1, stays:stays },
     '/guest-register': { ok:true, entries:reg, today:T },
     '/active-stay': { active:true, no:'DEMO/INV/001', guest:'Sample Guest A', checkin:iso(-1), checkout:iso(1) },
@@ -55,7 +55,7 @@
       { no:'DEMO-F-001', date:iso(-1), time:'20:15', guest:'Sample Guest A', stayNo:'DEMO/INV/001', items:[], subtotal:1450, discount:0, gstPercent:5, gstAmount:73, serviceChargePercent:0, serviceChargeAmount:0, total:1523, paymentMode:'', status:'open' } ] },
     '/feedback': { version:1, entries:[
       { id:'f1', guest:'Sample Guest D', bookingNo:'DEMO/INV/004', rating:5, comment:'Lovely pool and a very helpful caretaker.', allowFeature:true, createdAt:now-2*864e5, source:'form', approved:true } ] },
-    '/stay-settings': { version:1, company:'Demo Beach Villa\n1 Sample Road, Coastal Town - 600000', pan:'DEMO00000X', invPrefix:'DEMO/INV', qtPrefix:'DEMO/QT', bank:'Sample bank details', wifiNetwork:'RYST-Guest', wifiVoucher:'demo', walletAppleEnabled:false, walletGoogleEnabled:false, declaration:'Sample declaration.', terms:['Check-in 3 pm, check-out 11 am.'], rates:[{ desc:'Villa Rental Charges', rate:30000 }], maxGuests:10, guestCapacity:16, advancePercent:30 },
+    '/stay-settings': { version:1, company:'Demo Beach Villa\n1 Sample Road, Coastal Town - 600000', pan:'DEMO00000X', invPrefix:'DEMO/INV', qtPrefix:'DEMO/QT', bank:'Sample bank details', wifiNetwork:'DemoVilla-Guest', wifiVoucher:'demo', walletAppleEnabled:false, walletGoogleEnabled:false, declaration:'Sample declaration.', terms:['Check-in 3 pm, check-out 11 am.'], rates:[{ desc:'Villa Rental Charges', rate:30000 }], maxGuests:10, guestCapacity:16, advancePercent:30 },
     '/users': { version:1, users:[{ email:'reviewer@example.com', role:'owner', admin:true, modules:[], telegramChatId:'' }] },
     '/whatsapp-templates': { templates:{}, interaktTemplates:{}, automation:{} },
     '/whatsapp/status': { configured:true, connected:true, botUsername:'demo_bot', recipientCount:1, alertTypes:[] },
@@ -94,7 +94,8 @@
   }
   window.rystExitDemo = function(){
     ['ryst_demo','ryst_proxy_token','ryst_user_email','ryst_user_role','ryst_user_admin','ryst_user_modules'].forEach(function(k){ try { localStorage.removeItem(k); } catch (e) {} });
-    location.href = '/login.html';
+    var fromHome = false; try { fromHome = sessionStorage.getItem('ryst_demo_from') === 'home'; sessionStorage.removeItem('ryst_demo_from'); } catch (e) {}
+    location.href = fromHome ? '/' : '/login.html'; // "Try the demo" visitors go back to the home page
   };
   if (document.body) banner(); else document.addEventListener('DOMContentLoaded', banner);
 })();

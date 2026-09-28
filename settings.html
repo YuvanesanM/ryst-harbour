@@ -621,7 +621,7 @@ function hasModule(mod){
   const hasCache = !!localStorage.getItem(K_STAY);
   loadStayPanel();
   // The keypad PIN is RYST 109A's; other villas rely on their sign-in alone.
-  if(!window.RYST_VILLA || window.RYST_VILLA==='ryst-109a') initPinGate();
+  if((!window.RYST_VILLA || window.RYST_VILLA==='ryst-109a') && localStorage.getItem('ryst_demo')!=='1') initPinGate();
 
   const loader = document.getElementById('loader'), msgEl = document.getElementById('loaderMsg'), retryBtn = document.getElementById('loaderRetry');
   const saveBtn = document.getElementById('staySave');
