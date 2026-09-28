@@ -1943,7 +1943,8 @@ gEl('gstRegBtn').addEventListener('click', async ()=>{
     const res=await fetch(`${PROXY_URL}/gst/register?from=${m}-01&to=${m}-${String(last).padStart(2,'0')}`,{headers:{'X-Token':proxyToken},cache:'no-store'});
     const d=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(d.error||('HTTP '+res.status));
-    const q=v=>{ const s=String(v==null?'':v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+    const q=v=>{ v=(typeof v==='string' && /^[=+\-@\t\r]/.test(v) && !/^-?\d+(\.\d+)?$/.test(v)) ? "'"+v : v; // a typed name must never run as a spreadsheet formula
+      const s=String(v==null?'':v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
     const head=['Invoice no','Invoice date','Status','Booking no','Guest / buyer','Buyer GSTIN','Buyer state','Place of supply','SAC','Rate %','Taxable value','CGST','SGST','IGST','Invoice value','Cancelled on','Cancel reason'];
     const rows=(d.invoices||[]).map(g=>[g.no,g.date,g.status,g.bookingNo,g.buyer&&g.buyer.name,g.buyer&&g.buyer.gstin,g.buyer&&g.buyer.state&&g.buyer.state.name,g.placeOfSupply&&(g.placeOfSupply.code+'-'+g.placeOfSupply.name),g.sac,g.rate,g.taxable,g.cgst,g.sgst,g.igst,g.total,(g.cancelledAt||'').slice(0,10),g.cancelReason||'']);
     const csv=[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n');

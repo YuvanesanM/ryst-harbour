@@ -1349,7 +1349,8 @@ window.addEventListener('beforeprint', ()=>{ if(LAST) renderCharts(LAST.S, LAST.
    anywhere in the UI) + print/PDF via window.print().
    Blob/anchor/quoting pattern copied from petty-cash.html:815-829.
    ============================================================ */
-function csvCell(v){ const s=String(v==null?'':v); return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
+function csvCell(v){ v=(typeof v==='string' && /^[=+\-@\t\r]/.test(v) && !/^-?\d+(\.\d+)?$/.test(v)) ? "'"+v : v; // a typed name must never run as a spreadsheet formula
+  const s=String(v==null?'':v); return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; }
 function downloadCSV(filename, rows){
   const lines = rows.map(r=>r.map(csvCell).join(','));
   const blob = new Blob([lines.join('\n')], { type:'text/csv' });

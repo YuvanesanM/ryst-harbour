@@ -884,7 +884,8 @@ function exportCSV(){
     const type = e.type==='topup' ? (e.subtype==='reimbursement'?'Reimbursement':'Top-up') : e.type==='withdrawal' ? 'Withdrawal' : 'Expense';
     const amt = e.type==='topup' ? e.amount : -e.amount;
     const cells=[e.date||'', type, e.category||'', (e.note||'').replace(/"/g,'""'), amt, e.status||'', e.createdBy||''];
-    lines.push(cells.map(c=>/[",\n]/.test(String(c))?`"${c}"`:c).join(','));
+    lines.push(cells.map(c=>{ c=(typeof c==='string' && /^[=+\-@\t\r]/.test(c) && !/^-?\d+(\.\d+)?$/.test(c)) ? "'"+c : c; // never a spreadsheet formula
+      return /[",\n]/.test(String(c))?`"${c}"`:c; }).join(','));
   }
   const blob=new Blob([lines.join('\n')],{type:'text/csv'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
