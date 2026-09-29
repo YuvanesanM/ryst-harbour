@@ -606,7 +606,7 @@
     <div class="sync-results" id="photoResults" style="margin-bottom:22px"></div>
 
     <p class="gh-mini" style="margin-top:28px">Billing settings</p>
-    <p class="sd" style="margin-bottom:12px">What villas pay for RYST Harbour, per villa. Payments and invoices are in the name of the business below, through the Razorpay account set on Render (HARBOUR_RAZORPAY_KEY_ID, _KEY_SECRET, _WEBHOOK_SECRET). A new price makes a new Razorpay plan for new subscribers; existing subscribers keep theirs.</p>
+    <p class="sd" style="margin-bottom:12px">What villas pay for RYST Harbour, per villa. Payments and invoices are in the name of the business below, through the Studio RYST Razorpay account (STUDIO_RAZORPAY_* on Render) — or a separate one if HARBOUR_RAZORPAY_* are set. A new price makes a new Razorpay plan for new subscribers; existing subscribers keep theirs.</p>
     <div class="sync-results" id="billCfgStatus" style="margin-bottom:10px"></div>
     <div id="billTiers"></div>
     <label class="f" style="margin-bottom:8px"><span>Prices</span><select class="t" id="billGstMode"><option value="excl">Exclude GST (GST added at checkout)</option><option value="incl">Include GST</option></select></label>
@@ -1409,8 +1409,8 @@ async function billCfgLoad(){
     document.getElementById('billTrial').value=c.trialDays; document.getElementById('billGrace').value=c.graceDays;
     document.getElementById('billBiz').value=c.businessName||''; document.getElementById('billGstin').value=c.gstin||'';
     const row=(l,ok,t)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(l)}</span><span>${esc(t)}</span></div>`;
-    document.getElementById('billCfgStatus').innerHTML = row('Razorpay account', c.razorpayConfigured, c.razorpayConfigured ? 'Connected ('+c.razorpayMode+' mode)' : 'Not set — add HARBOUR_RAZORPAY_KEY_ID and HARBOUR_RAZORPAY_KEY_SECRET on Render')
-      + row('Subscription webhook', c.webhookConfigured, c.webhookConfigured ? c.webhookUrl : 'Add HARBOUR_RAZORPAY_WEBHOOK_SECRET on Render, then a Razorpay webhook to '+c.webhookUrl+' with subscription events');
+    document.getElementById('billCfgStatus').innerHTML = row('Razorpay account', c.razorpayConfigured, c.razorpayConfigured ? 'Connected ('+c.razorpayMode+' mode) — keys from '+(c.razorpaySource||'Render') : 'Not set — STUDIO_RAZORPAY_KEY_ID and STUDIO_RAZORPAY_KEY_SECRET on Render')
+      + row('Subscription webhook', c.webhookConfigured, c.webhookConfigured ? 'Secret set. In that Razorpay account → Webhooks → Add: '+c.webhookUrl+', the subscription.* events, and the same secret as STUDIO_RAZORPAY_WEBHOOK_SECRET' : 'Set STUDIO_RAZORPAY_WEBHOOK_SECRET on Render, then add the webhook '+c.webhookUrl+' with subscription events');
   }catch(e){ document.getElementById('billCfgStatus').innerHTML=`<div class="sync-result err"><span>Billing</span><span>${esc(e.message)}</span></div>`; }
 }
 document.getElementById('billSave').addEventListener('click', async e=>{
