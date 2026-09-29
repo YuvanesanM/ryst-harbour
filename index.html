@@ -1,299 +1,1021 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'none';">
-<title>RYST Harbour · Run your villa like a premium hotel</title>
-<meta name="description" content="RYST Harbour: channel calendar sync, WhatsApp automation, caretaker checklists and an owner dashboard for private villas in India. Built and proven at RYST 109A, ECR.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'none';">
+<title>RYST Harbour — Property Management for Independent Villas</title>
+<meta name="description" content="Manage bookings, guests, staff, payments and direct bookings in one simple platform built for independent villa owners.">
+<link rel="canonical" href="https://harbour.ryst.in/">
+<meta name="theme-color" content="#F6F3ED">
 <link rel="icon" href="/assets/staff-icon-192.png">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
 <link rel="manifest" href="/staff.webmanifest">
-<meta name="theme-color" content="#0e2420">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#f3f4f1; --panel:#ffffff; --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
-    --ink:#1d211c; --muted:#5f655d; --muted2:#8b9188; --deep:#0e2420; --deep2:#16332d; --sand:#e3c486; --warn:#b4552e; --warn-soft:#fbeee7;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
-  a{color:inherit}
-  .wrap{max-width:1040px;margin:0 auto}
-  section{padding:56px 16px}
-  .kicker{font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent-d);margin-bottom:8px}
-  h2{font-size:clamp(24px,4vw,34px);line-height:1.18;font-weight:600;margin-bottom:10px;max-width:22ch}
-  .intro{color:var(--muted);font-size:16px;max-width:60ch;margin-bottom:26px}
-  .btn{display:inline-flex;align-items:center;justify-content:center;padding:13px 22px;border-radius:12px;font-weight:600;font-size:15px;text-decoration:none;border:1.5px solid transparent;cursor:pointer;font-family:inherit}
-  .btn.primary{background:var(--sand);color:#1a2c33}
-  .btn.ghost{border-color:rgba(246,241,230,.35);color:#f6f1e6;background:transparent}
-  .btn.green{background:var(--accent);color:#fff}
-  .btn.line{border-color:var(--line);background:var(--panel);color:var(--ink)}
-  .soon{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--warn);background:var(--warn-soft);border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle}
 
-  .hero{background:var(--deep);color:#f6f1e6;padding:52px 16px 64px}
-  .brand{display:flex;align-items:center;gap:12px;font-weight:600;letter-spacing:.3px}
-  .brand img{width:44px;height:44px;border-radius:11px}
-  .hero h1{font-size:clamp(32px,6.4vw,54px);line-height:1.08;font-weight:600;margin:36px 0 16px;max-width:15ch}
-  .hero .lead{font-size:clamp(16px,2.4vw,20px);opacity:.86;max-width:48ch}
-  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-  .proof{margin-top:22px;font-size:13.5px;opacity:.72}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RYST Harbour">
+<meta property="og:url" content="https://harbour.ryst.in/">
+<meta property="og:title" content="RYST Harbour — Run your villa like a premium hotel">
+<meta property="og:description" content="Bookings, guests, staff and payments in one simple system. Built by a villa owner, for villa owners.">
+<meta property="og:image" content="https://harbour.ryst.in/assets/site/og-harbour.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RYST 109A villa at night with the headline: Run your villa like a premium hotel.">
+<meta property="og:locale" content="en_IN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RYST Harbour — Run your villa like a premium hotel">
+<meta name="twitter:description" content="Bookings, guests, staff and payments in one simple system. Built by a villa owner, for villa owners.">
+<meta name="twitter:image" content="https://harbour.ryst.in/assets/site/og-harbour.jpg">
 
-  .leaks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-  .leak{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .leak b{display:block;font-size:17px;margin-bottom:4px}
-  .leak p{font-size:14px;color:var(--muted)}
-  .leak .n{font-size:26px;font-weight:700;color:var(--warn);display:block;margin-bottom:4px}
+<link rel="preconnect" href="https://data.ryst.in" crossorigin>
+<link rel="preload" href="/assets/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" type="image/avif" imagesrcset="/assets/site/villa-pool-480.avif 480w, /assets/site/villa-pool-800.avif 800w, /assets/site/villa-pool-1200.avif 1200w" imagesizes="(max-width: 980px) 100vw, 56vw" fetchpriority="high">
+<link rel="stylesheet" href="/assets/site/site.css">
+<script src="/assets/site/site.js" defer></script>
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .card h3{font-size:16px;font-weight:600;margin-bottom:6px}
-  .card p{font-size:14px;color:var(--muted)}
-  .ico{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);color:var(--accent-d);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
-  .ico svg{width:20px;height:20px}
-  .also{margin-top:16px;font-size:14px;color:var(--muted)}
-
-  .flow{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;counter-reset:s}
-  .flow li{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 18px}
-  .flow li::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
-  .flow b{display:block;margin-bottom:4px}
-  .flow p{font-size:14px;color:var(--muted)}
-
-  .band{background:var(--deep2);color:#f6f1e6}
-  .band .kicker{color:var(--sand)}
-  .band .intro{color:rgba(246,241,230,.75)}
-  .split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;align-items:start}
-  .big{font-size:clamp(44px,8vw,68px);font-weight:700;line-height:1;color:var(--sand)}
-  .big + p{margin-top:8px;font-size:16px}
-  .fine{font-size:13px;opacity:.7;margin-top:12px;max-width:52ch}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
-  .stat{background:rgba(255,255,255,.06);border-radius:12px;padding:14px}
-  .stat b{display:block;font-size:22px;color:var(--sand)}
-  .stat span{font-size:13px;opacity:.8}
-
-  .why{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-  .why div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .why b{display:block;margin-bottom:4px}
-  .why p{font-size:14px;color:var(--muted)}
-
-  .cycle{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:18px;background:var(--panel)}
-  .cycle button{border:0;background:transparent;padding:9px 16px;font:inherit;font-size:14px;cursor:pointer;color:var(--muted)}
-  .cycle button.on{background:var(--accent);color:#fff}
-  .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
-  .tier{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:8px}
-  .tier.pop{border:2px solid var(--accent)}
-  .tier .badge{position:absolute;top:-11px;left:22px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;letter-spacing:.6px;padding:3px 10px;border-radius:20px;text-transform:uppercase}
-  .tier h3{font-size:19px}
-  .price{font-size:32px;font-weight:700}
-  .price small{font-size:14px;font-weight:500;color:var(--muted)}
-  .setup{font-size:13.5px;color:var(--muted)}
-  .tier ul{list-style:none;display:grid;gap:6px;margin:6px 0 10px;font-size:14.5px}
-  .tier li::before{content:"✓";color:var(--accent-d);font-weight:700;margin-right:8px}
-  .tier .btn{margin-top:auto}
-  .terms{margin-top:16px;font-size:13.5px;color:var(--muted);max-width:70ch}
-
-  .days{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-  .day{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .day em{font-style:normal;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--accent-d)}
-  .day b{display:block;font-size:17px;margin:4px 0}
-  .day p{font-size:14px;color:var(--muted)}
-
-  .close{background:var(--deep);color:#f6f1e6}
-  .close h2{max-width:none}
-  .close .intro{color:rgba(246,241,230,.8)}
-  .sign{margin-top:22px;font-size:14px;opacity:.8}
-
-  footer{padding:32px 16px 40px;color:var(--muted2);font-size:13px}
-  footer .wrap{display:flex;gap:16px 32px;flex-wrap:wrap;justify-content:space-between;border-top:1px solid var(--line);padding-top:18px;line-height:1.6}
-  footer strong{color:var(--muted);font-weight:600}
-  footer a{color:var(--accent-d)}
-  footer .contact{text-align:right}
-  @media (max-width:560px){ footer .contact{text-align:left} section{padding:44px 16px} .stat b{font-size:18px} }
-</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://harbour.ryst.in/#org",
+      "name": "RYST Harbour",
+      "url": "https://harbour.ryst.in/",
+      "logo": "https://harbour.ryst.in/assets/staff-icon-512.png",
+      "parentOrganization": { "@type": "Organization", "name": "Dreamour Multiventures", "address": { "@type": "PostalAddress", "addressLocality": "Chennai", "addressCountry": "IN" } },
+      "contactPoint": { "@type": "ContactPoint", "telephone": "+91-86080-08608", "contactType": "sales", "areaServed": "IN", "availableLanguage": ["English", "Tamil"] }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "RYST Harbour",
+      "url": "https://harbour.ryst.in/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web, Android, iOS",
+      "description": "Property management for independent villas: channel calendar sync, a direct booking website, WhatsApp guest messages, a caretaker app in Tamil or English, GST invoices and an owner dashboard.",
+      "publisher": { "@id": "https://harbour.ryst.in/#org" },
+      "offers": { "@type": "AggregateOffer", "priceCurrency": "INR", "lowPrice": "3499", "highPrice": "7499", "offerCount": "3" }
+    }
+  ]
+}
+</script>
 </head>
 <body>
-<header class="hero">
-  <div class="wrap">
-    <div class="brand"><img src="/assets/staff-icon-192.png" alt=""> RYST Harbour</div>
-    <h1>Run your villa like a premium hotel.</h1>
-    <p class="lead">Keep more of every booking, without losing your weekends to WhatsApp. One system for your listings, your guests, your caretaker and your money, built for how Indian villas actually run.</p>
-    <div class="cta">
-      <a class="btn primary" href="https://wa.me/918608008608?text=Hi%2C%20I%27d%20like%20a%2020-minute%20demo%20of%20RYST%20Harbour%20for%20my%20villa.">Book a 20-minute demo</a>
-      <a class="btn ghost" href="/login.html?demo=1">Try the demo</a>
-      <a class="btn ghost" href="/login.html">Sign in</a>
+<svg width="0" height="0" class="sr-only" aria-hidden="true" focusable="false">
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11.5l2 2 4-4M9 17h6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/></symbol>
+  <symbol id="i-food" viewBox="0 0 24 24"><path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 0-3 2-3 6s1 5 3 5v9"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-tool" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></symbol>
+  <symbol id="i-rupee" viewBox="0 0 24 24"><path d="M7 4h10M7 8.5h10M14 20l-7-7h2.5a4.5 4.5 0 0 0 0-9"/></symbol>
+  <symbol id="i-lang" viewBox="0 0 24 24"><path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 6 8M11 5c0 4-3 7-7 8M13 21l4-9 4 9M14.5 18h5"/></symbol>
+  <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M14 10h4M14 14h3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+</svg>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ── Navigation ─────────────────────────────────────────────────────── -->
+<header class="nav" id="nav">
+  <div class="container nav__inner">
+    <a class="wordmark" href="#top" aria-label="RYST Harbour, back to top"><img class="wordmark__mark" src="/assets/staff-icon-192.png" alt="" width="26" height="26">RYST HARBOUR</a>
+    <nav class="nav__links" aria-label="Main">
+      <a href="#product">Product</a>
+      <a href="#how">How it works</a>
+      <a href="#owners">For owners</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <div class="nav__actions">
+      <a class="nav__signin" href="/login.html">Sign in</a>
+      <a class="btn btn--sm" href="https://wa.me/918608008608?text=Hi%2C%20I%27d%20like%20a%2020-minute%20demo%20of%20RYST%20Harbour%20for%20my%20villa." target="_blank" rel="noopener">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
     </div>
-    <p class="proof">Built and proven every day at RYST 109A, Paramankeni, ECR.</p>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="drawer" aria-label="Open menu"><span></span></button>
   </div>
 </header>
-
-<section>
-  <div class="wrap">
-    <p class="kicker">The reality of owning a villa</p>
-    <h2>Your villa earns. But it leaks.</h2>
-    <div class="leaks" style="margin-top:22px">
-      <div class="leak"><span class="n">15–20%</span><b>to OTAs</b><p>Every Airbnb, Agoda and MakeMyTrip booking takes a cut, even from repeat guests.</p></div>
-      <div class="leak"><span class="n">4 calendars</span><b>Double-booking risk</b><p>Updated by hand across platforms, at the worst possible time.</p></div>
-      <div class="leak"><span class="n">11 pm</span><b>Midnight WhatsApps</b><p>Directions, Wi-Fi, check-in time. The same questions, every single booking.</p></div>
-      <div class="leak"><span class="n">?</span><b>No view of the ground</b><p>Was the pool cleaned? Were the linens changed? You find out from the review.</p></div>
-    </div>
+<div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Menu">
+  <nav class="drawer__links" aria-label="Mobile">
+    <a href="#product">Product</a>
+    <a href="#how">How it works</a>
+    <a href="#owners">For owners</a>
+    <a href="#pricing">Pricing</a>
+  </nav>
+  <div class="drawer__actions">
+    <a class="btn btn--block" href="https://wa.me/918608008608?text=Hi%2C%20I%27d%20like%20a%2020-minute%20demo%20of%20RYST%20Harbour%20for%20my%20villa." target="_blank" rel="noopener">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+    <a class="btn btn--secondary btn--block" href="/login.html">Sign in</a>
+    <p class="drawer__note">Or <a class="link" href="/login.html?demo=1">try the demo app</a></p>
   </div>
-</section>
+</div>
 
-<section style="padding-top:0">
-  <div class="wrap">
-    <p class="kicker">What you get</p>
-    <h2>Everything a villa needs, nothing it doesn't.</h2>
-    <p class="intro">Owner sees everything. Guest feels looked after. Caretaker knows exactly what to do.</p>
-    <div class="grid">
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Channel sync</h3><p>Airbnb, Booking.com, Agoda and MakeMyTrip calendars in one view, so the villa can't be sold twice.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>WhatsApp automation</h3><p>Confirmations, check-in guides, stay reminders and review requests, sent from your own business number.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Caretaker app</h3><p>In Tamil or English: check-in, check-out and daily checklists with photos, issue reports, petty cash with receipts, and stock levels.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div><h3>Owner dashboard</h3><p>Bookings, revenue by channel, occupancy and payments, on your phone.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Direct booking website</h3><p>Your villa's own website with live availability, instant prices and Razorpay/UPI payments. Zero OTA commission.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div><h3>GST tax invoices</h3><p>GST tax invoices with CGST and SGST, numbered by financial year, plus a monthly GST register for your accountant.</p></div>
+<main id="main">
+
+<!-- ── Hero ───────────────────────────────────────────────────────────── -->
+<section class="hero" id="top">
+  <div class="container hero__grid">
+    <div class="hero__copy">
+      <p class="eyebrow">Property management for independent villas</p>
+      <h1 class="display">Run your villa like a <em>premium hotel.</em></h1>
+      <p class="hero__sub">Bookings, guests, staff and payments — in one simple system.</p>
+      <div class="hero__ctas">
+        <a class="btn" href="https://wa.me/918608008608?text=Hi%2C%20I%27d%20like%20a%2020-minute%20demo%20of%20RYST%20Harbour%20for%20my%20villa." target="_blank" rel="noopener">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn--secondary" href="#product">See how Harbour works</a>
+      </div>
+      <p class="hero__proof">
+        <img src="/assets/site/villa-night-avatar.webp" alt="" width="44" height="44" decoding="async">
+        <span>Built and proven every day at <strong>RYST 109A</strong>, our own beach villa on Pearl Beach, ECR.</span>
+      </p>
     </div>
-    <p class="also">Also included: guest check-in with ID photos and signatures, a guest portal with Wi-Fi and food ordering, restaurant menu and orders, reviews, and per-person access for your team.</p>
-  </div>
-</section>
 
-<section style="padding-top:0">
-  <div class="wrap">
-    <p class="kicker">How it works</p>
-    <h2>From enquiry to checkout, handled.</h2>
-    <ol class="flow" style="margin-top:22px">
-      <li><b>Guest books</b><p>On Airbnb, Agoda, MakeMyTrip, or directly with UPI.</p></li>
-      <li><b>Dates lock</b><p>All calendars update so the villa can't be sold twice.</p></li>
-      <li><b>Guest is guided</b><p>WhatsApp confirmation, check-in form, directions and house rules.</p></li>
-      <li><b>Villa is ready</b><p>Caretaker gets a checklist and uploads photos when done.</p></li>
-      <li><b>You get paid</b><p>Money settles to your own account. The report is on your phone.</p></li>
-    </ol>
-  </div>
-</section>
+    <div class="hero__visual">
+      <div class="hero__photo">
+        <picture>
+          <source type="image/avif" srcset="/assets/site/villa-pool-480.avif 480w, /assets/site/villa-pool-800.avif 800w, /assets/site/villa-pool-1200.avif 1200w" sizes="(max-width: 980px) 100vw, 56vw">
+          <img data-parallax src="/assets/site/villa-pool-800.webp" srcset="/assets/site/villa-pool-480.webp 480w, /assets/site/villa-pool-800.webp 800w, /assets/site/villa-pool-1200.webp 1200w" sizes="(max-width: 980px) 100vw, 56vw" width="1200" height="900" alt="The private pool at RYST 109A, with a lawn and white lattice walls" fetchpriority="high" decoding="async">
+        </picture>
+        <p class="hero__caption"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>RYST 109A · Pearl Beach, ECR</p>
+      </div>
 
-<section class="band">
-  <div class="wrap split">
-    <div>
-      <p class="kicker">The math</p>
-      <h2>Direct bookings pay you back.</h2>
-      <div class="big">₹67,500</div>
-      <p>saved a year by moving 30% of bookings direct.</p>
-      <p class="fine">Illustrative: a villa earning ₹15 lakh a year through OTAs at 15% average commission. Repeat guests and referrals are the easiest bookings to move direct.</p>
-    </div>
-    <div>
-      <p class="kicker">Built by a villa owner, for villa owners</p>
-      <h2>Proven every day at RYST 109A.</h2>
-      <p class="intro" style="margin-bottom:0">We didn't build software and look for villas. We ran our own beach villa, hit every problem, and built the fix.</p>
-      <div class="stats">
-        <div class="stat"><b>4BHK</b><span>beach villa with jacuzzi pool, sleeps 12</span></div>
-        <div class="stat"><b>5 channels</b><span>Airbnb, Agoda, MakeMyTrip, Booking.com, direct</span></div>
-        <div class="stat"><b>8 nights</b><span>one film production booking, handled end to end</span></div>
+      <div class="booking-card" data-inview role="group" aria-label="Example: a new booking in Harbour">
+        <div class="booking-card__head">
+          <span class="booking-card__live">New booking</span>
+          <span class="pill pill--teal">Direct</span>
+        </div>
+        <div>
+          <p class="booking-card__title">RYST 109A</p>
+          <p class="booking-card__meta"><span>Sat 10 – Mon 12 Oct</span><span>8 guests</span></p>
+        </div>
+        <p class="booking-card__amount"><span class="fine">Paid by UPI</span><b class="num">₹48,000</b></p>
+        <ul class="booking-card__steps">
+          <li><span class="tick"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Payment received</li>
+          <li><span class="tick"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Guest confirmed on WhatsApp</li>
+          <li><span class="tick"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Caretaker notified</li>
+        </ul>
       </div>
     </div>
   </div>
 </section>
 
-<section>
-  <div class="wrap">
-    <p class="kicker">Why not a global tool?</p>
-    <h2>Made for how Indian villas run.</h2>
-    <div class="why" style="margin-top:22px">
-      <div><b>WhatsApp first</b><p>Guests and staff live on WhatsApp, not email.</p></div>
-      <div><b>UPI and Razorpay</b><p>Guests pay the way they already pay for everything.</p></div>
-      <div><b>Tamil for caretakers</b><p>Your staff use it without training in English.</p></div>
-      <div><b>Money goes to you</b><p>Guest payments settle directly to your own bank account.</p></div>
+<!-- ── Problem ────────────────────────────────────────────────────────── -->
+<section class="section section--tight" aria-labelledby="leak-title">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div class="section-head section-head--flush">
+        <p class="eyebrow">The reality of owning a villa</p>
+        <h2 class="h2" id="leak-title">Your villa earns.<br><em>But it leaks.</em></h2>
+      </div>
+      <p class="lede">Commission on every booking. Calendars kept in sync by hand. The same guest questions, every stay. And no view of what happens on the ground.</p>
+    </div>
+
+    <div class="leaks">
+      <article class="leak reveal">
+        <p class="leak__n num">15–20%</p>
+        <h3 class="leak__t">OTA commissions</h3>
+        <p class="leak__p">Every Airbnb, Agoda and MakeMyTrip booking takes a cut, even from repeat guests.</p>
+        <div class="leak__viz" aria-hidden="true">
+          <div class="viz-cut">
+            <div class="viz-cut__bar"><span></span><span></span></div>
+            <div class="viz-cut__legend"><span>What you keep</span><span>Commission</span></div>
+          </div>
+        </div>
+      </article>
+      <article class="leak reveal" data-delay="1">
+        <p class="leak__n num">4</p>
+        <h3 class="leak__t">Calendars · double-booking risk</h3>
+        <p class="leak__p">Updated by hand across platforms, at the worst possible time.</p>
+        <div class="leak__viz" aria-hidden="true">
+          <div class="viz-cals">
+            <div><span>Airbnb</span><i style="--l:8%;--w:22%"></i></div>
+            <div class="is-clash"><span>Booking.com</span><i style="--l:22%;--w:26%"></i></div>
+            <div><span>Agoda</span><i style="--l:60%;--w:18%"></i></div>
+            <div><span>MakeMyTrip</span><i style="--l:80%;--w:14%"></i></div>
+          </div>
+        </div>
+      </article>
+      <article class="leak reveal" data-delay="2">
+        <p class="leak__n num">11 PM</p>
+        <h3 class="leak__t">Guest WhatsApps</h3>
+        <p class="leak__p">Directions, Wi-Fi, check-in time. The same questions, every single booking.</p>
+        <div class="leak__viz" aria-hidden="true">
+          <p class="viz-msg">Hi, what's the Wi-Fi password? And where do we park?<time>11:04 PM</time></p>
+        </div>
+      </article>
+      <article class="leak reveal" data-delay="3">
+        <p class="leak__n">?</p>
+        <h3 class="leak__t">No view of the ground</h3>
+        <p class="leak__p">Was the pool cleaned? Were the linens changed? You find out from the review.</p>
+        <div class="leak__viz" aria-hidden="true">
+          <div class="viz-ask"><span>Pool cleaned?</span><span>Linens changed?</span><span>Water cans stocked?</span></div>
+        </div>
+      </article>
     </div>
   </div>
 </section>
 
-<section id="pricing" style="padding-top:0">
-  <div class="wrap">
-    <p class="kicker">Simple pricing</p>
-    <h2>Pay less than one OTA booking a month.</h2>
-    <div class="cycle" role="group" aria-label="Billing cycle"><button type="button" data-cycle="monthly" class="on">Monthly</button><button type="button" data-cycle="annual">Annual · 2 months free</button></div>
-    <div class="tiers" id="tiers"></div>
-    <p class="terms" id="terms">Per villa. GST extra. Annual billing gets 2 months free. 6-month minimum term, 30 days' notice. Domain and payment gateway fees are paid directly by the owner. Every plan starts with a free trial.</p>
+<!-- ── Product showcase ───────────────────────────────────────────────── -->
+<section class="section section--dark" id="product" aria-labelledby="product-title">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div class="section-head section-head--flush">
+        <p class="eyebrow">The product</p>
+        <h2 class="h2" id="product-title">One system for your <em>entire villa.</em></h2>
+      </div>
+      <p class="lede">From the moment a guest books to the moment they check out, Harbour keeps your property, people and payments in sync.</p>
+    </div>
+
+    <div class="showcase" data-tabs>
+      <div class="showcase__bar">
+        <div class="seg" role="tablist" aria-label="Choose a view">
+          <button type="button" role="tab" id="tab-owner" aria-controls="panel-owner" aria-selected="true">Owner</button>
+          <button type="button" role="tab" id="tab-care" aria-controls="panel-care" aria-selected="false" tabindex="-1">Caretaker</button>
+          <button type="button" role="tab" id="tab-guest" aria-controls="panel-guest" aria-selected="false" tabindex="-1">Guest</button>
+        </div>
+        <p class="showcase__hint">One app, three views. Everyone sees exactly what they need.</p>
+      </div>
+
+      <!-- Owner -->
+      <div class="tabpanel" role="tabpanel" id="panel-owner" aria-labelledby="tab-owner" tabindex="0">
+        <div class="browser">
+          <div class="browser__bar" aria-hidden="true">
+            <div class="browser__dots"><i></i><i></i><i></i></div>
+            <div class="browser__url"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>harbour.ryst.in/reports</div>
+          </div>
+          <div class="dash" data-inview>
+            <div class="dash__head">
+              <p class="dash__title">September<small>RYST 109A · Owner dashboard</small></p>
+              <span class="mock-tag">Sample data</span>
+            </div>
+            <div class="dash__card kpi"><span class="label">Revenue</span><span class="kpi__v num" data-count="284500" data-format="inr">₹2,84,500</span><span class="kpi__d">↑ 13% vs August</span></div>
+            <div class="dash__card kpi"><span class="label">Occupancy</span><span class="kpi__v num" data-count="78" data-suffix="%">78%</span><span class="kpi__d">23 of 30 nights</span></div>
+            <div class="dash__card kpi"><span class="label">Bookings</span><span class="kpi__v num" data-count="18">18</span><span class="kpi__d kpi__d--muted">Next 90 days</span></div>
+            <div class="dash__card kpi"><span class="label">Open tasks</span><span class="kpi__v num" data-count="4">4</span><span class="kpi__d kpi__d--muted">1 issue · 3 checklists</span></div>
+
+            <div class="dash__card dash__chart">
+              <div class="card-head"><h3>Revenue by month</h3><span>Apr – Sep</span></div>
+              <div class="bars" role="img" aria-label="Sample revenue by month: April ₹1.62 lakh, May ₹1.35 lakh, June ₹1.10 lakh, July ₹1.48 lakh, August ₹2.51 lakh, September ₹2.85 lakh">
+                <div class="bars__col" style="--h:54%"><i class="bars__bar"></i></div>
+                <div class="bars__col" style="--h:45%"><i class="bars__bar"></i></div>
+                <div class="bars__col" style="--h:37%"><i class="bars__bar"></i></div>
+                <div class="bars__col" style="--h:49%"><i class="bars__bar"></i></div>
+                <div class="bars__col" style="--h:84%"><i class="bars__bar"></i></div>
+                <div class="bars__col is-now" style="--h:95%" data-v="₹2.85L"><i class="bars__bar"></i></div>
+              </div>
+              <div class="bars__x" aria-hidden="true"><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div>
+            </div>
+
+            <div class="dash__card dash__channels">
+              <div class="card-head"><h3>By channel</h3><span>Share of revenue</span></div>
+              <ul class="hbars">
+                <li><div class="hbars__row"><span>Airbnb</span><b>34%</b></div><div class="hbars__track"><i style="--w:34%"></i></div></li>
+                <li><div class="hbars__row"><span>Direct</span><b>28%</b></div><div class="hbars__track"><i style="--w:28%"></i></div></li>
+                <li><div class="hbars__row"><span>Booking.com</span><b>22%</b></div><div class="hbars__track"><i style="--w:22%"></i></div></li>
+                <li><div class="hbars__row"><span>Agoda</span><b>16%</b></div><div class="hbars__track"><i style="--w:16%"></i></div></li>
+              </ul>
+            </div>
+
+            <div class="dash__card dash__stays">
+              <div class="card-head"><h3>Upcoming stays</h3><span>October</span></div>
+              <table class="table">
+                <thead><tr><th scope="col">Guest</th><th scope="col">Dates</th><th scope="col" class="hide-sm">Guests</th><th scope="col" class="hide-sm">Channel</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                  <tr><td>Rahul Mehta</td><td>10 – 12 Oct</td><td class="hide-sm">8</td><td class="hide-sm">Direct</td><td><span class="pill pill--good"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Paid</span></td></tr>
+                  <tr><td>Ananya Iyer</td><td>16 – 18 Oct</td><td class="hide-sm">6</td><td class="hide-sm">Airbnb</td><td><span class="pill pill--good"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Confirmed</span></td></tr>
+                  <tr><td>Karthik S.</td><td>21 – 29 Oct</td><td class="hide-sm">12</td><td class="hide-sm">Direct</td><td><span class="pill pill--warn"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Advance paid</span></td></tr>
+                  <tr><td>Sneha R.</td><td>30 Oct – 1 Nov</td><td class="hide-sm">10</td><td class="hide-sm">Booking.com</td><td><span class="pill pill--good"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Confirmed</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="dash__card dash__money">
+              <div class="card-head"><h3>Payments</h3><span>October</span></div>
+              <div class="money">
+                <div class="money__row"><span>Received</span><b class="num">₹1,86,000</b></div>
+                <div class="meter" aria-hidden="true"><i style="flex:81"></i><i style="flex:19"></i></div>
+                <div class="money__row"><span>Due at check-in</span><b class="num">₹43,500</b></div>
+                <div class="money__row"><span>GST invoices issued</span><b class="num">11</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caretaker -->
+      <div class="tabpanel" role="tabpanel" id="panel-care" aria-labelledby="tab-care" tabindex="0" hidden>
+        <div class="stage">
+          <div class="stage__notes stage__notes--left">
+            <div class="note"><b>Check-ins &amp; check-outs</b><p>Today's arrival, with its checklist ready to start.</p></div>
+            <div class="note"><b>Daily rounds</b><p>Pool, garden, water tank, power backup — ticked with photos.</p></div>
+          </div>
+          <div class="phone">
+            <div class="phone__screen">
+              <span class="phone__island" aria-hidden="true"></span>
+              <div class="phone__status" aria-hidden="true"><span>9:41</span></div>
+              <div class="phone__body">
+                <div class="app-head"><b>Today</b><span class="mock-tag">Sample</span></div>
+                <div class="tile tile--accent">
+                  <span class="label">Check-in · 3:00 PM</span>
+                  <span class="tile__big">Rahul Mehta · 8 guests</span>
+                  <span class="btn btn--light btn--sm">Start checklist</span>
+                </div>
+                <div class="tile">
+                  <div class="tile__row"><b>Daily rounds</b><span class="fine">5 of 7</span></div>
+                  <div class="progress"><i style="--w:71%"></i></div>
+                </div>
+                <div class="tile">
+                  <div class="tile__row"><b>Issues</b><span class="pill pill--warn">1 open</span></div>
+                  <span class="fine">Bedroom 2 — AC dripping</span>
+                </div>
+                <div class="tile">
+                  <div class="tile__row"><b>Stock</b><span class="pill pill--warn">Low</span></div>
+                  <span class="fine">Drinking water cans · 2 left</span>
+                </div>
+                <div class="report-btn"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Report a problem</div>
+              </div>
+            </div>
+          </div>
+          <div class="stage__notes stage__notes--right">
+            <div class="note"><b>Report a problem</b><p>One tap, with a photo. You're alerted straight away.</p></div>
+            <div class="note"><b>Stock &amp; petty cash</b><p>Low-stock items, and every spend with its receipt.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guest -->
+      <div class="tabpanel" role="tabpanel" id="panel-guest" aria-labelledby="tab-guest" tabindex="0" hidden>
+        <div class="stage">
+          <div class="stage__notes stage__notes--left">
+            <div class="note"><b>Online check-in</b><p>ID photos and signature, done before the guest arrives.</p></div>
+            <div class="note"><b>House rules &amp; directions</b><p>Everything guests ask about, in one link.</p></div>
+          </div>
+          <div class="phone">
+            <div class="phone__screen">
+              <span class="phone__island" aria-hidden="true"></span>
+              <div class="phone__status" aria-hidden="true"><span>9:41</span></div>
+              <div class="phone__body">
+                <div class="portal-hero">
+                  <img src="/assets/site/villa-bedroom-480.webp" alt="" width="480" height="360" loading="lazy" decoding="async">
+                  <span>RYST 109A</span>
+                </div>
+                <div>
+                  <p class="portal-hi">Welcome, Rahul</p>
+                  <p class="fine">Sat 10 – Mon 12 Oct · 8 guests</p>
+                </div>
+                <div class="portal-times">
+                  <div>Check-in<b>3:00 PM</b></div>
+                  <div>Check-out<b>11:00 AM</b></div>
+                </div>
+                <div class="portal-grid">
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-wifi"/></svg>Wi-Fi</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>House rules</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Directions</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-food"/></svg>Food menu</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>Food bill</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg>Rate stay</div>
+                </div>
+                <span class="btn btn--block btn--sm">Complete check-in</span>
+              </div>
+            </div>
+          </div>
+          <div class="stage__notes stage__notes--right">
+            <div class="note"><b>Wi-Fi in one tap</b><p>No more midnight messages asking for the password.</p></div>
+            <div class="note"><b>Food, bill &amp; invoice</b><p>Order from the menu, see the bill, get the tax invoice.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase__foot">
+        <p class="fine">Illustrative sample data. Every screen above is a real part of Harbour.</p>
+        <a class="link" href="/login.html?demo=1">Open the demo app <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
   </div>
 </section>
 
-<section style="padding-top:0" id="how">
-  <div class="wrap">
-    <p class="kicker">Getting started</p>
-    <h2>Live in 7 days. We do the setup.</h2>
-    <div class="days" style="margin-top:22px">
-      <div class="day"><em>Day 1</em><b>Walkthrough</b><p>We visit or call, and understand your villa and staff.</p></div>
-      <div class="day"><em>Day 2–3</em><b>Connect</b><p>We link your OTA calendars and your payment account.</p></div>
-      <div class="day"><em>Day 4–5</em><b>Launch</b><p>Your WhatsApp messages and guest links go live.</p></div>
-      <div class="day"><em>Day 6–7</em><b>Train</b><p>Your caretaker is onboarded. First guest, fully automated.</p></div>
+<!-- ── WhatsApp ───────────────────────────────────────────────────────── -->
+<section class="section" aria-labelledby="wa-title">
+  <div class="container">
+    <div class="wa">
+      <div>
+        <div class="section-head section-head--flush">
+          <p class="eyebrow">WhatsApp automation</p>
+          <h2 class="h2" id="wa-title">Your villa already runs on <em>WhatsApp.</em></h2>
+          <p class="lede">Harbour makes WhatsApp part of your property system. The messages you'd type at 11 PM go out on time, from your own business number.</p>
+        </div>
+        <ul class="wa__list">
+          <li><span>On booking</span><div><b>Confirmation</b> — dates, amount and a check-in link.</div></li>
+          <li><span>Before arrival</span><div><b>Check-in guide</b> — directions, house rules, Wi-Fi and the food menu.</div></li>
+          <li><span>During the stay</span><div><b>Stay reminders</b> — like check-out time, without you lifting a finger.</div></li>
+          <li><span>After checkout</span><div><b>Review request</b> — while the stay is still fresh.</div></li>
+        </ul>
+      </div>
+
+      <div class="wa__visual reveal">
+        <div class="chat" data-chat role="group" aria-label="Example guest conversation sent by Harbour">
+          <div class="chat__head">
+            <img class="chat__avatar" src="/assets/site/villa-night-avatar.webp" alt="" width="38" height="38" loading="lazy" decoding="async">
+            <div><b>RYST 109A</b><span>Business account · sent by Harbour</span></div>
+          </div>
+          <div class="chat__body">
+            <span class="chat__day">Fri, 9 Oct</span>
+            <span class="typing" data-step aria-hidden="true"><i></i><i></i><i></i></span>
+            <div class="bubble bubble--in" data-step>
+              <span class="bubble__auto"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Sent automatically · day before arrival</span>
+              Hi Rahul 👋 Your stay at RYST 109A starts tomorrow. Check-in is from 3:00 PM.
+              <span class="bubble__links">
+                <span><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Directions</span>
+                <span><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>House rules</span>
+                <span><svg class="icon" aria-hidden="true"><use href="#i-wifi"/></svg>Wi-Fi</span>
+                <span><svg class="icon" aria-hidden="true"><use href="#i-food"/></svg>Food menu</span>
+                <span class="wide">Complete online check-in</span>
+              </span>
+              <time>6:00 PM</time>
+            </div>
+            <div class="bubble bubble--out" data-step>Perfect, thank you! We'll reach around 4.<time>6:12 PM</time></div>
+            <span class="chat__day" data-step>Mon, 12 Oct</span>
+            <span class="typing" data-step aria-hidden="true"><i></i><i></i><i></i></span>
+            <div class="bubble bubble--in" data-step>
+              <span class="bubble__auto"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Sent automatically · after checkout</span>
+              Thank you for staying at RYST 109A, Rahul. How was it?
+              <span class="bubble__links"><span class="wide"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg>Rate your stay</span></span>
+              <time>12:30 PM</time>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <p class="terms">No downtime: your existing bookings stay exactly as they are.</p>
+
+    <div class="relay" role="group" aria-label="What happens when a booking comes in">
+      <div class="relay__node reveal">
+        <span class="label">8:12 PM · Direct booking</span>
+        <h3>Guest books</h3>
+        <ul>
+          <li><span class="tick"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Rahul pays ₹48,000 by UPI on your booking site</li>
+        </ul>
+      </div>
+      <span class="relay__link" aria-hidden="true"></span>
+      <div class="relay__node relay__node--core reveal" data-delay="1">
+        <span class="label">Harbour, in seconds</span>
+        <h3>Everything updates</h3>
+        <ul>
+          <li><span class="tick"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Dates closed on every calendar</li>
+          <li><span class="tick"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Confirmation sent on WhatsApp</li>
+          <li><span class="tick"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Payment recorded against the stay</li>
+        </ul>
+      </div>
+      <span class="relay__link" aria-hidden="true"></span>
+      <div class="relay__node reveal" data-delay="2">
+        <span class="label">Owner &amp; caretaker · Telegram</span>
+        <h3>Your team knows</h3>
+        <p class="tg"><b>Payment received</b><br>₹48,000 · Rahul Mehta · 10–12 Oct</p>
+        <p class="tg"><b>Check-in checklist</b> due Sat, 10 Oct</p>
+      </div>
+    </div>
   </div>
 </section>
 
-<section class="close">
-  <div class="wrap">
-    <h2>Let your villa run itself.</h2>
-    <p class="intro">Book a 20-minute demo, or visit RYST 109A on ECR and see it running live.</p>
-    <div class="cta">
-      <a class="btn primary" href="https://wa.me/918608008608?text=Hi%2C%20I%27d%20like%20a%2020-minute%20demo%20of%20RYST%20Harbour%20for%20my%20villa.">WhatsApp us for a demo</a>
-      <a class="btn ghost" href="tel:+918608008608">Call +91 86080 08608</a>
-      <a class="btn ghost" href="/login.html?demo=1">Try the demo</a>
+<!-- ── Caretaker ──────────────────────────────────────────────────────── -->
+<section class="section section--sand" aria-labelledby="care-title">
+  <div class="container care">
+    <div class="care__visual reveal">
+      <div class="seg care__lang" role="group" aria-label="Caretaker app language">
+        <button type="button" data-lang-set="en" aria-pressed="true">English</button>
+        <button type="button" data-lang-set="ta" aria-pressed="false" lang="ta">தமிழ்</button>
+      </div>
+      <div class="phone">
+        <div class="phone__screen">
+          <span class="phone__island" aria-hidden="true"></span>
+          <div class="phone__status" aria-hidden="true"><span>3:05 PM</span></div>
+          <div class="phone__body" data-lang-pane="en" lang="en">
+            <div class="checklist-head"><b>Check-in checklist</b><span>Rahul Mehta · 4 of 5 done</span></div>
+            <ul class="checklist">
+              <li class="is-done"><span class="check check--on"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>Pool clean and safe<span class="checklist__photo"><img src="/assets/site/villa-pool-480.webp" alt="" width="44" height="34" loading="lazy" decoding="async">Photo added</span></span></li>
+              <li class="is-done"><span class="check check--on"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>Bedrooms — beds made, fresh linens, pillows arranged</span></li>
+              <li class="is-done"><span class="check check--on"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>Bathrooms — towels, toiletries &amp; tissue stocked</span></li>
+              <li class="is-done"><span class="check check--on"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>AC / fans / lights working in all rooms</span></li>
+              <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>Welcome kit ready — keys, house rules, Wi-Fi card</span></li>
+            </ul>
+            <div class="checklist-foot">
+              <span class="btn btn--secondary"><svg class="icon" aria-hidden="true"><use href="#i-camera"/></svg>Add photo</span>
+              <span class="btn">Mark complete</span>
+            </div>
+          </div>
+          <div class="phone__body" data-lang-pane="ta" lang="ta" hidden>
+            <div class="checklist-head"><b>செக்-இன் சரிபார்ப்புப் பட்டியல்</b><span>Rahul Mehta · 4 / 5</span></div>
+            <ul class="checklist">
+              <li class="is-done"><span class="check check--on"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>நீச்சல் குளம் சுத்தமாகவும் பாதுகாப்பாகவும் உள்ளது<span class="checklist__photo"><img src="/assets/site/villa-pool-480.webp" alt="" width="44" height="34" loading="lazy" decoding="async"></span></span></li>
+              <li class="is-done"><span class="check check--on"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>படுக்கையறைகள் — படுக்கைகள் சீரமைப்பு, புதிய விரிப்புகள்</span></li>
+              <li class="is-done"><span class="check check--on"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>குளியலறைகள் — சுத்தம், துண்டுகள்</span></li>
+              <li class="is-done"><span class="check check--on"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>அனைத்து அறைகளிலும் AC / மின்விசிறிகள் / விளக்குகள் இயங்குகின்றன</span></li>
+              <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span><span>வரவேற்புப் பொருட்கள் தயார் — சாவிகள், Wi-Fi அட்டை</span></li>
+            </ul>
+            <div class="checklist-foot">
+              <span class="btn btn--secondary"><svg class="icon" aria-hidden="true"><use href="#i-camera"/></svg>புகைப்படம் சேர்</span>
+              <span class="btn">முடிந்ததாகக் குறி</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="care__alert" role="group" aria-label="Example alert to the owner">
+        <span class="label"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg>Telegram · to owner</span>
+        <b>Problem reported — Bedroom 2</b>
+        <span>AC dripping · 1 photo · by caretaker</span>
+      </div>
     </div>
-    <p class="sign">Yuvanesan Muthukumaresan · Managing Partner, Dreamour Multiventures, Chennai</p>
+
+    <div>
+      <div class="section-head section-head--flush">
+        <p class="eyebrow">Caretaker app</p>
+        <h2 class="h2" id="care-title">Your caretaker.<br><em>Your language.</em></h2>
+        <p class="lede">Simple screens for the people who actually run the property. No training in English, no enterprise software.</p>
+      </div>
+      <ul class="care__points">
+        <li><svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg><span>Check-in, check-out and daily checklists, ticked with photos</span></li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-tool"/></svg><span>Report a problem in one tap — you hear about it first</span></li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-wallet"/></svg><span>Petty cash with receipt photos</span></li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-box"/></svg><span>Stock levels, with a nudge when something runs low</span></li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-lang"/></svg><span>Tamil or English, switched with one tap</span></li>
+      </ul>
+    </div>
   </div>
 </section>
 
-<footer>
-  <div class="wrap">
-    <div class="legal">
-      <p><strong>RYST Harbour</strong> is managed by Dreamour Multiventures.</p>
-      <p>RYST is a trademark of Dreamour Multiventures. © <span id="yr">2026</span> Dreamour Multiventures. All rights reserved.</p>
+<!-- ── Feature explorer ───────────────────────────────────────────────── -->
+<section class="section" id="features" aria-labelledby="features-title">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Everything included</p>
+      <h2 class="h2" id="features-title">Everything a villa needs. <em>Nothing it doesn't.</em></h2>
     </div>
-    <div class="contact">
-      <p>Contact: <a href="tel:+918608008608">+91 86080 08608</a></p>
-      <p>From the team behind <a href="https://stay.ryst.in">RYST 109A</a></p>
+
+    <div class="explorer" data-tabs>
+      <div class="explorer__tabs" role="tablist" aria-label="Feature areas">
+        <button class="explorer__tab" type="button" role="tab" id="ft-bookings" aria-controls="fp-bookings" aria-selected="true"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg><b>Bookings</b><span>Every channel, one calendar, plus your own booking site.</span></button>
+        <button class="explorer__tab" type="button" role="tab" id="ft-guests" aria-controls="fp-guests" aria-selected="false" tabindex="-1"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><b>Guests</b><span>Looked after before they even ask.</span></button>
+        <button class="explorer__tab" type="button" role="tab" id="ft-ops" aria-controls="fp-ops" aria-selected="false" tabindex="-1"><svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg><b>Operations</b><span>Housekeeping, maintenance and stock, on record.</span></button>
+        <button class="explorer__tab" type="button" role="tab" id="ft-money" aria-controls="fp-money" aria-selected="false" tabindex="-1"><svg class="icon" aria-hidden="true"><use href="#i-rupee"/></svg><b>Money</b><span>Payments, GST invoices and reports, done.</span></button>
+      </div>
+
+      <div>
+        <!-- Bookings -->
+        <div class="tabpanel explorer__panel" role="tabpanel" id="fp-bookings" aria-labelledby="ft-bookings" tabindex="0">
+          <div class="explorer__stage">
+            <div class="duo">
+              <div class="mock cal">
+                <div class="cal__head"><b>October</b><span class="mock-tag">Sample</span></div>
+                <div class="cal__grid" aria-hidden="true">
+                  <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                  <i class="is-x"></i><i class="is-x"></i><i class="is-x"></i><i>1</i><i class="is-b">2</i><i class="is-b">3</i><i>4</i>
+                  <i>5</i><i>6</i><i>7</i><i>8</i><i>9</i><i class="is-d">10</i><i class="is-d">11</i>
+                  <i>12</i><i>13</i><i>14</i><i>15</i><i class="is-b">16</i><i class="is-b">17</i><i>18</i>
+                  <i>19</i><i>20</i><i class="is-d">21</i><i class="is-d">22</i><i class="is-d">23</i><i class="is-d">24</i><i class="is-d">25</i>
+                  <i class="is-d">26</i><i class="is-d">27</i><i class="is-d">28</i><i>29</i><i class="is-b">30</i><i class="is-b">31</i><i class="is-x"></i>
+                </div>
+                <div class="cal__legend"><span class="pill pill--ink">Direct</span><span class="pill pill--teal">Airbnb · Booking.com · Agoda · MakeMyTrip</span></div>
+              </div>
+              <div class="mock site">
+                <img class="site__img" src="/assets/site/villa-dining-480.webp" alt="" width="480" height="360" loading="lazy" decoding="async">
+                <div class="site__body">
+                  <span class="label">Your booking website</span>
+                  <b>RYST 109A</b>
+                  <div class="site__row"><span>10 – 12 Oct · 8 guests</span><strong class="num">₹48,000</strong></div>
+                  <span class="btn btn--sm btn--block">Pay with UPI</span>
+                  <span class="fine">Zero commission</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ul class="explorer__list">
+            <li><b>Channel sync</b><span>Airbnb, Booking.com, Agoda and MakeMyTrip in one calendar.</span></li>
+            <li><b>Availability</b><span>Booked dates close everywhere, so the villa can't be sold twice.</span></li>
+            <li><b>Direct booking website</b><span>Live availability, instant prices, UPI and Razorpay.</span></li>
+            <li><b>Quotes &amp; follow-ups</b><span>Send a quote, and get nudged before it goes cold.</span></li>
+          </ul>
+        </div>
+
+        <!-- Guests -->
+        <div class="tabpanel explorer__panel" role="tabpanel" id="fp-guests" aria-labelledby="ft-guests" tabindex="0" hidden>
+          <div class="explorer__stage">
+            <div class="duo">
+              <div class="mock form">
+                <div class="cal__head"><b>Online check-in</b><span class="mock-tag">Sample</span></div>
+                <div class="field">Full name<div>Rahul Mehta</div></div>
+                <div class="field">ID proof<div><svg class="icon" aria-hidden="true"><use href="#i-id"/></svg>2 photos added <span class="pill pill--good pill--end"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Done</span></div></div>
+                <div class="field">Signature<div class="sig"><svg viewBox="0 0 150 40" aria-hidden="true"><path d="M4 28c10-18 18-22 20-12s-6 16 2 10 14-20 18-12-2 14 6 8 10-14 16-10 4 10 12 6 12-8 18-6 10 6 20 2 14-8 30-10"/></svg></div></div>
+                <span class="btn btn--sm btn--block">Submit check-in</span>
+              </div>
+              <div class="mock report">
+                <span class="label">Guest portal</span>
+                <div class="portal-grid">
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-wifi"/></svg>Wi-Fi</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Rules</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Directions</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-food"/></svg>Menu</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>Bill</div>
+                  <div><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg>Review</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ul class="explorer__list">
+            <li><b>WhatsApp automation</b><span>Confirmations, check-in guides, reminders and review requests.</span></li>
+            <li><b>Online check-in</b><span>ID photos and signatures, in English or Tamil.</span></li>
+            <li><b>Guest portal</b><span>Wi-Fi, house rules, directions, food ordering and the bill.</span></li>
+            <li><b>Reviews</b><span>Guest feedback collected in one place after every stay.</span></li>
+          </ul>
+        </div>
+
+        <!-- Operations -->
+        <div class="tabpanel explorer__panel" role="tabpanel" id="fp-ops" aria-labelledby="ft-ops" tabindex="0" hidden>
+          <div class="explorer__stage">
+            <div class="ops">
+              <div class="mock">
+                <span class="label">Checklists · today</span>
+                <div class="ops__row"><span>Check-in · Rahul</span><span class="pill pill--good"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>5/5</span></div>
+                <div class="ops__row"><span>Daily rounds</span><span class="pill pill--warn">5/7</span></div>
+                <div class="ops__row"><span>Check-out</span><span class="pill">Due Mon</span></div>
+              </div>
+              <div class="mock">
+                <span class="label">Issues</span>
+                <div class="ops__row"><span>Bedroom 2 — AC dripping</span><span class="pill pill--warn">Open</span></div>
+                <div class="ops__row"><span>Pool light replaced</span><span class="pill pill--good"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Fixed</span></div>
+              </div>
+              <div class="mock">
+                <span class="label">Inventory</span>
+                <div class="ops__row"><span>Drinking water cans</span><span class="pill pill--warn">2 left</span></div>
+                <div class="ops__row"><span>Bath towels</span><span class="pill">24</span></div>
+              </div>
+              <div class="mock">
+                <span class="label">Petty cash</span>
+                <div class="ops__row"><span>Diesel for generator</span><b class="num">₹1,200</b></div>
+                <div class="ops__row"><span>Pool chlorine</span><b class="num">₹850</b></div>
+                <span class="fine">Receipts attached</span>
+              </div>
+            </div>
+          </div>
+          <ul class="explorer__list">
+            <li><b>Caretaker app</b><span>Tamil or English, on the phone they already have.</span></li>
+            <li><b>Housekeeping</b><span>Check-in, check-out and daily checklists with photos.</span></li>
+            <li><b>Issues &amp; maintenance</b><span>Reported with a photo, tracked until fixed.</span></li>
+            <li><b>Inventory &amp; petty cash</b><span>Stock levels and every spend, with receipts.</span></li>
+          </ul>
+        </div>
+
+        <!-- Money -->
+        <div class="tabpanel explorer__panel" role="tabpanel" id="fp-money" aria-labelledby="ft-money" tabindex="0" hidden>
+          <div class="explorer__stage">
+            <div class="duo">
+              <div class="mock invoice">
+                <div class="invoice__top"><b>Tax invoice</b><small>RYST/26-27/0042<br>12 Oct 2026</small></div>
+                <table>
+                  <tr><td>Accommodation · 2 nights</td><td>₹40,678</td></tr>
+                  <tr><td>CGST 9%</td><td>₹3,661</td></tr>
+                  <tr><td>SGST 9%</td><td>₹3,661</td></tr>
+                  <tr class="total"><td>Total</td><td>₹48,000</td></tr>
+                </table>
+                <span class="fine">Place of supply: Tamil Nadu · Sample</span>
+              </div>
+              <div class="mock report">
+                <div class="report__from"><i>RH</i>RYST Harbour · Telegram</div>
+                <b>Weekly report — RYST 109A</b>
+                <span>Revenue ₹96,000 · 3 stays</span>
+                <span>Occupancy 71%</span>
+                <span>Direct bookings 44%</span>
+                <span>Open issues 1</span>
+              </div>
+            </div>
+          </div>
+          <ul class="explorer__list">
+            <li><b>Payments</b><span>UPI and Razorpay, settled to your own bank account.</span></li>
+            <li><b>GST tax invoices</b><span>CGST and SGST, numbered by financial year, plus a monthly GST register.</span></li>
+            <li><b>Revenue by channel</b><span>See which platforms actually pay.</span></li>
+            <li><b>Owner reports</b><span>A weekly and monthly summary on your phone.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="also">
+      <span>Also included:</span>
+      <span class="pill">Restaurant menu &amp; orders</span>
+      <span class="pill">Telegram alerts</span>
+      <span class="pill">Per-person team access</span>
+      <span class="pill">Guest check-in in Tamil</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── How it works ───────────────────────────────────────────────────── -->
+<section class="section section--white" id="how" aria-labelledby="how-title">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2 class="h2" id="how-title">From booking to checkout. <em>Handled.</em></h2>
+    </div>
+    <div class="timeline" data-timeline>
+      <span class="timeline__line" aria-hidden="true"><i></i></span>
+      <ol class="timeline__steps">
+        <li class="step"><span class="step__dot"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg></span><span class="step__n">01</span><h3>Book</h3><p>A guest books on Airbnb, Agoda, MakeMyTrip, Booking.com — or directly with UPI.</p></li>
+        <li class="step"><span class="step__dot"><svg class="icon" aria-hidden="true"><use href="#i-sync"/></svg></span><span class="step__n">02</span><h3>Sync</h3><p>Availability updates across every channel. No double bookings.</p></li>
+        <li class="step"><span class="step__dot"><svg class="icon" aria-hidden="true"><use href="#i-message"/></svg></span><span class="step__n">03</span><h3>Guide</h3><p>Confirmation, check-in form, directions and house rules go out on WhatsApp.</p></li>
+        <li class="step"><span class="step__dot"><svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg></span><span class="step__n">04</span><h3>Ready</h3><p>Your caretaker gets the checklist and uploads photos when the villa is ready.</p></li>
+        <li class="step"><span class="step__dot"><svg class="icon" aria-hidden="true"><use href="#i-rupee"/></svg></span><span class="step__n">05</span><h3>Paid</h3><p>Money settles to your own account. The report is on your phone.</p></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ── Built by a villa owner ─────────────────────────────────────────── -->
+<section class="section" id="owners" aria-labelledby="owners-title">
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Our story</p>
+      <h2 class="h2" id="owners-title">Built by a villa owner. <em>For villa owners.</em></h2>
+    </div>
+
+    <figure class="story__photo reveal">
+      <picture>
+        <source type="image/avif" srcset="/assets/site/villa-night-800.avif 800w, /assets/site/villa-night-1200.avif 1200w" sizes="(max-width: 1240px) 100vw, 1240px">
+        <img src="/assets/site/villa-night-1200.webp" srcset="/assets/site/villa-night-800.webp 800w, /assets/site/villa-night-1200.webp 1200w" sizes="(max-width: 1240px) 100vw, 1240px" width="1200" height="900" alt="RYST 109A at night, its lit facade and name sign glowing at the gate" loading="lazy" decoding="async">
+      </picture>
+      <figcaption>RYST 109A at night · Pearl Beach, ECR</figcaption>
+    </figure>
+
+    <div class="story__grid">
+      <div class="story__copy">
+        <p class="story__pull">We didn't build software and then look for villas.</p>
+        <p>We run RYST 109A, a private beach villa on the East Coast Road. The double booking, the 11 PM Wi-Fi question, the pool nobody checked — we hit every one of those problems ourselves, at our own villa.</p>
+        <p>Harbour is the system we built to fix them. It runs RYST 109A every day. Come and see it working live on ECR.</p>
+        <p class="signature"><span><strong>Yuvanesan Muthukumaresan</strong>Managing Partner, Dreamour Multiventures, Chennai</span></p>
+      </div>
+      <div class="reveal" data-delay="1">
+        <div class="facts">
+          <div><b>RYST 109A</b><span>Pearl Beach · ECR</span></div>
+          <div><b>4 bedrooms</b><span>Private pool &amp; jacuzzi</span></div>
+          <div><b>5 channels</b><span>Airbnb, Agoda, MakeMyTrip, Booking.com, direct</span></div>
+          <div><b>8 nights</b><span>One film production booking, handled end to end</span></div>
+        </div>
+        <div class="story__thumbs">
+          <img src="/assets/site/villa-dining-480.webp" alt="The dining table at RYST 109A" width="480" height="360" loading="lazy" decoding="async">
+          <img src="/assets/site/villa-bedroom-480.webp" alt="A bedroom at RYST 109A with fresh white linens" width="480" height="360" loading="lazy" decoding="async">
+        </div>
+      </div>
+    </div>
+
+    <div class="india">
+      <div><svg class="icon" aria-hidden="true"><use href="#i-message"/></svg><h3>WhatsApp first</h3><p>Guests and staff live on WhatsApp, not email.</p></div>
+      <div><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg><h3>UPI and Razorpay</h3><p>Guests pay the way they already pay for everything.</p></div>
+      <div><svg class="icon" aria-hidden="true"><use href="#i-lang"/></svg><h3>Tamil for caretakers</h3><p>Your staff use it without training in English.</p></div>
+      <div><svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg><h3>Money goes to you</h3><p>Guest payments settle directly to your own bank account.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Before / after ─────────────────────────────────────────────────── -->
+<section class="section section--tight" aria-labelledby="compare-title">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <p class="eyebrow">What changes</p>
+      <h2 class="h2" id="compare-title">Less chasing. <em>More running.</em></h2>
+    </div>
+    <div class="compare reveal">
+      <div class="compare__col compare__col--before">
+        <h3>Before Harbour</h3>
+        <ul>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></span>4 calendars</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></span>Manual WhatsApp replies</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></span>Payments tracked in Excel</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></span>Calling the caretaker</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></span>Dependent on OTAs</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></span>No real-time visibility</li>
+        </ul>
+      </div>
+      <div class="compare__mid" aria-hidden="true"><span><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span></div>
+      <div class="compare__col compare__col--after">
+        <h3>With Harbour</h3>
+        <ul>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>One calendar</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Automatic guest messages</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Payments recorded as they arrive</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Checklists with photos</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Your own booking website</li>
+          <li><span class="compare__mark"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Owner dashboard on your phone</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ROI calculator ─────────────────────────────────────────────────── -->
+<section class="section section--white" aria-labelledby="roi-title">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div class="section-head section-head--flush">
+        <p class="eyebrow">The math</p>
+        <h2 class="h2" id="roi-title">How much could Harbour <em>save you?</em></h2>
+      </div>
+      <p class="lede">Repeat guests and referrals are the easiest bookings to move direct. Here's what that's worth.</p>
+    </div>
+
+    <div class="roi" data-roi>
+      <div class="roi__inputs">
+        <div class="slider">
+          <div class="slider__top"><label for="roi-rev">Annual villa revenue</label><output for="roi-rev" class="num" data-out="rev">₹15,00,000</output></div>
+          <input type="range" id="roi-rev" data-in="rev" min="300000" max="10000000" step="100000" value="1500000">
+        </div>
+        <div class="slider">
+          <div class="slider__top"><label for="roi-ota">Share booked through OTAs</label><output for="roi-ota" class="num" data-out="ota">100%</output></div>
+          <input type="range" id="roi-ota" data-in="ota" min="0" max="100" step="5" value="100">
+        </div>
+        <div class="slider">
+          <div class="slider__top"><label for="roi-com">Average OTA commission</label><output for="roi-com" class="num" data-out="com">15%</output></div>
+          <input type="range" id="roi-com" data-in="com" min="5" max="25" step="1" value="15">
+        </div>
+        <div class="slider">
+          <div class="slider__top"><label for="roi-move">OTA bookings moved direct</label><output for="roi-move" class="num" data-out="move">30%</output></div>
+          <input type="range" id="roi-move" data-in="move" min="0" max="80" step="5" value="30" aria-describedby="roi-move-note">
+          <small id="roi-move-note">Repeat guests, referrals and enquiries booked on your own site.</small>
+        </div>
+      </div>
+      <div class="roi__out">
+        <div class="roi__big">
+          <span id="roi-save-label">Potential annual savings</span>
+          <output class="num" data-out="save" aria-labelledby="roi-save-label" aria-live="polite">₹67,500</output>
+        </div>
+        <div class="roi__row"><span id="roi-paid-label">Commission paid to OTAs today</span><output class="num" data-out="paid" aria-labelledby="roi-paid-label">₹2,25,000</output></div>
+        <div class="roi__row"><span id="roi-month-label">Savings per month</span><output class="num" data-out="month" aria-labelledby="roi-month-label">₹5,625</output></div>
+        <p class="fine">Illustrative estimate. Actual savings vary by property, channel mix and booking behaviour.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Pricing ────────────────────────────────────────────────────────── -->
+<section class="section" id="pricing" aria-labelledby="pricing-title">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <p class="eyebrow">Pricing</p>
+      <h2 class="h2" id="pricing-title">Simple pricing.<br><em>One villa, one plan.</em></h2>
+      <p class="lede">Priced per villa. Every plan starts with a <span data-trial>7-day</span> free trial.</p>
+    </div>
+
+    <div class="pricing__bar">
+      <div class="seg" role="group" aria-label="Billing cycle">
+        <button type="button" data-cycle="monthly" aria-pressed="true">Monthly</button>
+        <button type="button" data-cycle="annual" aria-pressed="false">Annual · <span data-free>2 months</span> free</button>
+      </div>
+    </div>
+
+    <div class="plans" id="plans">
+      <article class="plan">
+        <h3 class="plan__name">Starter</h3>
+        <p class="plan__price"><b>₹3,499</b><span>/ month + GST</span></p>
+        <p class="plan__setup">+ ₹9,999 one-time setup</p>
+        <ul><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Channel calendar sync</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Direct booking website</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Owner dashboard</li></ul>
+        <a class="btn btn--secondary" href="https://wa.me/918608008608?text=Hi%2C%20I%27m%20interested%20in%20the%20RYST%20Harbour%20Starter%20plan%20for%20my%20villa." target="_blank" rel="noopener">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+      </article>
+      <article class="plan plan--featured">
+        <h3 class="plan__name">Growth <span class="plan__badge">Popular</span></h3>
+        <p class="plan__price"><b>₹5,499</b><span>/ month + GST</span></p>
+        <p class="plan__setup">+ ₹19,999 one-time setup</p>
+        <ul><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Everything in Starter</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>WhatsApp automation</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Caretaker app</li></ul>
+        <a class="btn" href="https://wa.me/918608008608?text=Hi%2C%20I%27m%20interested%20in%20the%20RYST%20Harbour%20Growth%20plan%20for%20my%20villa." target="_blank" rel="noopener">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+      </article>
+      <article class="plan">
+        <h3 class="plan__name">Pro</h3>
+        <p class="plan__price"><b>₹7,499</b><span>/ month + GST</span></p>
+        <p class="plan__setup">+ ₹29,999 one-time setup</p>
+        <ul><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Everything in Growth</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>GST invoices</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Priority support</li></ul>
+        <a class="btn btn--secondary" href="https://wa.me/918608008608?text=Hi%2C%20I%27m%20interested%20in%20the%20RYST%20Harbour%20Pro%20plan%20for%20my%20villa." target="_blank" rel="noopener">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+      </article>
+    </div>
+
+    <details class="terms">
+      <summary>View billing terms <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+      <p id="terms">Per villa. GST extra (18%). Annual billing gets 2 months free. 6-month minimum term, 30 days' notice. Domain and payment gateway fees are paid directly by the owner. Every plan starts with a 7-day free trial.</p>
+    </details>
+
+    <div class="onboard">
+      <div class="section-head section-head--flush">
+        <p class="eyebrow">Getting started</p>
+        <h3 class="h3">Live in 7 days. We do the setup.</h3>
+        <p class="fine">No downtime: your existing bookings stay exactly as they are.</p>
+      </div>
+      <ol>
+        <li><em>Day 1</em><b>Walkthrough</b><span>We visit or call, and understand your villa and staff.</span></li>
+        <li><em>Day 2–3</em><b>Connect</b><span>We link your OTA calendars and your payment account.</span></li>
+        <li><em>Day 4–5</em><b>Launch</b><span>Your WhatsApp messages and guest links go live.</span></li>
+        <li><em>Day 6–7</em><b>Train</b><span>Your caretaker is onboarded. First guest, fully automated.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ── Testimonials ───────────────────────────────────────────────────────
+     Hidden until there are real quotes: add <figure class="quote"> items
+     (photo, quote, owner + property) inside .quotes and the section shows
+     itself. Never add a quote a real owner didn't give us. -->
+<section class="section section--white" id="stories" aria-labelledby="stories-title" hidden data-testimonials>
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">From villa owners</p>
+      <h2 class="h2" id="stories-title">In their words.</h2>
+    </div>
+    <div class="quotes" tabindex="0" role="region" aria-label="Testimonials">
+      <!--
+      <figure class="quote">
+        <img src="/assets/site/…" alt="" width="120" height="120" loading="lazy">
+        <div><blockquote>…</blockquote><figcaption><strong>Owner name</strong> · Property, Location</figcaption></div>
+      </figure>
+      -->
+    </div>
+  </div>
+</section>
+
+<!-- ── Final CTA ──────────────────────────────────────────────────────── -->
+<section class="cta-final" id="contact" aria-labelledby="cta-title">
+  <div class="cta-final__bg">
+    <picture>
+      <source type="image/avif" srcset="/assets/site/villa-cinema-800.avif 800w, /assets/site/villa-cinema-1200.avif 1200w" sizes="100vw">
+      <img src="/assets/site/villa-cinema-1200.webp" srcset="/assets/site/villa-cinema-800.webp 800w, /assets/site/villa-cinema-1200.webp 1200w" sizes="100vw" width="1200" height="900" alt="" loading="lazy" decoding="async">
+    </picture>
+  </div>
+  <div class="container">
+    <div class="cta-final__inner">
+      <p class="eyebrow">See it live</p>
+      <h2 class="h2" id="cta-title">Let your villa <em>run itself.</em></h2>
+      <p class="lede">See Harbour running live and discover how much simpler villa operations can be. Or visit RYST 109A on ECR and watch it work.</p>
+      <div class="cta-final__actions">
+        <a class="btn btn--light" href="https://wa.me/918608008608?text=Hi%2C%20I%27d%20like%20a%2020-minute%20demo%20of%20RYST%20Harbour%20for%20my%20villa." target="_blank" rel="noopener">Book a 20-minute demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn--ghost-light" href="https://wa.me/918608008608?text=Hi%2C%20I%20have%20a%20question%20about%20RYST%20Harbour." target="_blank" rel="noopener">Talk to us on WhatsApp</a>
+      </div>
+      <p class="cta-final__more"><a href="/login.html?demo=1">Try the demo app</a><a href="tel:+918608008608">Call +91 86080 08608</a></p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <a class="wordmark" href="#top"><img class="wordmark__mark" src="/assets/staff-icon-192.png" alt="" width="26" height="26" loading="lazy">RYST HARBOUR</a>
+        <p class="footer__tag">Property management for independent villas.</p>
+      </div>
+      <nav aria-labelledby="f-product">
+        <h2 id="f-product">Product</h2>
+        <ul>
+          <li><a href="#product">Product</a></li>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="/login.html?demo=1">Try the demo</a></li>
+          <li><a href="/login.html">Sign in</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="f-ryst">
+        <h2 id="f-ryst">RYST</h2>
+        <ul>
+          <li><a href="https://studio.ryst.in">Studio RYST</a></li>
+          <li><a href="https://stay.ryst.in">Stay RYST</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h2>Contact</h2>
+        <ul>
+          <li><a href="https://wa.me/918608008608?text=Hi%2C%20I%20have%20a%20question%20about%20RYST%20Harbour." target="_blank" rel="noopener">WhatsApp</a></li>
+          <li><a href="tel:+918608008608">+91 86080 08608</a></li>
+          <li>Chennai, Tamil Nadu</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>© <span data-year>2026</span> Dreamour Multiventures. RYST Harbour is managed by Dreamour Multiventures.</p>
+      <p>RYST is a trademark of Dreamour Multiventures.</p>
     </div>
   </div>
 </footer>
-<script>
-document.getElementById('yr').textContent = new Date().getFullYear();
-// Pricing comes from the live plans (Settings → Billing settings); these are
-// the published prices, shown until (or if) that request doesn't answer.
-(function(){
-  var FEATURES = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST invoices', prioritySupport:'Priority support' };
-  var SOON = {};
-  var data = { gstPercent:18, pricesIncludeGst:false, annualMonths:10, minTermMonths:6, noticeDays:30, trialDays:7, plans:[
-    { key:'starter', name:'Starter', monthly:3499, annual:34990, setup:9999, features:['calendar','bookingSite','dashboard'] },
-    { key:'growth', name:'Growth', monthly:5499, annual:54990, setup:19999, features:['calendar','bookingSite','dashboard','whatsapp','caretaker'] },
-    { key:'pro', name:'Pro', monthly:7499, annual:74990, setup:29999, features:['calendar','bookingSite','dashboard','whatsapp','caretaker','gstInvoices','prioritySupport'] } ] };
-  var cycle = 'monthly';
-  function inr(n){ return '₹' + Number(n || 0).toLocaleString('en-IN'); }
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
-  function render(){
-    var tax = data.pricesIncludeGst ? 'incl. GST' : '+ GST';
-    document.getElementById('tiers').innerHTML = data.plans.map(function(p, i){
-      var prev = i ? data.plans[i - 1] : null;
-      var feats = p.features.filter(function(f){ return !prev || prev.features.indexOf(f) < 0; });
-      return '<div class="tier' + (p.key === 'growth' ? ' pop' : '') + '">' + (p.key === 'growth' ? '<span class="badge">Popular</span>' : '')
-        + '<h3>' + esc(p.name) + '</h3>'
-        + '<div class="price">' + inr(cycle === 'annual' ? p.annual : p.monthly) + '<small> / ' + (cycle === 'annual' ? 'year' : 'month') + ' ' + tax + '</small></div>'
-        + '<div class="setup">+ ' + inr(p.setup) + ' one-time setup</div>'
-        + '<ul>' + (prev ? '<li>Everything in ' + esc(prev.name) + '</li>' : '') + feats.map(function(f){ return '<li>' + esc(FEATURES[f] || f) + (SOON[f] ? ' <span class="soon">Soon</span>' : '') + '</li>'; }).join('') + '</ul>'
-        + '<a class="btn ' + (p.key === 'growth' ? 'green' : 'line') + '" href="https://wa.me/918608008608?text=' + encodeURIComponent('Hi, I\'m interested in the RYST Harbour ' + p.name + ' plan for my villa.') + '">Talk to us about ' + esc(p.name) + '</a></div>';
-    }).join('');
-    document.getElementById('terms').textContent = 'Per villa. ' + (data.pricesIncludeGst ? 'Prices include GST. ' : 'GST extra (' + data.gstPercent + '%). ')
-      + 'Annual billing gets ' + (12 - data.annualMonths) + ' months free. ' + (data.minTermMonths ? data.minTermMonths + '-month minimum term, ' : '') + (data.noticeDays ? data.noticeDays + ' days\' notice. ' : '')
-      + 'Domain and payment gateway fees are paid directly by the owner. Every plan starts with a ' + data.trialDays + '-day free trial.';
-    var btns = document.querySelectorAll('.cycle button');
-    for (var j = 0; j < btns.length; j++) btns[j].classList.toggle('on', btns[j].getAttribute('data-cycle') === cycle);
-    btns[1].textContent = 'Annual · ' + (12 - data.annualMonths) + ' months free';
-  }
-  document.querySelector('.cycle').addEventListener('click', function(e){ var b = e.target.closest('[data-cycle]'); if (b) { cycle = b.getAttribute('data-cycle'); render(); } });
-  render();
-  fetch('https://data.ryst.in/harbour/plans', { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(d){ if (d && Array.isArray(d.plans) && d.plans.length) { data = d; render(); } }).catch(function(){});
-})();
-</script>
+
+<div class="dock" id="dock">
+  <a class="btn btn--secondary" href="/login.html?demo=1">Try demo</a>
+  <a class="btn" href="https://wa.me/918608008608?text=Hi%2C%20I%27d%20like%20a%2020-minute%20demo%20of%20RYST%20Harbour%20for%20my%20villa." target="_blank" rel="noopener">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+</div>
 </body>
 </html>

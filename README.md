@@ -5,6 +5,24 @@ checklists, inventory, reports, restaurant, reviews), villa signup (`start.html`
 the guest pages. Data and sign-in come from the server at `data.ryst.in`
 (repo `ryst-109a-proxy`).
 
+## The home page (harbour.ryst.in)
+
+`index.html` is the marketing site. Plain HTML, no build step:
+
+- `assets/site/site.css`: the design system (tokens, type, buttons, mock
+  frames) followed by one block per section.
+- `assets/site/site.js`: tabs, mobile menu, ROI calculator, live pricing and
+  in-view animations. It's progressive enhancement, so the page reads fine
+  without it.
+- `assets/site/*.avif|webp`: RYST 109A photos, exported at 480/800/1200 px
+  from the originals in the `RYST-109A` repository.
+- `assets/fonts/`: Instrument Serif (headings) and Inter (text), self-hosted
+  and subset to Latin plus ₹.
+
+Prices come live from `data.ryst.in/harbour/plans` (Settings → Billing
+settings). The copy in `site.js` is only the fallback. The testimonials
+section stays hidden until a real `<figure class="quote">` is added to it.
+
 ## Guest pages are published on two addresses
 
 `checkin.html`, `guest.html`, `feedback.html`, `wa.html`, `villa.js` and `property.js`
