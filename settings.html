@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
-<title data-title="Rate Card &amp; Settings — {name}">Rate Card &amp; Settings — RYST 109A</title>
+<title data-title="Settings — {name}">Settings — RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -174,12 +174,12 @@
 
 <header class="bar">
   <img class="hdr-logo" src="/assets/stay-logo.webp" data-prop-src="logoUrl" alt="RYST 109A" data-prop-alt="name">
-  <span class="bar-title">Rate Card &amp; Settings</span>
+  <span class="bar-title">Settings</span>
   <a class="btn" href="login.html">← Home</a>
 </header>
 
 <div class="cfg-body">
-  <p class="sd">Settings for the <b data-prop="fullName">RYST 109A Beach Villa</b> invoice / quote builder. Pricing, bank details and business info sync to the cloud and load automatically in the Stay builder.</p>
+  <p class="sd">Everything about <b data-prop="fullName">RYST 109A Beach Villa</b> — your business details, tariffs, invoices, calendars, messages and team. Changes apply everywhere in the app, the guest pages and your booking website.</p>
 
   <div class="onb" id="onboard" hidden>
     <div class="onb-head"><b>Get your villa ready</b><button type="button" class="onb-x" id="onbHide" aria-label="Hide">Hide</button></div>
@@ -187,14 +187,60 @@
   </div>
 
   <div class="tabs" id="cfgTabs">
-    <button type="button" class="tab-btn active" data-tab="villa">Villa &amp; Business</button>
+    <button type="button" class="tab-btn active" data-tab="profile">Business profile</button>
+    <button type="button" class="tab-btn" data-tab="tariffs">Tariffs</button>
+    <button type="button" class="tab-btn" data-tab="invoices">Invoices &amp; GST</button>
     <button type="button" class="tab-btn" data-tab="ota">OTA Sync</button>
-    <button type="button" class="tab-btn" data-tab="whatsapp">WhatsApp Templates</button>
+    <button type="button" class="tab-btn" data-tab="whatsapp">WhatsApp &amp; Alerts</button>
     <button type="button" class="tab-btn" id="tabWebBtn" data-tab="website" style="display:none">Website</button>
-    <button type="button" class="tab-btn" id="tabUserBtn" data-tab="users" style="display:none">User Access</button>
+    <button type="button" class="tab-btn" id="tabUserBtn" data-tab="users" style="display:none">Team</button>
+    <button type="button" class="tab-btn" id="tabConnBtn" data-tab="connections" style="display:none">Connections</button>
+    <button type="button" class="tab-btn" id="tabSubBtn" data-tab="subscription" style="display:none">Subscription</button>
+    <button type="button" class="tab-btn" id="tabPlatformBtn" data-tab="platform" style="display:none">Platform</button>
   </div>
 
-  <div class="tab-panel" data-panel="villa">
+  <div class="tab-panel" data-panel="profile">
+    <p class="gh-mini">Property profile</p>
+    <p class="sd" style="margin-bottom:12px">Everything that names or locates this property — used across the staff app, guest pages, messages, receipts, invoices and wallet passes.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+      <label class="f"><span>Property name <small style="color:var(--muted2);font-weight:400">— Short name — page titles, receipts, alerts</small></span><input class="t" id="prop_name" type="text" maxlength="500" required></label>
+      <label class="f"><span>Full name <small style="color:var(--muted2);font-weight:400">— Used in guest messages: "your stay at …"</small></span><input class="t" id="prop_fullName" type="text" maxlength="500"></label>
+      <label class="f"><span>Restaurant / kitchen name <small style="color:var(--muted2);font-weight:400">— Leave blank if you don't run one</small></span><input class="t" id="prop_restaurantName" type="text" maxlength="500"></label>
+      <label class="f"><span>Property type <small style="color:var(--muted2);font-weight:400">— Shown under the name on invoices, e.g. Beach Villa</small></span><input class="t" id="prop_typeLabel" type="text" maxlength="500"></label>
+      <label class="f"><span>Tagline <small style="color:var(--muted2);font-weight:400">— Invoice wordmark line, e.g. Private coastal retreat</small></span><input class="t" id="prop_tagline" type="text" maxlength="500"></label>
+      <label class="f"><span>Invoice signatory <small style="color:var(--muted2);font-weight:400">— Name printed under "For &lt;property&gt;"</small></span><input class="t" id="prop_signatory" type="text" maxlength="500"></label>
+      <label class="f"><span>Address (one line) <small style="color:var(--muted2);font-weight:400">— Receipts and wallet passes</small></span><input class="t" id="prop_address" type="text" maxlength="500"></label>
+      <label class="f"><span>Google Maps link <small style="color:var(--muted2);font-weight:400">— Directions buttons</small></span><input class="t" id="prop_mapLink" type="url" maxlength="500"></label>
+      <label class="f"><span>Website <small style="color:var(--muted2);font-weight:400">— e.g. https://yourvilla.com</small></span><input class="t" id="prop_website" type="url" maxlength="500"></label>
+      <label class="f"><span>Guest WhatsApp number <small style="color:var(--muted2);font-weight:400">— With country code, e.g. 919876543210</small></span><input class="t" id="prop_whatsapp" type="tel" maxlength="500"></label>
+      <label class="f"><span>Instagram handle <small style="color:var(--muted2);font-weight:400">— Without @ — leave blank to hide</small></span><input class="t" id="prop_instagram" type="text" maxlength="500"></label>
+      <label class="f"><span>Food receipt footer <small style="color:var(--muted2);font-weight:400">— e.g. Thank you for dining with us.</small></span><input class="t" id="prop_receiptNote" type="text" maxlength="500"></label>
+      <label class="f"><span>Logo image URL <small style="color:var(--muted2);font-weight:400">— Square PNG, shown on documents and passes</small></span><input class="t" id="prop_logoUrl" type="url" maxlength="500"></label>
+      <label class="f"><span>Cover photo URL <small style="color:var(--muted2);font-weight:400">— Wallet pass banner</small></span><input class="t" id="prop_coverUrl" type="url" maxlength="500"></label>
+      <label class="f"><span>Latitude <small style="color:var(--muted2);font-weight:400">— For wallet-pass arrival alerts</small></span><input class="t" id="prop_latitude" type="text" maxlength="500"></label>
+      <label class="f"><span>Longitude</span><input class="t" id="prop_longitude" type="text" maxlength="500"></label>
+      <label class="f"><span>Google Maps listing name <small style="color:var(--muted2);font-weight:400">— How the listing appears on Google, for the rating widget</small></span><input class="t" id="prop_googlePlaceQuery" type="text" maxlength="500"></label>
+    </div>
+    <p class="gh-mini">Business &amp; bank details</p>
+    <label class="f"><span>Property address block (under the wordmark)</span><textarea class="t" id="stayCompany" rows="3"></textarea></label>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+      <label class="f"><span>PAN</span><input class="t" id="stayPan" placeholder="e.g. ABCDE1234F"></label>
+    </div>
+    <label class="f"><span>Bank / payment details block</span><textarea class="t" id="stayBank" rows="6"></textarea></label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <label class="f"><span>Wi-Fi network</span><input class="t" id="stayWifiNetwork" placeholder="e.g. Villa-Guest"></label>
+      <label class="f"><span>Wi-Fi voucher code</span><input class="t" id="stayWifiVoucher" placeholder="Welcome109"></label>
+    </div>
+    <p class="sd" style="margin:-6px 0 14px">Shown to signed-in guests on the Manage My Stay portal (guest.html).</p>
+    <p class="gh-mini">Wallet passes</p>
+    <p class="sd" style="margin-bottom:10px">Controls the "Add to Apple/Google Wallet" buttons everywhere they appear — the booking site, check-in page, and guest portal. Turning one off hides that button and blocks new passes of that kind from being issued; passes already saved to a guest's phone keep working.</p>
+    <div style="display:flex;gap:12px;margin-bottom:14px">
+      <label class="chk-toggle"><input type="checkbox" id="stayWalletApple"> Apple Wallet</label>
+      <label class="chk-toggle"><input type="checkbox" id="stayWalletGoogle"> Google Wallet</label>
+    </div>
+  </div>
+
+  <div class="tab-panel" data-panel="tariffs" style="display:none">
     <p class="gh-mini">Charge pricing</p>
     <div class="rc-table-wrap">
       <table class="rc-table">
@@ -207,6 +253,14 @@
       </table>
     </div>
     <button class="rc-add" id="stayRcAdd">+ Add charge</button>
+
+
+    <p class="gh-mini">Guests &amp; advance</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+      <label class="f"><span>Guests included in the villa rate</span><input class="t" id="stayMaxGuests" type="number" min="0" step="1" placeholder="4"></label>
+      <label class="f"><span>Guest capacity (hard cap)</span><input class="t" id="stayGuestCapacity" type="number" min="0" step="1" placeholder="10"></label>
+      <label class="f"><span>Online booking advance (%)</span><input class="t" id="stayAdvancePercent" type="number" min="1" max="100" step="1" placeholder="30"></label>
+    </div>
 
     <p class="gh-mini">Peak pricing</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -242,51 +296,17 @@
     </div>
     <button class="rc-add" id="stayCouponAdd">+ Add coupon code</button>
 
-    <p class="gh-mini">Property profile</p>
-    <p class="sd" style="margin-bottom:12px">Everything that names or locates this property — used across the staff app, guest pages, messages, receipts, invoices and wallet passes.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
-      <label class="f"><span>Property name <small style="color:var(--muted2);font-weight:400">— Short name — page titles, receipts, alerts</small></span><input class="t" id="prop_name" type="text" maxlength="500" required></label>
-      <label class="f"><span>Full name <small style="color:var(--muted2);font-weight:400">— Used in guest messages: "your stay at …"</small></span><input class="t" id="prop_fullName" type="text" maxlength="500"></label>
-      <label class="f"><span>Restaurant / kitchen name <small style="color:var(--muted2);font-weight:400">— Leave blank if you don't run one</small></span><input class="t" id="prop_restaurantName" type="text" maxlength="500"></label>
-      <label class="f"><span>Property type <small style="color:var(--muted2);font-weight:400">— Shown under the name on invoices, e.g. Beach Villa</small></span><input class="t" id="prop_typeLabel" type="text" maxlength="500"></label>
-      <label class="f"><span>Tagline <small style="color:var(--muted2);font-weight:400">— Invoice wordmark line, e.g. Private coastal retreat</small></span><input class="t" id="prop_tagline" type="text" maxlength="500"></label>
-      <label class="f"><span>Invoice signatory <small style="color:var(--muted2);font-weight:400">— Name printed under "For &lt;property&gt;"</small></span><input class="t" id="prop_signatory" type="text" maxlength="500"></label>
-      <label class="f"><span>Address (one line) <small style="color:var(--muted2);font-weight:400">— Receipts and wallet passes</small></span><input class="t" id="prop_address" type="text" maxlength="500"></label>
-      <label class="f"><span>Google Maps link <small style="color:var(--muted2);font-weight:400">— Directions buttons</small></span><input class="t" id="prop_mapLink" type="url" maxlength="500"></label>
-      <label class="f"><span>Website <small style="color:var(--muted2);font-weight:400">— e.g. https://yourvilla.com</small></span><input class="t" id="prop_website" type="url" maxlength="500"></label>
-      <label class="f"><span>Guest WhatsApp number <small style="color:var(--muted2);font-weight:400">— With country code, e.g. 919876543210</small></span><input class="t" id="prop_whatsapp" type="tel" maxlength="500"></label>
-      <label class="f"><span>Instagram handle <small style="color:var(--muted2);font-weight:400">— Without @ — leave blank to hide</small></span><input class="t" id="prop_instagram" type="text" maxlength="500"></label>
-      <label class="f"><span>Food receipt footer <small style="color:var(--muted2);font-weight:400">— e.g. Thank you for dining with us.</small></span><input class="t" id="prop_receiptNote" type="text" maxlength="500"></label>
-      <label class="f"><span>Logo image URL <small style="color:var(--muted2);font-weight:400">— Square PNG, shown on documents and passes</small></span><input class="t" id="prop_logoUrl" type="url" maxlength="500"></label>
-      <label class="f"><span>Cover photo URL <small style="color:var(--muted2);font-weight:400">— Wallet pass banner</small></span><input class="t" id="prop_coverUrl" type="url" maxlength="500"></label>
-      <label class="f"><span>Latitude <small style="color:var(--muted2);font-weight:400">— For wallet-pass arrival alerts</small></span><input class="t" id="prop_latitude" type="text" maxlength="500"></label>
-      <label class="f"><span>Longitude</span><input class="t" id="prop_longitude" type="text" maxlength="500"></label>
-      <label class="f"><span>Google Maps listing name <small style="color:var(--muted2);font-weight:400">— How the listing appears on Google, for the rating widget</small></span><input class="t" id="prop_googlePlaceQuery" type="text" maxlength="500"></label>
-    </div>
-    <p class="gh-mini">Business &amp; payment</p>
-    <label class="f"><span>Property address block (under the wordmark)</span><textarea class="t" id="stayCompany" rows="3"></textarea></label>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
-      <label class="f"><span>PAN</span><input class="t" id="stayPan" placeholder="e.g. ABCDE1234F"></label>
+  </div>
+
+  <div class="tab-panel" data-panel="invoices" style="display:none">
+    <p class="gh-mini">Numbering</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
       <label class="f"><span>Invoice no. prefix</span><input class="t" id="stayInvPrefix" placeholder="e.g. VILLA/INV"></label>
       <label class="f"><span>Quote no. prefix</span><input class="t" id="stayQtPrefix" placeholder="e.g. VILLA/QT"></label>
-      <label class="f"><span>Max guests (incl.)</span><input class="t" id="stayMaxGuests" type="number" min="0" step="1" placeholder="4"></label>
-      <label class="f"><span>Guest capacity (hard cap)</span><input class="t" id="stayGuestCapacity" type="number" min="0" step="1" placeholder="10"></label>
-      <label class="f"><span>Online booking advance (%)</span><input class="t" id="stayAdvancePercent" type="number" min="1" max="100" step="1" placeholder="30"></label>
     </div>
-    <label class="f"><span>Bank / payment details block</span><textarea class="t" id="stayBank" rows="6"></textarea></label>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <label class="f"><span>Wi-Fi network</span><input class="t" id="stayWifiNetwork" placeholder="e.g. Villa-Guest"></label>
-      <label class="f"><span>Wi-Fi voucher code</span><input class="t" id="stayWifiVoucher" placeholder="Welcome109"></label>
-    </div>
-    <p class="sd" style="margin:-6px 0 14px">Shown to signed-in guests on the Manage My Stay portal (guest.html).</p>
-    <p class="gh-mini">Wallet passes</p>
-    <p class="sd" style="margin-bottom:10px">Controls the "Add to Apple/Google Wallet" buttons everywhere they appear — the booking site, check-in page, and guest portal. Turning one off hides that button and blocks new passes of that kind from being issued; passes already saved to a guest's phone keep working.</p>
-    <div style="display:flex;gap:12px;margin-bottom:14px">
-      <label class="chk-toggle"><input type="checkbox" id="stayWalletApple"> Apple Wallet</label>
-      <label class="chk-toggle"><input type="checkbox" id="stayWalletGoogle"> Google Wallet</label>
-    </div>
+
     <p class="gh-mini" id="gst">GST tax invoices</p>
-    <div id="gstPlanNote" class="sync-result warn" style="margin-bottom:12px;display:none"><span>GST tax invoices are part of the Pro plan — upgrade under User Access → Subscription.</span></div>
+    <div id="gstPlanNote" class="sync-result warn" style="margin-bottom:12px;display:none"><span>GST tax invoices are part of the Pro plan — upgrade in the Subscription tab.</span></div>
     <label class="chk-toggle" style="margin-bottom:12px;display:inline-flex"><input type="checkbox" id="gstEnabled"> I'm GST-registered — issue GST tax invoices</label>
     <div id="gstFields">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
@@ -344,7 +364,7 @@
   </div>
 
   <div class="rc-foot" id="stayGroupSave">
-    <button class="btn primary" id="staySave" disabled>Save stay settings</button>
+    <button class="btn primary" id="staySave" disabled>Save settings</button>
   </div>
 
   <div class="tab-panel" data-panel="whatsapp" style="display:none">
@@ -362,7 +382,7 @@
     <div class="sync-results" id="waRunResults" style="margin-bottom:18px"></div>
 
     <p class="gh-mini">Owner report on your phone</p>
-    <p class="sd" style="margin-bottom:12px">Every Monday at 8 am a weekly report, and on the 1st a monthly one, goes to the villa's owners and admins on Telegram — revenue, occupancy, expenses, who's arriving, balances to collect, and anything waiting at the villa. Caretakers never get it. Turn it off per person under User Access (Telegram alerts).</p>
+    <p class="sd" style="margin-bottom:12px">Every Monday at 8 am a weekly report, and on the 1st a monthly one, goes to the villa's owners and admins on Telegram — revenue, occupancy, expenses, who's arriving, balances to collect, and anything waiting at the villa. Caretakers never get it. Turn it off per person in the Team tab.</p>
     <div class="rc-foot" style="margin-top:0;margin-bottom:10px">
       <button class="btn" data-report="weekly">Preview weekly</button>
       <button class="btn" data-report="monthly">Preview monthly</button>
@@ -397,7 +417,7 @@
     <div class="sync-results" id="waWebhookResults" style="margin-bottom:22px"></div>
 
     <p class="gh-mini">Telegram notify setup</p>
-    <p class="sd" style="margin-bottom:12px">One-time setup on Render: message <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> on Telegram, send <code>/newbot</code>, and set the token it gives you as <code>TELEGRAM_BOT_TOKEN</code> (a Render environment variable — not set from here). Each person who wants alerts then taps <b>🔔 Get alerts on Telegram</b> on the home screen and presses Start in Telegram — that's all; their chat is saved against their own name. Which alerts each person gets is set in <b>Settings → User Access</b>.</p>
+    <p class="sd" style="margin-bottom:12px">One-time setup on Render: message <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> on Telegram, send <code>/newbot</code>, and set the token it gives you as <code>TELEGRAM_BOT_TOKEN</code> (a Render environment variable — not set from here). Each person who wants alerts then taps <b>🔔 Get alerts on Telegram</b> on the home screen and presses Start in Telegram — that's all; their chat is saved against their own name. Which alerts each person gets is set in the <b>Team</b> tab.</p>
     <div class="rc-foot" style="margin-top:0;margin-bottom:10px" id="tgChatIdRow">
       <button class="btn" id="tgChatIdBtn">Find a chat ID</button>
     </div>
@@ -525,7 +545,7 @@
   </div>
 
   <div class="tab-panel" data-panel="users" id="userAccessSection" style="display:none">
-    <p class="gh-mini">User access</p>
+    <p class="gh-mini">Team &amp; access</p>
     <p class="sd" style="margin-bottom:12px">Who can sign in, their role, and who's admin (can delete quotes, invoices and reimbursed expenses, and manage this list). Admin-only section.</p>
     <div id="userRows"></div>
     <div class="rc-foot" style="margin-top:0;margin-bottom:4px">
@@ -536,14 +556,10 @@
       <button class="btn primary" id="userSave" disabled>Save user access</button>
     </div>
 
-    <div id="subSection" hidden>
-      <p class="gh-mini" style="margin-top:28px" id="subscription">Subscription</p>
-      <p class="sd" style="margin-bottom:12px">Your RYST Harbour plan for this villa. Payment is by UPI Autopay or card on Razorpay's secure page, renewing automatically; you can cancel from the link in Razorpay's emails. Invoices are issued by <span id="subBiz">Dreamour Multiventures</span>.</p>
-      <div class="sync-results" id="subStatus" style="margin-bottom:12px"></div>
-      <div class="rc-foot" id="subPlans" style="margin-top:0;margin-bottom:22px;flex-wrap:wrap;gap:8px"></div>
-    </div>
+  </div>
 
-    <p class="gh-mini" style="margin-top:28px">Connections</p>
+  <div class="tab-panel" data-panel="connections" style="display:none">
+    <p class="gh-mini">Connections</p>
     <p class="sd" style="margin-bottom:12px">Your own WhatsApp Business (Interakt) and Razorpay accounts: guest messages go out from your number, and guest payments go straight to your Razorpay account. Keys are stored encrypted and are never shown again after saving.</p>
     <div class="sync-results" id="connStatus" style="margin-bottom:12px"><div class="sync-result"><span>Connections</span><span>Loading…</span></div></div>
     <div id="connForm" hidden>
@@ -560,8 +576,21 @@
     </div>
     <div id="connHooks" style="margin-bottom:22px"></div>
 
+  </div>
+
+  <div class="tab-panel" data-panel="subscription" style="display:none">
+    <div id="subSection" hidden>
+      <p class="gh-mini" id="subscription">Subscription</p>
+      <p class="sd" style="margin-bottom:12px">Your RYST Harbour plan for this villa. Payment is by UPI Autopay or card on Razorpay's secure page, renewing automatically; you can cancel from the link in Razorpay's emails. Invoices are issued by <span id="subBiz">Dreamour Multiventures</span>.</p>
+      <div class="sync-results" id="subStatus" style="margin-bottom:12px"></div>
+      <div class="rc-foot" id="subPlans" style="margin-top:0;margin-bottom:22px;flex-wrap:wrap;gap:8px"></div>
+    </div>
+
+  </div>
+
+  <div class="tab-panel" data-panel="platform" style="display:none">
     <div id="platformOnly">
-    <p class="gh-mini" style="margin-top:28px">Data storage</p>
+    <p class="gh-mini">Data storage</p>
     <p class="sd" style="margin-bottom:12px">Where bookings, cash, inventory and settings are kept — moving from GitHub to the Supabase database. <b>Copy to Supabase</b> copies every data file across and checks each one arrived identical; <b>Compare</b> only checks. Neither changes where the app reads and saves — that's the <code>STORAGE_BACKEND</code> setting on Render.</p>
     <div class="rc-foot" style="margin-top:0;margin-bottom:8px">
       <button class="btn" id="storStatusBtn">Check status</button>
@@ -778,6 +807,7 @@ function hasModule(mod){
   // a failure loading one shouldn't block or hide the other.
   if(IS_ADMIN){
     document.getElementById('tabUserBtn').style.display = '';
+    document.getElementById('tabConnBtn').style.display = '';
     // RYST 109A's own site is stay.ryst.in; other villas get a website here.
     if((window.RYST_VILLA || 'ryst-109a') !== 'ryst-109a') document.getElementById('tabWebBtn').style.display = '';
     loadUserAccess();
@@ -805,12 +835,12 @@ async function renderOnboarding(d){
   }
   const rates = Array.isArray(d && d.rates) && d.rates.some(r => Number(r.rate) > 0);
   const steps = [
-    { done: !!(p.address && p.whatsapp), text: 'Add your villa details — address, WhatsApp number, logo', tab: 'villa', anchor: 'propName' },
-    { done: rates && !!(d && d.bank), text: 'Set your rates and bank details for quotes and invoices', tab: 'villa' },
+    { done: !!(p.address && p.whatsapp), text: 'Add your villa details — address, WhatsApp number, logo', tab: 'profile', anchor: 'propName' },
+    { done: rates && !!(d && d.bank), text: 'Set your rates and bank details for quotes and invoices', tab: 'tariffs' },
     { done: team != null && team > 1, text: 'Add your caretaker and managers', tab: 'users' },
     { done: Array.isArray(d && d.icalFeeds) && d.icalFeeds.length > 0, text: 'Connect your Airbnb / Booking.com calendars', tab: 'ota' },
     { done: false, text: 'Give your OTAs your calendar export link (so they block your bookings)', tab: 'ota' },
-    { done: !!(conn && conn.interakt && conn.razorpay && conn.interakt.connected && conn.razorpay.connected), text: 'Optional: connect your WhatsApp (Interakt) and Razorpay accounts', tab: 'users' },
+    { done: !!(conn && conn.interakt && conn.razorpay && conn.interakt.connected && conn.razorpay.connected), text: 'Optional: connect your WhatsApp (Interakt) and Razorpay accounts', tab: 'connections' },
   ];
   if(isNewVilla && localStorage.getItem('ryst_user_admin') === 'true'){
     let site = null; try{ const r = await fetch(PROXY_URL+'/website',{headers:{'X-Token':proxyToken}}); if(r.ok) site = (await r.json()).site; }catch(e){}
@@ -833,7 +863,8 @@ function switchTab(tab){
   // The stay-settings save bar belongs to both the villa and OTA panels —
   // they write the same document via the same button — so it isn't its own
   // tab-panel, just shown/hidden alongside whichever of those two is active.
-  document.getElementById('stayGroupSave').style.display = (tab==='villa'||tab==='ota') ? '' : 'none';
+  // One Save for everything in stay-settings.json — the four tabs that edit it.
+  document.getElementById('stayGroupSave').style.display = ['profile','tariffs','invoices','ota'].includes(tab) ? '' : 'none';
   document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
   if(tab==='website' && !webLoaded) loadWebsite();
 }
@@ -1065,7 +1096,7 @@ async function loadWhatsAppStatus(){
       text.textContent = 'Telegram notify — not set up yet (see below)';
     } else if(data.connected && !data.recipientCount){
       dot.className = 'dot off';
-      text.textContent = 'Telegram notify — bot connected, but no one has a chat ID set yet (see User Access)';
+      text.textContent = 'Telegram notify — bot connected, but no one has connected Telegram yet (home screen → Get alerts on Telegram)';
     } else if(data.connected){
       dot.className = 'dot on';
       const who = data.recipientCount===1 ? '1 person' : `${data.recipientCount} people`;
@@ -1225,6 +1256,7 @@ async function subLoad(){
   let d; try{ d = await storCall('GET','/billing'); }catch(e){ return; }
   if(!d || !d.billed) return;
   document.getElementById('subSection').hidden = false;
+  document.getElementById('tabSubBtn').style.display = '';
   document.getElementById('subBiz').textContent = d.businessName || 'Dreamour Multiventures';
   const s = d.state || {}, row=(l,ok,t)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(l)}</span><span>${esc(t)}</span></div>`;
   const days = n => n===1 ? '1 day' : n+' days';
@@ -1266,7 +1298,7 @@ async function subLoad(){
 }
 if(localStorage.getItem('ryst_demo')!=='1' && localStorage.getItem('ryst_user_admin')==='true') subLoad();
 // settings.html#subscription (from the billing banner) opens that section.
-if(location.hash==='#subscription'){ setTimeout(()=>{ const u=document.querySelector('.tab-btn[data-tab="users"]'); if(u && u.style.display!=='none'){ switchTab('users'); const el=document.getElementById('subscription'); if(el) el.scrollIntoView({block:'start'}); } }, 600); }
+if(location.hash==='#subscription'){ setTimeout(()=>{ const u=document.getElementById('tabSubBtn'); if(u && u.style.display!=='none'){ switchTab('subscription'); document.getElementById('cfgTabs').scrollIntoView({block:'start'}); } }, 900); }
 
 // ── Connections (this villa's own Interakt + Razorpay) ──
 function connRender(d){
@@ -1325,6 +1357,8 @@ function tokenVilla(){
   catch(e){ return 'ryst-109a'; }
 }
 if(tokenVilla()!=='ryst-109a') document.getElementById('platformOnly').style.display='none';
+// Data storage, Harbour billing and villas: the platform owner (an admin of RYST 109A) only.
+else if(localStorage.getItem('ryst_user_admin')==='true') document.getElementById('tabPlatformBtn').style.display='';
 function villaBillText(b){
   if(!b) return 'not billed';
   const d = n => n===1 ? '1 day' : n+' days';
@@ -1483,7 +1517,7 @@ document.getElementById('tgChatIdBtn').addEventListener('click', async ()=>{
     if(!data.chats || !data.chats.length){ out.innerHTML = '<div class="sync-result"><span>Chat ID</span><span>No messages yet — send "hi" to your bot on Telegram, then try again</span></div>'; return; }
     out.innerHTML = data.chats.map(c=>`<div class="sync-result"><span>${esc(c.name||'Chat')}</span><span>${esc(c.id)} <button type="button" class="rc-add" data-copy-chat-id="${esc(c.id)}" style="margin-left:8px">Copy</button></span></div>`).join('');
     out.querySelectorAll('[data-copy-chat-id]').forEach(b=>b.addEventListener('click', async ()=>{
-      try{ await navigator.clipboard.writeText(b.dataset.copyChatId); toast('Chat ID copied — paste it into that person\'s row in User Access below'); }
+      try{ await navigator.clipboard.writeText(b.dataset.copyChatId); toast('Chat ID copied — paste it into that person\'s row in the Team tab below'); }
       catch(e){ toast('Could not copy — chat ID is ' + b.dataset.copyChatId); }
     }));
   }catch(e){ out.innerHTML = '<div class="sync-result err">Could not reach the server</div>'; }
@@ -1862,7 +1896,7 @@ async function saveStay(){
   stay.walletGoogleEnabled=document.getElementById("stayWalletGoogle").checked;
   stay.declaration=document.getElementById("stayDecl").value;
   const gstErr = gstProblem();
-  if(gstErr){ toast(gstErr); btn.disabled=false; btn.textContent="Save stay settings"; document.getElementById('gstGstin').focus(); return; }
+  if(gstErr){ toast(gstErr); btn.disabled=false; btn.textContent="Save settings"; document.getElementById('gstGstin').focus(); return; }
   stay.gst = collectGst();
   stay.terms=(document.getElementById("stayTerms").value||"").split("\n").map(t=>t.trim()).filter(Boolean);
   if(!stay.terms.length) stay.terms=STAY_DEFAULTS.terms.slice();
@@ -1878,14 +1912,14 @@ async function saveStay(){
       if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
       if(!res.ok) toast("Saved locally — cloud sync failed ("+res.status+")");
       else {
-        toast("Stay settings saved");
+        toast("Settings saved");
         // Pages brand themselves from this cache first — update it now so the
         // new profile shows everywhere without waiting for the next refresh.
         try { localStorage.setItem(window.PROPERTY_CACHE_KEY || 'ryst_property', JSON.stringify(Object.assign({}, window.PROPERTY_DEFAULTS, prop))); } catch(e) {}
       }
     }catch(e){ toast("Saved locally — cloud unreachable"); }
   } else { toast("Saved locally"); }
-  btn.disabled=false; btn.textContent="Save stay settings";
+  btn.disabled=false; btn.textContent="Save settings";
   stayRcDraft=stay.rates.map(r=>({...r}));
   renderStayRates();
   stayHolDraft=stay.holidays.map(h=>({...h}));
@@ -2043,7 +2077,7 @@ function fillWebsite(d){
   webPhotos = (w.photos||[]).map(p=>({ url:p.url, caption:p.caption||'' }));
   $w('webPayNote').innerHTML = d.razorpayReady
     ? 'Your Razorpay account is connected — payments go straight to you.'
-    : 'Razorpay isn\'t connected yet, so guests send a booking request and you confirm on WhatsApp. Connect it under <b>User Access → Connections</b> to take payments online.';
+    : 'Razorpay isn\'t connected yet, so guests send a booking request and you confirm on WhatsApp. Connect it in the <b>Connections</b> tab to take payments online.';
   const host = d.serverHost || 'data.ryst.in';
   $w('webDomainHelp').innerHTML = `At your domain provider, add a <b>CNAME</b> record for your domain pointing to <code>${esc(host)}</code>. Then WhatsApp RYST Harbour support on <b>8608008608</b> to switch it on — the secure certificate is set up for you.`;
   renderWebPhotos(); renderWebLinks();

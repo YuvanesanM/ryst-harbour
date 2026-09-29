@@ -56,7 +56,7 @@
     'Petty Cash': 'சில்லறைச் செலவு', 'Caretaker expenses & reimbursements': 'பராமரிப்பாளர் செலவுகள் & திருப்பிச் செலுத்துதல்',
     'Inventory & Restock': 'இருப்பு & மறு நிரப்பல்', 'Consumables & shopping list': 'பயன்பாட்டுப் பொருட்கள் & வாங்க வேண்டிய பட்டியல்',
     'Profit & Loss': 'லாபம் & நஷ்டம்', 'Revenue vs. petty-cash spend': 'வருவாய் vs சில்லறைச் செலவு',
-    'Rate Card & Settings': 'கட்டண அட்டை & அமைப்புகள்', 'Pricing, bank details & business info': 'விலை, வங்கி விவரங்கள் & வணிகத் தகவல்',
+    'Settings': 'அமைப்புகள்', 'Business, tariffs, invoices, team & more': 'வணிகம், கட்டணங்கள், இன்வாய்ஸ்கள், குழு & மேலும்',
     '⎋ Log out': '⎋ வெளியேறு', '📲 Install RYST Harbour app': '📲 RYST Harbour செயலியை நிறுவு',
 
     // ── checklists ──
