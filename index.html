@@ -263,10 +263,10 @@ document.getElementById('yr').textContent = new Date().getFullYear();
 (function(){
   var FEATURES = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST invoices', prioritySupport:'Priority support' };
   var SOON = {};
-  var data = { gstPercent:18, pricesIncludeGst:false, annualMonths:10, minTermMonths:6, noticeDays:30, trialDays:14, plans:[
-    { key:'starter', name:'Starter', monthly:1499, annual:14990, setup:9999, features:['calendar','bookingSite','dashboard'] },
-    { key:'growth', name:'Growth', monthly:2499, annual:24990, setup:14999, features:['calendar','bookingSite','dashboard','whatsapp','caretaker'] },
-    { key:'pro', name:'Pro', monthly:3999, annual:39990, setup:24999, features:['calendar','bookingSite','dashboard','whatsapp','caretaker','gstInvoices','prioritySupport'] } ] };
+  var data = { gstPercent:18, pricesIncludeGst:false, annualMonths:10, minTermMonths:6, noticeDays:30, trialDays:7, plans:[
+    { key:'starter', name:'Starter', monthly:3499, annual:34990, setup:9999, features:['calendar','bookingSite','dashboard'] },
+    { key:'growth', name:'Growth', monthly:5499, annual:54990, setup:19999, features:['calendar','bookingSite','dashboard','whatsapp','caretaker'] },
+    { key:'pro', name:'Pro', monthly:7499, annual:74990, setup:29999, features:['calendar','bookingSite','dashboard','whatsapp','caretaker','gstInvoices','prioritySupport'] } ] };
   var cycle = 'monthly';
   function inr(n){ return '₹' + Number(n || 0).toLocaleString('en-IN'); }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
