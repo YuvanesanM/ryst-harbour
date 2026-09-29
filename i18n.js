@@ -216,7 +216,15 @@
     'This check-in link has expired or is invalid — please sign in with Google to find your booking.': 'இந்தச் செக்-இன் இணைப்பு காலாவதியானது அல்லது தவறானது — உங்கள் முன்பதிவைக் கண்டறிய Google மூலம் உள்நுழையவும்.',
     'Verifying…': 'சரிபார்க்கிறது…', 'Could not reach the server — check your connection.': 'சர்வரை அணுக முடியவில்லை — இணைய இணைப்பைச் சரிபார்க்கவும்.',
     "We couldn't match this Google account to an upcoming booking or staff account. If you have a check-in link from WhatsApp, please use that instead.": 'இந்த Google கணக்கை வரவிருக்கும் முன்பதிவுடன் பொருத்த முடியவில்லை. WhatsApp-இல் வந்த செக்-இன் இணைப்பு இருந்தால் அதைப் பயன்படுத்தவும்.',
-    'Could not load Google Sign-In — check your connection or disable ad blockers.': 'Google உள்நுழைவை ஏற்ற முடியவில்லை — இணைப்பைச் சரிபார்க்கவும் அல்லது விளம்பரத் தடுப்பானை நிறுத்தவும்.'
+    'Could not load Google Sign-In — check your connection or disable ad blockers.': 'Google உள்நுழைவை ஏற்ற முடியவில்லை — இணைப்பைச் சரிபார்க்கவும் அல்லது விளம்பரத் தடுப்பானை நிறுத்தவும்.',
+
+    // ── Connect Telegram (home) ──
+    '🔔 Get alerts on Telegram': '🔔 Telegram-இல் அறிவிப்புகளைப் பெறுங்கள்', '🔔 Reconnect Telegram': '🔔 Telegram-ஐ மீண்டும் இணைக்கவும்',
+    'Open Telegram': 'Telegram-ஐத் திற',
+    'Tap the button, then press Start in Telegram. Come back here when done.': 'பொத்தானைத் தட்டி, Telegram-இல் Start அழுத்தவும். முடிந்ததும் இங்கே திரும்பி வாருங்கள்.',
+    'The link expired — tap the button again.': 'இணைப்பு காலாவதியானது — பொத்தானை மீண்டும் தட்டவும்.',
+    'Telegram connected — your alerts will come there.': 'Telegram இணைக்கப்பட்டது — உங்கள் அறிவிப்புகள் அங்கே வரும்.',
+    'Could not start —': 'தொடங்க முடியவில்லை —'
   };
   var VILLA_TYPES = { 'beach villa': 'கடற்கரை வில்லா', 'pool villa': 'நீச்சல் குள வில்லா', 'villa': 'வில்லா', 'farm stay': 'பண்ணை வீடு', 'farmhouse': 'பண்ணை வீடு', 'cottage': 'குடில்', 'homestay': 'ஹோம்ஸ்டே' };
 

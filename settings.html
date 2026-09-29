@@ -397,8 +397,8 @@
     <div class="sync-results" id="waWebhookResults" style="margin-bottom:22px"></div>
 
     <p class="gh-mini">Telegram notify setup</p>
-    <p class="sd" style="margin-bottom:12px">One-time setup on Render: message <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> on Telegram, send <code>/newbot</code>, and set the token it gives you as <code>TELEGRAM_BOT_TOKEN</code> (a Render environment variable — not set from here). Each person who wants alerts then sends "hi" to the new bot from their own Telegram account, uses the button below to find their chat ID, and an admin enters it against their name in <b>Settings → User Access</b> — along with which of the 12 alert types they want to receive.</p>
-    <div class="rc-foot" style="margin-top:0;margin-bottom:10px">
+    <p class="sd" style="margin-bottom:12px">One-time setup on Render: message <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> on Telegram, send <code>/newbot</code>, and set the token it gives you as <code>TELEGRAM_BOT_TOKEN</code> (a Render environment variable — not set from here). Each person who wants alerts then taps <b>🔔 Get alerts on Telegram</b> on the home screen and presses Start in Telegram — that's all; their chat is saved against their own name. Which alerts each person gets is set in <b>Settings → User Access</b>.</p>
+    <div class="rc-foot" style="margin-top:0;margin-bottom:10px" id="tgChatIdRow">
       <button class="btn" id="tgChatIdBtn">Find a chat ID</button>
     </div>
     <div class="sync-results" id="tgChatIdResults" style="margin-bottom:18px"></div>
@@ -1396,6 +1396,8 @@ document.getElementById('billSave').addEventListener('click', async e=>{
   finally{ b.disabled=false; b.textContent=t; }
 });
 if(tokenVilla()==='ryst-109a' && localStorage.getItem('ryst_demo')!=='1' && localStorage.getItem('ryst_user_admin')==='true') billCfgLoad();
+// "Find a chat ID" lists everyone who has messaged the shared bot — the platform owner's tool only.
+if(tokenVilla()!=='ryst-109a'){ const r=document.getElementById('tgChatIdRow'); if(r) r.style.display='none'; }
 async function villaList(){
   const out=document.getElementById('villaResults');
   try{ const d=await storCall('GET','/platform/villas'); out.innerHTML=villaRows(d.villas||[]); }

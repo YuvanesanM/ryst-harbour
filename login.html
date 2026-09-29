@@ -89,6 +89,10 @@
   .install-app-btn{margin-top:14px;background:#0e2420;color:#f6f1e6;border:0;padding:11px 22px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.3px;display:inline-flex;align-items:center;gap:8px}
   .install-app-btn[hidden]{display:none}
   .logout-btn:hover{border-color:var(--danger,#c0584b);color:var(--danger,#c0584b)}
+  .tgc{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:360px;text-align:center}
+  .tgc-btn{background:var(--panel,#fff);border:1.5px solid var(--accent);color:var(--accent-d);padding:11px 20px;border-radius:10px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer}
+  .tgc-open{display:inline-block;background:#229ed9;color:#fff;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:600;font-size:13.5px}
+  .tgc-msg{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0}
   @media(max-width:600px){
     #homeView{overflow-y:auto;justify-content:flex-start;padding-top:32px;padding-bottom:32px}
     .home-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
@@ -209,6 +213,10 @@
       <span class="hc-sub">Pricing, bank details &amp; business info</span>
     </button>
   </div>
+  <div class="tgc" id="tgcBox">
+    <button type="button" class="tgc-btn" id="tgcBtn">🔔 Get alerts on Telegram</button>
+    <div id="tgcStep"></div>
+  </div>
   <button type="button" class="install-app-btn" hidden>📲 Install RYST Harbour app</button>
   <button id="logoutBtn" class="logout-btn" type="button">⎋ Log out</button>
   <button type="button" class="logout-btn" data-lang-toggle>தமிழ்</button>
@@ -237,6 +245,37 @@
 })();
 const PROXY_URL = 'https://data.ryst.in';
 let proxyToken = localStorage.getItem('ryst_proxy_token') || '';
+
+// ── Connect Telegram ── one tap: the server gives a one-time t.me link, the
+// person presses Start in Telegram, and their chat is saved against their own
+// user — no chat IDs to find or copy. Polls until Telegram says they did.
+(function(){
+  const btn = document.getElementById('tgcBtn'), step = document.getElementById('tgcStep');
+  const t = s => (window.rystT ? window.rystT(s) : s);
+  let polling = null;
+  const msg = (text, extra) => { step.innerHTML = (extra || '') + `<p class="tgc-msg">${text}</p>`; };
+  btn.addEventListener('click', async () => {
+    const token = localStorage.getItem('ryst_proxy_token') || '';
+    btn.disabled = true; clearInterval(polling);
+    try{
+      const res = await fetch(PROXY_URL + '/telegram/connect', { method:'POST', headers:{ 'X-Token': token } });
+      const d = await res.json().catch(() => ({}));
+      if(!res.ok) throw new Error(d.error || ('HTTP ' + res.status));
+      msg(t('Tap the button, then press Start in Telegram. Come back here when done.'),
+        `<a class="tgc-open" href="${d.link.replace(/"/g,'')}" target="_blank" rel="noopener">${t('Open Telegram')}</a>`);
+      const until = Date.now() + 15 * 60 * 1000;
+      polling = setInterval(async () => {
+        if(Date.now() > until){ clearInterval(polling); msg(t('The link expired — tap the button again.')); btn.disabled = false; return; }
+        try{
+          const r = await fetch(PROXY_URL + '/telegram/connect?code=' + encodeURIComponent(d.code), { headers:{ 'X-Token': token }, cache:'no-store' });
+          const j = await r.json().catch(() => ({}));
+          if(j.connected){ clearInterval(polling); msg('✅ ' + t('Telegram connected — your alerts will come there.')); btn.textContent = t('🔔 Reconnect Telegram'); btn.disabled = false; }
+          else if(!r.ok && r.status !== 429){ clearInterval(polling); msg(j.error || ('HTTP ' + r.status)); btn.disabled = false; }
+        }catch(e){ /* offline for a moment — keep waiting */ }
+      }, 4000);
+    }catch(e){ msg(t('Could not start —') + ' ' + e.message); btn.disabled = false; }
+  });
+})();
 
 function showHome(){
   // Swap views immediately — no network wait
