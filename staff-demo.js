@@ -20,6 +20,7 @@
     { no:'DEMO/QT/003', type:'quote', guest:'Sample Guest C', phone:'+919000000003', email:'guest.c@example.com', guests:12, checkin:iso(6), checkout:iso(7), date:iso(-1), advance:10000, items:villa(36000,1) },
     { no:'DEMO/INV/004', type:'invoice', guest:'Sample Guest D', phone:'+919000000004', email:'guest.d@example.com', guests:4, checkin:iso(-5), checkout:iso(-3), date:iso(-20), advance:60000, items:villa(30000,2), mode:'Razorpay' },
     { no:'DEMO/BLK/005', type:'block', guest:'Airbnb', source:'airbnb', checkin:iso(10), checkout:iso(12) },
+    { no:'BLOCK-demo-maint', type:'block', guest:'Maintenance', checkin:iso(18), checkout:iso(19) },
     // Earlier stays, so the dashboard and reports have a few months of history.
     { no:'DEMO/INV/101', type:'invoice', guest:'Sample Guest F', guests:8, channel:'Website', mode:'Razorpay', checkin:iso(-33), checkout:iso(-31), date:iso(-45), advance:72000, items:villa(36000,2) },
     { no:'DEMO/INV/102', type:'invoice', guest:'Sample Guest G', guests:12, channel:'Airbnb', mode:'Bank transfer', checkin:iso(-47), checkout:iso(-44), date:iso(-60), advance:108000, items:villa(36000,3) },

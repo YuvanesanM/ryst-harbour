@@ -50,11 +50,15 @@
     return l.indexOf('airbnb') >= 0 ? 'Airbnb' : l.indexOf('booking') >= 0 ? 'Booking.com' : l.indexOf('agoda') >= 0 ? 'Agoda'
       : l.indexOf('makemytrip') >= 0 || l.indexOf('mmt') >= 0 ? 'MakeMyTrip' : (l.indexOf('vrbo') >= 0 || l.indexOf('homeaway') >= 0) ? 'VRBO' : 'OTA';
   }
+  // Calendar-sync imports carry source:<feedId> (no "OTA-…"); "Block dates"
+  // entries (maintenance, owner use) have neither and are not bookings.
+  function isOtaBlock(s) { return typeOf(s) === 'block' && (!!s.source || String(s.no || '').indexOf('OTA-') === 0); }
   function nightsIn(stays, start, end) {
     var booked = {}, bookedN = 0, otaNights = {}, ota = 0;
     stays.forEach(function (s) {
       if (!s.checkin || !s.checkout) return;
       var n = Math.min(nightsBetween(s.checkin, s.checkout), 400), isBlock = typeOf(s) === 'block';
+      if (isBlock && !isOtaBlock(s)) return;
       if (!isBlock && (!committed(s) || isConverted(s, stays))) return;
       for (var i = 0; i < n; i++) {
         var d = addDays(s.checkin, i);
@@ -112,7 +116,7 @@
   function stayList() {
     if (D.stays) {
       var all = Array.isArray(D.stays.stays) ? D.stays.stays : [];
-      return all.filter(function (s) { return s && s.checkin && s.checkout && (typeOf(s) === 'block' || (committed(s) && !isConverted(s, all))); })
+      return all.filter(function (s) { return s && s.checkin && s.checkout && (isOtaBlock(s) || (typeOf(s) !== 'block' && committed(s) && !isConverted(s, all))); })
         .map(function (s) {
           var block = typeOf(s) === 'block', total = grandTotal(s), paid = num(s.advance), ci = s.checkinInfo || null;
           return { no: s.no, block: block, guest: block ? otaName(s.guest) + ' booking' : (s.guest || 'Guest'), guests: s.guests || '',
@@ -128,6 +132,11 @@
       });
     }
     return null;
+  }
+  // Manual blocks ("Block dates") holding the villa today — shown as a note, never as a stay.
+  function manualBlocksToday() {
+    var all = D.stays && Array.isArray(D.stays.stays) ? D.stays.stays : [];
+    return all.filter(function (s) { return s && typeOf(s) === 'block' && !isOtaBlock(s) && s.checkin <= TODAY && s.checkout > TODAY; });
   }
   function runFor(stayNo, type) {
     var runs = D.cl && Array.isArray(D.cl.runs) ? D.cl.runs : [];
@@ -220,6 +229,8 @@
       var next = list.filter(function (s) { return s.checkin > TODAY; }).sort(function (a, b) { return a.checkin.localeCompare(b.checkin); })[0];
       html = '<div class="empty">' + ICON('ok') + '<span>' + esc(t('No check-ins or check-outs today.')) + (next ? ' ' + esc(t('Next arrival')) + ': <b>' + esc(next.guest) + '</b>, ' + esc(fmtDay(next.checkin)) + '.' : '') + '</span></div>';
     }
+    var held = manualBlocksToday();
+    if (held.length) html += '<p class="note">' + esc(t('Blocked today')) + ': ' + held.map(function (s) { var last = addDays(s.checkout, -1); return esc(s.guest || 'Blocked') + (last > TODAY ? ' (' + esc(t('until')) + ' ' + esc(fmtDay(last)) + ')' : ''); }).join(', ') + '</p>';
     if (inHouse.length) html += '<p class="note">' + esc(t('In house')) + ': ' + inHouse.map(function (s) { return esc(s.guest) + ' (' + esc(t('leaves')) + ' ' + esc(fmtDay(s.checkout)) + ')'; }).join(', ') + '</p>';
     setHTML('todayBody', html);
   }

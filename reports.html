@@ -559,7 +559,9 @@ function buildRows(){
       adr: nights ? total/nights : 0,
       channel: channelOf(s), channelBucket: channelBucket(s),
       payStatus: type==='block' ? null : payStatusOf(s),
-      otaPlatform: type==='block' ? otaPlatformOf(s.guest) : null,
+      // Only calendar-sync imports (source:<feedId>) are OTA holds; "Block dates"
+      // entries (maintenance, owner use) stay blocked nights with no platform.
+      otaPlatform: type==='block' && (s.source || String(s.no||'').startsWith('OTA-')) ? otaPlatformOf(s.guest) : null,
       savedAt: s.savedAt||null, leadDays: leadDaysOf(s),
       converted: isConvertedQuote(s, STAYS),
       committed: isCommitted(s),
