@@ -124,7 +124,7 @@
         var s = steps[i++];
         s.classList.add('is-shown');
         if (s.classList.contains('typing')) setTimeout(function () { s.classList.remove('is-shown'); next(); }, 900);
-        else setTimeout(next, s.classList.contains('bubble--out') ? 1100 : 700);
+        else setTimeout(next, s.classList.contains('wa-msg') ? 1000 : 450);
       })();
     }, '0px 0px -20% 0px');
   });
@@ -214,11 +214,29 @@
         return '<article class="plan' + (pop ? ' plan--featured' : '') + '">'
           + '<h3 class="plan__name">' + esc(p.name) + (pop ? ' <span class="plan__badge">Popular</span>' : '') + '</h3>'
           + '<p class="plan__price"><b>' + inr(cycle === 'annual' ? p.annual : p.monthly) + '</b><span>/ ' + (cycle === 'annual' ? 'year' : 'month') + ' ' + tax + '</span></p>'
+          + (cycle === 'annual' && p.monthly ? '<p class="plan__note">≈ ' + inr(p.annual / 12) + ' / month · save ' + inr(p.monthly * 12 - p.annual) + ' a year</p>' : '')
           + '<p class="plan__setup">+ ' + inr(p.setup) + ' one-time setup</p>'
           + '<ul>' + (prev ? '<li>' + tick + 'Everything in ' + esc(prev.name) + '</li>' : '') + feats.map(function (f) { return '<li>' + tick + esc(FEATURES[f] || f) + '</li>'; }).join('') + '</ul>'
           + '<a class="btn' + (pop ? '' : ' btn--secondary') + '" href="' + WA + encodeURIComponent('Hi, I\'m interested in the RYST Harbour ' + p.name + ' plan for my villa.') + '" target="_blank" rel="noopener">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>'
           + '</article>';
       }).join('');
+      // Side-by-side comparison, built from the same plan data as the cards.
+      var table = $('#ptable');
+      if (table) {
+        var keys = Object.keys(FEATURES);
+        data.plans.forEach(function (p) { (p.features || []).forEach(function (f) { if (keys.indexOf(f) < 0) keys.push(f); }); });
+        var yes = '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span class="sr-only">Included</span>';
+        var no = '<span class="ptable__no" aria-hidden="true">—</span><span class="sr-only">Not included</span>';
+        var row = function (label, cells) { return '<tr><th scope="row">' + label + '</th>' + cells.join('') + '</tr>'; };
+        var cls = function (p) { return p.key === featured ? ' class="is-featured"' : ''; };
+        table.innerHTML = '<caption class="sr-only">Compare plans</caption><thead><tr><td></td>'
+          + data.plans.map(function (p) { return '<th scope="col"' + cls(p) + '>' + esc(p.name) + '</th>'; }).join('') + '</tr></thead><tbody>'
+          + row('Monthly', data.plans.map(function (p) { return '<td' + cls(p) + '>' + inr(p.monthly) + '</td>'; }))
+          + row('Annual', data.plans.map(function (p) { return '<td' + cls(p) + '>' + inr(p.annual) + '</td>'; }))
+          + row('One-time setup', data.plans.map(function (p) { return '<td' + cls(p) + '>' + inr(p.setup) + '</td>'; }))
+          + keys.map(function (f) { return row(esc(FEATURES[f] || f), data.plans.map(function (p) { return '<td' + cls(p) + '>' + ((p.features || []).indexOf(f) >= 0 ? yes : no) + '</td>'; })); }).join('')
+          + '</tbody>';
+      }
       var free = 12 - data.annualMonths;
       $('#terms').textContent = 'Per villa. ' + (data.pricesIncludeGst ? 'Prices include GST. ' : 'GST extra (' + data.gstPercent + '%). ')
         + 'Annual billing gets ' + free + ' months free. ' + (data.minTermMonths ? data.minTermMonths + '-month minimum term, ' : '') + (data.noticeDays ? data.noticeDays + ' days\' notice. ' : '')
