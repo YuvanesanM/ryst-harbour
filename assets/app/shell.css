@@ -11,11 +11,12 @@
   display:none;
 }
 @media (min-width:1024px){
-  html.has-hsb{padding-left:236px}
-  html.has-hsb #loader{left:236px}
-  html.has-hsb .ob-cartbar.show{left:236px}
+  html.has-hsb{--hsb-cur:236px;padding-left:var(--hsb-cur)}
+  html.has-hsb.hsb-collapsed{--hsb-cur:64px}
+  html.has-hsb #loader{left:var(--hsb-cur)}
+  html.has-hsb .ob-cartbar.show{left:var(--hsb-cur)}
   .hsb{
-    position:fixed;inset:0 auto 0 0;z-index:25;width:var(--hsb-w);display:flex;flex-direction:column;overflow-y:auto;
+    position:fixed;inset:0 auto 0 0;z-index:25;width:var(--hsb-cur,236px);display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;
     background:var(--paper);border-right:1px solid var(--line);
     font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Tamil",sans-serif;font-size:14px;line-height:1.45;color:var(--ink);
     -webkit-font-smoothing:antialiased;text-align:left;
@@ -23,12 +24,18 @@
 }
 .hsb *,.hsb *::before,.hsb *::after{box-sizing:border-box;margin:0}
 .hsb a{color:inherit;text-decoration:none}
-.hsb__brand{display:flex;align-items:center;height:var(--hsb-h);padding:0 22px;flex:none;font-size:12.5px;font-weight:650;letter-spacing:.22em;border-bottom:1px solid var(--line-2)}
+.hsb__top{display:flex;align-items:center;gap:8px;height:var(--hsb-h);padding:0 10px 0 22px;flex:none;border-bottom:1px solid var(--line-2)}
+.hsb__brand{flex:1;min-width:0;font-size:12.5px;font-weight:650;letter-spacing:.22em;white-space:nowrap;overflow:hidden}
+.hsb__toggle{flex:none;width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}
+.hsb__toggle:hover{background:rgba(23,23,23,.06);color:var(--ink)}
+.hsb__toggle:focus-visible{outline:2px solid #547A76;outline-offset:1px}
+.hsb__toggle .hsb__i{color:inherit;transition:transform .2s}
 .hsb__nav{display:grid;gap:1px;padding:12px 10px 24px}
 .hsb__group{display:grid;gap:1px;margin-top:14px}
 .hsb__group[hidden],.hsb__link[hidden]{display:none}
 .hsb__label{padding:6px 12px 4px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.hsb__link{display:flex;align-items:center;gap:11px;min-height:36px;padding:0 12px;border-radius:8px;color:var(--text-2);font-weight:500;transition:background .15s,color .15s}
+.hsb__link{display:flex;align-items:center;gap:11px;min-height:36px;padding:0 12px;border-radius:8px;color:var(--text-2);font-weight:500;white-space:nowrap;transition:background .15s,color .15s}
+.hsb__link span{overflow:hidden;text-overflow:ellipsis}
 .hsb__link:hover{background:rgba(23,23,23,.045);color:var(--ink)}
 .hsb__link:focus-visible{outline:2px solid #547A76;outline-offset:1px}
 .hsb__link[aria-current="page"]{background:var(--white);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
@@ -37,6 +44,21 @@
 .hsb__foot{margin-top:auto;padding:12px 22px 16px;border-top:1px solid var(--line-2);font-size:12px;color:var(--muted)}
 .hsb__foot b{display:block;color:var(--text-2);font-weight:600;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body.hsb-demo .hsb{padding-bottom:56px}
+
+/* Collapsed: an icon rail. Labels stay in the DOM for screen readers and
+   show as a tooltip (title) on hover. */
+html.hsb-collapsed .hsb__top{padding:0;justify-content:center}
+html.hsb-collapsed .hsb__brand,
+html.hsb-collapsed .hsb__link span,
+html.hsb-collapsed .hsb__foot{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+html.hsb-collapsed .hsb__toggle .hsb__i{transform:scaleX(-1)}
+html.hsb-collapsed .hsb__nav{padding:12px 10px 24px}
+html.hsb-collapsed .hsb__link{justify-content:center;padding:0}
+html.hsb-collapsed .hsb__label{height:1px;padding:0;margin:6px 8px 7px;background:var(--line);font-size:0}
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference){
+  html.hsb-ready.has-hsb{transition:padding-left .2s ease}
+  html.hsb-ready .hsb{transition:width .2s ease}
+}
 
 @media print{
   .hsb{display:none!important}

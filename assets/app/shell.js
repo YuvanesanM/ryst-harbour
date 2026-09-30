@@ -15,9 +15,13 @@
   // the automatic sidebar (data-hsb-manual) and mounts it once signed in.
   var manual = doc.documentElement.hasAttribute('data-hsb-manual');
   var mounted = false;
+  // Collapsed to an icon rail? Remembered per browser; set now so there's no jump.
+  if (ls('ryst_sidebar') === 'collapsed') doc.documentElement.classList.add('hsb-collapsed');
+  var collapsed = function () { return doc.documentElement.classList.contains('hsb-collapsed'); };
 
   var ICONS = {
     home: '<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+    panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15.5 10l-2 2 2 2"/>',
     cal: '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
     users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
@@ -78,7 +82,7 @@
     var svg = function (i) { return '<svg class="hsb__i" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[i] + '</svg>'; };
     var html = NAV.map(function (g) {
       var links = g.items.map(function (i) {
-        return '<a class="hsb__link" href="' + i[0] + '"' + (i[3] ? ' data-module="' + i[3] + '"' : '') + (i[0] === cur ? ' aria-current="page"' : '')
+        return '<a class="hsb__link" href="' + i[0] + '" title="' + esc(label(i[2])) + '"' + (i[3] ? ' data-module="' + i[3] + '"' : '') + (i[0] === cur ? ' aria-current="page"' : '')
           + (allowed(i[3], acc) ? '' : ' hidden') + '>' + svg(i[1]) + '<span' + (i[2] === '{restaurantName}' ? ' data-hsb-rest' : '') + '>' + esc(label(i[2])) + '</span></a>';
       }).join('');
       if (!g.label) return links;
@@ -89,10 +93,28 @@
     var aside = doc.querySelector('.hsb') || doc.createElement('aside');
     aside.className = 'hsb';
     aside.setAttribute('aria-label', 'Harbour');
-    aside.innerHTML = '<a class="hsb__brand" href="login.html">RYST HARBOUR</a><nav class="hsb__nav" aria-label="Modules">' + html + '</nav>'
+    aside.id = 'hsb';
+    aside.innerHTML = '<div class="hsb__top"><a class="hsb__brand" href="login.html">RYST HARBOUR</a>'
+      + '<button type="button" class="hsb__toggle" aria-controls="hsb" aria-expanded="' + !collapsed() + '" aria-label="' + (collapsed() ? 'Expand sidebar' : 'Collapse sidebar') + '" title="' + (collapsed() ? 'Expand sidebar' : 'Collapse sidebar') + '">' + svg('panel') + '</button></div>'
+      + '<nav class="hsb__nav" aria-label="Modules">' + html + '</nav>'
       + '<div class="hsb__foot" data-no-i18n><b data-hsb-villa>' + esc(villa) + '</b>' + esc(email) + '</div>';
     if (!aside.parentNode) doc.body.insertBefore(aside, doc.body.firstChild);
+    $toggle(aside);
+    // Animate only user toggles, never the first paint.
+    setTimeout(function () { doc.documentElement.classList.add('hsb-ready'); }, 50);
     doc.body.classList.toggle('hsb-demo', ls('ryst_demo') === '1');
+  }
+  function $toggle(aside) {
+    var b = aside.querySelector('.hsb__toggle');
+    b.addEventListener('click', function () {
+      var c = !collapsed();
+      doc.documentElement.classList.toggle('hsb-collapsed', c);
+      try { localStorage.setItem('ryst_sidebar', c ? 'collapsed' : 'open'); } catch (e) {}
+      b.setAttribute('aria-expanded', String(!c));
+      b.setAttribute('aria-label', c ? 'Expand sidebar' : 'Collapse sidebar');
+      b.title = c ? 'Expand sidebar' : 'Collapse sidebar';
+      try { window.dispatchEvent(new Event('resize')); } catch (e) {}
+    });
   }
   function refreshProperty() {
     var p = window.PROPERTY || {};
