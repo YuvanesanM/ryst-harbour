@@ -227,7 +227,7 @@ async function api(method, body){
 }
 async function load(){
   const loader=$('#loader'), msg=$('#loaderMsg'); loader.classList.remove('hide'); $('#loaderSpin').style.display=''; $('#loaderRetry').style.display='none'; msg.textContent='Loading issues…';
-  const slow = setTimeout(()=>{ msg.textContent='Waking up the server… this can take up to a minute.'; }, 4000);
+  const slow = setTimeout(()=>{ msg.textContent='Still loading… the first open of the day can take up to a minute.'; }, 4000);
   try{ const d = await api('GET'); ISSUES = Array.isArray(d.issues)?d.issues:[]; render(); loader.classList.add('hide'); }
   catch(e){ $('#loaderSpin').style.display='none'; msg.textContent = e.message; $('#loaderRetry').style.display=''; }
   finally{ clearTimeout(slow); }

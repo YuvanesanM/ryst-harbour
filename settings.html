@@ -85,7 +85,10 @@
   .user-tg{margin:10px 2px 2px;padding-top:8px;border-top:1px solid var(--line)}
   .user-tg-id{display:flex;align-items:center;gap:8px;margin-bottom:8px}
   .user-tg-id span{font-size:11.5px;color:var(--muted);white-space:nowrap}
-  .user-tg-id input.t{flex:1}
+  .user-tg-id b{font-size:12px;font-weight:600}
+  .user-tg-id b.on{color:var(--accent-d)}
+  .user-tg-id small{font-size:11.5px;color:var(--muted)}
+  .user-tg-id .tg-off{margin-left:auto;background:none;border:0;padding:0;font:inherit;font-size:11.5px;color:var(--danger);text-decoration:underline;cursor:pointer}
   .user-tg-alerts{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
   .user-err{color:var(--danger);font-size:12.5px;min-height:16px;margin-top:2px}
   .chk-toggle{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;white-space:nowrap}
@@ -420,7 +423,7 @@
 
     <p class="gh-mini">Telegram notify setup</p>
     <p class="sd" style="margin-bottom:12px">One-time setup on Render: message <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> on Telegram, send <code>/newbot</code>, and set the token it gives you as <code>TELEGRAM_BOT_TOKEN</code> (a Render environment variable — not set from here). Each person who wants alerts then taps <b>🔔 Get alerts on Telegram</b> on the home screen and presses Start in Telegram — that's all; their chat is saved against their own name. Which alerts each person gets is set in the <b>Team</b> tab.</p>
-    <div class="rc-foot" style="margin-top:0;margin-bottom:10px" id="tgChatIdRow">
+    <div class="rc-foot" style="margin-top:0;margin-bottom:10px;display:none" id="tgChatIdRow">
       <button class="btn" id="tgChatIdBtn">Find a chat ID</button>
     </div>
     <div class="sync-results" id="tgChatIdResults" style="margin-bottom:18px"></div>
@@ -762,7 +765,7 @@ function hasModule(mod){
   if(hasCache){ loader.classList.add('hide'); saveBtn.disabled = false; }
 
   const ctrl = new AbortController();
-  const slowTimer = setTimeout(() => { if(!hasCache) msgEl.textContent = 'Waking up the server… this can take up to a minute.'; }, 4000);
+  const slowTimer = setTimeout(() => { if(!hasCache) msgEl.textContent = 'Still loading… the first open of the day can take up to a minute.'; }, 4000);
   const abortTimer = setTimeout(() => ctrl.abort(), 75000);
   try{
     const res = await fetch(PROXY_URL+'/stay-settings',{headers:{'X-Token':proxyToken}, signal: ctrl.signal});
@@ -1689,7 +1692,9 @@ function renderUserRows(){
     const tgDisabled = Array.isArray(u.telegramDisabledTypes) ? u.telegramDisabledTypes : [];
     const tgHtml = `
       <div class="user-tg">
-        <div class="user-tg-id"><span>Telegram chat ID</span><input class="t" data-i="${i}" data-k="telegramChatId" placeholder="optional — leave blank for no Telegram alerts" value="${esc(u.telegramChatId||'')}"></div>
+        <div class="user-tg-id"><span>Telegram</span>${(u.telegramChatId||'').trim()
+          ? `<b class="on">✓ Connected</b><button type="button" class="tg-off" data-tg-off="${i}">Disconnect</button>`
+          : `<b>Not connected</b><small>— they tap 🔔 Get alerts on Telegram on their home screen</small>`}</div>
         <div class="user-tg-alerts">
           ${TELEGRAM_ALERT_TYPES.map(t=>`<label class="mod-chk"><input type="checkbox" data-i="${i}" data-tg="${t.key}" ${!tgDisabled.includes(t.key)?'checked':''}> ${esc(t.label)}</label>`).join('')}
         </div>
@@ -1742,8 +1747,8 @@ function renderUserRows(){
       u.modules = mods;
     });
   });
-  wrap.querySelectorAll('input[data-k="telegramChatId"]').forEach(inp=>{
-    inp.addEventListener('input', e=>{ usersDraft[+e.target.dataset.i].telegramChatId = e.target.value; });
+  wrap.querySelectorAll('[data-tg-off]').forEach(b=>{
+    b.addEventListener('click', ()=>{ usersDraft[+b.dataset.tgOff].telegramChatId = ''; renderUserRows(); toast('Telegram disconnected — save to apply'); });
   });
   wrap.querySelectorAll('.user-tg-alerts input[data-tg]').forEach(chk=>{
     chk.addEventListener('change', e=>{

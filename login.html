@@ -394,7 +394,7 @@ async function handleGoogleLogin(credentialResponse) {
   // user informed, but abort after 70s so the UI never hangs on 'Verifying…'.
   const ctrl = new AbortController();
   const slowTimer = setTimeout(() => {
-    errEl.textContent = 'Waking up the server… this can take up to a minute.';
+    errEl.textContent = 'Still loading… the first open of the day can take up to a minute.';
   }, 4000);
   const abortTimer = setTimeout(() => ctrl.abort(), 70000);
   try {

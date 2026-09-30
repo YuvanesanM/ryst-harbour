@@ -454,7 +454,7 @@ function toast(msg, isErr){
 // ── API ──
 async function api(method, payload){
   const ctrl=new AbortController();
-  const slow=setTimeout(()=>{ $('#loaderMsg').textContent='Waking up the server… up to a minute.'; }, 4000);
+  const slow=setTimeout(()=>{ $('#loaderMsg').textContent='Still loading… the first open of the day can take up to a minute.'; }, 4000);
   const abort=setTimeout(()=>ctrl.abort(), 75000);
   try{
     const opts={ method, headers:{'X-Token':TOKEN}, signal:ctrl.signal };

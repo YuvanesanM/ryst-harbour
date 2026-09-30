@@ -682,7 +682,7 @@ async function load(){
   msgEl.textContent = 'Loading restaurant data…';
 
   const ctrl = new AbortController();
-  const slowTimer = setTimeout(() => { msgEl.textContent = 'Waking up the server… this can take up to a minute.'; }, 4000);
+  const slowTimer = setTimeout(() => { msgEl.textContent = 'Still loading… the first open of the day can take up to a minute.'; }, 4000);
   const abortTimer = setTimeout(() => ctrl.abort(), 75000);
   try{
     const res = await fetch(PROXY_URL+'/restaurant', { headers:{'X-Token':TOKEN}, signal: ctrl.signal });

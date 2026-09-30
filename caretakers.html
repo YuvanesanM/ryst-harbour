@@ -215,7 +215,7 @@ async function get(path){
 
 let TEAM = null, RUNS = [], ISSUES = [], PETTY = [], ERR = '';
 async function load(){
-  const slow = setTimeout(()=>{ if(!TEAM) $('#list').innerHTML = '<p class="loadmsg">' + esc(t('Waking up the server… this can take up to a minute.')) + '</p>'; }, 4000);
+  const slow = setTimeout(()=>{ if(!TEAM) $('#list').innerHTML = '<p class="loadmsg">' + esc(t('Still loading… the first open of the day can take up to a minute.')) + '</p>'; }, 4000);
   // Activity is best-effort: a villa without the caretaker plan (or a
   // transient error) still gets the roster.
   const opt = (path, pick) => get(path).then(pick, () => []);
