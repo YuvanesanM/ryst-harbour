@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=32542b06">
-<script src="/assets/app/shell.js?v=653b1617"></script>
+<script src="/assets/app/shell.js?v=b6257650"></script>
 <title data-title="Settings — {name}">Settings — RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1300,6 +1300,7 @@ async function subLoad(){
 }
 if(localStorage.getItem('ryst_demo')!=='1' && localStorage.getItem('ryst_user_admin')==='true') subLoad();
 // settings.html#subscription (from the billing banner) opens that section.
+if(location.hash==='#team'){ setTimeout(()=>{ const u=document.getElementById('tabUserBtn'); if(u && u.style.display!=='none'){ switchTab('users'); document.getElementById('cfgTabs').scrollIntoView({block:'start'}); } }, 900); }
 if(location.hash==='#subscription'){ setTimeout(()=>{ const u=document.getElementById('tabSubBtn'); if(u && u.style.display!=='none'){ switchTab('subscription'); document.getElementById('cfgTabs').scrollIntoView({block:'start'}); } }, 900); }
 
 // ── Connections (this villa's own Interakt + Razorpay) ──

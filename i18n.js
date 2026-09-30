@@ -53,6 +53,7 @@
     'Guest Register': 'விருந்தினர் பதிவேடு', 'Upcoming stays, notes & payment status': 'வரவிருக்கும் தங்கல்கள், குறிப்புகள் & கட்டண நிலை',
     'Guest Feedback': 'விருந்தினர் கருத்து', 'Post-stay reviews & ratings': 'தங்கலுக்குப் பிந்தைய மதிப்புரைகள் & மதிப்பீடுகள்',
     'Restaurant billing, menu & inventory': 'உணவக பில், மெனு & இருப்பு',
+    'Caretakers': 'பராமரிப்பாளர்கள்', 'Your team at the villa': 'வில்லாவில் உங்கள் குழு',
     'Petty Cash': 'சில்லறைச் செலவு', 'Caretaker expenses & reimbursements': 'பராமரிப்பாளர் செலவுகள் & திருப்பிச் செலுத்துதல்',
     'Inventory & Restock': 'இருப்பு & மறு நிரப்பல்', 'Consumables & shopping list': 'பயன்பாட்டுப் பொருட்கள் & வாங்க வேண்டிய பட்டியல்',
     'Profit & Loss': 'லாபம் & நஷ்டம்', 'Revenue vs. petty-cash spend': 'வருவாய் vs சில்லறைச் செலவு',
