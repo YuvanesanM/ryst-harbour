@@ -377,6 +377,8 @@ $('#chips').addEventListener('click', e => {
   render();
 });
 
+// Dashboard links: ?f=inhouse (Guests) or ?f=unpaid (Payments) pick that filter.
+(function(){ const f = new URLSearchParams(location.search).get('f'); const chip = f && document.querySelector('.chip[data-f="'+f.replace(/[^a-zA-Z]/g,'')+'"]'); if(chip) chip.click(); })();
 load();
 </script>
 </body>

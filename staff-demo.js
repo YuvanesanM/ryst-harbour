@@ -14,11 +14,19 @@
   var now = Date.now(), T = iso(0);
   function villa(rate, nights){ return [{ desc:'Villa Rental Charges', qty:String(nights), rate:String(rate), _villaRow:true }]; }
   var stays = [
-    { no:'DEMO/INV/001', type:'invoice', guest:'Sample Guest A', phone:'+919000000001', email:'guest.a@example.com', guests:8, checkin:iso(-1), checkout:iso(1), date:iso(-10), advance:20000, items:villa(30000,2), mode:'UPI', checkinInfo:{ name:'Sample Guest A', idType:'Aadhaar', idNumber:'XXXX-XXXX-0001', arrivalTime:'14:00', guestsCount:8, submittedAt:now-86400000 } },
-    { no:'DEMO/INV/002', type:'invoice', guest:'Sample Guest B', phone:'+919000000002', email:'guest.b@example.com', guests:6, checkin:iso(2), checkout:iso(4), date:iso(-6), advance:15000, items:villa(30000,2), mode:'Bank transfer', reminderSentAt:new Date(now-3600e3).toISOString(), waDelivery:{ reminderSentAt:{ id:'demo1', status:'read', at:new Date(now-3600e3).toISOString() } } },
+    { no:'DEMO/INV/001', type:'invoice', guest:'Sample Guest A', phone:'+919000000001', email:'guest.a@example.com', guests:8, channel:'WhatsApp / Phone', checkin:iso(-2), checkout:iso(0), date:iso(-10), advance:20000, items:villa(30000,2), mode:'UPI', checkinInfo:{ name:'Sample Guest A', idType:'Aadhaar', idNumber:'XXXX-XXXX-0001', arrivalTime:'14:00', guestsCount:8, submittedAt:now-86400000 } },
+    { no:'DEMO/INV/006', type:'invoice', guest:'Sample Guest E', phone:'+919000000006', email:'guest.e@example.com', guests:10, channel:'Website', checkin:iso(0), checkout:iso(2), date:iso(-9), advance:39600, items:villa(39600,2), mode:'Razorpay', checkinInfo:{ name:'Sample Guest E', idType:'Passport', idNumber:'XXXXXX06', arrivalTime:'15:30', guestsCount:10, submittedAt:now-3600e3 } },
+    { no:'DEMO/INV/002', type:'invoice', guest:'Sample Guest B', phone:'+919000000002', email:'guest.b@example.com', guests:6, channel:'Airbnb', checkin:iso(3), checkout:iso(5), date:iso(-6), advance:15000, items:villa(30000,2), mode:'Bank transfer', reminderSentAt:new Date(now-3600e3).toISOString(), waDelivery:{ reminderSentAt:{ id:'demo1', status:'read', at:new Date(now-3600e3).toISOString() } } },
     { no:'DEMO/QT/003', type:'quote', guest:'Sample Guest C', phone:'+919000000003', email:'guest.c@example.com', guests:12, checkin:iso(6), checkout:iso(7), date:iso(-1), advance:10000, items:villa(36000,1) },
     { no:'DEMO/INV/004', type:'invoice', guest:'Sample Guest D', phone:'+919000000004', email:'guest.d@example.com', guests:4, checkin:iso(-5), checkout:iso(-3), date:iso(-20), advance:60000, items:villa(30000,2), mode:'Razorpay' },
-    { no:'DEMO/BLK/005', type:'block', guest:'Airbnb', source:'airbnb', checkin:iso(10), checkout:iso(12) }
+    { no:'DEMO/BLK/005', type:'block', guest:'Airbnb', source:'airbnb', checkin:iso(10), checkout:iso(12) },
+    // Earlier stays, so the dashboard and reports have a few months of history.
+    { no:'DEMO/INV/101', type:'invoice', guest:'Sample Guest F', guests:8, channel:'Website', mode:'Razorpay', checkin:iso(-33), checkout:iso(-31), date:iso(-45), advance:72000, items:villa(36000,2) },
+    { no:'DEMO/INV/102', type:'invoice', guest:'Sample Guest G', guests:12, channel:'Airbnb', mode:'Bank transfer', checkin:iso(-47), checkout:iso(-44), date:iso(-60), advance:108000, items:villa(36000,3) },
+    { no:'DEMO/INV/103', type:'invoice', guest:'Sample Guest H', guests:6, channel:'Booking.com', mode:'UPI', checkin:iso(-68), checkout:iso(-66), date:iso(-80), advance:79200, items:villa(39600,2) },
+    { no:'DEMO/INV/104', type:'invoice', guest:'Sample Guest I', guests:10, channel:'WhatsApp / Phone', mode:'UPI', checkin:iso(-96), checkout:iso(-94), date:iso(-110), advance:72000, items:villa(36000,2) },
+    { no:'DEMO/INV/105', type:'invoice', guest:'Sample Guest J', guests:8, channel:'Website', mode:'Razorpay', checkin:iso(-124), checkout:iso(-121), date:iso(-140), advance:118800, items:villa(39600,3) },
+    { no:'DEMO/INV/106', type:'invoice', guest:'Sample Guest K', guests:4, channel:'Agoda', mode:'Bank transfer', checkin:iso(-152), checkout:iso(-150), date:iso(-165), advance:72000, items:villa(36000,2) }
   ];
   function total(s){ return (s.items||[]).reduce(function(a,it){ return a + (+it.rate||0)*(+it.qty||0); }, 0); }
   var reg = stays.filter(function(s){ return s.type !== 'block'; }).map(function(s){
@@ -36,7 +44,7 @@
       receiptNote:'Thank you for dining with us.', logoUrl:'https://harbour.ryst.in/assets/staff-icon-512.png', coverUrl:'', latitude:null, longitude:null, googlePlaceQuery:'' },
     '/stays': { version:1, stays:stays },
     '/guest-register': { ok:true, entries:reg, today:T },
-    '/active-stay': { active:true, no:'DEMO/INV/001', guest:'Sample Guest A', checkin:iso(-1), checkout:iso(1) },
+    '/active-stay': { active:true, no:'DEMO/INV/001', guest:'Sample Guest A', checkin:iso(-2), checkout:iso(0) },
     '/petty-cash': { version:1, float:5000, categories:['Groceries & Guest Supplies','Housekeeping','Utilities','Repairs & Maintenance','Transport','Miscellaneous'], entries:[
       { id:'d1', type:'topup', subtype:'cash', date:iso(-14), amount:5000, note:'Opening float', createdBy:'owner@example.com', createdAt:now-14*864e5 },
       exp('d2',-6,640,'Groceries & Guest Supplies','Milk, bread, eggs','reimbursed'),

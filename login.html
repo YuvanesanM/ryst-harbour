@@ -70,39 +70,12 @@
   #tgCodeStep{display:flex;flex-direction:column;gap:10px}
   #tgCodeStep[hidden]{display:none}
 
-  /* ── HOME ── */
-  #homeView{gap:36px}
-  #homeLogo{max-height:72px;max-width:220px;display:block}
-  .home-cards{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
-  .home-card{background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:32px 28px;width:210px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:.18s;text-align:center;font-family:inherit;color:inherit}
-  .home-card:hover{border-color:var(--accent);box-shadow:0 8px 28px rgba(60,100,60,.13);transform:translateY(-3px)}
-  .hc-icon{width:52px;height:52px;background:var(--accent-soft);border-radius:13px;display:flex;align-items:center;justify-content:center;color:var(--accent-d)}
-  .hc-title{font-size:15px;font-weight:700;color:var(--ink)}
-  .hc-sub{font-size:12px;color:var(--muted2);line-height:1.45}
-  /* Booking Calendar is the daily hub — first in the grid and visually
-     anchored so it reads as the default landing point, not just one tile
-     among equals. */
-  .home-card.primary{border-color:var(--accent);background:linear-gradient(180deg,var(--accent-soft) 0%,var(--panel) 60%)}
-  .home-card.primary:hover{box-shadow:0 8px 28px rgba(60,100,60,.2)}
-  .home-card.primary .hc-icon{background:var(--accent);color:#fff}
-  .logout-btn{margin-top:8px;background:transparent;border:1.5px solid var(--line);color:var(--muted2);padding:10px 24px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:.18s}
+  /* ── HOME: the dashboard's own styles are in /assets/app/dashboard.css ── */
   .install-app-btn{margin-top:14px;background:#0e2420;color:#f6f1e6;border:0;padding:11px 22px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.3px;display:inline-flex;align-items:center;gap:8px}
   .install-app-btn[hidden]{display:none}
-  .logout-btn:hover{border-color:var(--danger,#c0584b);color:var(--danger,#c0584b)}
-  .tgc{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:360px;text-align:center}
-  .tgc-btn{background:var(--panel,#fff);border:1.5px solid var(--accent);color:var(--accent-d);padding:11px 20px;border-radius:10px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer}
-  .tgc-open{display:inline-block;background:#229ed9;color:#fff;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:600;font-size:13.5px}
-  .tgc-msg{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0}
-  @media(max-width:600px){
-    #homeView{overflow-y:auto;justify-content:flex-start;padding-top:32px;padding-bottom:32px}
-    .home-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
-    .home-card{width:100%;padding:22px 14px;gap:9px}
-    .hc-icon{width:42px;height:42px;border-radius:10px}
-    .hc-title{font-size:13.5px}
-    .hc-sub{font-size:11px}
-    #homeLogo{max-height:52px}
-  }
 </style>
+<link rel="stylesheet" href="/assets/app/dashboard.css">
+<script src="/assets/app/dashboard.js" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -148,78 +121,189 @@
   <p class="legal-line">RYST Harbour is managed by Dreamour Multiventures · RYST is a trademark of Dreamour Multiventures. All rights reserved. · <a href="tel:+918608008608">+91 86080 08608</a></p>
 </div>
 
-<!-- ── HOME ── -->
-<div id="homeView" class="view" hidden>
-  <img id="homeLogo" alt="RYST 109A" data-prop-alt="name" data-prop-src="logoUrl" src="/assets/stay-logo.webp">
-  <div class="home-cards">
-    <!-- Ordered guest-lifecycle first (Booking Calendar → Stay Quote →
-         Check-in/out → Feedback — the sequence a single stay actually moves
-         through), then daily operations (Casa de RYST → Petty Cash →
-         Inventory), then reporting/admin last (Profit & Loss → Settings,
-         the two lowest-frequency, most "look at occasionally" pages). -->
-    <button class="home-card primary" data-module="bookings" onclick="window.location.href='bookings.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-      <span class="hc-title">Booking Calendar</span>
-      <span class="hc-sub">Occupancy, revenue &amp; upcoming stays</span>
-    </button>
-    <button class="home-card" data-module="bookings" onclick="window.location.href='stay.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/></svg></div>
-      <span class="hc-title">Stay Quote &amp; Invoice</span>
-      <span class="hc-sub">Villa invoices &amp; quotations</span>
-    </button>
-    <button class="home-card" data-module="checklist" onclick="window.location.href='checklist.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12l3 3 7-7"/></svg></div>
-      <span class="hc-title">Checklists</span>
-      <span class="hc-sub">Check-in, check-out &amp; daily rounds</span>
-    </button>
-    <button class="home-card" data-module="checklist" onclick="window.location.href='issues.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
-      <span class="hc-title">Issues</span>
-      <span class="hc-sub">Report a problem &amp; track repairs</span>
-    </button>
-    <button class="home-card" data-module="guestRegister" onclick="window.location.href='guest-register.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
-      <span class="hc-title">Guest Register</span>
-      <span class="hc-sub">Upcoming stays, notes &amp; payment status</span>
-    </button>
-    <button class="home-card" data-module="feedback" onclick="window.location.href='reviews.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.2l7.1-.6z"/></svg></div>
-      <span class="hc-title">Guest Feedback</span>
-      <span class="hc-sub">Post-stay reviews &amp; ratings</span>
-    </button>
-    <button class="home-card" data-module="restaurant" onclick="window.location.href='restaurant.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h0a2 2 0 002-2V2M7 2v20M11 2v7a2 2 0 002 2h0a2 2 0 002-2V2"/><path d="M18 2c-1.1 1.5-1.5 3.4-1.5 5.5 0 2.2.5 4 1.5 5.5v9"/></svg></div>
-      <span class="hc-title" data-prop="restaurantName">Casa de RYST</span>
-      <span class="hc-sub">Restaurant billing, menu &amp; inventory</span>
-    </button>
-    <button class="home-card" data-module="petty-cash" onclick="window.location.href='petty-cash.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><circle cx="12" cy="15" r="1.6"/></svg></div>
-      <span class="hc-title">Petty Cash</span>
-      <span class="hc-sub">Caretaker expenses &amp; reimbursements</span>
-    </button>
-    <button class="home-card" data-module="inventory" onclick="window.location.href='inventory.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
-      <span class="hc-title">Inventory &amp; Restock</span>
-      <span class="hc-sub">Consumables &amp; shopping list</span>
-    </button>
-    <button class="home-card" data-module="reports" onclick="window.location.href='reports.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div>
-      <span class="hc-title">Profit &amp; Loss</span>
-      <span class="hc-sub">Revenue vs. petty-cash spend</span>
-    </button>
-    <button class="home-card" data-module="settings" onclick="window.location.href='settings.html'">
-      <div class="hc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
-      <span class="hc-title">Settings</span>
-      <span class="hc-sub">Business, tariffs, invoices, team &amp; more</span>
-    </button>
+<!-- ── HOME: owner operations dashboard (caretakers get their own day view) ── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="d-home" viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></symbol>
+  <symbol id="d-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></symbol>
+  <symbol id="d-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+  <symbol id="d-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
+  <symbol id="d-check" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+  <symbol id="d-tool" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></symbol>
+  <symbol id="d-box" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></symbol>
+  <symbol id="d-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/></symbol>
+  <symbol id="d-doc" viewBox="0 0 24 24"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="d-rupee" viewBox="0 0 24 24"><path d="M7 4h10M7 8.5h10M14 20l-7-7h2.5a4.5 4.5 0 0 0 0-9"/></symbol>
+  <symbol id="d-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-4M13 17V8M18 17v-7"/></symbol>
+  <symbol id="d-food" viewBox="0 0 24 24"><path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 0-3 2-3 6s1 5 3 5v9"/></symbol>
+  <symbol id="d-star" viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+  <symbol id="d-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="d-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></symbol>
+  <symbol id="d-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="d-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></symbol>
+  <symbol id="d-villa" viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-5h6v5"/></symbol>
+  <symbol id="d-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="d-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="d-in" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/></symbol>
+  <symbol id="d-out" viewBox="0 0 24 24"><path d="M14 7l5 5-5 5M19 12H7M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/></symbol>
+  <symbol id="d-alert" viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4.5M12 17.5h.01"/></symbol>
+  <symbol id="d-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></symbol>
+  <symbol id="d-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+</svg>
+
+<div id="homeView" class="app" hidden>
+  <aside class="sb" aria-label="Harbour">
+    <a class="sb__brand" href="login.html">RYST HARBOUR</a>
+    <nav class="sb__nav" aria-label="Main">
+        <a class="sb__link" href="login.html" aria-current="page"><svg class="i" aria-hidden="true"><use href="#d-home"/></svg><span>Dashboard</span></a>
+        <a class="sb__link" href="bookings.html" data-module="bookings"><svg class="i" aria-hidden="true"><use href="#d-cal"/></svg><span>Calendar</span></a>
+        <a class="sb__link" href="guest-register.html" data-module="guestRegister"><svg class="i" aria-hidden="true"><use href="#d-list"/></svg><span>Bookings</span></a>
+        <a class="sb__link" href="guest-register.html?f=inhouse" data-module="guestRegister"><svg class="i" aria-hidden="true"><use href="#d-users"/></svg><span>Guests</span></a>
+      <div class="sb__group" data-group>
+        <p class="sb__label">Operations</p>
+        <a class="sb__link" href="checklist.html" data-module="checklist"><svg class="i" aria-hidden="true"><use href="#d-check"/></svg><span>Checklists</span></a>
+        <a class="sb__link" href="issues.html" data-module="checklist"><svg class="i" aria-hidden="true"><use href="#d-tool"/></svg><span>Issues &amp; Maintenance</span></a>
+        <a class="sb__link" href="inventory.html" data-module="inventory"><svg class="i" aria-hidden="true"><use href="#d-box"/></svg><span>Inventory</span></a>
+        <a class="sb__link" href="petty-cash.html" data-module="petty-cash"><svg class="i" aria-hidden="true"><use href="#d-wallet"/></svg><span>Petty Cash</span></a>
+      </div>
+      <div class="sb__group" data-group>
+        <p class="sb__label">Finance</p>
+        <a class="sb__link" href="stay.html" data-module="bookings"><svg class="i" aria-hidden="true"><use href="#d-doc"/></svg><span>Quotes &amp; Invoices</span></a>
+        <a class="sb__link" href="guest-register.html?f=unpaid" data-module="guestRegister"><svg class="i" aria-hidden="true"><use href="#d-rupee"/></svg><span>Payments</span></a>
+        <a class="sb__link" href="reports.html" data-module="reports"><svg class="i" aria-hidden="true"><use href="#d-chart"/></svg><span>Profit &amp; Loss</span></a>
+      </div>
+      <div class="sb__group" data-group>
+        <p class="sb__label">Property</p>
+        <a class="sb__link" href="restaurant.html" data-module="restaurant"><svg class="i" aria-hidden="true"><use href="#d-food"/></svg><span data-prop="restaurantName">Casa de RYST</span></a>
+        <a class="sb__link" href="reviews.html" data-module="feedback"><svg class="i" aria-hidden="true"><use href="#d-star"/></svg><span>Guest Feedback</span></a>
+      </div>
+      <div class="sb__group" data-group>
+        <p class="sb__label">System</p>
+        <a class="sb__link" href="settings.html" data-module="settings"><svg class="i" aria-hidden="true"><use href="#d-gear"/></svg><span>Settings</span></a>
+      </div>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="tb">
+      <a class="tb__brand" href="login.html">RYST HARBOUR</a>
+      <span class="tb__prop" title="Signed in to this property"><svg class="i" aria-hidden="true"><use href="#d-villa"/></svg><span data-prop="name">RYST 109A</span></span>
+      <span class="tb__date" id="dDate"></span>
+      <div class="tb__actions">
+        <div class="pop-wrap tb__new">
+          <button type="button" class="btn btn--primary" data-pop="newMenu" aria-haspopup="true" aria-expanded="false"><svg class="i" aria-hidden="true"><use href="#d-plus"/></svg>New</button>
+        </div>
+        <div class="pop-wrap">
+          <button type="button" class="icon-btn" data-pop="bellMenu" aria-haspopup="true" aria-expanded="false" aria-label="Notifications"><svg class="i" aria-hidden="true"><use href="#d-bell"/></svg><span class="dot" id="bellCount" hidden></span></button>
+          <div class="pop pop--right" id="bellMenu" hidden>
+            <div class="pop__head"><b>Needs attention</b></div>
+            <div class="pop__body" id="bellList"></div>
+            <div class="pop__foot">
+              <div class="tgc" id="tgcBox">
+                <button type="button" class="tgc-btn" id="tgcBtn">🔔 Get alerts on Telegram</button>
+                <div id="tgcStep"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pop-wrap">
+          <button type="button" class="avatar" data-pop="profileMenu" aria-haspopup="true" aria-expanded="false" aria-label="Your account"><span id="dInitial">R</span></button>
+          <div class="pop pop--right" id="profileMenu" hidden>
+            <div class="pop__head"><b id="dUserName">Signed in</b><span id="dUserEmail"></span><span class="role-tag" id="dUserRole"></span></div>
+            <div class="pop__body pop__stack">
+              <button type="button" class="pop__item" data-lang-toggle>தமிழ்</button>
+              <button type="button" class="pop__item install-app-btn" hidden>📲 Install RYST Harbour app</button>
+              <button id="logoutBtn" class="pop__item pop__item--danger" type="button">⎋ Log out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content" id="dContent">
+      <div class="greet">
+        <h1 id="dGreet">Good morning</h1>
+        <p><span>Here's what's happening at</span> <span data-prop="name" data-no-i18n>RYST 109A</span> <span>today.</span></p>
+      </div>
+
+      <!-- Owner / coordinator -->
+      <div id="dashOwner">
+        <section class="kpis" aria-label="Key numbers">
+          <a class="kpi" href="reports.html" id="kRevenue" data-module="reports"><span class="kpi__l">Revenue</span><b class="kpi__v sk"></b><span class="kpi__s sk sk--sm"></span></a>
+          <a class="kpi" href="bookings.html" id="kOcc" data-module="bookings"><span class="kpi__l">Occupancy</span><b class="kpi__v sk"></b><span class="kpi__s sk sk--sm"></span></a>
+          <a class="kpi" href="guest-register.html?f=arriving" id="kArr" data-module="guestRegister"><span class="kpi__l">Today's arrivals</span><b class="kpi__v sk"></b><span class="kpi__s sk sk--sm"></span></a>
+          <a class="kpi" href="issues.html" id="kIssues" data-module="checklist"><span class="kpi__l">Open issues</span><b class="kpi__v sk"></b><span class="kpi__s sk sk--sm"></span></a>
+        </section>
+
+        <div class="grid">
+          <section class="card card--today" aria-labelledby="hToday" id="cToday">
+            <div class="card__head"><h2 id="hToday">Today</h2><a class="card__link" href="bookings.html" data-module="bookings">Calendar</a></div>
+            <div class="card__body" id="todayBody"><div class="sk sk--row"></div><div class="sk sk--row"></div></div>
+          </section>
+
+          <section class="card card--attn" aria-labelledby="hAttn" id="cAttn">
+            <div class="card__head"><h2 id="hAttn">Attention required</h2><span class="count" id="attnCount" hidden></span></div>
+            <div class="card__body" id="attnBody"><div class="sk sk--row"></div><div class="sk sk--row"></div></div>
+          </section>
+
+          <section class="card card--up" aria-labelledby="hUp" id="cUp">
+            <div class="card__head"><h2 id="hUp">Upcoming stays</h2><a class="card__link" href="guest-register.html" data-module="guestRegister">All bookings</a></div>
+            <div class="card__body" id="upBody"><div class="sk sk--row"></div><div class="sk sk--row"></div></div>
+          </section>
+
+          <section class="card card--rev" aria-labelledby="hRev" id="cRev" data-module="reports">
+            <div class="card__head"><h2 id="hRev">Revenue</h2><a class="card__link" href="reports.html">Profit &amp; Loss</a></div>
+            <div class="card__body" id="revBody"><div class="sk sk--block"></div></div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Caretaker -->
+      <div id="dashCare" hidden>
+        <div class="care-grid">
+          <section class="card" aria-labelledby="hCi"><div class="card__head"><h2 id="hCi">Today's check-in</h2></div><div class="card__body" id="careIn"><div class="sk sk--row"></div></div></section>
+          <section class="card" aria-labelledby="hCo"><div class="card__head"><h2 id="hCo">Today's check-out</h2></div><div class="card__body" id="careOut"><div class="sk sk--row"></div></div></section>
+          <section class="card" aria-labelledby="hCl" data-module="checklist"><div class="card__head"><h2 id="hCl">Checklists</h2><a class="card__link" href="checklist.html">Open</a></div><div class="card__body" id="careCl"><div class="sk sk--row"></div></div></section>
+          <section class="card" aria-labelledby="hIs" data-module="checklist"><div class="card__head"><h2 id="hIs">Issues</h2><a class="card__link" href="issues.html">Open</a></div><div class="card__body" id="careIs"><div class="sk sk--row"></div></div></section>
+          <section class="card" aria-labelledby="hInv" data-module="inventory"><div class="card__head"><h2 id="hInv">Inventory</h2><a class="card__link" href="inventory.html">Open</a></div><div class="card__body" id="careInv"><div class="sk sk--row"></div></div></section>
+        </div>
+      </div>
+    </main>
   </div>
-  <div class="tgc" id="tgcBox">
-    <button type="button" class="tgc-btn" id="tgcBtn">🔔 Get alerts on Telegram</button>
-    <div id="tgcStep"></div>
+
+  <!-- "+ New": one menu, a dropdown on desktop and a bottom sheet on phones -->
+  <div class="pop pop--new" id="newMenu" role="menu" aria-label="New" hidden>
+    <div class="pop__head pop__head--sheet"><b>New</b></div>
+    <div class="pop__body pop__stack">
+      <a class="pop__item" role="menuitem" href="stay.html?new=invoice" data-module="bookings"><svg class="i" aria-hidden="true"><use href="#d-cal"/></svg><span>New booking</span></a>
+      <a class="pop__item" role="menuitem" href="stay.html?new=quote" data-module="bookings"><svg class="i" aria-hidden="true"><use href="#d-doc"/></svg><span>New quote</span></a>
+      <button class="pop__item" role="menuitem" type="button" id="recordPayBtn" data-module="bookings"><svg class="i" aria-hidden="true"><use href="#d-rupee"/></svg><span>Record payment</span></button>
+      <a class="pop__item" role="menuitem" href="issues.html#report" data-module="checklist"><svg class="i" aria-hidden="true"><use href="#d-tool"/></svg><span>Report issue</span></a>
+      <a class="pop__item" role="menuitem" href="petty-cash.html#add" data-module="petty-cash"><svg class="i" aria-hidden="true"><use href="#d-wallet"/></svg><span>Add expense</span></a>
+      <a class="pop__item" role="menuitem" href="inventory.html#add" data-module="inventory"><svg class="i" aria-hidden="true"><use href="#d-box"/></svg><span>Add inventory</span></a>
+    </div>
   </div>
-  <button type="button" class="install-app-btn" hidden>📲 Install RYST Harbour app</button>
-  <button id="logoutBtn" class="logout-btn" type="button">⎋ Log out</button>
-  <button type="button" class="logout-btn" data-lang-toggle>தமிழ்</button>
+  <div class="pop pop--sheet" id="paySheet" role="dialog" aria-label="Record payment" hidden>
+    <div class="pop__head pop__head--sheet"><b>Record payment</b><span>Open a booking to add the payment received</span></div>
+    <div class="pop__body pop__stack" id="payList"></div>
+  </div>
+  <div class="pop pop--sheet" id="tasksSheet" role="dialog" aria-label="Tasks" hidden>
+    <div class="pop__head pop__head--sheet"><b>Tasks</b></div>
+    <div class="pop__body pop__stack" id="tasksList"></div>
+  </div>
+  <div class="pop pop--sheet" id="moreSheet" role="dialog" aria-label="More" hidden>
+    <div class="pop__head pop__head--sheet"><b>More</b></div>
+    <div class="pop__body" id="moreList"></div>
+  </div>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <nav class="bn" aria-label="Quick navigation">
+    <a class="bn__i" href="login.html" aria-current="page"><svg class="i" aria-hidden="true"><use href="#d-home"/></svg><span>Home</span></a>
+    <a class="bn__i" href="bookings.html" data-module="bookings" id="bnCal"><svg class="i" aria-hidden="true"><use href="#d-cal"/></svg><span>Calendar</span></a>
+    <a class="bn__i" href="issues.html" data-module="checklist" id="bnIssues" hidden><svg class="i" aria-hidden="true"><use href="#d-tool"/></svg><span>Issues</span></a>
+    <button class="bn__plus" type="button" data-pop="newMenu" aria-haspopup="true" aria-expanded="false" aria-label="New"><svg class="i" aria-hidden="true"><use href="#d-plus"/></svg></button>
+    <button class="bn__i" type="button" data-pop="tasksSheet" aria-haspopup="true" aria-expanded="false"><svg class="i" aria-hidden="true"><use href="#d-check"/></svg><span>Tasks</span><span class="dot" id="tasksCount" hidden></span></button>
+    <button class="bn__i" type="button" data-pop="moreSheet" aria-haspopup="true" aria-expanded="false"><svg class="i" aria-hidden="true"><use href="#d-more"/></svg><span>More</span></button>
+  </nav>
 </div>
 
 <script>
@@ -283,6 +367,7 @@ function showHome(){
   document.getElementById('loginView').style.display='';
   document.getElementById('homeView').removeAttribute('hidden');
   applyRoleView();
+  if(window.rystDashboard) window.rystDashboard.start(); else window.RYST_DASH_PENDING = true;
 }
 
 // Owner always sees every card. Coordinator/caretaker see only the cards for
@@ -295,7 +380,8 @@ function showHome(){
 // see the Checklist tile either (property.js reports the plan's features).
 document.addEventListener('plan-features', e=>{
   if(!Array.isArray(e.detail) || e.detail.includes('caretaker')) return;
-  document.querySelectorAll('.home-card[data-module="checklist"]').forEach(card=>{ card.style.display='none'; });
+  document.querySelectorAll('#homeView [data-module="checklist"]').forEach(el=>{ el.style.display='none'; });
+  if(window.rystDashboard) window.rystDashboard.refreshNav();
 });
 function applyRoleView(){
   const role = localStorage.getItem('ryst_user_role') || 'owner';
@@ -354,6 +440,12 @@ async function handleGoogleLogin(credentialResponse) {
     const data = await res.json();
     if (data.ok && data.token) {
       errEl.textContent = '';
+      // First name for the dashboard greeting, from Google's own sign-in token.
+      try {
+        const b = credentialResponse.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+        const claims = JSON.parse(decodeURIComponent(escape(atob(b + '==='.slice((b.length + 3) % 4)))));
+        if (claims.given_name) localStorage.setItem('ryst_user_name', String(claims.given_name).slice(0, 40));
+      } catch(e) {}
       applyAuthSuccess(data);
     } else {
       errEl.textContent = data.error || 'Access denied.';
@@ -520,6 +612,7 @@ function logout(){
   localStorage.removeItem('ryst_user_role');
   localStorage.removeItem('ryst_user_admin');
   localStorage.removeItem('ryst_user_modules');
+  localStorage.removeItem('ryst_user_name');
   document.getElementById('homeView').setAttribute('hidden','');
   document.getElementById('loginView').removeAttribute('hidden');
   document.getElementById('loginView').style.display='';

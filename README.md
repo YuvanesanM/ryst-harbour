@@ -23,6 +23,22 @@ Prices come live from `data.ryst.in/harbour/plans` (Settings → Billing
 settings). The copy in `site.js` is only the fallback. The testimonials
 section stays hidden until a real `<figure class="quote">` is added to it.
 
+## The staff dashboard (login.html)
+
+After sign-in, `login.html` shows the owner operations dashboard
+(`assets/app/dashboard.css` + `dashboard.js`): KPIs, today's check-ins and
+check-outs, what needs attention, upcoming stays and six months of revenue,
+with the modules in a sidebar (desktop) or bottom navigation (phones).
+Caretakers get a day view instead: check-in, check-out, checklists, issues
+and inventory. It only reads the endpoints the module pages already use,
+under the same role/module access, and its revenue and occupancy follow
+the owner report (`owner-report.js` in the proxy repo) and Reports.
+
+"+ New" and the dashboard's buttons open module pages through small deep
+links: `stay.html?new=invoice|quote`, `checklist.html?start=<type>&stay=&guest=`,
+`petty-cash.html#add`, `inventory.html#add`, `issues.html#report` and
+`guest-register.html?f=<filter>`.
+
 ## Guest pages are published on two addresses
 
 `checkin.html`, `guest.html`, `feedback.html`, `wa.html`, `villa.js` and `property.js`

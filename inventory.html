@@ -554,7 +554,8 @@ $('#btnCopyList').addEventListener('click', async () => {
 
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeItemModal(); });
 
-load();
+// #add (from the dashboard's "+ New → Add inventory") opens the form once items are loaded.
+load().then(()=>{ if(location.hash==='#add'){ history.replaceState(null,'',location.pathname); openAdd(); } });
 </script>
 </body>
 </html>

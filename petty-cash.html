@@ -910,7 +910,8 @@ $('#fStatus').onchange=e=>{ FILTERS.status=e.target.value; render(); };
 $('#fSearch').oninput=e=>{ FILTERS.q=e.target.value; renderLedger(); renderReports(); };
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ $$('.overlay').forEach(o=>o.className=o.className.replace(' show','')); } });
 
-load();
+// #add (from the dashboard's "+ New → Add expense") opens the form once the ledger is loaded.
+load().then(()=>{ if(location.hash==='#add'){ history.replaceState(null,'',location.pathname); if(!$('#addBtn').disabled) openExpense(null); } });
 </script>
 </body>
 </html>

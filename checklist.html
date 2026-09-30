@@ -844,7 +844,14 @@ $('#fStatus').addEventListener('change', e=>{ FILTERS.status=e.target.value; ren
 
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeStartModal(); closeRunModal(); $('#tplOverlay').classList.remove('show'); } });
 
-load();
+// Dashboard deep link: ?start=checkin|checkout|daily&stay=<no>&guest=<name>
+// starts (or reopens) that checklist once the page has loaded.
+load().then(()=>{
+  const q = new URLSearchParams(location.search), type = q.get('start');
+  if(!type || !TYPE_LABEL[type]) return;
+  history.replaceState(null, '', location.pathname);
+  startOrOpen(type === 'daily' ? '' : (q.get('stay') || ''), type, type === 'daily' ? '' : (q.get('guest') || ''));
+});
 </script>
 </body>
 </html>

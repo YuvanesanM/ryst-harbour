@@ -767,6 +767,8 @@ async function initApp(){
     // Deep link from the booking calendar dashboard: stay.html?open=<no>
     const openNo = new URLSearchParams(location.search).get('open');
     if(openNo) loadDoc(openNo);
+    // Dashboard "+ New": stay.html?new=invoice (a booking) or ?new=quote
+    else { const nw = new URLSearchParams(location.search).get('new'); if(nw === 'invoice' || nw === 'quote') setType(nw); }
     loader.classList.add('hide');
     $('#btnSave').disabled = false;
   }catch(e){
