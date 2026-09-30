@@ -23,6 +23,7 @@
 
   var ICONS = {
     home: '<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+    more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     bell: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
     villa: '<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-5h6v5"/>',
@@ -161,6 +162,66 @@
       location.href = 'login.html';
     });
   }
+  // ── Bottom navigation for phones: Home / Calendar / + / Tasks / More,
+  // the same as the dashboard's. Menus open as bottom sheets.
+  var TASKS = [['checklist.html', 'check', 'Checklists', 'checklist'], ['issues.html', 'tool', 'Issues & Maintenance', 'checklist'],
+    ['inventory.html', 'box', 'Inventory', 'inventory'], ['petty-cash.html', 'wallet', 'Petty Cash', 'petty-cash']];
+  function buildBottomNav() {
+    if (manual || doc.querySelector('.hbn')) return;
+    var acc = modules(), cur = currentHref(), svg = function (i) { return '<svg class="htb__i" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[i] + '</svg>'; };
+    var second = allowed('bookings', acc) ? ['bookings.html', 'cal', 'Calendar'] : allowed('checklist', acc) ? ['issues.html', 'tool', 'Issues']
+      : allowed('guestRegister', acc) ? ['guest-register.html', 'list', 'Bookings'] : null;
+    var tasks = TASKS.filter(function (x) { return allowed(x[3], acc); });
+    var more = []; NAV.forEach(function (g) { g.items.forEach(function (i) { if (i[0] !== 'login.html' && allowed(i[3], acc)) more.push(i); }); });
+    var news = NEW.filter(function (n) { return allowed(n[3], acc); });
+    var inTasks = tasks.some(function (x) { return x[0] === cur; }) && !(second && second[0] === cur);
+    var here = function (on) { return on ? ' aria-current="page"' : ''; };
+    var nav = doc.createElement('nav');
+    nav.className = 'hbn';
+    nav.setAttribute('aria-label', 'Quick navigation');
+    nav.innerHTML = '<a class="hbn__i" href="login.html">' + svg('home') + '<span>' + esc(t('Home')) + '</span></a>'
+      + (second ? '<a class="hbn__i" href="' + second[0] + '"' + here(second[0] === cur) + '>' + svg(second[1]) + '<span>' + esc(t(second[2])) + '</span></a>' : '<span></span>')
+      + '<button type="button" class="hbn__plus" data-sheet="new" aria-haspopup="dialog" aria-label="' + esc(t('New')) + '"' + (news.length ? '' : ' style="visibility:hidden"') + '>' + svg('plus') + '</button>'
+      + (tasks.length ? '<button type="button" class="hbn__i" data-sheet="tasks" aria-haspopup="dialog"' + here(inTasks) + '>' + svg('check') + '<span>' + esc(t('Tasks')) + '</span></button>' : '<span></span>')
+      + '<button type="button" class="hbn__i" data-sheet="more" aria-haspopup="dialog"' + here(!inTasks && !(second && second[0] === cur) && !!cur) + '>' + svg('more') + '<span>' + esc(t('More')) + '</span></button>';
+    var list = function (rows) {
+      return '<div class="hbs__list">' + rows.map(function (i) { return '<a class="hbs__item" href="' + i[0] + '"' + here(i[0] === cur) + '>' + svg(i[1]) + '<span>' + esc(label(i[2])) + '</span></a>'; }).join('') + '</div>';
+    };
+    var SHEETS = { 'new': ['New', news], tasks: ['Tasks', tasks], more: ['More', more] };
+    var scrim = doc.createElement('div'); scrim.className = 'hbs-scrim';
+    var sheet = doc.createElement('div'); sheet.className = 'hbs'; sheet.setAttribute('role', 'dialog');
+    // A spacer at the end of the page keeps its last lines clear of the nav,
+    // even on pages whose content overflows a fixed-height body.
+    var space = doc.createElement('div'); space.className = 'hbn-space'; space.setAttribute('aria-hidden', 'true');
+    doc.body.appendChild(space); doc.body.appendChild(nav); doc.body.appendChild(scrim); doc.body.appendChild(sheet);
+    var opener = null;
+    var close = function () { if (!sheet.classList.contains('is-open')) return; sheet.classList.remove('is-open'); scrim.classList.remove('is-open'); if (opener) { opener.setAttribute('aria-expanded', 'false'); opener.focus(); } opener = null; };
+    nav.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-sheet]'); if (!b) return;
+      var def = SHEETS[b.getAttribute('data-sheet')], was = opener === b;
+      close(); if (was) return;
+      sheet.setAttribute('aria-label', t(def[0]));
+      sheet.innerHTML = '<p class="hbs__head">' + esc(t(def[0])) + '</p>' + list(def[1]);
+      sheet.classList.add('is-open'); scrim.classList.add('is-open');
+      opener = b; b.setAttribute('aria-expanded', 'true');
+      var first = sheet.querySelector('a'); if (first) first.focus();
+    });
+    scrim.addEventListener('click', close);
+    doc.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  }
+  // "+ New → Add expense/inventory, Report issue" open the form through a
+  // #hash the page reads on load. Already on that page, a hash alone
+  // wouldn't reload it, so reload explicitly.
+  doc.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('.hbs a[href*="#"], .htb__menu a[href*="#"]');
+    if (!a || a.pathname !== location.pathname || a.search !== location.search) return;
+    e.preventDefault(); location.hash = a.hash; location.reload();
+  });
+  // Demo mode's banner sits at the very bottom; keep the nav above it.
+  function fitDemoBar() { var bar = doc.getElementById('rystDemoBar'); doc.documentElement.style.setProperty('--demo-h', bar ? bar.offsetHeight + 'px' : '0px'); }
+  window.addEventListener('load', function () { fitDemoBar(); setTimeout(fitDemoBar, 300); });
+  window.addEventListener('resize', fitDemoBar);
+
   function $toggle(aside) {
     var b = aside.querySelector('.hsb__toggle');
     b.addEventListener('click', function () {
@@ -183,8 +244,8 @@
   function mount() {
     mounted = true;
     doc.documentElement.classList.add('has-hsb');
-    if (!manual) doc.documentElement.classList.add('has-htb');
-    var go = function () { build(); buildTopbar(); };
+    if (!manual) { doc.documentElement.classList.add('has-htb'); doc.documentElement.classList.add('has-hbn'); }
+    var go = function () { build(); buildTopbar(); buildBottomNav(); fitDemoBar(); };
     if (doc.body) go(); else doc.addEventListener('DOMContentLoaded', go);
   }
   function unmount() {

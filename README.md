@@ -35,7 +35,8 @@ loaded in each page's `<head>` right after `property.js`. It shows from
 nav list is defined once in `shell.js`. It collapses to an icon rail (remembered per
 browser). `shell.js` also adds the dashboard's top bar
 (property, date, "+ New", notifications, account menu) to every module page
-and the Harbour colour scheme (`html.hth` in `shell.css`, which overrides the
+and, on phones, the dashboard's bottom navigation (Home / Calendar / + / Tasks /
+More), and the Harbour colour scheme (`html.hth` in `shell.css`, which overrides the
 colour tokens each page defines, so pages keep their own CSS). After editing any file in `assets/app/`, run
 `python3 tools/version-assets.py` so pages load the new version rather than
 a cached one.
