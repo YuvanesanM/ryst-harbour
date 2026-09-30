@@ -301,27 +301,6 @@
       }).join('') + '</tbody></table>');
   }
 
-  // ── Revenue ───────────────────────────────────────────────────────────
-  function renderRevenue() {
-    var card = $('#cRev');
-    show(card, can('bookings') || can('reports'));
-    if (!D.stays) { setHTML('revBody', loading('stays') ? '<div class="sk sk--block"></div>' : errBox('stays')); return; }
-    var stays = D.stays.stays || [], orders = D.rs && D.rs.orders || [], exps = D.pc && D.pc.entries || [];
-    var months = [];
-    for (var i = 5; i >= 0; i--) { var s = monthStart(TODAY, i); months.push({ start: s, m: metrics(stays, orders, exps, s, nextMonth(s)) }); }
-    var cur = months[5].m, prev = months[4].m, max = Math.max.apply(null, months.map(function (x) { return x.m.revenue; })) || 1;
-    var d = prev.revenue ? Math.round((cur.revenue - prev.revenue) / prev.revenue * 100) : null;
-    var summary = months.map(function (x) { return monthName(x.start, 'short') + ' ' + inr(x.m.revenue); }).join(', ');
-    setHTML('revBody', '<div class="rev"><div>'
-      + '<p class="rev__lbl">' + esc(monthName(months[5].start)) + ' so far</p><p class="rev__big num">' + inr(cur.revenue) + '</p>'
-      + '<p class="rev__d">' + (d === null ? '<span class="kpi__s">No revenue last month to compare</span>' : '<span class="' + (d >= 0 ? 'up' : 'down') + '">' + (d >= 0 ? '↑ ' : '↓ ') + Math.abs(d) + '%</span> <span class="kpi__s">vs ' + esc(monthName(months[4].start)) + ' (' + inr(prev.revenue) + ')</span>') + '</p>'
-      + '<div class="rev__split"><div><span>Received</span><b class="num">' + inr(cur.collected) + '</b></div><div><span>Still due</span><b class="num">' + inr(Math.max(0, cur.revenue - cur.collected)) + '</b></div>'
-      + (can('petty-cash') ? '<div><span>Petty-cash spend</span><b class="num">' + inr(cur.expenses) + '</b></div>' : '') + '</div></div>'
-      + '<div class="chart"><div class="chart__plot" role="img" aria-label="Revenue by month: ' + esc(summary) + '">'
-      + months.map(function (x, k) { return '<div class="chart__col' + (k === 5 ? ' is-now' : '') + '" tabindex="0" style="--h:' + Math.max(1, x.m.revenue / max * 100).toFixed(1) + '%" data-tip="' + esc(monthName(x.start, 'short') + ' · ' + inr(x.m.revenue)) + '" aria-label="' + esc(monthName(x.start) + ': ' + inr(x.m.revenue)) + '"><i class="chart__bar"></i></div>'; }).join('')
-      + '</div><div class="chart__x" aria-hidden="true">' + months.map(function (x, k) { return '<span' + (k === 5 ? ' class="is-now"' : '') + '>' + esc(monthName(x.start, 'short')) + '</span>'; }).join('') + '</div></div></div>');
-  }
-
   // ── Caretaker day view ────────────────────────────────────────────────
   function careStay(list, type) {
     if (!can('guestRegister') && !can('bookings')) return '<p class="note">' + esc(t('Ask the owner for Guest Register access to see arrivals here.')) + '</p>';
@@ -461,7 +440,7 @@
     show($('#dashOwner'), !caretaker); show($('#dashCare'), caretaker);
     var list = stayList();
     if (caretaker) { renderCare(list); renderAttention(list); return; }
-    renderKpis(list); renderToday(list); renderAttention(list); renderUpcoming(list); renderRevenue();
+    renderKpis(list); renderToday(list); renderAttention(list); renderUpcoming(list);
     show($('#cToday'), can('bookings') || can('guestRegister'));
     show($('#cUp'), can('bookings') || can('guestRegister'));
   }

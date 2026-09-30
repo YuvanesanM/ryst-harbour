@@ -93,7 +93,6 @@
 .card--today{grid-column:span 8}
 .card--attn{grid-column:span 4;grid-row:span 2}
 .card--up{grid-column:span 8}
-.card--rev{grid-column:span 12}
 .card__head{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 18px;border-bottom:1px solid var(--line-2)}
 .card__head h2{font-size:15px;font-weight:650}
 .card__link{margin-left:auto;font-size:13px;font-weight:600;color:var(--teal-ink)}
@@ -107,7 +106,6 @@
 .kpi__v.sk{height:30px;width:60%}
 .sk--sm{height:14px;width:45%}
 .sk--row{height:44px;margin:10px 0}
-.sk--block{height:180px;margin:10px 0}
 @keyframes sk{to{background-position:-200% 0}}
 
 /* Today */
@@ -155,25 +153,6 @@
 .utable small{display:block;font-size:12px;color:var(--muted)}
 
 /* Revenue */
-.rev{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,2.4fr);gap:28px;align-items:end;padding:10px 0 4px}
-.rev__big{font-size:34px;font-weight:650;letter-spacing:-.035em;line-height:1.1}
-.rev__lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.rev__d{margin-top:4px}
-.rev__split{display:grid;gap:6px;margin-top:16px;font-size:13px;color:var(--text-2)}
-.rev__split div{display:flex;justify-content:space-between;gap:12px}
-.rev__split b{color:var(--ink)}
-.chart{position:relative;overflow-x:clip}
-.chart__col:first-child::after{left:0;transform:none}
-.chart__col:last-child::after{left:auto;right:0;transform:none}
-.chart__plot{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;align-items:end;height:170px;padding-top:24px;background:linear-gradient(to top,var(--line-2) 1px,transparent 1px) 0 0/100% 33.33%;border-bottom:1px solid var(--line)}
-.chart__col{position:relative;height:100%;display:flex;align-items:flex-end;justify-content:center}
-.chart__bar{width:min(100%,44px);height:var(--h);min-height:2px;border-radius:4px 4px 0 0;background:var(--sand)}
-.chart__col.is-now .chart__bar{background:var(--teal)}
-.chart__col:hover .chart__bar,.chart__col:focus-visible .chart__bar{filter:brightness(.92)}
-.chart__col::after{content:attr(data-tip);position:absolute;bottom:calc(var(--h) + 8px);left:50%;transform:translateX(-50%);padding:4px 8px;border-radius:6px;background:var(--ink);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s}
-.chart__col:hover::after,.chart__col:focus-visible::after{opacity:1}
-.chart__x{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;margin-top:6px;font-size:12px;color:var(--muted);text-align:center}
-.chart__x .is-now{color:var(--ink);font-weight:600}
 
 /* Caretaker day view */
 .care-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
@@ -209,7 +188,6 @@
   .grid{gap:10px}
   .card__head{padding:0 14px}
   .card__body{padding:4px 14px 10px}
-  .rev{grid-template-columns:1fr;gap:18px}
   .care-grid{grid-template-columns:1fr;gap:10px}
 
   .bn{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;height:calc(var(--bn) + env(safe-area-inset-bottom));padding:0 6px env(safe-area-inset-bottom);background:var(--paper);border-top:1px solid var(--line)}
@@ -246,6 +224,5 @@
   .utable td.u-guest{grid-column:1;grid-row:1}
   .utable td.u-n,.utable td.u-ch{display:none}
   .utable td.u-bal{grid-column:2;grid-row:1 / span 2;align-self:center}
-  .chart__plot,.chart__x{gap:10px}
 }
 @media (prefers-reduced-motion:reduce){.sk{animation:none}}
