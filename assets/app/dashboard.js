@@ -383,6 +383,7 @@
   function closePop() {
     if (!openPop) return;
     openPop.hidden = true; $('#scrim').hidden = true;
+    $$('.tb--pop').forEach(function (t) { t.classList.remove('tb--pop'); });
     $$('[data-pop]').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
     var back = openerBtn; openPop = null; openerBtn = null;
     if (back && doc.activeElement && doc.activeElement !== doc.body && !back.contains(doc.activeElement)) back.focus();
@@ -398,6 +399,9 @@
       pop.style.top = (r.bottom + 8) + 'px'; pop.style.right = Math.max(12, window.innerWidth - r.right) + 'px'; pop.style.left = 'auto';
     }
     pop.hidden = false; openPop = pop; openerBtn = btn;
+    // A menu inside the sticky top bar is capped by the bar's own stacking
+    // level — lift the bar over the scrim and bottom nav while it's open.
+    var bar = pop.closest('.tb'); if (bar) bar.classList.add('tb--pop');
     if (btn) btn.setAttribute('aria-expanded', 'true');
     $('#scrim').hidden = desktop.matches;
     var first = $('a,button', pop); if (first) first.focus();

@@ -30,6 +30,7 @@
 /* ── Top bar ──────────────────────────────────────────────────────────── */
 .main{min-width:0}
 .tb{position:sticky;top:0;z-index:15;height:var(--tb);display:flex;align-items:center;gap:16px;padding:0 28px;background:rgba(246,243,237,.92);border-bottom:1px solid var(--line)}
+.tb.tb--pop{z-index:45}
 .tb__brand{display:none;font-size:12px;font-weight:650;letter-spacing:.2em}
 .tb__prop{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--white);font-weight:600}
 .tb__prop .i{color:var(--teal-ink);width:16px;height:16px}
