@@ -18,9 +18,16 @@
   // Collapsed to an icon rail? Remembered per browser; set now so there's no jump.
   if (ls('ryst_sidebar') === 'collapsed') doc.documentElement.classList.add('hsb-collapsed');
   var collapsed = function () { return doc.documentElement.classList.contains('hsb-collapsed'); };
+  // The Harbour colour scheme applies to every staff page (and the sign-in screen).
+  if (manual || ls('ryst_proxy_token')) doc.documentElement.classList.add('hth');
 
   var ICONS = {
     home: '<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    bell: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+    villa: '<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-5h6v5"/>',
+    lang: '<path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 6 8M11 5c0 4-3 7-7 8M13 21l4-9 4 9M14.5 18h5"/>',
+    out: '<path d="M14 7l5 5-5 5M19 12H7M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/>',
     panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15.5 10l-2 2 2 2"/>',
     cal: '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
@@ -104,6 +111,56 @@
     setTimeout(function () { doc.documentElement.classList.add('hsb-ready'); }, 50);
     doc.body.classList.toggle('hsb-demo', ls('ryst_demo') === '1');
   }
+  // ── Top bar for module pages: the dashboard's header (property, date,
+  // "+ New", notifications, account). Each page keeps its own title and
+  // action buttons in its header, just below.
+  var NEW = [['stay.html?new=invoice', 'cal', 'New booking', 'bookings'], ['stay.html?new=quote', 'doc', 'New quote', 'bookings'],
+    ['guest-register.html?f=unpaid', 'rupee', 'Record payment', 'guestRegister'], ['issues.html#report', 'tool', 'Report issue', 'checklist'],
+    ['petty-cash.html#add', 'wallet', 'Add expense', 'petty-cash'], ['inventory.html#add', 'box', 'Add inventory', 'inventory']];
+  function buildTopbar() {
+    if (manual || doc.querySelector('.htb')) return;
+    var acc = modules(), svg = function (i) { return '<svg class="htb__i" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[i] + '</svg>'; };
+    var p = window.PROPERTY || {}, email = ls('ryst_user_email') || '', name = ls('ryst_user_name') || '';
+    var role = acc.role.charAt(0).toUpperCase() + acc.role.slice(1);
+    var news = NEW.filter(function (n) { return allowed(n[3], acc); });
+    var date = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+    var bar = doc.createElement('header');
+    bar.className = 'htb';
+    bar.innerHTML = '<a class="htb__brand" href="login.html">RYST HARBOUR</a>'
+      + '<span class="htb__prop" title="Signed in to this property">' + svg('villa') + '<span data-hsb-villa2>' + esc(p.name || '') + '</span></span>'
+      + '<span class="htb__date" data-no-i18n>' + esc(date) + '</span>'
+      + '<div class="htb__act">'
+      + (news.length ? '<div class="htb__wrap"><button type="button" class="htb__new" aria-haspopup="true" aria-expanded="false" aria-controls="htbNew" aria-label="' + esc(t('New')) + '">' + svg('plus') + '<span>' + esc(t('New')) + '</span></button>'
+        + '<div class="htb__menu" id="htbNew" hidden><div class="htb__list">' + news.map(function (n) { return '<a class="htb__item" href="' + n[0] + '">' + svg(n[1]) + '<span>' + esc(t(n[2])) + '</span></a>'; }).join('') + '</div></div></div>' : '')
+      + '<a class="htb__icon" href="login.html" title="' + esc(t('Needs attention')) + '" aria-label="' + esc(t('Needs attention')) + ' — ' + esc(t('Dashboard')) + '">' + svg('bell') + '</a>'
+      + '<div class="htb__wrap"><button type="button" class="htb__avatar" aria-haspopup="true" aria-expanded="false" aria-controls="htbMe" aria-label="Your account">' + esc((name || email || 'R').charAt(0).toUpperCase()) + '</button>'
+      + '<div class="htb__menu" id="htbMe" hidden><div class="htb__head" data-no-i18n><b>' + esc(name || email.split('@')[0] || 'Signed in') + '</b><span>' + esc(email) + '</span><span class="htb__role">' + esc(t(role)) + '</span></div>'
+      + '<div class="htb__list">' + (window.rystSetLang ? '<button type="button" class="htb__item" data-htb-lang>' + svg('lang') + '<span data-no-i18n>' + (window.RYST_LANG === 'ta' ? 'English' : 'தமிழ்') + '</span></button>' : '')
+      + '<button type="button" class="htb__item htb__item--danger" data-htb-out>' + svg('out') + '<span>' + esc(t('⎋ Log out').replace(/^⎋\s*/, '')) + '</span></button></div></div></div>'
+      + '</div>';
+    var aside = doc.querySelector('.hsb');
+    doc.body.insertBefore(bar, aside ? aside.nextSibling : doc.body.firstChild);
+    var open = null;
+    var close = function () { if (!open) return; open.menu.hidden = true; open.btn.setAttribute('aria-expanded', 'false'); open = null; };
+    bar.querySelectorAll('[aria-controls]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var menu = doc.getElementById(btn.getAttribute('aria-controls')), was = open && open.menu === menu;
+        close(); if (was) return;
+        menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); open = { menu: menu, btn: btn };
+        var first = menu.querySelector('a,button'); if (first) first.focus();
+      });
+    });
+    doc.addEventListener('click', function (e) { if (open && !open.menu.contains(e.target)) close(); });
+    doc.addEventListener('keydown', function (e) { if (e.key === 'Escape' && open) { var b = open.btn; close(); b.focus(); } });
+    var lang = bar.querySelector('[data-htb-lang]');
+    if (lang) lang.addEventListener('click', function () { window.rystSetLang(window.RYST_LANG === 'ta' ? 'en' : 'ta'); });
+    bar.querySelector('[data-htb-out]').addEventListener('click', function () {
+      if (ls('ryst_demo') === '1' && window.rystExitDemo) { window.rystExitDemo(); return; }
+      ['ryst_proxy_token', 'ryst_user_email', 'ryst_user_role', 'ryst_user_admin', 'ryst_user_modules', 'ryst_user_name'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+      location.href = 'login.html';
+    });
+  }
   function $toggle(aside) {
     var b = aside.querySelector('.hsb__toggle');
     b.addEventListener('click', function () {
@@ -120,12 +177,15 @@
     var p = window.PROPERTY || {};
     var r = doc.querySelector('[data-hsb-rest]'); if (r && p.restaurantName) r.textContent = p.restaurantName;
     var v = doc.querySelector('[data-hsb-villa]'); if (v && p.name) v.textContent = p.name;
+    var v2 = doc.querySelector('[data-hsb-villa2]'); if (v2 && p.name) v2.textContent = p.name;
   }
 
   function mount() {
     mounted = true;
     doc.documentElement.classList.add('has-hsb');
-    if (doc.body) build(); else doc.addEventListener('DOMContentLoaded', build);
+    if (!manual) doc.documentElement.classList.add('has-htb');
+    var go = function () { build(); buildTopbar(); };
+    if (doc.body) go(); else doc.addEventListener('DOMContentLoaded', go);
   }
   function unmount() {
     mounted = false;
