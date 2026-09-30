@@ -376,11 +376,9 @@
   }
   function refreshNav() {
     readAccess();
-    $$('#homeView .sb [data-group]').forEach(function (g) {
-      g.hidden = !$$('.sb__link', g).some(function (a) { return a.style.display !== 'none'; });
-    });
     // More (phones): every sidebar destination this person can open.
-    var more = $$('#homeView .sb__nav > .sb__link, #homeView .sb__group:not([hidden]) .sb__link').filter(function (a) { return a.style.display !== 'none' && a.getAttribute('aria-current') !== 'page'; });
+    if (window.rystShell) window.rystShell.refresh();
+    var more = $$('.hsb__link').filter(function (a) { return !a.hidden && a.style.display !== 'none' && a.getAttribute('aria-current') !== 'page'; });
     setHTML('moreList', '<div class="pop__stack">' + more.map(function (a) { return '<a class="pop__item" href="' + esc(a.getAttribute('href')) + '">' + a.innerHTML + '</a>'; }).join('') + '</div>');
     var bnIssues = $('#bnIssues'), bnCal = $('#bnCal');
     if (bnIssues && bnCal) { var cal = can('bookings'); bnCal.hidden = !cal; bnIssues.hidden = cal || !can('checklist'); }

@@ -29,6 +29,10 @@ After sign-in, `login.html` shows the owner operations dashboard
 (`assets/app/dashboard.css` + `dashboard.js`): KPIs, today's check-ins and
 check-outs, what needs attention, upcoming stays and six months of revenue,
 with the modules in a sidebar (desktop) or bottom navigation (phones).
+The sidebar is shared by every staff page: `assets/app/shell.js` + `shell.css`,
+loaded in each page's `<head>` right after `property.js`. It shows from
+1024 px up and follows the same role/module access as the dashboard; the
+nav list is defined once in `shell.js`.
 Caretakers get a day view instead: check-in, check-out, checklists, issues
 and inventory. It only reads the endpoints the module pages already use,
 under the same role/module access, and its revenue and occupancy follow

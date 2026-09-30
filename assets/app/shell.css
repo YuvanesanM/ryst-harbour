@@ -1,0 +1,44 @@
+/* RYST Harbour — the staff sidebar, shared by the dashboard (login.html) and
+   every module page. Desktop only (≥1024px); phones keep each page's own
+   header, and the dashboard's bottom navigation. Built by shell.js. */
+
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 700;font-display:swap;src:url("/assets/fonts/inter-latin-var.woff2") format("woff2")}
+
+.hsb{
+  --hsb-w:236px; --hsb-h:60px;
+  --ivory:#F6F3ED; --paper:#FBF9F5; --white:#FFFFFF; --ink:#171717; --text-2:#4A4741; --muted:#6B665E;
+  --line:#E6E0D5; --line-2:#EFEAE1; --teal-ink:#3E615D;
+  display:none;
+}
+@media (min-width:1024px){
+  html.has-hsb{padding-left:236px}
+  html.has-hsb #loader{left:236px}
+  html.has-hsb .ob-cartbar.show{left:236px}
+  .hsb{
+    position:fixed;inset:0 auto 0 0;z-index:25;width:var(--hsb-w);display:flex;flex-direction:column;overflow-y:auto;
+    background:var(--paper);border-right:1px solid var(--line);
+    font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Tamil",sans-serif;font-size:14px;line-height:1.45;color:var(--ink);
+    -webkit-font-smoothing:antialiased;text-align:left;
+  }
+}
+.hsb *,.hsb *::before,.hsb *::after{box-sizing:border-box;margin:0}
+.hsb a{color:inherit;text-decoration:none}
+.hsb__brand{display:flex;align-items:center;height:var(--hsb-h);padding:0 22px;flex:none;font-size:12.5px;font-weight:650;letter-spacing:.22em;border-bottom:1px solid var(--line-2)}
+.hsb__nav{display:grid;gap:1px;padding:12px 10px 24px}
+.hsb__group{display:grid;gap:1px;margin-top:14px}
+.hsb__group[hidden],.hsb__link[hidden]{display:none}
+.hsb__label{padding:6px 12px 4px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hsb__link{display:flex;align-items:center;gap:11px;min-height:36px;padding:0 12px;border-radius:8px;color:var(--text-2);font-weight:500;transition:background .15s,color .15s}
+.hsb__link:hover{background:rgba(23,23,23,.045);color:var(--ink)}
+.hsb__link:focus-visible{outline:2px solid #547A76;outline-offset:1px}
+.hsb__link[aria-current="page"]{background:var(--white);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
+.hsb__i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;color:var(--muted)}
+.hsb__link[aria-current="page"] .hsb__i{color:var(--teal-ink)}
+.hsb__foot{margin-top:auto;padding:12px 22px 16px;border-top:1px solid var(--line-2);font-size:12px;color:var(--muted)}
+.hsb__foot b{display:block;color:var(--text-2);font-weight:600;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.hsb-demo .hsb{padding-bottom:56px}
+
+@media print{
+  .hsb{display:none!important}
+  html.has-hsb{padding-left:0!important}
+}

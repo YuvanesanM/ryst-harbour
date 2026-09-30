@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-hsb-manual>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -74,7 +74,9 @@
   .install-app-btn{margin-top:14px;background:#0e2420;color:#f6f1e6;border:0;padding:11px 22px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.3px;display:inline-flex;align-items:center;gap:8px}
   .install-app-btn[hidden]{display:none}
 </style>
+<link rel="stylesheet" href="/assets/app/shell.css">
 <link rel="stylesheet" href="/assets/app/dashboard.css">
+<script src="/assets/app/shell.js"></script>
 <script src="/assets/app/dashboard.js" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="manifest" href="/staff.webmanifest">
@@ -151,37 +153,6 @@
 </svg>
 
 <div id="homeView" class="app" hidden>
-  <aside class="sb" aria-label="Harbour">
-    <a class="sb__brand" href="login.html">RYST HARBOUR</a>
-    <nav class="sb__nav" aria-label="Main">
-        <a class="sb__link" href="login.html" aria-current="page"><svg class="i" aria-hidden="true"><use href="#d-home"/></svg><span>Dashboard</span></a>
-        <a class="sb__link" href="bookings.html" data-module="bookings"><svg class="i" aria-hidden="true"><use href="#d-cal"/></svg><span>Calendar</span></a>
-        <a class="sb__link" href="guest-register.html" data-module="guestRegister"><svg class="i" aria-hidden="true"><use href="#d-list"/></svg><span>Bookings</span></a>
-        <a class="sb__link" href="guest-register.html?f=inhouse" data-module="guestRegister"><svg class="i" aria-hidden="true"><use href="#d-users"/></svg><span>Guests</span></a>
-      <div class="sb__group" data-group>
-        <p class="sb__label">Operations</p>
-        <a class="sb__link" href="checklist.html" data-module="checklist"><svg class="i" aria-hidden="true"><use href="#d-check"/></svg><span>Checklists</span></a>
-        <a class="sb__link" href="issues.html" data-module="checklist"><svg class="i" aria-hidden="true"><use href="#d-tool"/></svg><span>Issues &amp; Maintenance</span></a>
-        <a class="sb__link" href="inventory.html" data-module="inventory"><svg class="i" aria-hidden="true"><use href="#d-box"/></svg><span>Inventory</span></a>
-        <a class="sb__link" href="petty-cash.html" data-module="petty-cash"><svg class="i" aria-hidden="true"><use href="#d-wallet"/></svg><span>Petty Cash</span></a>
-      </div>
-      <div class="sb__group" data-group>
-        <p class="sb__label">Finance</p>
-        <a class="sb__link" href="stay.html" data-module="bookings"><svg class="i" aria-hidden="true"><use href="#d-doc"/></svg><span>Quotes &amp; Invoices</span></a>
-        <a class="sb__link" href="guest-register.html?f=unpaid" data-module="guestRegister"><svg class="i" aria-hidden="true"><use href="#d-rupee"/></svg><span>Payments</span></a>
-        <a class="sb__link" href="reports.html" data-module="reports"><svg class="i" aria-hidden="true"><use href="#d-chart"/></svg><span>Profit &amp; Loss</span></a>
-      </div>
-      <div class="sb__group" data-group>
-        <p class="sb__label">Property</p>
-        <a class="sb__link" href="restaurant.html" data-module="restaurant"><svg class="i" aria-hidden="true"><use href="#d-food"/></svg><span data-prop="restaurantName">Casa de RYST</span></a>
-        <a class="sb__link" href="reviews.html" data-module="feedback"><svg class="i" aria-hidden="true"><use href="#d-star"/></svg><span>Guest Feedback</span></a>
-      </div>
-      <div class="sb__group" data-group>
-        <p class="sb__label">System</p>
-        <a class="sb__link" href="settings.html" data-module="settings"><svg class="i" aria-hidden="true"><use href="#d-gear"/></svg><span>Settings</span></a>
-      </div>
-    </nav>
-  </aside>
 
   <div class="main">
     <header class="tb">
@@ -367,6 +338,7 @@ function showHome(){
   document.getElementById('loginView').style.display='';
   document.getElementById('homeView').removeAttribute('hidden');
   applyRoleView();
+  if(window.rystShell) window.rystShell.mount();
   if(window.rystDashboard) window.rystDashboard.start(); else window.RYST_DASH_PENDING = true;
 }
 
@@ -471,6 +443,7 @@ async function handleGoogleLogin(credentialResponse) {
   fetch(PROXY_URL+'/petty-cash',{headers:{'X-Token':proxyToken}}).then(res=>{
     if(res && res.status===401){
       proxyToken=''; localStorage.removeItem('ryst_proxy_token');
+      if(window.rystShell) window.rystShell.unmount();
       document.getElementById('homeView').setAttribute('hidden','');
       document.getElementById('loginView').removeAttribute('hidden');
       document.getElementById('loginView').style.display='';
@@ -613,6 +586,7 @@ function logout(){
   localStorage.removeItem('ryst_user_admin');
   localStorage.removeItem('ryst_user_modules');
   localStorage.removeItem('ryst_user_name');
+  if(window.rystShell) window.rystShell.unmount();
   document.getElementById('homeView').setAttribute('hidden','');
   document.getElementById('loginView').removeAttribute('hidden');
   document.getElementById('loginView').style.display='';

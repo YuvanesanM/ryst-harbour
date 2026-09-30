@@ -7,6 +7,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css">
+<script src="/assets/app/shell.js"></script>
 <title data-title="Booking Calendar · {name}">Booking Calendar · RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +56,9 @@
   .card.warn .val{color:var(--warn)}
 
   /* ── Layout: calendar + sidebar ── */
-  .layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+  /* With the staff sidebar, a small laptop has too little room for the calendar and side panel side by side. */
+  @media(max-width:1259px){html.has-hsb .layout{grid-template-columns:minmax(0,1fr)}}
 
   /* ── Calendar panel ── */
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 18px rgba(40,50,40,.04)}
@@ -75,7 +79,7 @@
   .cal-legend .i-agoda{background:var(--ota-agoda)}
   .cal-legend .i-conf{background:var(--danger)}
 
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
   .cal-dow{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted2);text-align:center;padding:10px 4px;border-bottom:1px solid var(--line)}
   .cal-cell{min-height:92px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);border-left:4px solid transparent;padding:6px;display:flex;flex-direction:column;gap:3px;cursor:pointer;transition:background .12s;position:relative}
   .cal-cell:hover{background:var(--panel2)}
