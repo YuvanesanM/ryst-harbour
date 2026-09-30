@@ -502,6 +502,7 @@
 
   <div class="tab-panel" data-panel="website" id="websiteSection" style="display:none">
     <p class="gh-mini">Your booking website</p>
+    <div id="webPlanNote" class="sync-result warn" style="margin-bottom:12px;display:none"><span>The direct booking website is part of the Growth and Pro plans — guests can't open it or book on it until you upgrade in the Subscription tab. You can still prepare it here.</span></div>
     <p class="sd" style="margin-top:-4px">A page for your villa where guests see photos, pick dates, get the exact price and book — no OTA commission. Your name, address, WhatsApp, rates and calendar come from the other tabs; this tab adds the photos and words.</p>
     <div id="webLoading" class="sd">Loading…</div>
     <div id="webBody" hidden>
@@ -1973,6 +1974,7 @@ function gstProblem(){
 ['gstEnabled','gstGstin','gstPrefix'].forEach(id=>gEl(id).addEventListener('input',syncGstUi));
 gEl('gstEnabled').addEventListener('change',syncGstUi);
 document.addEventListener('plan-features', e=>{ if(Array.isArray(e.detail) && !e.detail.includes('gstInvoices')) gEl('gstPlanNote').style.display=''; });
+document.addEventListener('plan-features', e=>{ if(Array.isArray(e.detail) && !e.detail.includes('bookingSite')) gEl('webPlanNote').style.display=''; });
 (function(){ const d=new Date(); gEl('gstMonth').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); })();
 gEl('gstRegBtn').addEventListener('click', async ()=>{
   const m=gEl('gstMonth').value; if(!/^\d{4}-\d{2}$/.test(m)){ toast('Pick a month'); return; }

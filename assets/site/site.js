@@ -199,9 +199,48 @@
   if (plansEl) {
     var FEATURES = { calendar: 'Channel calendar sync', bookingSite: 'Direct booking website', dashboard: 'Owner dashboard', whatsapp: 'WhatsApp automation', caretaker: 'Caretaker app', gstInvoices: 'GST invoices', prioritySupport: 'Priority support' };
     var data = { gstPercent: 18, pricesIncludeGst: false, annualMonths: 10, minTermMonths: 6, noticeDays: 30, trialDays: 7, plans: [
-      { key: 'starter', name: 'Starter', monthly: 3499, annual: 34990, setup: 9999, features: ['calendar', 'bookingSite', 'dashboard'] },
+      { key: 'starter', name: 'Starter', monthly: 3499, annual: 34990, setup: 9999, features: ['calendar', 'dashboard'] },
       { key: 'growth', name: 'Growth', monthly: 5499, annual: 54990, setup: 19999, features: ['calendar', 'bookingSite', 'dashboard', 'whatsapp', 'caretaker'] },
       { key: 'pro', name: 'Pro', monthly: 7499, annual: 74990, setup: 29999, features: ['calendar', 'bookingSite', 'dashboard', 'whatsapp', 'caretaker', 'gstInvoices', 'prioritySupport'] } ] };
+    // The comparison table, in detail. Each row belongs to one plan feature
+    // (the keys the server gates on), so a tick always means the plan has it;
+    // '*' rows come with every plan.
+    var BREAKDOWN = [
+      { group: 'Owner dashboard', rows: [
+        ['Today board', 'Arrivals, check-outs and guests in house', 'dashboard'],
+        ['Occupancy and revenue', 'This month against last, nights sold and OTA holds', 'dashboard'],
+        ['Attention list', 'Balances due, low stock, petty cash to reimburse', 'dashboard'],
+        ['Upcoming stays', 'Channel, guest count and payment status at a glance', 'dashboard'],
+        ['Profit & loss reports', 'Revenue, expenses, occupancy and nights by OTA', 'dashboard'],
+        ['Owner report on Telegram', 'Every Monday and on the 1st of the month', 'dashboard'],
+        ['Team access by role', 'Managers and caretakers see only what you allow', 'dashboard'] ] },
+      { group: 'Bookings & channels', rows: [
+        ['Channel calendar sync', 'Airbnb, Booking.com, Agoda and VRBO in one calendar', 'calendar'],
+        ['Blocked dates with a reason', 'Maintenance and owner stays kept apart from bookings', 'calendar'],
+        ['Quotes and invoices', 'Advance, balance and payment mode on every stay', 'dashboard'],
+        ['Online guest check-in', 'Guests send ID and arrival time before they come', 'dashboard'] ] },
+      { group: 'Direct booking website', rows: [
+        ['Your own villa website', 'Photos, rates and live availability on your domain', 'bookingSite'],
+        ['Instant booking online', 'Exact price, UPI and card payment, no OTA commission', 'bookingSite'],
+        ['Enquiries to your dashboard', 'Website requests arrive as quotes, ready to confirm', 'bookingSite'] ] },
+      { group: 'Guest messaging', rows: [
+        ['WhatsApp confirmations', 'Sent the moment a booking is paid', 'whatsapp'],
+        ['Check-in links and reminders', 'Pre-arrival messages on schedule', 'whatsapp'],
+        ['Feedback requests', 'After check-out, with reviews collected in one place', 'whatsapp'] ] },
+      { group: 'Caretaker app', rows: [
+        ['Checklists with photos', 'Check-in, check-out and daily rounds', 'caretaker'],
+        ['Issue reports', 'Photo, urgency and an instant alert to you', 'caretaker'],
+        ['Tamil or English', 'Each person picks their language', 'caretaker'],
+        ['Caretaker activity', 'Who did what, this month, on your Caretakers page', 'caretaker'] ] },
+      { group: 'Finance & compliance', rows: [
+        ['Petty cash', 'Expenses logged by staff, reimbursed by you', 'dashboard'],
+        ['Inventory', 'Stock levels and a restock list', 'dashboard'],
+        ['GST tax invoices', 'GSTIN, SAC and CGST/SGST split, numbered by series', 'gstInvoices'],
+        ['GST register', 'Every invoice, ready for your accountant', 'gstInvoices'] ] },
+      { group: 'Setup & support', rows: [
+        ['Done-for-you setup', 'OTA calendars connected and staff trained in 7 days', '*'],
+        ['Priority support', 'Phone and WhatsApp, answered first', 'prioritySupport'] ] }
+    ];
     var cycle = 'monthly';
     var tick = '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>';
     var renderPlans = function () {
@@ -234,7 +273,16 @@
           + row('Monthly', data.plans.map(function (p) { return '<td' + cls(p) + '>' + inr(p.monthly) + '</td>'; }))
           + row('Annual', data.plans.map(function (p) { return '<td' + cls(p) + '>' + inr(p.annual) + '</td>'; }))
           + row('One-time setup', data.plans.map(function (p) { return '<td' + cls(p) + '>' + inr(p.setup) + '</td>'; }))
-          + keys.map(function (f) { return row(esc(FEATURES[f] || f), data.plans.map(function (p) { return '<td' + cls(p) + '>' + ((p.features || []).indexOf(f) >= 0 ? yes : no) + '</td>'; })); }).join('')
+          + BREAKDOWN.map(function (g) {
+            return '<tr class="ptable__group"><th scope="rowgroup">' + esc(g.group) + '</th>' + data.plans.map(function (p) { return '<td' + cls(p) + '></td>'; }).join('') + '</tr>'
+              + g.rows.map(function (r) {
+                return row('<b>' + esc(r[0]) + '</b><small>' + esc(r[1]) + '</small>', data.plans.map(function (p) {
+                  return '<td' + cls(p) + '>' + (r[2] === '*' || (p.features || []).indexOf(r[2]) >= 0 ? yes : no) + '</td>'; }));
+              }).join('');
+          }).join('')
+          // Anything the server adds that this list doesn't know yet, on one line each.
+          + keys.filter(function (f) { return !BREAKDOWN.some(function (g) { return g.rows.some(function (r) { return r[2] === f; }); }); })
+            .map(function (f) { return row('<b>' + esc(FEATURES[f] || f) + '</b>', data.plans.map(function (p) { return '<td' + cls(p) + '>' + ((p.features || []).indexOf(f) >= 0 ? yes : no) + '</td>'; })); }).join('')
           + '</tbody>';
       }
       var free = 12 - data.annualMonths;
