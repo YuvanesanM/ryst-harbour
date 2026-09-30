@@ -111,6 +111,20 @@
   .cal-pill.inv{background:var(--inv)}
   .cal-pill.qt{background:var(--qt)}
   .cal-pill.block{background:var(--block)}
+  /* Dates you block yourself (Block dates: maintenance, owner use) — hatched
+     grey, reason in dark text, so they never read as an OTA booking. */
+  .cal-cell.held{background:repeating-linear-gradient(45deg,rgba(107,114,128,.13) 0 3px,transparent 3px 8px),var(--panel)}
+  .cal-pill.manual{background:var(--block-soft)!important;color:var(--ink);border:1px solid var(--block);font-weight:600}
+  .cal-legend .i-held{background:repeating-linear-gradient(45deg,var(--block) 0 2px,var(--block-soft) 2px 4px)}
+  .blk-list{border-top:1px solid var(--line);padding:12px 14px 14px}
+  .blk-list h3{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .blk-row{display:flex;align-items:center;gap:10px;width:100%;padding:8px 0;border:0;border-top:1px solid var(--line);background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+  .blk-row:first-of-type{border-top:0}
+  @media(hover:hover){.blk-row:hover .blk-why{text-decoration:underline}}
+  .blk-sw{flex:0 0 10px;height:10px;border-radius:3px}
+  .blk-why{font-weight:600;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .blk-when{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap}
+  .blk-kind{font-size:11px;color:var(--muted);white-space:nowrap}
   .cal-more{font-size:10px;color:var(--muted);padding:0 2px}
 
   /* ── Sidebar ── */
@@ -221,6 +235,7 @@
     .cal-cell.has-booking::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--inv)}
     .cal-cell.has-quote-only::after{background:var(--qt)}
     .cal-cell.has-block-only::after{background:var(--block)}
+    .blk-kind{display:none}
     .cards{grid-template-columns:1fr 1fr}
   }
   @media(max-width:420px){
@@ -283,12 +298,14 @@
           <span><i class="i-airbnb"></i>Airbnb</span>
           <span><i class="i-booking"></i>Booking.com</span>
           <span><i class="i-agoda"></i>Agoda</span>
-          <span><i class="i-block"></i>Other block</span>
+          <span><i class="i-block"></i>Other OTA</span>
+          <span><i class="i-held"></i>Blocked</span>
           <span><i class="i-conf"></i>Overlap</span>
         </div>
       </div>
       <div class="cal-grid" id="calDow"></div>
       <div class="cal-grid" id="calGrid"></div>
+      <div class="blk-list" id="blkList" hidden></div>
     </div>
 
     <div class="side">
@@ -563,6 +580,20 @@ function pillClass(type){ return type==='block' ? 'block' : (type==='quote' ? 'q
 // Sync, e.g. "Airbnb") against known platforms so its pill gets a
 // recognizable color at a glance — anything custom/unrecognized falls
 // back to the plain grey block color.
+// Calendar-sync imports carry source:<feedId> (numbered OTA-…); "Block
+// dates" entries have neither — their guest field is the owner's reason.
+function isManualBlock(b){ return b.type==='block' && !b.source && !String(b.no||'').startsWith('OTA-'); }
+const niceDay = (iso, o) => new Date(iso+'T00:00:00').toLocaleDateString('en-IN', o || {day:'numeric', month:'short'});
+function blockSpan(b){
+  const last = addDays(b.checkout,-1);
+  if(last <= b.checkin) return niceDay(b.checkin, {weekday:'short', day:'numeric', month:'short'});
+  return last.slice(0,7)===b.checkin.slice(0,7) ? `${+b.checkin.slice(8)}–${niceDay(last)}` : `${niceDay(b.checkin)} – ${niceDay(last)}`;
+}
+function otaNameOf(label){
+  const l = (label||'').toLowerCase();
+  return l.includes('airbnb') ? 'Airbnb' : l.includes('booking') ? 'Booking.com' : l.includes('agoda') ? 'Agoda'
+    : (l.includes('vrbo')||l.includes('homeaway')) ? 'VRBO' : (label||'OTA');
+}
 function otaBlockColor(label){
   const l = (label||'').toLowerCase();
   if(l.includes('airbnb')) return 'var(--ota-airbnb)';
@@ -1257,19 +1288,23 @@ function renderCalendar(){
     if(c.iso===today) cls.push('today');
     if(conflict) cls.push('conflict');
     if(c.dayBookings.length) cls.push('has-booking');
-    if(hasBlk) cls.push('blocked');
+    const onlyHeld = hasBlk && c.dayBookings.every(isManualBlock);
+    if(hasBlk && !onlyHeld) cls.push('blocked');
+    if(onlyHeld) cls.push('held');
     if(hasConfirmed) cls.push('unavailable');
     // Mobile collapses to a single dot — priority invoice > quote > block.
     if(!hasInv && hasQt) cls.push('has-quote-only');
     else if(!hasInv && !hasQt && hasBlk) cls.push('has-block-only');
-    const shown = c.dayBookings.slice(0,2).map(b=>
-      `<div class="cal-pill ${pillClass(b.type)}"${b.type==='block' ? ` style="background:${otaBlockColor(b.guest)}"` : ''}>${esc(b.type==='block' ? (b.guest||'Blocked') : (b.guest||b.no||''))}</div>`
-    ).join('');
+    const shown = c.dayBookings.slice(0,2).map(b=>{
+      if(isManualBlock(b)) return `<div class="cal-pill block manual" title="${esc('Blocked: '+(b.guest||'Blocked')+' · '+blockSpan(b))}">${esc(b.guest||'Blocked')}</div>`;
+      return `<div class="cal-pill ${pillClass(b.type)}"${b.type==='block' ? ` style="background:${otaBlockColor(b.guest)}"` : ''}>${esc(b.type==='block' ? (b.guest||'Blocked') : (b.guest||b.no||''))}</div>`;
+    }).join('');
     const more = c.dayBookings.length>2 ? `<div class="cal-more">+${c.dayBookings.length-2} more</div>` : '';
     // Left accent bar in that day's specific OTA color (same otaBlockColor()
     // the pill already uses) — first block of the day sets it, since a
     // day essentially never has two different-platform blocks at once.
-    const style = hasBlk ? ` style="border-left-color:${otaBlockColor(c.dayBookings.find(b=>b.type==='block').guest)}"` : '';
+    const firstBlk = hasBlk && c.dayBookings.find(b=>b.type==='block');
+    const style = hasBlk ? ` style="border-left-color:${isManualBlock(firstBlk) ? 'var(--block)' : otaBlockColor(firstBlk.guest)}"` : '';
     return `<div class="${cls.join(' ')}" data-iso="${c.iso}"${style}>
       <div class="daynum">${c.date.getDate()}</div>
       ${shown}${more}
@@ -1277,6 +1312,28 @@ function renderCalendar(){
   }).join('');
 
   $$('#calGrid .cal-cell').forEach(el=> el.addEventListener('click', ()=> openDay(el.dataset.iso)));
+  renderBlockList(filtered, y, m);
+}
+// Every block touching the month on show, with its reason — the only place
+// phones (where the grid collapses to dots) can read why a date is closed.
+function renderBlockList(filtered, y, m){
+  const box = $('#blkList');
+  const from = dateOnly(new Date(y,m,1)), to = dateOnly(new Date(y,m+1,1));
+  const blocks = filtered.filter(b=>b.type==='block' && b.checkin && b.checkout && b.checkin < to && b.checkout > from)
+    .sort((a,b)=>a.checkin.localeCompare(b.checkin));
+  box.hidden = !blocks.length;
+  if(!blocks.length){ box.innerHTML = ''; return; }
+  box.innerHTML = '<h3>Blocked this month</h3>' + blocks.map(b=>{
+    const manual = isManualBlock(b), n = nightsBetween(b.checkin,b.checkout);
+    const sw = manual ? 'background:repeating-linear-gradient(45deg,var(--block) 0 2px,var(--block-soft) 2px 4px)' : `background:${otaBlockColor(b.guest)}`;
+    return `<button type="button" class="blk-row" data-day="${esc(b.checkin < from ? from : b.checkin)}">
+      <span class="blk-sw" style="${sw}"></span>
+      <span class="blk-why">${esc(manual ? (b.guest||'Blocked') : otaNameOf(b.guest)+' booking')}</span>
+      <span class="blk-kind">${manual ? 'Blocked by you' : 'Calendar sync'}</span>
+      <span class="blk-when">${esc(blockSpan(b))} · ${n} night${n===1?'':'s'}</span>
+    </button>`;
+  }).join('');
+  $$('#blkList .blk-row').forEach(el=> el.addEventListener('click', ()=> openDay(el.dataset.day)));
 }
 
 /* ---------- DAY DETAIL ---------- */
@@ -1293,6 +1350,7 @@ function openDay(iso){
               <span class="ag-no" style="color:${otaBlockColor(b.guest)}">${esc(b.guest||'Blocked')}</span>
               <span class="ag-tag" style="background:var(--block-soft);color:var(--block)">Blocked</span>
             </div>
+            <div class="ag-dates">${isManualBlock(b) ? 'Reason: '+esc(b.guest||'Blocked')+' · blocked by you' : 'Imported by calendar sync'}</div>
             <div class="ag-dates">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${nightsBetween(b.checkin,b.checkout)} night(s)</div>
             <button type="button" class="btn danger" style="align-self:flex-start;margin-top:4px" data-unblock="${esc(b.no)}">Remove block</button>
           </div>`;
