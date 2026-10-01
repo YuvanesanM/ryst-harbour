@@ -31,7 +31,12 @@
   function fmtDay(iso) { return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }); }
   function monthName(start, style) { return new Date(start + 'T00:00:00Z').toLocaleDateString('en-IN', { month: style || 'long', timeZone: 'UTC' }); }
   function ago(ms) { var h = Math.round((Date.now() - ms) / 3600e3); return h < 1 ? 'just now' : h < 24 ? h + 'h ago' : Math.round(h / 24) + 'd ago'; }
-  function time12(hhmm) { var m = /^(\d{1,2}):(\d{2})/.exec(hhmm || ''); if (!m) return ''; var h = +m[1]; return ((h % 12) || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM'); }
+  // Check-in forms save "2:00 PM"; older entries may be 24-hour "14:00".
+  function time12(v) {
+    var s = String(v || '').trim(), m = /^(\d{1,2}):(\d{2})\s*(am|pm)?$/i.exec(s); if (!m) return s;
+    if (m[3]) return (+m[1]) + ':' + m[2] + ' ' + m[3].toUpperCase();
+    var h = +m[1]; return ((h % 12) || 12) + ':' + m[2] + ' ' + (h < 12 ? 'AM' : 'PM');
+  }
 
   // ── Same rules as owner-report.js / reports.html ──────────────────────
   var typeOf = function (s) { return s.type || 'invoice'; };
@@ -99,8 +104,11 @@
       .then(function (j) { D[key] = j; }, function (e) { ERR[key] = e.message || 'Could not load'; })
       .then(render);
   }
-  function load() {
-    D = {}; ERR = {}; TODAY = todayISO();
+  // refresh: keep what's on screen until the new figures arrive (no flash of
+  // loading placeholders each time the app comes back to the foreground).
+  function load(refresh) {
+    if (!refresh) D = {};
+    ERR = {}; TODAY = todayISO();
     var jobs = [];
     if (can('bookings') || can('reports')) jobs.push(get('/stays', 'stays'));
     else if (can('guestRegister')) jobs.push(get('/guest-register', 'reg'));
@@ -138,11 +146,17 @@
     var all = D.stays && Array.isArray(D.stays.stays) ? D.stays.stays : [];
     return all.filter(function (s) { return s && typeOf(s) === 'block' && !isOtaBlock(s) && s.checkin <= TODAY && s.checkout > TODAY; });
   }
-  function runFor(stayNo, type) {
+  function runFor(stayNo, type, day) {
     var runs = D.cl && Array.isArray(D.cl.runs) ? D.cl.runs : [];
     if (type === 'daily') return runs.filter(function (r) { return r.type === 'daily' && r.date === TODAY; })[0] || null;
-    return runs.filter(function (r) { return r.stayNo === stayNo && r.type === type; })[0] || null;
+    var linked = runs.filter(function (r) { return r.stayNo === stayNo && r.type === type; })[0];
+    if (linked || !day) return linked || null;
+    // A checklist started by hand from the Checklists page has no booking
+    // number — count it for the stay whose check-in/out it was done on.
+    var byDay = runs.filter(function (r) { return !r.stayNo && r.type === type && r.date === day; });
+    return byDay.filter(function (r) { return r.status === 'completed'; })[0] || byDay[0] || null;
   }
+  function runForStay(s, type) { return runFor(s.no, type, type === 'checkin' ? s.checkin : s.checkout); }
   function checklistHref(type, s) {
     return 'checklist.html?start=' + type + (s ? '&stay=' + encodeURIComponent(s.no) + '&guest=' + encodeURIComponent(s.block ? s.channel : s.guest) : '');
   }
@@ -184,7 +198,10 @@
     if (stays) {
       var cur = metrics(stays, orders, exps, ms, me), prev = metrics(stays, orders, exps, pms, ms);
       var d = prev.revenue ? Math.round((cur.revenue - prev.revenue) / prev.revenue * 100) : null;
-      setKpi('kRevenue', inr(cur.revenue), d === null ? esc(monthName(ms)) + ' · ' + inr(cur.collected) + ' received'
+      // In the first week a month has barely started — a percentage against
+      // all of last month would read as a collapse. Show both figures instead.
+      if (+TODAY.slice(8, 10) <= 7 && d !== null) setKpi('kRevenue', inr(cur.revenue), esc(t('Booked for')) + ' ' + esc(monthName(ms)) + ' · ' + esc(monthName(pms)) + ' ' + inr(prev.revenue));
+      else setKpi('kRevenue', inr(cur.revenue), d === null ? esc(monthName(ms)) + ' · ' + inr(cur.collected) + ' received'
         : '<span class="' + (d >= 0 ? 'up' : 'down') + '">' + (d >= 0 ? '↑ ' : '↓ ') + Math.abs(d) + '%</span> vs ' + esc(monthName(pms)));
       setKpi('kOcc', Math.round(cur.occupancy) + '%', cur.nights + ' of ' + cur.days + ' nights' + (cur.ota ? ' · +' + cur.ota + ' on OTAs' : ''));
     }
@@ -196,6 +213,7 @@
         : (dep.length ? dep.length + ' checking out' : next ? 'Next: ' + esc(fmtDay(next.checkin)) : 'None coming up'));
     }
     show($('#kIssues'), can('checklist'));
+    var kp = $('.kpis'); if (kp) kp.setAttribute('data-n', $$('.kpi', kp).filter(function (k) { return !k.hidden && k.style.display !== 'none'; }).length);
     if (D.issues) {
       var open = openIssues(), urgent = open.filter(function (i) { return i.urgency === 'urgent'; }).length;
       setKpi('kIssues', String(open.length), urgent ? '<span class="down">' + urgent + ' urgent</span>' : open.length ? 'None urgent' : 'All clear', urgent > 0);
@@ -204,7 +222,7 @@
 
   // ── Owner: Today ──────────────────────────────────────────────────────
   function todayRow(s, type) {
-    var run = can('checklist') && D.cl ? runFor(s.no, type) : null;
+    var run = can('checklist') && D.cl ? runForStay(s, type) : null;
     var clLabel = run ? (run.status === 'completed' ? 'Checklist ✓' : 'Continue') : 'Checklist';
     var status = [payPill(s)];
     if (type === 'checkin' && !s.block) status.push(s.checkedIn ? '<span class="pill pill--good">' + esc(t('Checked in online')) + '</span>' : '<span class="pill">' + esc(t('Check-in form pending')) + '</span>');
@@ -251,14 +269,41 @@
       list.forEach(function (s) {
         [['checkin', s.checkin], ['checkout', s.checkout]].forEach(function (p) {
           if (p[1] !== TODAY) return;
-          var run = runFor(s.no, p[0]);
+          var run = runForStay(s, p[0]);
           if (!run || run.status !== 'completed') items.push({ lvl: '', icon: 'check', title: (p[0] === 'checkin' ? 'Check-in' : 'Check-out') + ' checklist ' + (run ? 'in progress' : 'not started'), meta: s.guest, href: checklistHref(p[0], s) });
         });
       });
     }
     if (D.cl && (D.cl.templates && (D.cl.templates.daily || []).length)) {
-      var daily = runFor('', 'daily');
-      if (!daily || daily.status !== 'completed') items.push({ lvl: '', icon: 'check', title: 'Daily rounds ' + (daily ? 'in progress' : 'not done yet'), meta: 'Pool, garden, water, power backup', href: checklistHref('daily') });
+      var daily = runFor('', 'daily'), dl = D.cl.templates.daily;
+      if (!daily || daily.status !== 'completed') items.push({ lvl: '', icon: 'check', title: 'Daily rounds ' + (daily ? 'in progress' : 'not done yet'), meta: dl.slice(0, 3).join(', ') + (dl.length > 3 ? '…' : ''), href: checklistHref('daily') });
+    }
+    if (list && can('bookings')) {
+      // Money to collect: stays already over with a balance, and arrivals in
+      // the next three days not yet paid in full (today's are on the Today card).
+      var after = list.filter(function (s) { return !s.block && s.due > 0 && s.checkout <= TODAY && s.checkout >= addDays(TODAY, -60) && s.checkin < TODAY; })
+        .sort(function (a, b) { return b.checkout.localeCompare(a.checkout); });
+      var before = list.filter(function (s) { return !s.block && s.due > 0 && s.checkin > TODAY && s.checkin <= addDays(TODAY, 3); })
+        .sort(function (a, b) { return a.checkin.localeCompare(b.checkin); });
+      after.slice(0, 3).forEach(function (s) { items.push({ lvl: 'warn', icon: 'rupee', title: inr(s.due) + ' still due', meta: s.guest + ' · checked out ' + fmtDay(s.checkout), href: stayHref(s) }); });
+      if (after.length > 3) items.push({ lvl: 'warn', icon: 'rupee', title: '+' + (after.length - 3) + ' more balances to collect', meta: inr(after.slice(3).reduce(function (a, s) { return a + s.due; }, 0)) + ' in all', href: 'guest-register.html?f=unpaid' });
+      before.forEach(function (s) { items.push({ lvl: '', icon: 'rupee', title: inr(s.due) + ' due before arrival', meta: s.guest + ' · arrives ' + fmtDay(s.checkin), href: stayHref(s) }); });
+      // The same night held by two bookings or OTA calendars (next 60 days).
+      var nights = {};
+      list.forEach(function (s) {
+        for (var d = s.checkin < TODAY ? TODAY : s.checkin; d < s.checkout && d < addDays(TODAY, 60); d = addDays(d, 1)) (nights[d] = nights[d] || []).push(s);
+      });
+      var seen = {};
+      Object.keys(nights).sort().forEach(function (d) {
+        var h = nights[d]; if (h.length < 2) return;
+        var key = h.map(function (s) { return s.no; }).sort().join('|'); if (seen[key]) return; seen[key] = 1;
+        items.unshift({ lvl: 'bad', icon: 'cal', title: fmtDay(d) + ' is held twice', meta: h.map(function (s) { return s.block ? s.channel : s.guest; }).join(' and ') + ' — check it isn’t a double booking', href: 'bookings.html' });
+      });
+    }
+    if (D.rs && Array.isArray(D.rs.orders) && can('restaurant')) {
+      var bills = D.rs.orders.filter(function (o) { return o.status === 'open' && o.date && o.date < addDays(TODAY, -1); });
+      var billAmt = bills.reduce(function (a, o) { return a + num(o.total); }, 0);
+      if (billAmt > 0) items.push({ lvl: 'warn', icon: 'food', title: inr(billAmt) + ' in food bills not settled', meta: bills.length + ' order' + (bills.length === 1 ? '' : 's') + ' since ' + fmtDay(bills.map(function (o) { return o.date; }).sort()[0]), href: 'restaurant.html' });
     }
     if (D.pc && Array.isArray(D.pc.entries)) {
       var pend = D.pc.entries.filter(function (e) { return e.type === 'expense' && e.status === 'pending'; });
@@ -282,7 +327,9 @@
     setHTML('bellList', items.length ? '<div class="pop__stack">' + attHTML(items) + '</div>' : '<div style="padding:12px 14px">' + allClear + '</div>');
     var b = $('#bellCount'); b.textContent = items.length; b.hidden = !items.length;
     var tc = $('#tasksCount'); tc.textContent = items.length; tc.hidden = !items.length;
-    show($('#cAttn'), can('checklist') || can('inventory') || can('petty-cash'));
+    var attn = can('checklist') || can('inventory') || can('petty-cash') || can('bookings');
+    show($('#cAttn'), attn);
+    var grid = $('#cAttn') && $('#cAttn').parentElement; if (grid) grid.classList.toggle('no-attn', !attn);
     renderTasks(items);
   }
 
@@ -308,7 +355,7 @@
     var today = list.filter(function (s) { return (type === 'checkin' ? s.checkin : s.checkout) === TODAY; });
     if (!today.length) return '<div class="empty">' + ICON('ok') + '<span>' + esc(t(type === 'checkin' ? 'No check-in today' : 'No check-out today')) + '</span></div>';
     return today.map(function (s) {
-      var run = D.cl ? runFor(s.no, type) : null, done = run && run.status === 'completed';
+      var run = D.cl ? runForStay(s, type) : null, done = run && run.status === 'completed';
       return '<div class="stay-card"><b data-no-i18n>' + esc(s.guest) + '</b><div class="stay-card__meta"><span>' + guestsTxt(s) + '</span>'
         + (type === 'checkin' && s.arrival ? '<span><span>' + esc(t('Arriving')) + '</span> <span data-no-i18n>' + esc(time12(s.arrival)) + '</span></span>' : '')
         + (type === 'checkin' && !s.block ? (s.checkedIn ? '<span class="pill pill--good">' + esc(t('Checked in online')) + '</span>' : '<span class="pill">' + esc(t('Check-in form pending')) + '</span>') : '') + '</div>'
@@ -460,7 +507,7 @@
     if (Array.isArray(e.detail) && e.detail.indexOf('caretaker') < 0) { NO_CARETAKER_PLAN = true; if (started) { refreshNav(); render(); } }
   });
   // Come back to fresh numbers when the app returns to the foreground.
-  doc.addEventListener('visibilitychange', function () { if (started && doc.visibilityState === 'visible' && !$('#homeView').hidden) { TODAY = todayISO(); load(); } });
+  doc.addEventListener('visibilitychange', function () { if (started && doc.visibilityState === 'visible' && !$('#homeView').hidden) { TODAY = todayISO(); renderHeader(); load(true); } });
 
   window.rystDashboard = { start: start, refreshNav: refreshNav };
   if (window.RYST_DASH_PENDING) start();

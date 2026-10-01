@@ -392,12 +392,18 @@ async function load(){
     const data = await res.json().catch(()=>({}));
     DOC = { templates: Object.assign({checkin:[],checkout:[],daily:[]}, data.templates||{}), runs: Array.isArray(data.runs)?data.runs:[] };
 
-    // /stays is owner-only server-side — a caretaker-role token gets 403.
-    // That's fine: the "due today" panel just won't populate for them, and
-    // starting a checklist manually still works regardless of role.
+    // Today's check-ins/outs for the "due today" panel, so each checklist is
+    // tied to its booking. /stays needs the bookings (or reports) module; a
+    // caretaker usually has Guest Register instead, which lists the same
+    // confirmed stays. Best-effort: starting a checklist by hand always works.
     try{
       const sres = await fetch(PROXY_URL+'/stays', { headers:{'X-Token':TOKEN} });
-      if(sres.ok){ const sdata = await sres.json().catch(()=>({})); STAYS = Array.isArray(sdata.stays)?sdata.stays:[]; }
+      if(sres.ok){ const sdata = await sres.json().catch(()=>({})); STAYS = confirmedStays(Array.isArray(sdata.stays)?sdata.stays:[]); }
+      else {
+        const gres = await fetch(PROXY_URL+'/guest-register', { headers:{'X-Token':TOKEN} });
+        if(gres.ok){ const g = await gres.json().catch(()=>({}));
+          STAYS = (Array.isArray(g.entries)?g.entries:[]).filter(e => e.stayStatus !== 'unconfirmed').map(e => ({ no:e.no, guest:e.guest, checkin:e.checkin, checkout:e.checkout })); }
+      }
     }catch(e){ /* ignore — best-effort */ }
 
     render();
@@ -425,6 +431,13 @@ async function sendCommand(cmd){
   return data;
 }
 
+// A real booking: an invoice, or a quote with an advance paid — minus a
+// quote already turned into an invoice (same rule as the dashboard).
+function confirmedStays(all){
+  const typeOf = s => s.type || 'invoice', key = s => String(s.email||'').trim().toLowerCase() || String(s.guest||'').trim().toLowerCase();
+  const converted = q => typeOf(q)==='quote' && all.some(s => s!==q && typeOf(s)==='invoice' && s.checkin===q.checkin && s.checkout===q.checkout && key(s) && key(s)===key(q));
+  return all.filter(s => (typeOf(s)==='invoice' || (typeOf(s)==='quote' && parseFloat(s.advance)>0)) && !converted(s));
+}
 function findRun(stayNo, type){
   // A daily round belongs to a day, not a booking.
   if(type === 'daily') return DOC.runs.find(r => r.type === 'daily' && r.date === todayISO());
@@ -433,7 +446,7 @@ function findRun(stayNo, type){
 
 function renderDue(){
   const today = todayISO();
-  const due = STAYS.filter(s => (s.type||'invoice')==='invoice' && (s.checkin===today || s.checkout===today));
+  const due = STAYS.filter(s => s.checkin===today || s.checkout===today);
   const rows = [];
   due.forEach(s=>{
     if(s.checkin===today) rows.push({ stayNo:s.no, guest:s.guest, type:'checkin' });
