@@ -712,8 +712,13 @@ function computeMetrics(startISO, endISO, F){
   const foodOrders = ORDERS.filter(o=>o.status!=='cancelled' && o.date && inRange(o.date,startISO,endISO));
   const foodRevenue = foodOrders.reduce((s,o)=>s+toNum(o.total),0);
   const foodCollected = foodOrders.filter(o=>o.status==='settled').reduce((s,o)=>s+toNum(o.total),0);
-  const revenue = stayRevenue + foodRevenue;
-  const collected = stayCollected + foodCollected;
+  // A confirmed quote (advance paid, not yet invoiced) adds the advance it
+  // has received — money in hand — until its invoice replaces it with the
+  // full total (converted quotes are already out of ROWS). Kept out of
+  // stayRevenue so the per-night and per-booking rates stay invoice-based.
+  const advanceRevenue = rows.filter(r=>r.type==='quote' && r.advance>0).reduce((s,r)=>s+r.advance,0);
+  const revenue = stayRevenue + advanceRevenue + foodRevenue;
+  const collected = stayCollected + advanceRevenue + foodCollected;
   const outstanding = Math.max(0, revenue-collected);
   const expenses = sliceExpenses(startISO,endISO).filter(e=>e.type==='expense').reduce((s,e)=>s+toNum(e.amount),0);
   const net = revenue-expenses;
@@ -774,7 +779,7 @@ function computeMetrics(startISO, endISO, F){
 
   return {
     revenue, collected, outstanding, expenses, net, marginPct,
-    stayRevenue, foodRevenue,
+    stayRevenue, foodRevenue, advanceRevenue,
     bookings: invoices.length, quotesTotal: allQuotesInRange.length, quotesConverted: convertedInRange.length,
     conversionPct: allQuotesInRange.length>=3 ? (convertedInRange.length/allQuotesInRange.length)*100 : null,
     avgBookingValue: invoices.length ? stayRevenue/invoices.length : 0,
@@ -1217,7 +1222,7 @@ function renderFilterBar(R){
 function renderKpis(cur, prev, S, R){
   const unfiltered = facetsActive(F);
   const financeCards = [
-    { label:'Revenue', value:cur.revenue, prev:prev.revenue, fmt:'money', hero:true, sub:'stays (by check-in) + food sales', spark:S.map(b=>b.revenue), prevLabel:R.prev.label },
+    { label:'Revenue', value:cur.revenue, prev:prev.revenue, fmt:'money', hero:true, sub:'stays (by check-in) + quote advances + food sales', spark:S.map(b=>b.revenue), prevLabel:R.prev.label },
     { label:'Expenses', value:cur.expenses, prev:prev.expenses, fmt:'money', invert:true, sub:'petty cash, all statuses', unfiltered, prevLabel:R.prev.label },
     { label:'Net Profit', value:cur.net, prev:prev.net, fmt:'money', sub:'revenue − expenses', unfiltered, prevLabel:R.prev.label },
     { label:'Profit Margin', value:cur.marginPct, prev:prev.marginPct, fmt:'pct', na: cur.marginPct==null, sub:'net ÷ revenue', unfiltered, prevLabel:R.prev.label },
@@ -1324,7 +1329,8 @@ function renderFootnotes(cur){
     timestamp (it updates on every edit). Cancellation rate isn't shown: this system has no record of cancelled
     bookings (deleting one leaves no trace).
     Revenue includes ${esc(PROPERTY.restaurantName || 'restaurant')} food sales (every order except a cancelled one, counted on its order date) alongside
-    stay invoices — Net Profit and Margin subtract petty-cash expenses only, not food's own ingredient cost, so
+    stay invoices, plus the advance already received on confirmed quotes not yet invoiced (by check-in date; once the
+    invoice is made its full total counts instead) — Net Profit and Margin subtract petty-cash expenses only, not food's own ingredient cost, so
     they run a little rich wherever food sales are a meaningful share of the period.
   `;
 }

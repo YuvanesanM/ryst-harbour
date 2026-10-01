@@ -4,7 +4,8 @@
 // arrives or leaves today, and is anything wrong. It only reads what the
 // module pages already read (same endpoints, same role/module rules), and
 // every number follows the Reports page and the owner report on Telegram:
-//   revenue    invoices by check-in date, plus food orders placed
+//   revenue    invoices by check-in date, plus the advance on confirmed
+//              quotes not yet invoiced, plus food orders placed
 //   occupancy  nights held by a real booking; OTA holds counted apart
 // Caretakers get their own day view (check-in, check-out, checklists, issues,
 // inventory). Nothing here writes data: every action opens the module page.
@@ -77,8 +78,11 @@
   function metrics(stays, orders, expenses, start, end) {
     var inv = stays.filter(function (s) { return typeOf(s) === 'invoice' && s.checkin >= start && s.checkin < end; });
     var food = orders.filter(function (o) { return o.status !== 'cancelled' && o.date >= start && o.date < end; });
-    var revenue = inv.reduce(function (a, s) { return a + grandTotal(s); }, 0) + food.reduce(function (a, o) { return a + num(o.total); }, 0);
-    var collected = inv.reduce(function (a, s) { return a + num(s.advance); }, 0) + food.filter(function (o) { return o.status === 'settled'; }).reduce(function (a, o) { return a + num(o.total); }, 0);
+    // Confirmed quotes not yet invoiced count the advance received.
+    var adv = stays.filter(function (s) { return typeOf(s) === 'quote' && num(s.advance) > 0 && s.checkin >= start && s.checkin < end && !isConverted(s, stays); })
+      .reduce(function (a, s) { return a + num(s.advance); }, 0);
+    var revenue = inv.reduce(function (a, s) { return a + grandTotal(s); }, 0) + adv + food.reduce(function (a, o) { return a + num(o.total); }, 0);
+    var collected = inv.reduce(function (a, s) { return a + num(s.advance); }, 0) + adv + food.filter(function (o) { return o.status === 'settled'; }).reduce(function (a, o) { return a + num(o.total); }, 0);
     var spent = expenses.filter(function (e) { return e.type === 'expense' && e.date >= start && e.date < end; }).reduce(function (a, e) { return a + num(e.amount); }, 0);
     var days = nightsBetween(start, end) || 1, n = nightsIn(stays, start, end);
     return { revenue: revenue, collected: collected, expenses: spent, days: days, nights: n.booked, ota: n.ota, occupancy: n.booked / days * 100 };
