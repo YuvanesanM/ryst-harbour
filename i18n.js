@@ -257,6 +257,18 @@
     'restock at': 'மறு நிரப்பல் அளவு', 'Report issue': 'பிரச்சனையைத் தெரிவி', 'Add expense': 'செலவைச் சேர்', 'Add inventory': 'இருப்பைச் சேர்',
     'Ask the owner for Guest Register access to see arrivals here.': 'வருகைகளை இங்கே பார்க்க, விருந்தினர் பதிவேடு அனுமதியை உரிமையாளரிடம் கேளுங்கள்.',
     'All clear — nothing needs you right now.': 'எல்லாம் சரி — இப்போது கவனிக்க வேண்டியது எதுவும் இல்லை.',
+    // ── guest register ──
+    'This month': 'இந்த மாதம்', 'Upcoming': 'வரவிருப்பவை', 'Fill rate': 'நிரம்பல் விகிதம்', 'In-house': 'தங்கியிருப்பவர்கள்',
+    'Balance due': 'நிலுவை உள்ளவை', 'Food due': 'உணவு நிலுவை', 'Not checked in': 'செக்-இன் செய்யாதவர்', 'Not checked in yet': 'இன்னும் செக்-இன் செய்யவில்லை',
+    'Invoice': 'விலைப்பட்டியல்', 'Quote': 'மதிப்பீடு', 'Arriving today': 'இன்று வருகை', 'Arrives tomorrow': 'நாளை வருகை',
+    'Departs today': 'இன்று புறப்பாடு', 'Departs tomorrow': 'நாளை புறப்பாடு', 'Stay paid in full': 'தங்கல் கட்டணம் முழுமையாகச் செலுத்தப்பட்டது',
+    'Unconfirmed quote': 'உறுதிசெய்யப்படாத மதிப்பீடு', 'No food orders': 'உணவு ஆர்டர் இல்லை', 'Loading guest register…': 'விருந்தினர் பதிவேடு ஏற்றப்படுகிறது…',
+    'Bank transfer': 'வங்கிப் பரிமாற்றம்', 'Cash': 'ரொக்கம்', 'Website': 'இணையதளம்', 'WhatsApp / Phone': 'WhatsApp / தொலைபேசி',
+    'Walk-in': 'நேரடி வருகை', 'Referral': 'பரிந்துரை', 'Other': 'மற்றவை', 'OTA payout': 'OTA செலுத்தல்',
+    "· Who's coming, who's here": '· யார் வருகிறார்கள், யார் இங்கே',
+    'Show unconfirmed quotes (drafts with no advance paid)': 'உறுதிசெய்யப்படாத மதிப்பீடுகளைக் காட்டு (முன்பணம் செலுத்தாத வரைவுகள்)',
+    'Nothing matches — try a different search or filter.': 'எதுவும் பொருந்தவில்லை — வேறு தேடல் அல்லது வடிகட்டியை முயற்சிக்கவும்.',
+    'Search name, phone or booking no…': 'பெயர், தொலைபேசி அல்லது முன்பதிவு எண்ணைத் தேடு…', 'Needs attention — Dashboard': 'கவனிக்க வேண்டியவை — முகப்பு', 'e.g. INV-2026/012': 'எ.கா. INV-2026/012',
     'Channels': 'சேனல்கள்', 'Check now': 'இப்போது சரிபார்', 'Checking…': 'சரிபார்க்கிறது…', 'Manage calendars': 'நாட்காட்டிகளை நிர்வகி',
     'Set up calendars': 'நாட்காட்டிகளை அமை', 'In sync': 'ஒத்திசைந்தது', 'Failing': 'தோல்வி', 'Can’t read': 'படிக்க முடியவில்லை',
     'Empty — rechecking': 'காலி — மீண்டும் சரிபார்க்கிறது', 'Waiting for first check': 'முதல் சரிபார்ப்புக்குக் காத்திருக்கிறது', 'Not checked': 'சரிபார்க்கப்படவில்லை',
@@ -271,6 +283,16 @@
   var TYPE = { 'Check-in': 'செக்-இன்', 'Check-out': 'செக்-அவுட்', 'Daily': 'தினசரி' };
   function bedroom(n, toilet){ return 'படுக்கையறை ' + n + (toilet ? ' கழிவறை' : ''); }
   var PATTERNS = [
+    [/^(\d+) nights?( · (\d+) guests?)?$/, function(m){ return m[1] + ' இரவு' + (m[3] ? ' · ' + m[3] + ' விருந்தினர்' : ''); }],
+    [/^(Stay|Food): (₹[\d,]+) due$/, function(m){ return (m[1] === 'Stay' ? 'தங்கல்' : 'உணவு') + ': ' + m[2] + ' நிலுவை'; }],
+    [/^Food paid \((₹[\d,]+)\)$/, function(m){ return 'உணவுக் கட்டணம் செலுத்தப்பட்டது (' + m[1] + ')'; }],
+    [/^In (\d+) days$/, function(m){ return m[1] + ' நாட்களில்'; }],
+    [/^Departs in (\d+)d$/, function(m){ return m[1] + ' நாட்களில் புறப்பாடு'; }],
+    [/^✓ Checked in((?: · .+)?)$/, function(m){ return '✓ செக்-இன் ஆனது' + m[1].split(' · ').slice(1).map(function(p){
+      var a = /^arrived (.+)$/.exec(p), g = /^(\d+) guests? on arrival$/.exec(p);
+      return ' · ' + (a ? a[1] + '-க்கு வந்தார்' : g ? 'வருகையில் ' + g[1] + ' விருந்தினர்' : p); }).join(''); }],
+    [/^(\d{1,2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)$/, function(m){ return m[1] + ' ' + MONTHS[m[2].slice(0,3)]; }],
+    [/^Could not load the register — (.+)$/, function(m){ return 'பதிவேட்டை ஏற்ற முடியவில்லை — ' + m[1]; }],
     [/^(.+) calendar: (failing|can’t read|empty — rechecking|not checked for \d+h)$/, function(m){ return m[1] + ' நாட்காட்டி: ' + (TA[m[2].charAt(0).toUpperCase() + m[2].slice(1)] || m[2]); }],
     [/^Bedroom (\d+)( toilet)? — (.+)$/, function(m){ return bedroom(m[1], m[2]) + ' — ' + (TA[m[3]] || m[3]); }],
     [/^Bedroom (\d+)$/, function(m){ return bedroom(m[1]); }],

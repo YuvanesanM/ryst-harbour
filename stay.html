@@ -363,6 +363,12 @@
               style="width:90px;padding:5px 8px;font-size:12.5px;text-align:right;border:1px solid var(--line);border-radius:7px;background:var(--panel2)">
           </div>
           <div class="grand"><span>Grand Total</span><b id="mGrand">₹0</b></div>
+          <div id="commRow" hidden style="align-items:center">
+            <span>OTA commission <small id="commHint" style="color:var(--muted2);font-weight:400"></small></span>
+            <input id="commInp" type="number" min="0" step="1" inputmode="decimal" placeholder="0" aria-label="OTA commission in rupees"
+              style="width:90px;padding:5px 8px;font-size:12.5px;text-align:right;border:1px solid var(--line);border-radius:7px;background:var(--panel2)">
+          </div>
+          <div id="netRow" hidden><span>Net payout to you</span><b id="mNet">₹0</b></div>
         </div>
       </div>
 
@@ -828,6 +834,8 @@ function bind(){
   $("#checkin").addEventListener("input", syncNights);
   $("#checkout").addEventListener("input", syncNights);
   $("#discountInp").addEventListener("input", render);
+  $("#commInp").addEventListener("input", render);
+  $("#channel").addEventListener("change", render);
   $("#addLi").addEventListener("click", ()=>{ items.push({desc:"",qty:"1",rate:""}); renderItems(); render(); });
   $("#typeSeg").querySelectorAll("button").forEach(b=> b.addEventListener("click", ()=> setType(b.dataset.type)));
   $("#hdrBrand").addEventListener("click", ()=> window.location.href='login.html');
@@ -965,7 +973,7 @@ function newDoc(){
   ["guest","email","phone","guests","ref","checkin","checkout","nights","deposit","advance"].forEach(id=> $("#"+id).value="");
   syncPhoneValidity();
   syncCheckoutMin();
-  $("#discountInp").value="";
+  $("#discountInp").value=""; $("#commInp").value="";
   $("#mode").value="UPI"; // matches the <select>'s own default-selected option
   $("#channel").value="";
   items=[{desc:"Villa Rental Charges",qty:"1",rate:rateFor("Villa Rental Charges"),_villaRow:true}];
@@ -1072,6 +1080,28 @@ function renderItems(){
 }
 
 /* ---------- RENDER PREVIEW ---------- */
+// OTA commission: what the channel keeps from this booking. Starts from the
+// channel's % in Settings → OTA Sync; type an amount to use the real figure
+// from the OTA's statement. Only for the bookkeeping — never printed.
+function otaChannel(ch){ return ['Airbnb','Booking.com','MakeMyTrip','Agoda'].includes(ch); }
+function commissionPct(ch){ const m = settings.channelCommission || {}; const v = parseFloat(m[ch]); return isFinite(v) && v > 0 ? v : 0; }
+function commissionFor(ch, grand){
+  if(!otaChannel(ch)) return null;
+  const typed = $("#commInp").value.trim();
+  if(typed !== '') return { amount: Math.max(0, parseFloat(typed)||0), manual: true };
+  const pct = commissionPct(ch);
+  return { amount: Math.round(grand * pct / 100), manual: false, pct };
+}
+function syncCommission(grand){
+  const ch = $("#channel").value, on = otaChannel(ch);
+  $("#commRow").hidden = !on; $("#netRow").hidden = !on;
+  if(!on) return;
+  const pct = commissionPct(ch), c = commissionFor(ch, grand);
+  $("#commInp").placeholder = String(Math.round(grand * pct / 100));
+  $("#commHint").textContent = c.manual ? '(from statement)' : pct ? '(' + pct + '% of total)' : '(set the % in Settings)';
+  $("#mNet").textContent = money(Math.max(0, grand - c.amount));
+}
+function grandNow(){ const sub = items.reduce((s,it)=>s+lineAmt(it),0); return Math.max(0, sub - (parseFloat($("#discountInp").value)||0)); }
 function render(){
   const isInv = docType==="invoice";
   $("#pTitle").textContent  = isInv ? "INVOICE" : "QUOTATION";
@@ -1139,6 +1169,7 @@ function render(){
 
   $("#mSub").textContent   = money(sub);
   $("#mGrand").textContent = money(grand);
+  syncCommission(grand);
 
   $("#pBank").innerHTML = esc(settings.bank).replace(/\n/g,"<br>") + `<div style="margin-top:6px;font-weight:600;color:var(--sea-d)">PAN: ${esc(settings.pan)}</div>`;
   $("#pDecl").textContent = settings.declaration;
@@ -1175,6 +1206,8 @@ function collect(){
     guest:$("#guest").value, email:$("#email").value, phone:$("#phone").value, guests:$("#guests").value,
     ref:$("#ref").value, checkin:$("#checkin").value, checkout:$("#checkout").value, mode:$("#mode").value,
     channel:$("#channel").value,
+    ...(()=>{ const c = commissionFor($("#channel").value, grandNow());
+      return c ? { otaCommission: c.amount, otaCommissionManual: c.manual || undefined } : { otaCommission: undefined, otaCommissionManual: undefined }; })(),
     ...(curHold && !(existing&&existing.otaHold) && { otaHold: curHold.no, otaFeed: curHold.source || "" }),
     deposit: parseFloat($("#deposit").value)||0, advance: parseFloat($("#advance").value)||0,
     discount: parseFloat($("#discountInp").value)||0,
@@ -1244,6 +1277,7 @@ function loadDoc(no){
   syncPhoneValidity(); // flags an old record's phone if it predates this format check — doesn't block loading it
   $("#ref").value=d.ref||""; $("#checkin").value=d.checkin||""; $("#checkout").value=d.checkout||""; $("#mode").value=d.mode||"";
   $("#channel").value=d.channel||"";
+  $("#commInp").value = d.otaCommissionManual && d.otaCommission!=null ? String(d.otaCommission) : "";
   $("#deposit").value=d.deposit||""; $("#advance").value=d.advance||"";
   $("#discountInp").value=d.discount!=null ? String(d.discount) : "";
   syncCheckoutMin();
