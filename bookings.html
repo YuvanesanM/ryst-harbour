@@ -665,7 +665,7 @@ async function load(){
     if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
     if(!res.ok) throw new Error('Server error ('+res.status+')');
     const data = await res.json().catch(()=>({}));
-    STAYS = Array.isArray(data.stays) ? data.stays.filter(d=>d.checkin && d.checkout) : [];
+    setStays(data);
     render();
     loader.classList.add('hide');
     syncOta(true); // best-effort, silent — keeps OTA blocks fresh without an extra click
@@ -709,7 +709,7 @@ async function syncOta(silent){
 
     // Refresh STAYS so newly synced OTA blocks show up immediately.
     const sres = await fetch(PROXY_URL+'/stays', { headers:{'X-Token':TOKEN} });
-    if(sres.ok){ const sdata = await sres.json().catch(()=>({})); STAYS = Array.isArray(sdata.stays) ? sdata.stays.filter(d=>d.checkin && d.checkout) : STAYS; render(); }
+    if(sres.ok){ const sdata = await sres.json().catch(()=>({})); if(Array.isArray(sdata.stays)) setStays(sdata); render(); }
 
     if(!silent){
       const ok = results.filter(r=>r.ok);
@@ -730,16 +730,31 @@ $('#btnSyncOta').addEventListener('click', ()=>syncOta(false));
 // Writes the full STAYS array back — blocks live in the same /stays document
 // as invoices/quotes so they share storage, the overlap-conflict check, and
 // the owner-only auth already enforced on this route.
+// Bookings without dates aren't shown here but must still go back with every
+// save — the server reads a booking missing from the list as deleted.
+let UNDATED = [];
+function setStays(data){
+  const all = Array.isArray(data && data.stays) ? data.stays : [];
+  STAYS = all.filter(d=>d.checkin && d.checkout);
+  UNDATED = all.filter(d=>!(d.checkin && d.checkout));
+}
 async function pushStays(){
   const res = await fetch(PROXY_URL+'/stays', {
     method:'PUT', headers:{'X-Token':TOKEN,'Content-Type':'application/json'},
-    body: JSON.stringify({version:1, stays: STAYS})
+    body: JSON.stringify({version:1, stays: STAYS.concat(UNDATED)})
   });
   if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return false; }
   if(!res.ok){
     const data = await res.json().catch(()=>({}));
     throw new Error(data.error || ('Save failed ('+res.status+')'));
   }
+  // Re-read the list so what was just added carries the server's marks —
+  // otherwise the next save from this page looks like a new booking reusing
+  // a number that's already taken, and is refused.
+  try{
+    const r = await fetch(PROXY_URL+'/stays', { headers:{'X-Token':TOKEN}, cache:'no-store' });
+    if(r.ok) setStays(await r.json());
+  }catch(e){ /* the save went through; a stale list is only a problem for the next save */ }
   return true;
 }
 
@@ -782,7 +797,7 @@ function scheduleWaRefresh(){
       const res = await fetch(PROXY_URL+'/stays', { headers:{'X-Token':TOKEN}, cache:'no-store' });
       if(!res.ok) return;
       const data = await res.json().catch(()=>null);
-      if(data && Array.isArray(data.stays)){ STAYS = data.stays.filter(d=>d.checkin && d.checkout); render(); }
+      if(data && Array.isArray(data.stays)){ setStays(data); render(); }
     }catch(e){}
   }, ms));
 }
