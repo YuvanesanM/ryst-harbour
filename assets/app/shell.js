@@ -85,7 +85,7 @@
     return all.indexOf(exact) >= 0 ? exact : (all.indexOf(file) >= 0 ? file : '');
   }
   function label(s) {
-    if (s === '{restaurantName}') return (window.PROPERTY && window.PROPERTY.restaurantName) || 'Casa de RYST';
+    if (s === '{restaurantName}') return (window.PROPERTY && window.PROPERTY.restaurantName) || t('Restaurant');
     return t(s);
   }
 

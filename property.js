@@ -80,7 +80,7 @@
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
   function each(root, sel, fn){ var list = (root || document).querySelectorAll(sel); for (var i = 0; i < list.length; i++) fn(list[i]); }
   function apply(root){
-    each(root, '[data-prop]', function(el){ el.textContent = P[el.getAttribute('data-prop')] || ''; });
+    each(root, '[data-prop]', function(el){ el.textContent = P[el.getAttribute('data-prop')] || el.getAttribute('data-prop-fallback') || ''; });
     each(root, '[data-prop-split]', function(el){
       var v = String(P[el.getAttribute('data-prop-split')] || '').trim(), i = v.lastIndexOf(' ');
       el.innerHTML = i > 0 ? esc(v.slice(0, i)) + ' <span>' + esc(v.slice(i + 1)) + '</span>' : esc(v);

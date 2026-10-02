@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=32542b06">
-<script src="/assets/app/shell.js?v=b6257650"></script>
+<script src="/assets/app/shell.js?v=d8478bd5"></script>
 <title data-title="Settings — {name}">Settings — RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -826,6 +826,11 @@ document.getElementById('loaderRetry').addEventListener('click', ()=>location.re
 /* ---------- GETTING STARTED (new villas) ----------
    Shown to another villa's staff until hidden, or to anyone arriving from
    signup (?welcome=1). Each step opens the tab where it's done. */
+// Re-read the villa's settings and redraw the checklist, so a step ticks as soon as it's done.
+async function refreshOnboarding(){
+  if(document.getElementById('onboard').hidden) return;
+  try{ const r = await fetch(PROXY_URL+'/stay-settings',{headers:{'X-Token':proxyToken},cache:'no-store'}); if(r.ok) renderOnboarding(await r.json()); }catch(e){}
+}
 async function renderOnboarding(d){
   const villa = window.RYST_VILLA || '';
   const isNewVilla = villa && villa !== 'ryst-109a';
@@ -1795,7 +1800,7 @@ document.getElementById('userSave').addEventListener('click', async ()=>{
     if(!res.ok){ errEl.textContent = data.error || 'Save failed'; return; }
     usersDraft = Array.isArray(data.users) ? data.users.map(u=>({...u})) : usersDraft;
     renderUserRows();
-    toast('User access saved');
+    toast('User access saved'); refreshOnboarding();
   }catch(e){ errEl.textContent = 'Could not reach the server'; }
   finally{ btn.disabled = false; btn.textContent = 'Save user access'; }
 });
@@ -1921,7 +1926,7 @@ async function saveStay(){
       if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
       if(!res.ok) toast("Saved locally — cloud sync failed ("+res.status+")");
       else {
-        toast("Settings saved");
+        toast("Settings saved"); refreshOnboarding();
         // Pages brand themselves from this cache first — update it now so the
         // new profile shows everywhere without waiting for the next refresh.
         try { localStorage.setItem(window.PROPERTY_CACHE_KEY || 'ryst_property', JSON.stringify(Object.assign({}, window.PROPERTY_DEFAULTS, prop))); } catch(e) {}
@@ -2117,7 +2122,7 @@ $w('webSave').addEventListener('click', async ()=>{
     const res = await fetch(PROXY_URL+'/website',{method:'PUT',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d = await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(d.error || ('HTTP '+res.status));
-    fillWebsite(d); toast(body.published ? 'Website saved and live' : 'Website saved');
+    fillWebsite(d); toast(body.published ? 'Website saved and live' : 'Website saved'); refreshOnboarding();
   }catch(e){ $w('webErr').textContent = 'Not saved — ' + e.message; }
   finally{ btn.disabled = false; btn.textContent = 'Save website'; }
 });

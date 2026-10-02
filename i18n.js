@@ -54,6 +54,7 @@
     'Restaurant billing, menu & inventory': 'உணவக பில், மெனு & இருப்பு',
     'Caretakers': 'பராமரிப்பாளர்கள்', 'Your team at the villa': 'வில்லாவில் உங்கள் குழு',
     // Owner dashboard
+    'Restaurant': 'உணவகம்', 'Finish setting up your villa': 'உங்கள் வில்லா அமைப்பை முடிக்கவும்', 'Add your address, WhatsApp number, rates and team': 'முகவரி, WhatsApp எண், கட்டணங்கள் மற்றும் குழுவைச் சேர்க்கவும்',
     'Revenue': 'வருவாய்', 'Occupancy': 'நிரம்பல்', "Today's arrivals": 'இன்றைய வருகைகள்', 'Today': 'இன்று',
     'All clear': 'எல்லாம் சரி', 'None urgent': 'அவசரம் எதுவும் இல்லை', 'None coming up': 'வரவிருப்பது எதுவும் இல்லை',
     'Attention required': 'கவனிக்க வேண்டியவை', 'Upcoming stays': 'வரவிருக்கும் தங்கல்கள்', 'All bookings': 'அனைத்து முன்பதிவுகள்',

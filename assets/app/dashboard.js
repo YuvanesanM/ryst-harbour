@@ -260,6 +260,10 @@
   // ── Attention required (also feeds the bell and the Tasks badge) ──────
   function attentionItems(list) {
     var items = [];
+    // A new villa's admin: until the address and WhatsApp number are in, point back to setup.
+    var villa = window.RYST_VILLA || '', pr = window.PROPERTY || {};
+    if (villa && villa !== 'ryst-109a' && ls('ryst_user_admin') === 'true' && ls('ryst_demo') !== '1' && (!pr.address || !pr.whatsapp))
+      items.push({ lvl: 'warn', icon: 'gear', title: 'Finish setting up your villa', meta: 'Add your address, WhatsApp number, rates and team', href: 'settings.html?welcome=1' });
     openIssues().slice(0, 4).forEach(function (i) {
       var urgent = i.urgency === 'urgent';
       items.push({ lvl: urgent ? 'bad' : 'warn', icon: 'tool', title: i.title || 'Issue', meta: (urgent ? 'Urgent · ' : '') + (i.area ? i.area + ' · ' : '') + 'reported ' + ago(i.reportedAt), href: 'issues.html' });
