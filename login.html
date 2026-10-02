@@ -75,9 +75,9 @@
   .install-app-btn[hidden]{display:none}
 </style>
 <link rel="stylesheet" href="/assets/app/shell.css?v=32542b06">
-<link rel="stylesheet" href="/assets/app/dashboard.css?v=a646d4a4">
+<link rel="stylesheet" href="/assets/app/dashboard.css?v=6d6ff992">
 <script src="/assets/app/shell.js?v=d8478bd5"></script>
-<script src="/assets/app/dashboard.js?v=685c1f12" defer></script>
+<script src="/assets/app/dashboard.js?v=c8b6e871" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -219,6 +219,11 @@
           <section class="card card--up" aria-labelledby="hUp" id="cUp">
             <div class="card__head"><h2 id="hUp">Upcoming stays</h2><a class="card__link" href="guest-register.html" data-module="guestRegister">All bookings</a></div>
             <div class="card__body" id="upBody"><div class="sk sk--row"></div><div class="sk sk--row"></div></div>
+          </section>
+
+          <section class="card card--chan" aria-labelledby="hChan" id="cChan" data-module="bookings" hidden>
+            <div class="card__head"><h2 id="hChan">Channels</h2><button type="button" class="btn btn--sm" id="chanSync" hidden style="margin-left:auto">Check now</button><a class="card__link" href="settings.html#ota" id="chanManage" style="margin-left:0">Manage calendars</a></div>
+            <div class="card__body" id="chanBody"><div class="sk sk--row"></div></div>
           </section>
         </div>
       </div>

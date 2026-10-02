@@ -256,7 +256,14 @@
     'Nothing in progress': 'எதுவும் நடந்துகொண்டில்லை', 'No open issues': 'திறந்த பிரச்சனைகள் இல்லை', 'Everything is stocked': 'எல்லாம் இருப்பில் உள்ளது',
     'restock at': 'மறு நிரப்பல் அளவு', 'Report issue': 'பிரச்சனையைத் தெரிவி', 'Add expense': 'செலவைச் சேர்', 'Add inventory': 'இருப்பைச் சேர்',
     'Ask the owner for Guest Register access to see arrivals here.': 'வருகைகளை இங்கே பார்க்க, விருந்தினர் பதிவேடு அனுமதியை உரிமையாளரிடம் கேளுங்கள்.',
-    'All clear — nothing needs you right now.': 'எல்லாம் சரி — இப்போது கவனிக்க வேண்டியது எதுவும் இல்லை.'
+    'All clear — nothing needs you right now.': 'எல்லாம் சரி — இப்போது கவனிக்க வேண்டியது எதுவும் இல்லை.',
+    'Channels': 'சேனல்கள்', 'Check now': 'இப்போது சரிபார்', 'Checking…': 'சரிபார்க்கிறது…', 'Manage calendars': 'நாட்காட்டிகளை நிர்வகி',
+    'Set up calendars': 'நாட்காட்டிகளை அமை', 'In sync': 'ஒத்திசைந்தது', 'Failing': 'தோல்வி', 'Can’t read': 'படிக்க முடியவில்லை',
+    'Empty — rechecking': 'காலி — மீண்டும் சரிபார்க்கிறது', 'Waiting for first check': 'முதல் சரிபார்ப்புக்குக் காத்திருக்கிறது', 'Not checked': 'சரிபார்க்கப்படவில்லை',
+    'Checked': 'சரிபார்த்தது', 'upcoming': 'வரவிருப்பவை', 'No upcoming bookings': 'வரவிருக்கும் முன்பதிவுகள் இல்லை', 'need guest details': 'விருந்தினர் விவரம் தேவை',
+    'no longer on the OTA': 'இனி OTA-வில் இல்லை', 'Reads our calendar': 'நமது நாட்காட்டியைப் படித்தது', 'check the link in the OTA': 'OTA-வில் இணைப்பைச் சரிபார்க்கவும்',
+    'Not yet read — paste our calendar link into the OTA': 'இன்னும் படிக்கவில்லை — நமது நாட்காட்டி இணைப்பை OTA-வில் ஒட்டவும்', 'Calendars are checked every 3 hours.': 'நாட்காட்டிகள் ஒவ்வொரு 3 மணி நேரத்துக்கும் சரிபார்க்கப்படும்.',
+    'Connect your OTA calendars so Airbnb, Booking.com, Agoda and MakeMyTrip bookings block your dates automatically.': 'உங்கள் OTA நாட்காட்டிகளை இணைத்தால் Airbnb, Booking.com, Agoda, MakeMyTrip முன்பதிவுகள் தேதிகளைத் தானாகத் தடுக்கும்.'
   };
   var VILLA_TYPES = { 'beach villa': 'கடற்கரை வில்லா', 'pool villa': 'நீச்சல் குள வில்லா', 'villa': 'வில்லா', 'farm stay': 'பண்ணை வீடு', 'farmhouse': 'பண்ணை வீடு', 'cottage': 'குடில்', 'homestay': 'ஹோம்ஸ்டே' };
 
@@ -264,6 +271,7 @@
   var TYPE = { 'Check-in': 'செக்-இன்', 'Check-out': 'செக்-அவுட்', 'Daily': 'தினசரி' };
   function bedroom(n, toilet){ return 'படுக்கையறை ' + n + (toilet ? ' கழிவறை' : ''); }
   var PATTERNS = [
+    [/^(.+) calendar: (failing|can’t read|empty — rechecking|not checked for \d+h)$/, function(m){ return m[1] + ' நாட்காட்டி: ' + (TA[m[2].charAt(0).toUpperCase() + m[2].slice(1)] || m[2]); }],
     [/^Bedroom (\d+)( toilet)? — (.+)$/, function(m){ return bedroom(m[1], m[2]) + ' — ' + (TA[m[3]] || m[3]); }],
     [/^Bedroom (\d+)$/, function(m){ return bedroom(m[1]); }],
     [/^(\d+) \/ (\d+) items checked$/, function(m){ return m[2] + '-இல் ' + m[1] + ' சரிபார்க்கப்பட்டது'; }],

@@ -123,6 +123,7 @@
     if (can('petty-cash')) jobs.push(get('/petty-cash', 'pc'));
     if (can('checklist')) { jobs.push(get('/issues', 'issues')); jobs.push(get('/checklist', 'cl')); }
     if (can('inventory')) jobs.push(get('/inventory', 'inv'));
+    if (can('bookings') || can('settings')) jobs.push(get('/ota-status', 'ota'));
     render();
     return Promise.all(jobs);
   }
@@ -262,6 +263,26 @@
     setHTML('todayBody', html);
   }
 
+
+  // ── Channels: is each OTA calendar still syncing? ──────────────────────
+  var STALE_H = 9;   // calendars are checked every 3 hours — three missed rounds is worth a flag
+  function hoursSince(iso) { var t0 = iso ? Date.parse(iso) : NaN; return isNaN(t0) ? null : (Date.now() - t0) / 3600e3; }
+  function agoIso(iso) { var t0 = iso ? Date.parse(iso) : NaN; return isNaN(t0) ? '' : ago(t0); }
+  // One verdict per channel: lvl is '' (fine), 'warn' or 'bad'.
+  function chanState(c) {
+    var h = hoursSince(c.lastRunAt);
+    if (c.kind === 'failing') return { lvl: 'bad', label: 'Failing', why: c.error || 'The last check could not read this calendar.' };
+    if (c.kind === 'format') return { lvl: 'bad', label: 'Can’t read', why: c.error || 'The link does not return a calendar.' };
+    if (c.kind === 'held') return { lvl: 'warn', label: 'Empty — rechecking', why: c.error || 'The calendar came back empty; rechecking before clearing holds.' };
+    if (c.kind === 'unknown' || !c.lastRunAt) return { lvl: '', label: 'Waiting for first check', why: '' };
+    if (h != null && h > STALE_H) return { lvl: 'warn', label: 'Not checked for ' + Math.round(h) + 'h', why: 'The automatic check has not run recently.' };
+    return { lvl: 'good', label: 'In sync', why: '' };
+  }
+  function channelProblems() {
+    var chans = D.ota && Array.isArray(D.ota.channels) ? D.ota.channels : [];
+    return chans.map(function (c) { return { c: c, st: chanState(c) }; }).filter(function (x) { return x.st.lvl === 'bad' || x.st.lvl === 'warn'; });
+  }
+
   // ── Attention required (also feeds the bell and the Tasks badge) ──────
   function attentionItems(list) {
     var items = [];
@@ -269,6 +290,9 @@
     var villa = window.RYST_VILLA || '', pr = window.PROPERTY || {};
     if (villa && villa !== 'ryst-109a' && ls('ryst_user_admin') === 'true' && ls('ryst_demo') !== '1' && (!pr.address || !pr.whatsapp))
       items.push({ lvl: 'warn', icon: 'gear', title: 'Finish setting up your villa', meta: 'Add your address, WhatsApp number, rates and team', href: 'settings.html?welcome=1' });
+    if (can('bookings') || can('settings')) channelProblems().forEach(function (x) {
+      items.push({ lvl: x.st.lvl, icon: 'cal', title: x.c.label + ' calendar: ' + x.st.label.toLowerCase(), meta: x.st.why, href: 'settings.html#ota' });
+    });
     openIssues().slice(0, 4).forEach(function (i) {
       var urgent = i.urgency === 'urgent';
       items.push({ lvl: urgent ? 'bad' : 'warn', icon: 'tool', title: i.title || 'Issue', meta: (urgent ? 'Urgent · ' : '') + (i.area ? i.area + ' · ' : '') + 'reported ' + ago(i.reportedAt), href: 'issues.html' });
@@ -483,6 +507,49 @@
   doc.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePop(); });
   desktop.addEventListener('change', closePop);
 
+
+  function renderChannels() {
+    var card = $('#cChan'); if (!card) return;
+    var on = can('bookings') || can('settings');
+    show(card, on); if (!on) return;
+    var body = $('#chanBody'), sync = $('#chanSync');
+    if (loading('ota')) { body.innerHTML = '<div class="sk sk--row"></div>'; return; }
+    if (ERR.ota) { body.innerHTML = errBox('ota'); show(sync, false); return; }
+    var chans = Array.isArray(D.ota.channels) ? D.ota.channels : [];
+    show(sync, can('settings') && chans.length > 0);
+    if (!chans.length) {
+      body.innerHTML = '<div class="empty">' + ICON('cal') + '<span>' + esc(t('Connect your OTA calendars so Airbnb, Booking.com, Agoda and MakeMyTrip bookings block your dates automatically.')) + ' <a href="settings.html#ota">' + esc(t('Set up calendars')) + '</a></span></div>';
+      return;
+    }
+    body.innerHTML = chans.map(function (c) {
+      var st = chanState(c), pillCls = st.lvl ? ' pill--' + st.lvl : '';
+      var checked = c.lastRunAt ? t('Checked') + ' ' + agoIso(c.lastRunAt) : '';
+      var needHref = can('bookings') ? 'bookings.html' : 'settings.html#ota';
+      var upLine = c.upcoming ? esc(c.upcoming + ' ' + t('upcoming')) : esc(t('No upcoming bookings'));
+      var needs = c.needsGuest ? '<a href="' + needHref + '">' + esc(c.needsGuest + ' ' + t('need guest details')) + '</a>' : '';
+      var gone = c.gone ? '<span class="down">' + esc(c.gone + ' ' + t('no longer on the OTA')) + '</span>' : '';
+      var read;
+      if (!c.theyReadOursAt) read = '<small>' + esc(t('Not yet read — paste our calendar link into the OTA')) + '</small>';
+      else { var rh = hoursSince(c.theyReadOursAt); read = '<small' + (rh != null && rh > 48 ? ' style="color:var(--warn-ink,#9a6700)"' : '') + '>' + esc(t('Reads our calendar') + ': ' + agoIso(c.theyReadOursAt)) + (rh != null && rh > 48 ? ' — ' + esc(t('check the link in the OTA')) : '') + '</small>'; }
+      return '<div class="chan">'
+        + '<div class="chan__n"><b>' + esc(c.label) + '</b>' + (checked ? '<small>' + esc(checked) + '</small>' : '') + '</div>'
+        + '<div class="chan__s"><span class="pill' + pillCls + '">' + esc(t(st.label.indexOf('Not checked for') === 0 ? 'Not checked' : st.label)) + '</span>' + (st.why ? '<small>' + esc(st.why) + '</small>' : '') + '</div>'
+        + '<div class="chan__b">' + upLine + (needs ? '<small>' + needs + '</small>' : '') + gone + '</div>'
+        + '<div class="chan__r">' + read + '</div></div>';
+    }).join('') + '<p class="chan-note">' + esc(t('Calendars are checked every 3 hours.')) + '</p>';
+  }
+  var syncing = false;
+  function checkNow() {
+    if (syncing) return; syncing = true;
+    var b = $('#chanSync'); if (b) { b.disabled = true; b.textContent = t('Checking…'); }
+    fetch(PROXY + '/ical-import', { method: 'POST', headers: { 'X-Token': ls('ryst_proxy_token') || '' } })
+      .catch(function () {})
+      .then(function () { return get('/ota-status', 'ota'); })
+      .then(function () { return get('/stays', 'stays'); })
+      .then(function () { syncing = false; if (b) { b.disabled = false; b.textContent = t('Check now'); } });
+  }
+  doc.addEventListener('click', function (e) { if (e.target && e.target.id === 'chanSync') checkNow(); });
+
   // ── Header bits ───────────────────────────────────────────────────────
   function renderHeader() {
     var h = new Date().getHours(), name = ls('ryst_user_name') || '';
@@ -510,7 +577,7 @@
     show($('#dashOwner'), !caretaker); show($('#dashCare'), caretaker);
     var list = stayList();
     if (caretaker) { renderCare(list); renderAttention(list); return; }
-    renderKpis(list); renderToday(list); renderAttention(list); renderUpcoming(list);
+    renderKpis(list); renderToday(list); renderAttention(list); renderUpcoming(list); renderChannels();
     show($('#cToday'), can('bookings') || can('guestRegister'));
     show($('#cUp'), can('bookings') || can('guestRegister'));
   }
