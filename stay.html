@@ -289,6 +289,7 @@
       <div class="group">
         <p class="gh">Document</p>
         <div class="gst-note" id="gstNote" hidden></div>
+        <div class="gst-note" id="holdNote" hidden style="background:#e4ecf0;border-color:#c8d6dc;color:#213a44"></div>
         <div class="seg" id="typeSeg">
           <button data-type="quote" class="on">Quotation</button>
           <button data-type="invoice">Invoice</button>
@@ -341,6 +342,7 @@
               <option selected>UPI</option>
               <option>Bank Transfer</option>
               <option>Cash</option>
+              <option>OTA payout</option>
             </select>
           </label>
         </div>
@@ -667,6 +669,7 @@ let docType = "quote";             // "invoice" | "quote"
 let items = [];                   // {desc, qty, rate}
 let staysCache = [];              // loaded from proxy
 let editingKey = null;
+let curHold = null;                // the OTA calendar hold this booking is being captured from (stay.html?hold=<no>)
 let curNo = "", curDateISO = "";
 
 /* ---------- CLOUD ---------- */
@@ -768,7 +771,10 @@ async function initApp(){
     render();
     // Deep link from the booking calendar dashboard: stay.html?open=<no>
     const openNo = new URLSearchParams(location.search).get('open');
+    const holdNo = new URLSearchParams(location.search).get('hold');
     if(openNo) loadDoc(openNo);
+    // Calendar / dashboard "Add guest details" on an OTA hold: stay.html?hold=<no>
+    else if(holdNo) startFromHold(holdNo);
     // Dashboard "+ New": stay.html?new=invoice (a booking) or ?new=quote
     else { const nw = new URLSearchParams(location.search).get('new'); if(nw === 'invoice' || nw === 'quote') setType(nw); }
     loader.classList.add('hide');
@@ -953,7 +959,7 @@ function syncGuestCharges(){
 
 /* ---------- NEW DOC ---------- */
 function newDoc(){
-  editingKey=null; syncPdfBtn(); syncWalletBtn(); syncPortalBtn(); syncSendQuoteBtn();
+  editingKey=null; curHold=null; if($("#holdNote")) $("#holdNote").hidden=true; syncPdfBtn(); syncWalletBtn(); syncPortalBtn(); syncSendQuoteBtn();
   curNo=nextNo(docType); curDateISO=todayISO();
   $("#no").value=curNo; $("#date").value=curDateISO;
   ["guest","email","phone","guests","ref","checkin","checkout","nights","deposit","advance"].forEach(id=> $("#"+id).value="");
@@ -1169,6 +1175,7 @@ function collect(){
     guest:$("#guest").value, email:$("#email").value, phone:$("#phone").value, guests:$("#guests").value,
     ref:$("#ref").value, checkin:$("#checkin").value, checkout:$("#checkout").value, mode:$("#mode").value,
     channel:$("#channel").value,
+    ...(curHold && !(existing&&existing.otaHold) && { otaHold: curHold.no, otaFeed: curHold.source || "" }),
     deposit: parseFloat($("#deposit").value)||0, advance: parseFloat($("#advance").value)||0,
     discount: parseFloat($("#discountInp").value)||0,
     items: items.map(({desc,qty,rate,_villaRow,_autoLocked})=>({desc,qty,rate,...(_villaRow&&{_villaRow:true}),...(_autoLocked&&{_autoLocked:true})})),
@@ -1197,6 +1204,9 @@ async function saveDoc(){
   }
   const all=getStays(); const key=editingKey||doc.no; const idx=all.findIndex(x=>x.no===key);
   if(idx>=0) all[idx]=doc; else all.push(doc);
+  // A booking captured from an OTA calendar hold takes over that hold's dates:
+  // mark the hold as claimed so it isn't counted or exported a second time.
+  if(doc.otaHold){ const hi=all.findIndex(x=>x.no===doc.otaHold && x.type==="block"); if(hi>=0 && all[hi].claimedBy!==doc.no) all[hi]={...all[hi], claimedBy:doc.no}; }
   const wasEditing=editingKey;
   staysCache=all; editingKey=doc.no; syncPdfBtn();
   if(!(await pushStays())){
@@ -1240,6 +1250,30 @@ function loadDoc(no){
   $("#nights").value = nightsBetween(d.checkin,d.checkout)||"";
   items = (d.items&&d.items.length)? d.items.map(x=>({desc:x.desc||"",qty:(x.qty!=null?x.qty:"1"),rate:x.rate||"",...(x._villaRow&&{_villaRow:true}),...(x._autoLocked&&{_autoLocked:true})})) : [{desc:"",qty:"1",rate:""}];
   syncGuestCharges(); renderItems(); render(); toast("Loaded "+d.no);
+}
+
+/* ---------- CAPTURE AN OTA BOOKING ----------
+   A calendar sync only knows that dates are taken ("Agoda", "Booking") — no
+   name, phone or price. This turns such a hold into a real invoice: dates,
+   channel and payment mode come from the hold; the owner adds what the OTA's
+   extranet shows (guest, phone, amount). The booking then gets the same
+   WhatsApp messages, check-in link, revenue and reports as any other. */
+function startFromHold(no){
+  const b = getStays().find(x=>x.no===no && x.type==="block");
+  if(!b){ toast("That calendar hold isn't there any more"); return; }
+  if(b.claimedBy && getStays().some(x=>x.no===b.claimedBy && (x.type||"invoice")!=="block")){ toast("Guest details were already added — opening that booking"); loadDoc(b.claimedBy); return; }
+  setType("invoice"); newDoc();
+  curHold = b;
+  const label = String(b.guest||"").toLowerCase();
+  const ch = label.includes("airbnb") ? "Airbnb" : label.includes("booking") ? "Booking.com" : label.includes("agoda") ? "Agoda" : (label.includes("makemytrip")||label.includes("mmt")||label.includes("goibibo")) ? "MakeMyTrip" : "Other";
+  $("#checkin").value = b.checkin; $("#checkout").value = b.checkout; syncCheckoutMin(); syncNights();
+  $("#channel").value = ch; $("#mode").value = "OTA payout";
+  const n = nightsBetween(b.checkin,b.checkout);
+  const note = $("#holdNote");
+  note.textContent = "Adding the guest for the " + (b.guest||"OTA") + " booking on " + fmtDate(b.checkin) + " → " + fmtDate(b.checkout) + " (" + n + " night" + (n===1?"":"s") + "). Fill in the guest's name and phone, and the amount from " + (b.guest||"the OTA") + "'s extranet — WhatsApp messages and revenue start from there.";
+  note.hidden = false;
+  renderItems(); render();
+  setTimeout(()=>{ try{ $("#guest").focus(); }catch(e){} }, 50);
 }
 
 /* ---------- QUOTE/INVOICE SEARCH ----------

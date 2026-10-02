@@ -54,6 +54,7 @@
     'Restaurant billing, menu & inventory': 'உணவக பில், மெனு & இருப்பு',
     'Caretakers': 'பராமரிப்பாளர்கள்', 'Your team at the villa': 'வில்லாவில் உங்கள் குழு',
     // Owner dashboard
+    'Add guest details': 'விருந்தினர் விவரங்களைச் சேர்', 'From calendar sync — add guest details': 'நாட்காட்டி ஒத்திசைவிலிருந்து — விருந்தினர் விவரங்களைச் சேர்க்கவும்',
     'Restaurant': 'உணவகம்', 'Finish setting up your villa': 'உங்கள் வில்லா அமைப்பை முடிக்கவும்', 'Add your address, WhatsApp number, rates and team': 'முகவரி, WhatsApp எண், கட்டணங்கள் மற்றும் குழுவைச் சேர்க்கவும்',
     'Revenue': 'வருவாய்', 'Occupancy': 'நிரம்பல்', "Today's arrivals": 'இன்றைய வருகைகள்', 'Today': 'இன்று',
     'All clear': 'எல்லாம் சரி', 'None urgent': 'அவசரம் எதுவும் இல்லை', 'None coming up': 'வரவிருப்பது எதுவும் இல்லை',
@@ -287,6 +288,13 @@
     [/^You're already checked in for your stay from (.+) to (.+)\. See you soon!$/, function(m){ return m[1] + ' முதல் ' + m[2] + ' வரையிலான தங்குதலுக்கு ஏற்கெனவே செக்-இன் செய்துவிட்டீர்கள். விரைவில் சந்திப்போம்!'; }],
     [/^You're already checked in\. See you soon at (.+)\.$/, function(m){ return 'ஏற்கெனவே செக்-இன் செய்துவிட்டீர்கள். விரைவில் ' + m[1] + '-இல் சந்திப்போம்.'; }],
     // Owner dashboard — figures, dates and names pass through untouched.
+    [/^(.+) booking needs guest details$/, function(m){ return m[1] + ' முன்பதிவுக்கு விருந்தினர் விவரங்கள் தேவை'; }],
+    [/^(.+) · (\d+) nights? — add the guest's name, phone and amount$/, function(m){ return m[1] + ' · ' + m[2] + ' இரவு — விருந்தினர் பெயர், தொலைபேசி, தொகையைச் சேர்க்கவும்'; }],
+    [/^\+(\d+) more OTA bookings need guest details$/, function(m){ return 'இன்னும் ' + m[1] + ' OTA முன்பதிவுகளுக்கு விவரங்கள் தேவை'; }],
+    [/^(.+) is no longer on (.+)'s calendar$/, function(m){ return m[1] + ' இனி ' + m[2] + ' நாட்காட்டியில் இல்லை'; }],
+    [/^Cancelled\? Check it there · (.+)$/, function(m){ return 'ரத்தா? அங்கே சரிபாருங்கள் · ' + m[1]; }],
+    [/^(.+) moved on (.+)'s calendar$/, function(m){ return m[1] + ' — ' + m[2] + ' நாட்காட்டியில் மாறியுள்ளது'; }],
+    [/^Now (.+) → (.+) · update the dates$/, function(m){ return 'இப்போது ' + m[1] + ' → ' + m[2] + ' · தேதிகளைப் புதுப்பிக்கவும்'; }],
     [/^(\d+) of (\d+) nights?( · \+(\d+) on OTAs)?$/, function(m){ return m[2] + ' இரவுகளில் ' + m[1] + (m[4] ? ' · OTA-க்களில் +' + m[4] : ''); }],
     [/^(\d+) nights? · to (.+)$/, function(m){ return m[1] + ' இரவு · ' + m[2] + ' வரை'; }],
     [/^Booked for (\w+) · (\w+) (₹[\d,]+)$/, function(m){ return MONTHS[m[1].slice(0,3)] + ' முன்பதிவு · ' + MONTHS[m[2].slice(0,3)] + ' ' + m[3]; }],

@@ -603,7 +603,12 @@ function otaBlockColor(label){
   return 'var(--block)';
 }
 
+// An OTA hold the owner turned into a booking: the booking now carries those
+// dates, so the hold is hidden (and not flagged as a clash with its own booking).
+// Only while that booking still exists — delete it and the hold counts again.
+function isClaimedHold(b){ return b.type==='block' && b.claimedBy && STAYS.some(x=>x.no===b.claimedBy && x.type!=='block'); }
 function passFilter(d){
+  if(isClaimedHold(d)) return false;
   if(FILTERS.type!=='all' && (d.type||'invoice')!==FILTERS.type) return false;
   const q = FILTERS.q.trim().toLowerCase();
   if(q && !((d.guest||'').toLowerCase().includes(q) || (d.no||'').toLowerCase().includes(q))) return false;
@@ -1352,6 +1357,7 @@ function openDay(iso){
             </div>
             <div class="ag-dates">${isManualBlock(b) ? 'Reason: '+esc(b.guest||'Blocked')+' · blocked by you' : 'Imported by calendar sync'}</div>
             <div class="ag-dates">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${nightsBetween(b.checkin,b.checkout)} night(s)</div>
+            ${isManualBlock(b) ? '' : `<a class="btn" style="align-self:flex-start;margin-top:4px" href="stay.html?hold=${encodeURIComponent(b.no)}">Add guest details</a><div class="ag-dates">An OTA calendar only shares the dates — add the guest's name, phone and amount to get WhatsApp messages and revenue for it.</div>`}
             <button type="button" class="btn danger" style="align-self:flex-start;margin-top:4px" data-unblock="${esc(b.no)}">Remove block</button>
           </div>`;
         }
@@ -1387,8 +1393,10 @@ function openDay(iso){
             <a class="ag-no" href="stay.html?open=${encodeURIComponent(b.no)}">${esc(b.no)}</a>
             <span style="display:flex;gap:6px">${publicBadge}<span class="ag-tag" style="${b.type==='quote'?'background:var(--qt-soft);color:var(--qt)':'background:var(--inv-soft);color:var(--inv)'}">${b.type==='quote'?'Quote':'Invoice'}</span></span>
           </div>
-          <div class="ag-guest">${esc(b.guest||'—')}</div>
+          <div class="ag-guest">${esc(b.guest||'—')}${b.otaFeed||b.channel ? ` <span class="ag-dates" style="display:inline">· ${esc(b.channel||'OTA')}</span>` : ''}</div>
           <div class="ag-dates">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${nightsBetween(b.checkin,b.checkout)} night(s) · ${money(grandTotal(b))}</div>
+          ${b.otaHoldGone ? `<div class="ag-dates" style="color:var(--danger);font-weight:600">⚠ No longer on ${esc(b.channel||'the OTA')}'s calendar — cancelled? Check the extranet.</div>` : ''}
+          ${b.otaHoldMoved ? `<div class="ag-dates" style="color:var(--warn);font-weight:600">⚠ ${esc(b.channel||'The OTA')} now shows ${fmtDate(b.otaHoldMoved.checkin)} → ${fmtDate(b.otaHoldMoved.checkout)} for this booking — update the dates if it moved.</div>` : ''}
           ${checkinLine}${extra}${delBtn}
         </div>`;
       }).join('');

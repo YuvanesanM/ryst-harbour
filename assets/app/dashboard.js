@@ -59,12 +59,15 @@
   // Calendar-sync imports carry source:<feedId> (no "OTA-…"); "Block dates"
   // entries (maintenance, owner use) have neither and are not bookings.
   function isOtaBlock(s) { return typeOf(s) === 'block' && (!!s.source || String(s.no || '').indexOf('OTA-') === 0); }
+  // An OTA hold the owner turned into a booking (block.claimedBy = that booking's number).
+  // The booking carries the dates, so the hold is left out — but only while the booking exists.
+  function claimedHold(s, all) { return typeOf(s) === 'block' && !!s.claimedBy && all.some(function (x) { return x.no === s.claimedBy && typeOf(x) !== 'block'; }); }
   function nightsIn(stays, start, end) {
     var booked = {}, bookedN = 0, otaNights = {}, ota = 0;
     stays.forEach(function (s) {
       if (!s.checkin || !s.checkout) return;
       var n = Math.min(nightsBetween(s.checkin, s.checkout), 400), isBlock = typeOf(s) === 'block';
-      if (isBlock && !isOtaBlock(s)) return;
+      if (isBlock && (!isOtaBlock(s) || claimedHold(s, stays))) return;
       if (!isBlock && (!committed(s) || isConverted(s, stays))) return;
       for (var i = 0; i < n; i++) {
         var d = addDays(s.checkin, i);
@@ -128,12 +131,13 @@
   function stayList() {
     if (D.stays) {
       var all = Array.isArray(D.stays.stays) ? D.stays.stays : [];
-      return all.filter(function (s) { return s && s.checkin && s.checkout && (isOtaBlock(s) || (typeOf(s) !== 'block' && committed(s) && !isConverted(s, all))); })
+      return all.filter(function (s) { return s && s.checkin && s.checkout && ((isOtaBlock(s) && !claimedHold(s, all)) || (typeOf(s) !== 'block' && committed(s) && !isConverted(s, all))); })
         .map(function (s) {
           var block = typeOf(s) === 'block', total = grandTotal(s), paid = num(s.advance), ci = s.checkinInfo || null;
           return { no: s.no, block: block, guest: block ? otaName(s.guest) + ' booking' : (s.guest || 'Guest'), guests: s.guests || '',
             checkin: s.checkin, checkout: s.checkout, channel: block ? otaName(s.guest) : (s.channel || (s.mode === 'Razorpay' ? 'Website' : '')),
-            total: total, paid: paid, due: block ? 0 : Math.max(0, total - paid), checkedIn: !!ci, arrival: ci ? ci.arrivalTime : '' };
+            total: total, paid: paid, due: block ? 0 : Math.max(0, total - paid), checkedIn: !!ci, arrival: ci ? ci.arrivalTime : '',
+            otaGone: !!s.otaHoldGone, otaMoved: s.otaHoldMoved || null };
         });
     }
     if (D.reg) {
@@ -164,7 +168,8 @@
   function checklistHref(type, s) {
     return 'checklist.html?start=' + type + (s ? '&stay=' + encodeURIComponent(s.no) + '&guest=' + encodeURIComponent(s.block ? s.channel : s.guest) : '');
   }
-  function stayHref(s) { return (s.block || !can('bookings')) ? (can('bookings') ? 'bookings.html' : 'guest-register.html') : 'stay.html?open=' + encodeURIComponent(s.no); }
+  // An OTA hold has only dates — "Add guest details" opens the booking form pre-filled from it.
+  function stayHref(s) { return s.block ? (can('bookings') ? 'stay.html?hold=' + encodeURIComponent(s.no) : 'guest-register.html') : !can('bookings') ? 'guest-register.html' : 'stay.html?open=' + encodeURIComponent(s.no); }
   function openIssues() { return (D.issues && Array.isArray(D.issues.issues) ? D.issues.issues : []).filter(function (i) { return i.status !== 'fixed'; })
     .sort(function (a, b) { return (b.urgency === 'urgent') - (a.urgency === 'urgent') || b.reportedAt - a.reportedAt; }); }
   function lowStock() { return (D.inv && Array.isArray(D.inv.items) ? D.inv.items : []).filter(function (i) { return num(i.threshold) > 0 && num(i.quantity) <= num(i.threshold); }); }
@@ -237,7 +242,7 @@
       + '<div class="trow__p">' + status.join(' ') + '</div>'
       + '<div class="trow__act">'
       + (can('checklist') ? '<a class="btn btn--sm' + (run && run.status === 'completed' ? '' : ' btn--primary') + '" href="' + esc(checklistHref(type, s)) + '">' + esc(t(clLabel)) + '</a>' : '')
-      + '<a class="btn btn--sm" href="' + esc(stayHref(s)) + '">' + esc(t(s.due > 0 && can('bookings') ? 'Collect' : 'Open')) + '</a>'
+      + '<a class="btn btn--sm' + (s.block && can('bookings') ? ' btn--primary' : '') + '" href="' + esc(stayHref(s)) + '">' + esc(t(s.block && can('bookings') ? 'Add guest details' : s.due > 0 && can('bookings') ? 'Collect' : 'Open')) + '</a>'
       + '</div></div>';
   }
   function renderToday(list) {
@@ -287,6 +292,12 @@
       if (!daily || daily.status !== 'completed') items.push({ lvl: '', icon: 'check', title: 'Daily rounds ' + (daily ? 'in progress' : 'not done yet'), meta: dl.slice(0, 3).join(', ') + (dl.length > 3 ? '…' : ''), href: checklistHref('daily') });
     }
     if (list && can('bookings')) {
+      // OTA bookings: holds that still need a guest, and captured bookings whose hold changed on the OTA.
+      var needs = list.filter(function (s) { return s.block && s.checkout > TODAY && s.checkin <= addDays(TODAY, 21); }).sort(function (a, b) { return a.checkin.localeCompare(b.checkin); });
+      needs.slice(0, 3).forEach(function (s) { var n = nightsBetween(s.checkin, s.checkout); items.push({ lvl: 'warn', icon: 'cal', title: s.channel + ' booking needs guest details', meta: fmtDay(s.checkin) + ' · ' + n + ' night' + (n === 1 ? '' : 's') + ' — add the guest\'s name, phone and amount', href: stayHref(s) }); });
+      if (needs.length > 3) items.push({ lvl: 'warn', icon: 'cal', title: '+' + (needs.length - 3) + ' more OTA bookings need guest details', meta: 'Calendar', href: 'bookings.html' });
+      list.filter(function (s) { return !s.block && s.otaGone && s.checkout >= TODAY; }).forEach(function (s) { items.unshift({ lvl: 'bad', icon: 'cal', title: s.guest + ' is no longer on ' + (s.channel || 'the OTA') + '\'s calendar', meta: 'Cancelled? Check it there · ' + fmtDay(s.checkin), href: stayHref(s) }); });
+      list.filter(function (s) { return !s.block && s.otaMoved && s.checkout >= TODAY; }).forEach(function (s) { items.unshift({ lvl: 'warn', icon: 'cal', title: s.guest + ' moved on ' + (s.channel || 'the OTA') + '\'s calendar', meta: 'Now ' + fmtDay(s.otaMoved.checkin) + ' → ' + fmtDay(s.otaMoved.checkout) + ' · update the dates', href: stayHref(s) }); });
       // Money to collect: stays already over with a balance, and arrivals in
       // the next three days not yet paid in full (today's are on the Today card).
       var after = list.filter(function (s) { return !s.block && s.due > 0 && s.checkout <= TODAY && s.checkout >= addDays(TODAY, -60) && s.checkin < TODAY; })
@@ -351,7 +362,7 @@
         var n = nightsBetween(s.checkin, s.checkout);
         return '<tr data-href="' + esc(stayHref(s)) + '">'
           + '<td class="u-dates"><b>' + esc(fmtDay(s.checkin)) + '</b><small>' + n + ' night' + (n === 1 ? '' : 's') + ' · to ' + esc(fmtDay(s.checkout)) + '</small></td>'
-          + '<td class="u-guest"><a href="' + esc(stayHref(s)) + '"><b>' + esc(s.guest) + '</b></a><small>' + esc(s.block ? 'From calendar sync' : s.no) + '</small></td>'
+          + '<td class="u-guest"><a href="' + esc(stayHref(s)) + '"><b>' + esc(s.guest) + '</b></a><small>' + esc(s.block ? (can('bookings') ? t('From calendar sync — add guest details') : t('From calendar sync')) : s.no) + '</small></td>'
           + '<td class="u-n">' + guestsTxt(s) + '</td><td class="u-ch">' + chPill(s) + '</td><td class="u-bal">' + payPill(s) + '</td></tr>';
       }).join('') + '</tbody></table>');
   }

@@ -564,6 +564,8 @@ function buildRows(){
       otaPlatform: type==='block' && (s.source || String(s.no||'').startsWith('OTA-')) ? otaPlatformOf(s.guest) : null,
       savedAt: s.savedAt||null, leadDays: leadDaysOf(s),
       converted: isConvertedQuote(s, STAYS),
+      // An OTA hold turned into a booking: the booking carries those nights now.
+      claimed: type==='block' && !!s.claimedBy && STAYS.some(x=>x.no===s.claimedBy && (x.type||'invoice')!=='block'),
       committed: isCommitted(s),
     };
   });
@@ -572,7 +574,7 @@ function buildRows(){
 function buildNightIndex(){
   NIGHTS = new Map();
   for(const r of ROWS){
-    if(r.converted || r.nights<=0) continue;
+    if(r.converted || r.claimed || r.nights<=0) continue;
     const n = Math.min(r.nights, 400); // typo guard — mirrors bookings.html's calendar clipping
     for(let i=0;i<n;i++){
       const iso = addDays(r.checkin, i);
