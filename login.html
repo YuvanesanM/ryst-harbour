@@ -75,9 +75,9 @@
   .install-app-btn[hidden]{display:none}
 </style>
 <link rel="stylesheet" href="/assets/app/shell.css?v=32542b06">
-<link rel="stylesheet" href="/assets/app/dashboard.css?v=43721aa7">
+<link rel="stylesheet" href="/assets/app/dashboard.css?v=35513aeb">
 <script src="/assets/app/shell.js?v=d8478bd5"></script>
-<script src="/assets/app/dashboard.js?v=7190c6a4" defer></script>
+<script src="/assets/app/dashboard.js?v=4b8f7b70" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -183,6 +183,7 @@
             <div class="pop__body pop__stack">
               <button type="button" class="pop__item" data-lang-toggle>தமிழ்</button>
               <button type="button" class="pop__item install-app-btn" hidden>📲 Install RYST Harbour app</button>
+              <button type="button" class="pop__item" id="notifBtn" data-pop="notifSheet" hidden>🔔 Notifications</button>
               <button type="button" class="pop__item" id="widgetBtn" data-pop="widgetSheet" hidden>▦ Phone widgets</button>
               <button id="logoutBtn" class="pop__item pop__item--danger" type="button">⎋ Log out</button>
             </div>
@@ -265,6 +266,16 @@
   <div class="pop pop--sheet" id="moreSheet" role="dialog" aria-label="More" hidden>
     <div class="pop__head pop__head--sheet"><b>More</b></div>
     <div class="pop__body" id="moreList"></div>
+  </div>
+  <div class="pop pop--sheet" id="notifSheet" role="dialog" aria-label="Notifications" hidden>
+    <div class="pop__head pop__head--sheet"><b>Notifications</b><span>Alerts on this phone or computer</span></div>
+    <div class="pop__body pop__stack wsheet">
+      <p class="wnote" id="nStatus">Checking…</p>
+      <p class="wnote">You get the same alerts as on Telegram — new bookings, payments, issues, check-ins and more. Each person chooses which in Settings → WhatsApp &amp; Alerts.</p>
+      <button type="button" class="btn btn--primary" id="nOn">Turn on notifications</button>
+      <button type="button" class="btn" id="nTest" hidden>Send a test notification</button>
+      <button type="button" class="btn" id="nOff" hidden>Turn off on this device</button>
+    </div>
   </div>
   <div class="pop pop--sheet" id="widgetSheet" role="dialog" aria-label="Phone widgets" hidden>
     <div class="pop__head pop__head--sheet"><b>Phone widgets</b><span>See today and this month on your home screen</span></div>

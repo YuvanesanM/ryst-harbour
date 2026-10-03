@@ -269,6 +269,14 @@
     'Show unconfirmed quotes (drafts with no advance paid)': 'உறுதிசெய்யப்படாத மதிப்பீடுகளைக் காட்டு (முன்பணம் செலுத்தாத வரைவுகள்)',
     'Nothing matches — try a different search or filter.': 'எதுவும் பொருந்தவில்லை — வேறு தேடல் அல்லது வடிகட்டியை முயற்சிக்கவும்.',
     'Search name, phone or booking no…': 'பெயர், தொலைபேசி அல்லது முன்பதிவு எண்ணைத் தேடு…', 'Needs attention — Dashboard': 'கவனிக்க வேண்டியவை — முகப்பு', 'e.g. INV-2026/012': 'எ.கா. INV-2026/012',
+    // ── notifications ──
+    '🔔 Notifications': '🔔 அறிவிப்புகள்', 'Alerts on this phone or computer': 'இந்த போன் அல்லது கணினியில் எச்சரிக்கைகள்',
+    'You get the same alerts as on Telegram — new bookings, payments, issues, check-ins and more. Each person chooses which in Settings → WhatsApp & Alerts.': 'Telegram-இல் வரும் அதே எச்சரிக்கைகள் — புதிய முன்பதிவுகள், கட்டணங்கள், பிரச்சனைகள், செக்-இன் மற்றும் பல. எவை வேண்டும் என்பதை Settings → WhatsApp & Alerts-இல் தேர்வு செய்யலாம்.',
+    'Turn on notifications': 'அறிவிப்புகளை இயக்கு', 'Send a test notification': 'சோதனை அறிவிப்பை அனுப்பு', 'Turn off on this device': 'இந்த சாதனத்தில் நிறுத்து',
+    'On for this device.': 'இந்த சாதனத்தில் இயக்கத்தில் உள்ளது.', 'Off for this device.': 'இந்த சாதனத்தில் நிறுத்தப்பட்டுள்ளது.',
+    'Test sent — it should arrive in a few seconds.': 'சோதனை அனுப்பப்பட்டது — சில விநாடிகளில் வரும்.',
+    'Notifications are blocked for RYST Harbour on this device. Allow them in the phone or browser settings, then try again.': 'இந்த சாதனத்தில் RYST Harbour அறிவிப்புகள் தடுக்கப்பட்டுள்ளன. போன் அல்லது உலாவி அமைப்புகளில் அனுமதித்து மீண்டும் முயற்சிக்கவும்.',
+    'Notifications weren’t allowed. Allow them in the phone or browser settings, then try again.': 'அறிவிப்புகள் அனுமதிக்கப்படவில்லை. போன் அல்லது உலாவி அமைப்புகளில் அனுமதித்து மீண்டும் முயற்சிக்கவும்.',
     // ── phone widgets ──
     '▦ Phone widgets': '▦ போன் விட்ஜெட்கள்', 'Phone widgets': 'போன் விட்ஜெட்கள்', 'See today and this month on your home screen': 'இன்றையதும் இந்த மாதமும் உங்கள் முகப்புத் திரையில்',
     'Tap “Connect this phone” — the RYST Harbour app keeps the link.': '“இந்த போனை இணை” என்பதைத் தட்டவும் — RYST Harbour ஆப் இணைப்பை வைத்துக்கொள்ளும்.',

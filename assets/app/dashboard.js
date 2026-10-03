@@ -549,6 +549,58 @@
   }
   window.addEventListener('hashchange', function () { if (location.hash === '#widget' && ANDROID && started) openPopFor('widgetSheet', $('.avatar')); });
 
+  // ── Notifications on this device (Web Push; the server mirrors Telegram alerts) ──
+  var PUSH_OK = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  function b64ToBytes(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; var r = atob(s), a = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) a[i] = r.charCodeAt(i); return a; }
+  function pushReg() { return navigator.serviceWorker.register('/staff-sw.js').then(function () { return navigator.serviceWorker.ready; }); }
+  function pushPost(path, body) {
+    return fetch(PROXY + path, { method: 'POST', headers: { 'X-Token': ls('ryst_proxy_token') || '', 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || 'Could not reach RYST Harbour'); return j; }); });
+  }
+  function notifState(msg, on) {
+    var st = $('#nStatus'); if (st) st.textContent = t(msg);
+    show($('#nOn'), !on); show($('#nTest'), !!on); show($('#nOff'), !!on);
+  }
+  function refreshNotif() {
+    if (!PUSH_OK) return;
+    if (Notification.permission === 'denied') return notifState('Notifications are blocked for RYST Harbour on this device. Allow them in the phone or browser settings, then try again.', false);
+    pushReg().then(function (reg) { return reg.pushManager.getSubscription(); })
+      .then(function (sub) { notifState(sub ? 'On for this device.' : 'Off for this device.', !!sub); }, function () { notifState('Off for this device.', false); });
+  }
+  doc.addEventListener('click', function (e) {
+    var on = e.target.closest('#nOn'), off = e.target.closest('#nOff'), test = e.target.closest('#nTest');
+    if (!on && !off && !test) return;
+    var b = on || off || test; b.disabled = true;
+    var done = function () { b.disabled = false; };
+    if (on) {
+      Notification.requestPermission().then(function (p) {
+        if (p !== 'granted') { notifState('Notifications weren’t allowed. Allow them in the phone or browser settings, then try again.', false); return; }
+        return Promise.all([pushReg(), fetch(PROXY + '/push/key').then(function (r) { return r.json(); })]).then(function (x) {
+          var reg = x[0], key = x[1].key;
+          return reg.pushManager.getSubscription().then(function (old) {
+            return old || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(key) });
+          });
+        }).then(function (sub) {
+          var j = sub.toJSON(); j.device = (navigator.userAgentData && navigator.userAgentData.platform) || (/Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Browser');
+          return pushPost('/push/subscribe', j);
+        }).then(function () { notifState('On for this device.', true); return pushPost('/push/test'); });
+      }).catch(function (err) { notifState(err.message || 'Could not turn notifications on.', false); }).then(done);
+    } else if (test) {
+      pushPost('/push/test').then(function (j) { notifState(j.sent ? 'Test sent — it should arrive in a few seconds.' : 'On for this device.', true); }, function (err) { notifState(err.message, true); }).then(done);
+    } else {
+      pushReg().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+        if (!sub) return;
+        var ep = sub.endpoint;
+        return sub.unsubscribe().then(function () { return pushPost('/push/unsubscribe', { endpoint: ep }); });
+      }).then(function () { notifState('Off for this device.', false); }, function (err) { notifState(err.message, false); }).then(done);
+    }
+  });
+  function wireNotif() {
+    var btn = $('#notifBtn'); if (btn) btn.hidden = !PUSH_OK || ls('ryst_demo') === '1';
+    if (PUSH_OK && ls('ryst_demo') !== '1') refreshNotif();
+    if (location.hash === '#notifications' && PUSH_OK) setTimeout(function () { openPopFor('notifSheet', $('.avatar')); }, 400);
+  }
+
   function renderChannels() {
     var card = $('#cChan'); if (!card) return;
     var on = can('bookings') || can('settings');
@@ -625,7 +677,7 @@
 
   var started = false;
   function start() {
-    readAccess(); renderHeader(); refreshNav(); wireWidgets();
+    readAccess(); renderHeader(); refreshNav(); wireWidgets(); wireNotif();
     if (started) return;
     started = true;
     load();
