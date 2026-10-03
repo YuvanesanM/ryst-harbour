@@ -8,7 +8,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=c4143046">
-<script src="/assets/app/shell.js?v=fbd18e00"></script>
+<script src="/assets/app/shell.js?v=2961ed25"></script>
 <title data-title="{name} — Stay Invoice / Quote">RYST 109A — Stay Invoice / Quote</title>
 <meta name="robots" content="noindex, nofollow">
 
@@ -866,7 +866,13 @@ async function initApp(){
     // Calendar / dashboard "Add guest details" on an OTA hold: stay.html?hold=<no>
     else if(holdNo) startFromHold(holdNo);
     // Dashboard "+ New": stay.html?new=invoice (a booking) or ?new=quote
-    else { const nw = new URLSearchParams(location.search).get('new'); if(nw === 'invoice' || nw === 'quote') setType(nw); }
+    else {
+      const qp = new URLSearchParams(location.search), nw = qp.get('new');
+      if(nw === 'invoice' || nw === 'quote') setType(nw);
+      // Guests page "+ New quote" for a guest: stay.html?new=quote&phone=<their phone>
+      const ph = qp.get('phone');
+      if(ph){ $("#phone").value = normalizePhoneStrict(ph).value || ph; syncPhoneValidity(); fillReturning(); render(); }
+    }
     loader.classList.add('hide');
     $('#btnSave').disabled = false;
   }catch(e){

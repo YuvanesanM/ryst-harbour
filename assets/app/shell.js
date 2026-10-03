@@ -54,7 +54,7 @@
   // ('owner': owners only, like the proxy's /team).
   var NAV = [
     { items: [['login.html', 'home', 'Dashboard'], ['bookings.html', 'cal', 'Calendar', 'bookings'],
-      ['guest-register.html', 'list', 'Bookings', 'guestRegister'], ['guest-register.html?f=inhouse', 'users', 'Guests', 'guestRegister']] },
+      ['guest-register.html', 'list', 'Bookings', 'guestRegister'], ['guests.html', 'users', 'Guests', 'bookings']] },
     { label: 'Operations', items: [['checklist.html', 'check', 'Checklists', 'checklist'], ['issues.html', 'tool', 'Issues & Maintenance', 'checklist'],
       ['inventory.html', 'box', 'Inventory', 'inventory'], ['petty-cash.html', 'wallet', 'Petty Cash', 'petty-cash'],
       ['caretakers.html', 'team', 'Caretakers', 'owner']] },

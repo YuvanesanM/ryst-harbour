@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://data.ryst.in https://harbour.ryst.in https://stay.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=c4143046">
+<script src="/assets/app/shell.js?v=2961ed25"></script>
+<title data-title="Guests · {name}">Guests · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097;
+    --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6; --good:#2f7d54;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  button,input,textarea,select{font-family:inherit}
+  button{cursor:pointer}
+  a{color:inherit}
+  .wrap{max-width:1080px;margin:0 auto;padding:18px 16px 70px}
+
+  header.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 2px 16px}
+  header.top .ttl{font-weight:700;font-size:18px;letter-spacing:.2px}
+  header.top .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px}
+  header.top .spacer{flex:1}
+  .tbtn{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1.5px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;text-decoration:none}
+  .tbtn:hover{border-color:var(--accent)}
+  .tbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);margin-bottom:12px}
+  .seg button{border:0;background:transparent;padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--muted)}
+  .seg button + button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--accent);color:#fff}
+
+  .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 14px;min-width:0}
+  .card .lbl{font-size:11px;font-weight:600;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase}
+  .card .val{font-size:24px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+  .card .sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+  .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:12px;align-items:start}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;min-width:0}
+  .box-h{display:flex;align-items:baseline;gap:8px;padding:14px 16px 6px}
+  .box-h h2{font-size:15px;font-weight:650}
+  .box-h .cnt{font-size:12px;color:var(--muted2)}
+  .box-h .more{margin-left:auto;font-size:12px;color:var(--muted2)}
+  .box .none{padding:6px 16px 16px;font-size:13px;color:var(--muted2)}
+
+  .chan{padding:4px 16px 14px;display:grid;gap:9px}
+  .chan-row{display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+  .chan-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chan-row .bar{height:8px;border-radius:0 4px 4px 0;background:var(--accent);min-width:2px}
+  .chan-row .v{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+  .chan-row .v b{color:var(--ink);font-weight:600}
+
+  .item{display:flex;gap:12px;align-items:flex-start;padding:11px 16px;border-top:1px solid var(--line)}
+  .item .who{flex:1;min-width:0}
+  .item .nm{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+  .item .meta{font-size:12.5px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+  .item .meta .warnv{color:var(--warn);font-weight:600}
+  .item .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex:none;max-width:52%}
+  .abtn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;color:var(--ink);text-decoration:none;white-space:nowrap}
+  .abtn:hover{border-color:var(--accent)}
+  .abtn.wa{border-color:#bfe3cc;color:var(--good)}
+  .abtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  details.sub{border-top:1px solid var(--line)}
+  details.sub summary{list-style:none;cursor:pointer;padding:10px 16px;font-size:12.5px;font-weight:600;color:var(--accent-d)}
+  details.sub summary::-webkit-details-marker{display:none}
+
+  .listbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:6px 16px 10px}
+  .listbar input{flex:1;min-width:180px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:14px;color:var(--ink);outline:none}
+  .listbar input:focus{border-color:var(--accent)}
+  .chip{border:1px solid var(--line);background:var(--panel);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--muted)}
+  .chip.on{background:var(--accent-soft);border-color:transparent;color:var(--accent-d)}
+  .gl-head,.gl-row{display:grid;grid-template-columns:minmax(0,2.2fr) 70px 70px 110px 120px 120px;gap:10px;align-items:center;padding:10px 16px}
+  .gl-head{font-size:11px;font-weight:600;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase;border-top:1px solid var(--line)}
+  .gl-row{border-top:1px solid var(--line);font-size:13px;cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;color:var(--ink)}
+  .gl-row:hover{background:var(--panel2)}
+  .gl-row .n{text-align:right;font-variant-numeric:tabular-nums}
+  .gl-row .nm{font-weight:600;overflow-wrap:anywhere}
+  .gl-row .ph{font-size:12px;color:var(--muted);font-weight:400}
+  .gl-row .d{color:var(--muted);font-size:12.5px}
+  .gl-head .n{text-align:right}
+  .tags{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:6px;vertical-align:middle}
+  .tag{font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+  .tag.rep{background:var(--accent-soft);color:var(--accent-d);border-color:transparent}
+  .tag.top{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+  .tag.up{background:#e6eef5;color:#2e5b7c;border-color:transparent}
+  .tag.enq{background:var(--panel2)}
+  .gl-more{display:block;width:100%;border:0;border-top:1px solid var(--line);background:none;padding:12px;font-size:12.5px;font-weight:600;color:var(--accent-d)}
+
+  .overlay{position:fixed;inset:0;background:rgba(23,23,23,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel);border-radius:14px;width:min(620px,100%);max-height:90vh;overflow-y:auto;box-shadow:0 24px 70px rgba(20,20,20,.25)}
+  .m-head{display:flex;gap:12px;align-items:flex-start;padding:18px 20px 10px}
+  .avatar{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-d);font-weight:700;font-size:15px}
+  .m-head h2{font-size:18px;font-weight:700;overflow-wrap:anywhere}
+  .m-head .msub{font-size:12.5px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+  .m-x{margin-left:auto;border:1px solid var(--line);background:var(--panel);border-radius:8px;width:34px;height:34px;font-size:18px;line-height:1;color:var(--muted)}
+  .m-acts{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 12px}
+  .m-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .m-stat{padding:10px 14px;min-width:0}
+  .m-stat + .m-stat{border-left:1px solid var(--line)}
+  .m-stat b{display:block;font-size:17px;font-weight:650;font-variant-numeric:tabular-nums}
+  .m-stat span{display:block;font-size:11.5px;color:var(--muted)}
+  .m-sec{padding:12px 20px}
+  .m-sec h3{font-size:12px;font-weight:600;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase;margin-bottom:8px}
+  .m-sec textarea{width:100%;min-height:70px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:14px;color:var(--ink);outline:none;resize:vertical}
+  .m-sec textarea:focus{border-color:var(--accent)}
+  .note-foot{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px;color:var(--muted2)}
+  .note-foot .btn{margin-left:auto}
+  .btn{border:1px solid var(--line);border-radius:9px;padding:8px 16px;font-size:13px;font-weight:600;background:var(--panel);color:var(--ink)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn:disabled{opacity:.6}
+  .tl{display:grid;gap:6px}
+  .tl a{display:flex;gap:10px;align-items:baseline;justify-content:space-between;text-decoration:none;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:13px}
+  .tl a:hover{border-color:var(--accent)}
+  .tl .st{font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;margin-right:6px}
+  .st.won{background:var(--accent-soft);color:var(--accent-d)}
+  .st.open{background:#e6eef5;color:#2e5b7c}
+  .st.lost{background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+  .tl .amt{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted)}
+  .fb{font-size:13px;padding:8px 10px;border-radius:9px;background:var(--panel2);margin-bottom:6px}
+  .fb .stars{color:var(--warn);letter-spacing:1px}
+
+  #toast{position:fixed;left:50%;bottom:calc(26px + var(--demo-h,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:100;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{background:var(--danger)}
+  .sk{background:linear-gradient(90deg,var(--panel2),#efebe4,var(--panel2));background-size:200% 100%;animation:skl 1.2s ease-in-out infinite;border-radius:12px}
+  @keyframes skl{to{background-position:-200% 0}}
+  @media (prefers-reduced-motion:reduce){.sk{animation:none}}
+  .loadmsg{font-size:13.5px;color:var(--muted);text-align:center;padding:20px}
+  .foot-note{font-size:12.5px;color:var(--muted2);margin-top:14px;line-height:1.5}
+
+  @media screen and (prefers-color-scheme: dark){ html.hth .tag.up, html.hth .st.open{background:#1d2a33;color:#9ec4df} }
+  @media(max-width:900px){ .grid2{grid-template-columns:1fr} .cards{grid-template-columns:1fr 1fr} }
+  @media(max-width:760px){
+    .gl-head{display:none}
+    .gl-row{grid-template-columns:minmax(0,1fr) auto;row-gap:2px}
+    .gl-row .c-stays,.gl-row .c-nights{display:none}
+    .gl-row .c-booked{grid-column:2;grid-row:1}
+    .gl-row .c-last{grid-column:1;grid-row:2}
+    .gl-row .c-next{grid-column:2;grid-row:2;text-align:right}
+  }
+  @media(max-width:600px){
+    .wrap{padding:14px 12px 70px}
+    .cards{gap:8px}
+    .card{padding:11px 12px}
+    .card .val{font-size:21px}
+    .item{flex-wrap:wrap}
+    .item .acts{max-width:none;justify-content:flex-start}
+    .m-stats{grid-template-columns:1fr 1fr}
+    .m-stat:nth-child(3){border-left:0}
+    .m-stat:nth-child(n+3){border-top:1px solid var(--line)}
+    .chan-row{grid-template-columns:92px minmax(0,1fr) auto}
+  }
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#F6F3ED" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="ttl"><span>Guests</span><small><span data-prop="name">RYST 109A</span> · follow-ups, guest history and where bookings come from</small></div>
+    <div class="spacer"></div>
+    <a class="tbtn primary" href="stay.html?new=quote">+ New quote</a>
+  </header>
+
+  <div class="seg" id="period" role="group" aria-label="Period">
+    <button type="button" data-p="month">This month</button>
+    <button type="button" data-p="3m">3 months</button>
+    <button type="button" data-p="year" class="on">This year</button>
+    <button type="button" data-p="all">All time</button>
+  </div>
+
+  <div id="main"><div class="cards"><div class="sk" style="height:86px"></div><div class="sk" style="height:86px"></div><div class="sk" style="height:86px"></div><div class="sk" style="height:86px"></div></div><div class="sk" style="height:260px"></div></div>
+</div>
+
+<div class="overlay" id="gOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="gName" id="gModal"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+function hasModule(mod){
+  const role = localStorage.getItem('ryst_user_role') || 'owner';
+  let m; try { m = JSON.parse(localStorage.getItem('ryst_user_modules') || 'null'); } catch(e) { m = null; }
+  if(!Array.isArray(m)) m = role === 'caretaker' ? ['petty-cash','inventory','checklist'] : [];
+  return role === 'owner' || m.includes(mod);
+}
+if(!TOKEN || !hasModule('bookings')) location.href = 'login.html';
+
+const $ = s => document.querySelector(s);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const lc = s => String(s||'').trim().toLowerCase();
+const todayISO = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const nightsBetween = (a, b) => (a && b) ? Math.max(0, Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5)) : 0;
+const fmtDay = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '';
+const fmtDayY = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
+const fmtMonY = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { month:'long', year:'numeric' }) : '';
+const daysAgo = v => { const t = typeof v === 'number' ? v : Date.parse(v); return isFinite(t) ? Math.floor((Date.now() - t) / 864e5) : null; };
+const ago = n => n == null ? '' : n <= 0 ? 'today' : n === 1 ? 'yesterday' : n + ' days ago';
+const typeOf = s => s.type || 'invoice';
+const OTA = ['Airbnb', 'Booking.com', 'MakeMyTrip', 'Agoda'];
+const ICON = {
+  phone:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',
+  wa:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.3z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-1.8-1.8l.8-1-1-2z"/></svg>'
+};
+
+function toast(msg, err){ const el=$('#toast'); el.textContent=msg; el.className = err ? 'show err' : 'show'; clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'), 3200); }
+async function api(path, method, body){
+  const res = await fetch(PROXY_URL + path, { method: method || 'GET', cache:'no-store', headers: Object.assign({ 'X-Token': TOKEN }, body ? { 'Content-Type':'application/json' } : {}), body: body ? JSON.stringify(body) : undefined });
+  if(res.status === 401){ localStorage.removeItem('ryst_proxy_token'); location.href='login.html'; throw new Error('Signed out'); }
+  const d = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(d.error || ('Could not load (' + res.status + ')'));
+  return d;
+}
+
+// ── The same rules as Reports and the owner report (owner-report.js) ──
+const grandTotal = s => Math.max(0, (s.items || []).reduce((a, it) => a + num(it.rate) * num(it.qty), 0) - num(s.discount));
+const committed = s => typeOf(s) === 'invoice' || (typeOf(s) === 'quote' && num(s.advance) > 0);
+function isConverted(q, stays){
+  if(typeOf(q) !== 'quote') return false;
+  const email = lc(q.email), guest = lc(q.guest);
+  return stays.some(s => s !== q && typeOf(s) === 'invoice' && (s.convertedFrom === q.no || (s.checkin === q.checkin && s.checkout === q.checkout &&
+    (email ? lc(s.email) === email : (guest && lc(s.guest) === guest)))));
+}
+// A guest is their phone number (last 10 digits); without one, their name.
+const keyOf = s => { const p = String(s.phone||'').replace(/\D/g,'').slice(-10); return p.length === 10 ? p : (lc(s.guest) ? 'n:' + lc(s.guest) : ''); };
+
+let STAYS = [], FEEDBACK = [], NOTES = {}, LOST = {}, PERIOD = 'year', FILTER = 'all', QUERY = '', SHOWN = 40, DOCS = [], GUESTS = [];
+try { const p = localStorage.getItem('ryst_guests_period'); if(['month','3m','year','all'].includes(p)) PERIOD = p; } catch(e) {}
+
+async function load(){
+  const slow = setTimeout(()=>{ if(!DOCS.length) $('#main').innerHTML = '<p class="loadmsg">Still loading… the first open of the day can take up to a minute.</p>'; }, 4000);
+  try{
+    const [st, fb, gd] = await Promise.all([
+      api('/stays'),
+      api('/feedback').catch(()=>({ entries: [] })),
+      api('/guests').catch(()=>({}))
+    ]);
+    STAYS = Array.isArray(st.stays) ? st.stays : [];
+    FEEDBACK = Array.isArray(fb.entries) ? fb.entries : [];
+    NOTES = (gd && gd.notes) || {}; LOST = (gd && gd.lost) || {};
+    build(); render();
+  }catch(e){
+    $('#main').innerHTML = '<p class="loadmsg">Could not load guests — ' + esc(e.message) + '. <button class="tbtn" type="button" onclick="load()">Try again</button></p>';
+  }finally{ clearTimeout(slow); }
+}
+
+// Every quote and booking with its status: won (an invoice, or a quote with
+// an advance), open (a quote still waiting on the guest) or lost (its dates
+// passed unpaid, or someone marked it lost). Converted quotes are left out
+// (their invoice stands for them); OTA calendar holds aren't guests.
+function build(){
+  DOCS = STAYS.filter(s => typeOf(s) !== 'block' && !isConverted(s, STAYS) && (s.guest || s.phone)).map(s => {
+    const won = committed(s);
+    const lost = !won && (!!LOST[s.no] || (s.checkin && s.checkin < todayISO));
+    return { s, no: s.no, key: keyOf(s), status: won ? 'won' : lost ? 'lost' : 'open', total: grandTotal(s), paid: num(s.advance),
+      nights: nightsBetween(s.checkin, s.checkout), channel: s.channel || 'Not set' };
+  }).filter(d => d.key);
+  const rating = {};
+  FEEDBACK.forEach(f => { if(f && f.bookingNo && f.rating) rating[f.bookingNo] = f; });
+  const by = new Map();
+  DOCS.forEach(d => {
+    let g = by.get(d.key);
+    if(!g){ g = { key: d.key, docs: [], name: '', phone: '', email: '', won: 0, nights: 0, booked: 0, paid: 0, due: 0, last: '', next: '', first: '', channels: new Set(), feedback: [], lastActivity: 0 }; by.set(d.key, g); }
+    g.docs.push(d);
+    const s = d.s;
+    const t = s.savedAt || Date.parse(s.date || '') || 0;
+    if(t >= g.lastActivity){ g.lastActivity = t; if(s.guest) g.name = s.guest; if(s.phone) g.phone = s.phone; }
+    if(s.email && !g.email) g.email = s.email;
+    if(!g.name && s.guest) g.name = s.guest;
+    if(!g.phone && s.phone) g.phone = s.phone;
+    if(d.status === 'won'){
+      g.won++; g.nights += d.nights; g.booked += d.total; g.paid += d.paid; g.due += Math.max(0, d.total - d.paid);
+      g.channels.add(d.channel);
+      if(s.checkout && s.checkout <= todayISO && s.checkout > g.last) g.last = s.checkout;
+      if(s.checkin && s.checkin >= todayISO && (!g.next || s.checkin < g.next)) g.next = s.checkin;
+      if(s.checkin && (!g.first || s.checkin < g.first)) g.first = s.checkin;
+      if(rating[s.no]) g.feedback.push(rating[s.no]);
+    }
+  });
+  GUESTS = [...by.values()];
+  GUESTS.forEach(g => { g.docs.sort((a,b) => String(b.s.checkin||'').localeCompare(String(a.s.checkin||''))); });
+  // Top spenders: the top fifth of guests who have booked, by what they booked.
+  const spend = GUESTS.filter(g => g.won).map(g => g.booked).sort((a,b) => b - a);
+  const cut = spend.length >= 5 ? spend[Math.max(0, Math.ceil(spend.length * 0.2) - 1)] : Infinity;
+  GUESTS.forEach(g => {
+    g.tags = [];
+    if(g.won >= 2) g.tags.push(['rep', 'Repeat']);
+    if(g.won && g.booked >= cut) g.tags.push(['top', 'Top spender']);
+    if(g.next) g.tags.push(['up', 'Upcoming']);
+    if(g.won && [...g.channels].every(c => OTA.includes(c))) g.tags.push(['ota', 'OTA']);
+    if(!g.won) g.tags.push(['enq', 'Enquiry']);
+    g.rating = g.feedback.length ? g.feedback.reduce((a,f) => a + num(f.rating), 0) / g.feedback.length : 0;
+  });
+}
+
+function periodRange(){
+  const d = new Date(), y = d.getFullYear(), m = d.getMonth();
+  const iso = (yy, mm) => { const x = new Date(yy, mm, 1); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-01`; };
+  if(PERIOD === 'month') return [iso(y, m), iso(y, m + 1), 'this month'];
+  if(PERIOD === '3m') return [iso(y, m - 2), iso(y, m + 1), 'the last 3 months'];
+  if(PERIOD === 'year') return [y + '-01-01', (y + 1) + '-01-01', 'this year'];
+  return ['0000', '9999', 'all time'];
+}
+
+// ── Headline numbers ──
+function headline(){
+  const [a, b, label] = periodRange();
+  const inP = iso => iso && iso >= a && iso < b;
+  const won = DOCS.filter(d => d.status === 'won' && inP(d.s.checkin));
+  const guestKeys = new Set(won.map(d => d.key));
+  let returning = 0;
+  // Returning: at least one of their stays in the period came after an earlier stay.
+  guestKeys.forEach(k => {
+    const lastIn = won.filter(d => d.key === k).map(d => d.s.checkin).sort().pop();
+    if(DOCS.some(d => d.key === k && d.status === 'won' && d.s.checkin && d.s.checkin < lastIn)) returning++;
+  });
+  const booked = won.reduce((x, d) => x + d.total, 0);
+  // Quotes made in the period (by the document date), and how they turned out.
+  const quotes = STAYS.filter(s => typeOf(s) === 'quote' && inP(s.date));
+  let qWon = 0, qLost = 0, qOpen = 0;
+  quotes.forEach(q => {
+    if(committed(q) || isConverted(q, STAYS)) qWon++;
+    else if(LOST[q.no] || (q.checkin && q.checkin < todayISO)) qLost++;
+    else qOpen++;
+  });
+  const decided = qWon + qLost;
+  const chans = {};
+  won.forEach(d => { const c = chans[d.channel] || (chans[d.channel] = { n: 0, v: 0 }); c.n++; c.v += d.total; });
+  return { label, guests: guestKeys.size, returning, booked, avg: guestKeys.size ? booked / guestKeys.size : 0, bookings: won.length,
+    conv: decided ? Math.round(qWon / decided * 100) : null, qWon, qLost, qOpen, decided,
+    chans: Object.entries(chans).sort((x, y) => y[1].v - x[1].v) };
+}
+
+// ── WhatsApp messages ──
+const villa = () => (window.PROPERTY && (PROPERTY.fullName || PROPERTY.name)) || 'the villa';
+const first = n => String(n||'').trim().split(/\s+/)[0] || 'there';
+function waLink(phone, text){
+  const p = String(phone||'').replace(/\D/g,'');
+  if(p.length < 10) return '';
+  return 'https://wa.me/' + (p.length === 10 ? '91' + p : p) + '?text=' + encodeURIComponent(text);
+}
+function portalLink(s){
+  if(!s.portalToken || typeof guestSiteUrl !== 'function') return '';
+  return guestSiteUrl() + '/guest.html?no=' + encodeURIComponent(s.no) + '&t=' + encodeURIComponent(s.portalToken) + (typeof villaLinkParam === 'function' ? villaLinkParam() : '');
+}
+function followUpText(d){
+  const s = d.s, link = portalLink(s);
+  return `Hi ${first(s.guest)}, this is ${villa()} — just checking on your quote for ${fmtDay(s.checkin)} to ${fmtDay(s.checkout)} (${d.nights} night${d.nights===1?'':'s'}, ${inr(d.total)}). Shall we hold the dates for you?` + (link ? `\n\nYou can review it and pay the advance here: ${link}` : '');
+}
+const winBackText = g => `Hi ${first(g.name)}, it's ${villa()}. It's been a while since your stay with us in ${fmtMonY(g.last)} — we'd love to have you back. Reply here if you'd like dates or a quote.`;
+const anniversaryText = (g, iso) => `Hi ${first(g.name)}, it's almost a year since your stay at ${villa()} (${fmtMonY(iso)})! If you're planning to celebrate again, we'd love to host you — reply here for dates.`;
+const helloText = g => `Hi ${first(g.name)}, it's ${villa()}.`;
+const waBtn = (phone, text, label) => { const u = waLink(phone, text); return u ? `<a class="abtn wa" href="${esc(u)}" target="_blank" rel="noopener">${ICON.wa}${esc(label || 'WhatsApp')}</a>` : ''; };
+
+// ── Render ──
+function render(){
+  document.querySelectorAll('#period button').forEach(b => b.classList.toggle('on', b.dataset.p === PERIOD));
+  const h = headline();
+  const open = DOCS.filter(d => d.status === 'open').sort((a, b) => String(a.s.checkin||'').localeCompare(String(b.s.checkin||'')));
+  const lostRecent = DOCS.filter(d => d.status === 'lost' && ((d.s.checkin && d.s.checkin >= addDays(todayISO, -60)) || (LOST[d.no] && daysAgo(LOST[d.no].at) <= 60)))
+    .sort((a, b) => String(b.s.checkin||'').localeCompare(String(a.s.checkin||''))).slice(0, 20);
+  // Worth a hello: past guests not seen in 6+ months, and stay anniversaries in the next 30 days.
+  const hello = [];
+  const in30 = addDays(todayISO, 30), six = addDays(todayISO, -183);
+  GUESTS.filter(g => g.won && !g.next && g.phone).forEach(g => {
+    const ann = g.docs.filter(d => d.status === 'won' && d.s.checkin && d.s.checkin.slice(0, 4) < todayISO.slice(0, 4)).map(d => {
+      const md = d.s.checkin.slice(5); let next = todayISO.slice(0, 4) + '-' + md; if(next < todayISO) next = (+todayISO.slice(0, 4) + 1) + '-' + md;
+      return { next, iso: d.s.checkin };
+    }).filter(x => x.next <= in30).sort((x, y) => x.next.localeCompare(y.next))[0];
+    if(ann) hello.push({ g, kind: 'ann', when: ann.next, iso: ann.iso });
+    else if(g.last && g.last < six) hello.push({ g, kind: 'away', when: g.last });
+  });
+  hello.sort((x, y) => (x.kind === y.kind ? (x.kind === 'ann' ? x.when.localeCompare(y.when) : y.g.booked - x.g.booked) : x.kind === 'ann' ? -1 : 1));
+
+  const card = (lbl, val, sub) => `<div class="card"><div class="lbl">${esc(lbl)}</div><div class="val">${esc(val)}</div><div class="sub">${esc(sub)}</div></div>`;
+  const maxV = Math.max(1, ...h.chans.map(c => c[1].v));
+  $('#main').innerHTML = `
+    <div class="cards">
+      ${card('Guests', String(h.guests), h.guests ? `${h.guests - h.returning} new · ${h.returning} returning` : `no stays ${h.label}`)}
+      ${card('Returning guests', h.guests ? Math.round(h.returning / h.guests * 100) + '%' : '—', h.guests ? `${h.returning} of ${h.guests} had stayed before` : 'of guests who stayed')}
+      ${card('Quote → booking', h.conv == null ? '—' : h.conv + '%', h.decided ? `${h.qWon} of ${h.decided} decided quotes${h.qOpen ? ' · ' + h.qOpen + ' open' : ''}` : (h.qOpen ? h.qOpen + ' open, none decided yet' : `no quotes ${h.label}`))}
+      ${card('Booked per guest', h.guests ? inr(h.avg) : '—', h.bookings ? `${inr(h.booked)} over ${h.bookings} booking${h.bookings===1?'':'s'}` : '')}
+    </div>
+    <div class="grid2">
+      <section class="box" aria-labelledby="fuH">
+        <div class="box-h"><h2 id="fuH">Waiting on the guest</h2><span class="cnt">${open.length}</span><span class="more">quotes not paid yet</span></div>
+        ${open.length ? open.map(d => {
+          const s = d.s, sent = s.quoteReadySentAt ? daysAgo(s.quoteReadySentAt) : null, until = nightsBetween(todayISO, s.checkin);
+          return `<div class="item"><div class="who"><div class="nm">${esc(s.guest || s.phone)}</div>
+            <div class="meta">${esc(fmtDay(s.checkin))} → ${esc(fmtDay(s.checkout))} · ${inr(d.total)} · ${sent == null ? '<span class="warnv">not sent yet</span>' : 'sent ' + esc(ago(sent))}${until <= 7 ? ` · <span class="warnv">${until === 0 ? 'arrives today' : 'in ' + until + ' day' + (until===1?'':'s')}</span>` : ''}</div></div>
+            <div class="acts">${waBtn(s.phone, followUpText(d), 'Follow up')}<a class="abtn" href="stay.html?open=${encodeURIComponent(s.no)}">Open</a><button class="abtn" type="button" data-lost="${esc(s.no)}">Mark lost</button></div></div>`;
+        }).join('') : '<p class="none">Nothing waiting — every quote is paid or closed.</p>'}
+        ${lostRecent.length ? `<details class="sub"><summary>Lost recently (${lostRecent.length})</summary>${lostRecent.map(d => {
+          const s = d.s, m = LOST[d.no];
+          return `<div class="item"><div class="who"><div class="nm">${esc(s.guest || s.phone)}</div>
+            <div class="meta">${esc(fmtDay(s.checkin))} → ${esc(fmtDay(s.checkout))} · ${inr(d.total)} · ${m ? 'marked lost' + (m.reason ? ': ' + esc(m.reason) : '') : 'dates passed unpaid'}</div></div>
+            <div class="acts">${waBtn(s.phone, helloText({ name: s.guest }), 'WhatsApp')}${m ? `<button class="abtn" type="button" data-unlost="${esc(s.no)}">Not lost</button>` : ''}</div></div>`;
+        }).join('')}</details>` : ''}
+      </section>
+      <div style="display:grid;gap:12px">
+        <section class="box" aria-labelledby="chH">
+          <div class="box-h"><h2 id="chH">Where bookings come from</h2><span class="more">${esc(h.label)}</span></div>
+          ${h.chans.length ? `<div class="chan">${h.chans.map(([c, v]) => `<div class="chan-row" title="${esc(c)}: ${v.n} booking${v.n===1?'':'s'}, ${inr(v.v)}"><span class="nm">${esc(c)}</span><span class="bar" style="width:${Math.max(2, Math.round(v.v / maxV * 100))}%"></span><span class="v"><b>${v.n}</b> · ${inr(v.v)}</span></div>`).join('')}</div>` : `<p class="none">No bookings ${esc(h.label)}.</p>`}
+        </section>
+        <section class="box" aria-labelledby="wbH">
+          <div class="box-h"><h2 id="wbH">Worth a hello</h2><span class="cnt">${hello.length}</span><span class="more">past guests</span></div>
+          ${hello.length ? hello.slice(0, 12).map(x => `<div class="item"><div class="who"><button type="button" class="nm" data-g="${esc(x.g.key)}" style="background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit">${esc(x.g.name || x.g.phone)}</button>
+            <div class="meta">${x.kind === 'ann' ? 'A year since their stay — ' + esc(fmtDay(x.when)) : 'Last here ' + esc(fmtMonY(x.when))} · ${x.g.won} stay${x.g.won===1?'':'s'} · ${inr(x.g.booked)}</div></div>
+            <div class="acts">${waBtn(x.g.phone, x.kind === 'ann' ? anniversaryText(x.g, x.iso) : winBackText(x.g), 'Say hello')}</div></div>`).join('') : '<p class="none">No past guests to reach out to right now. Guests show up here 6 months after their stay, or near its anniversary.</p>'}
+        </section>
+      </div>
+    </div>
+    <section class="box" aria-labelledby="glH">
+      <div class="box-h"><h2 id="glH">All guests</h2><span class="cnt">${GUESTS.length}</span></div>
+      <div class="listbar">
+        <input type="search" id="q" placeholder="Search name, phone or email" value="${esc(QUERY)}" aria-label="Search guests">
+        ${[['all','All'],['rep','Repeat'],['up','Upcoming'],['top','Top spenders'],['enq','Enquiries'],['ota','OTA']].map(([k, l]) => `<button type="button" class="chip${FILTER===k?' on':''}" data-f="${k}">${l}</button>`).join('')}
+      </div>
+      <div id="gl"></div>
+    </section>
+    <p class="foot-note">Guests are matched by phone number. "Booked" is the value of their confirmed stays (invoices, and quotes with an advance); quotes whose dates passed unpaid count as lost. Notes are private to your team.</p>`;
+  renderList();
+}
+
+function renderList(){
+  const q = lc(QUERY), qd = QUERY.replace(/\D/g, '');
+  let list = GUESTS.filter(g => (FILTER === 'all' || g.tags.some(t => t[0] === FILTER)) &&
+    (!q || lc(g.name).includes(q) || lc(g.email).includes(q) || (qd.length >= 3 && String(g.phone).replace(/\D/g,'').includes(qd))));
+  list.sort((a, b) => (a.next && b.next) ? a.next.localeCompare(b.next) : a.next ? -1 : b.next ? 1 : (b.lastActivity - a.lastActivity));
+  const shown = list.slice(0, SHOWN);
+  $('#gl').innerHTML = list.length ? `
+    <div class="gl-head"><span>Guest</span><span class="n">Stays</span><span class="n">Nights</span><span class="n">Booked</span><span>Last stay</span><span>Next stay</span></div>
+    ${shown.map(g => `<button type="button" class="gl-row" data-g="${esc(g.key)}">
+      <span><span class="nm">${esc(g.name || 'Guest')}</span><span class="tags">${g.tags.map(t => `<span class="tag ${t[0]}">${esc(t[1])}</span>`).join('')}</span><br><span class="ph">${esc(g.phone || g.email || '')}${g.rating ? ' · ' + '★'.repeat(Math.round(g.rating)) : ''}${NOTES[g.key] ? ' · 📝' : ''}</span></span>
+      <span class="n c-stays">${g.won}</span><span class="n c-nights">${g.nights}</span><span class="n c-booked">${g.won ? inr(g.booked) : '—'}</span>
+      <span class="d c-last">${g.last ? 'Last ' + esc(fmtDayY(g.last)) : (g.won ? '' : esc(g.docs[0].status === 'open' ? 'Quote open' : 'Quote lost'))}</span>
+      <span class="d c-next">${g.next ? 'Next ' + esc(fmtDay(g.next)) : ''}</span></button>`).join('')}
+    ${list.length > SHOWN ? `<button type="button" class="gl-more" id="glMore">Show ${Math.min(40, list.length - SHOWN)} more of ${list.length - SHOWN}</button>` : ''}`
+    : '<p class="none">No guests match.</p>';
+}
+
+// ── Guest profile ──
+let OPEN_KEY = '';
+function openGuest(key){
+  const g = GUESTS.find(x => x.key === key); if(!g) return;
+  OPEN_KEY = key;
+  const note = NOTES[key];
+  const statusLbl = d => d.status === 'won' ? (d.s.checkin && d.s.checkin >= todayISO ? 'Upcoming' : 'Stayed') : d.status === 'open' ? 'Quote open' : 'Quote lost';
+  const phone = String(g.phone||'').replace(/[^\d+]/g, '');
+  $('#gModal').innerHTML = `
+    <div class="m-head"><div class="avatar">${esc((g.name || '?').trim().charAt(0).toUpperCase())}</div>
+      <div style="min-width:0"><h2 id="gName">${esc(g.name || 'Guest')}</h2><div class="msub">${esc([g.phone, g.email].filter(Boolean).join(' · '))}</div>
+        <div class="tags" style="margin:6px 0 0">${g.tags.map(t => `<span class="tag ${t[0]}">${esc(t[1])}</span>`).join('')}</div></div>
+      <button class="m-x" type="button" id="gClose" aria-label="Close">×</button></div>
+    <div class="m-acts">${waBtn(g.phone, helloText(g), 'WhatsApp')}${phone ? `<a class="abtn" href="tel:${esc(phone)}">${ICON.phone}Call</a>` : ''}<a class="abtn" href="stay.html?new=quote${g.phone ? '&phone=' + encodeURIComponent(g.phone) : ''}">+ New quote</a></div>
+    <div class="m-stats">
+      <div class="m-stat"><b>${g.won}</b><span>stay${g.won===1?'':'s'}</span></div>
+      <div class="m-stat"><b>${g.nights}</b><span>nights</span></div>
+      <div class="m-stat"><b>${inr(g.booked)}</b><span>booked</span></div>
+      <div class="m-stat"><b>${inr(g.due)}</b><span>still due</span></div>
+    </div>
+    <div class="m-sec"><h3>Notes</h3>
+      <textarea id="gNote" maxlength="2000" placeholder="Preferences, occasions, anything to remember for next time">${esc(note ? note.text : '')}</textarea>
+      <div class="note-foot"><span>${note ? 'Saved ' + esc(fmtDayY(note.at.slice(0, 10))) + (note.by ? ' by ' + esc(String(note.by).split('@')[0]) : '') : 'Only your team sees notes.'}</span><button class="btn primary" type="button" id="gNoteSave">Save note</button></div>
+    </div>
+    <div class="m-sec"><h3>Bookings and quotes</h3><div class="tl">${g.docs.map(d => `<a href="stay.html?open=${encodeURIComponent(d.no)}"><span><span class="st ${d.status}">${esc(statusLbl(d))}</span>${esc(fmtDayY(d.s.checkin))} → ${esc(fmtDay(d.s.checkout))} · ${d.nights} night${d.nights===1?'':'s'}${d.channel !== 'Not set' ? ' · ' + esc(d.channel) : ''}</span><span class="amt">${inr(d.total)}</span></a>`).join('')}</div></div>
+    ${g.feedback.length ? `<div class="m-sec"><h3>Feedback</h3>${g.feedback.map(f => `<div class="fb"><span class="stars" aria-label="${num(f.rating)} out of 5">${'★'.repeat(num(f.rating))}${'☆'.repeat(5 - num(f.rating))}</span>${f.comment ? ' ' + esc(f.comment) : ''}</div>`).join('')}</div>` : ''}`;
+  $('#gOverlay').classList.add('show');
+  $('#gClose').focus();
+}
+function closeGuest(){ $('#gOverlay').classList.remove('show'); OPEN_KEY = ''; }
+
+async function saveNote(){
+  const btn = $('#gNoteSave'), text = $('#gNote').value.trim(), key = OPEN_KEY;
+  btn.disabled = true;
+  try{
+    const d = await api('/guests', 'PUT', { notes: { [key]: text ? { text } : null } });
+    const fresh = await api('/guests');
+    NOTES = fresh.notes || {}; LOST = fresh.lost || {};
+    toast(text ? 'Note saved' : 'Note removed');
+    build(); renderList(); openGuest(key);
+  }catch(e){ toast(e.message, true); btn.disabled = false; }
+}
+async function markLost(no, lost){
+  let reason = '';
+  if(lost){ reason = prompt('Why was it lost? (optional — e.g. price, dates, went elsewhere)', ''); if(reason === null) return; }
+  try{
+    await api('/guests', 'PUT', { lost: { [no]: lost ? { reason } : null } });
+    const fresh = await api('/guests');
+    NOTES = fresh.notes || {}; LOST = fresh.lost || {};
+    toast(lost ? 'Marked as lost' : 'Back in follow-ups');
+    build(); render();
+  }catch(e){ toast(e.message, true); }
+}
+
+document.addEventListener('click', e => {
+  const p = e.target.closest('#period button'); if(p){ PERIOD = p.dataset.p; try { localStorage.setItem('ryst_guests_period', PERIOD); } catch(x) {} render(); return; }
+  const f = e.target.closest('.chip[data-f]'); if(f){ FILTER = f.dataset.f; SHOWN = 40; render(); return; }
+  if(e.target.closest('#glMore')){ SHOWN += 40; renderList(); return; }
+  const l = e.target.closest('[data-lost]'); if(l){ markLost(l.dataset.lost, true); return; }
+  const u = e.target.closest('[data-unlost]'); if(u){ markLost(u.dataset.unlost, false); return; }
+  const g = e.target.closest('[data-g]'); if(g){ openGuest(g.dataset.g); return; }
+  if(e.target.id === 'gClose' || e.target.id === 'gOverlay'){ closeGuest(); return; }
+  if(e.target.id === 'gNoteSave'){ saveNote(); return; }
+});
+document.addEventListener('input', e => { if(e.target.id === 'q'){ QUERY = e.target.value; SHOWN = 40; renderList(); } });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && OPEN_KEY) closeGuest(); });
+document.addEventListener('property-updated', () => { if(DOCS.length) render(); });
+load();
+</script>
+</body>
+</html>

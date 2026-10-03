@@ -27,7 +27,11 @@
     { no:'DEMO/INV/103', type:'invoice', guest:'Sample Guest H', guests:6, channel:'Booking.com', mode:'UPI', checkin:iso(-68), checkout:iso(-66), date:iso(-80), advance:79200, items:villa(39600,2) },
     { no:'DEMO/INV/104', type:'invoice', guest:'Sample Guest I', guests:10, channel:'WhatsApp / Phone', mode:'UPI', checkin:iso(-96), checkout:iso(-94), date:iso(-110), advance:72000, items:villa(36000,2) },
     { no:'DEMO/INV/105', type:'invoice', guest:'Sample Guest J', guests:8, channel:'Website', mode:'Razorpay', checkin:iso(-124), checkout:iso(-121), date:iso(-140), advance:118800, items:villa(39600,3) },
-    { no:'DEMO/INV/106', type:'invoice', guest:'Sample Guest K', guests:4, channel:'Agoda', mode:'Bank transfer', checkin:iso(-152), checkout:iso(-150), date:iso(-165), advance:72000, items:villa(36000,2) }
+    { no:'DEMO/INV/106', type:'invoice', guest:'Sample Guest K', guests:4, channel:'Agoda', mode:'Bank transfer', checkin:iso(-152), checkout:iso(-150), date:iso(-165), advance:72000, items:villa(36000,2) },
+    // For the Guests page: a returning guest's earlier stay, a quote waiting on the guest and one that lapsed.
+    { no:'DEMO/INV/107', type:'invoice', guest:'Sample Guest A', phone:'+919000000001', email:'guest.a@example.com', guests:8, channel:'WhatsApp / Phone', mode:'UPI', checkin:iso(-212), checkout:iso(-210), date:iso(-230), advance:72000, items:villa(36000,2) },
+    { no:'DEMO/QT/108', type:'quote', guest:'Sample Guest L', phone:'+919000000012', guests:6, channel:'WhatsApp / Phone', checkin:iso(24), checkout:iso(26), date:iso(-3), advance:0, quoteReadySentAt:new Date(now-3*864e5).toISOString(), items:villa(36000,2) },
+    { no:'DEMO/QT/109', type:'quote', guest:'Sample Guest M', phone:'+919000000013', guests:10, channel:'Website', checkin:iso(-12), checkout:iso(-10), date:iso(-25), advance:0, items:villa(39600,2) }
   ];
   function total(s){ return (s.items||[]).reduce(function(a,it){ return a + (+it.rate||0)*(+it.qty||0); }, 0); }
   var reg = stays.filter(function(s){ return s.type !== 'block'; }).map(function(s){
@@ -77,6 +81,7 @@
       { email:'caretaker@example.com', role:'caretaker', modules:['petty-cash','inventory','checklist','guestRegister'], telegram:true, name:'Murugan S', phone:'+91 90000 00011', joined:'2024-11-01', note:'Lives next door. Off on Tuesdays.' },
       { email:'helper@example.com', role:'caretaker', modules:['checklist','inventory'], telegram:false, name:'', phone:'', joined:'', note:'' },
       { email:'manager@example.com', role:'coordinator', modules:['bookings','guestRegister','reports'], telegram:true, name:'Priya R', phone:'+91 90000 00022', joined:'2025-03-15', note:'Handles guest calls and bookings.' } ] },
+    '/guests': { version:1, notes:{ '9000000001':{ text:'Celebrated an anniversary last time — likes the poolside dinner setup.', at:new Date(now-40*864e5).toISOString(), by:'reviewer@example.com' } }, lost:{} },
     '/users': { version:1, users:[{ email:'reviewer@example.com', role:'owner', admin:true, modules:[], telegramChatId:'' }] },
     '/whatsapp-templates': { templates:{}, interaktTemplates:{}, automation:{} },
     '/whatsapp/status': { configured:true, connected:true, botUsername:'demo_bot', recipientCount:1, alertTypes:[] },
