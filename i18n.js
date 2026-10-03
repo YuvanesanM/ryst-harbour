@@ -273,7 +273,7 @@
     '▦ Phone widgets': '▦ போன் விட்ஜெட்கள்', 'Phone widgets': 'போன் விட்ஜெட்கள்', 'See today and this month on your home screen': 'இன்றையதும் இந்த மாதமும் உங்கள் முகப்புத் திரையில்',
     'Tap “Connect this phone” — the RYST Harbour app keeps the link.': '“இந்த போனை இணை” என்பதைத் தட்டவும் — RYST Harbour ஆப் இணைப்பை வைத்துக்கொள்ளும்.',
     'Long-press your home screen → Widgets → RYST Harbour, and drag “Today at the villa” or “This month” onto it.': 'முகப்புத் திரையை நீண்ட நேரம் அழுத்தவும் → Widgets → RYST Harbour, பிறகு “Today at the villa” அல்லது “This month”-ஐ இழுத்து வைக்கவும்.',
-    'Needs the RYST Harbour app from the Play Store, version 1.3 or later. The widget can only read today\'s summary; disconnect any time.': 'Play Store-இல் உள்ள RYST Harbour ஆப் (பதிப்பு 1.3 அல்லது அதற்கு மேல்) தேவை. விட்ஜெட் இன்றைய சுருக்கத்தை மட்டுமே படிக்கும்; எப்போது வேண்டுமானாலும் துண்டிக்கலாம்.',
+    'Needs the RYST Harbour app from the Play Store, version 1.3.3 or later. The widget can only read today\'s summary; disconnect any time.': 'Play Store-இல் உள்ள RYST Harbour ஆப் (பதிப்பு 1.3.3 அல்லது அதற்கு மேல்) தேவை. விட்ஜெட் இன்றைய சுருக்கத்தை மட்டுமே படிக்கும்; எப்போது வேண்டுமானாலும் துண்டிக்கலாம்.',
     'Connect this phone': 'இந்த போனை இணை', 'Disconnect widgets': 'விட்ஜெட்களைத் துண்டி', 'Opening the RYST Harbour app…': 'RYST Harbour ஆப் திறக்கிறது…',
     'Widgets disconnected on all your phones.': 'உங்கள் எல்லா போன்களிலும் விட்ஜெட்கள் துண்டிக்கப்பட்டன.',
     'Channels': 'சேனல்கள்', 'Check now': 'இப்போது சரிபார்', 'Checking…': 'சரிபார்க்கிறது…', 'Manage calendars': 'நாட்காட்டிகளை நிர்வகி',
