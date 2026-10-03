@@ -605,7 +605,7 @@ function buildNightIndex(){
       let rec = NIGHTS.get(iso);
       if(!rec){ rec = { iso, dow: dowOf(iso), rows:[], committed:false, blocked:false, tentative:false, rate:0, otaPlatform:null }; NIGHTS.set(iso, rec); }
       rec.rows.push(r);
-      if(r.type==='block'){ rec.blocked = true; rec.otaPlatform = r.otaPlatform; }
+      if(r.type==='block'){ rec.blocked = true; rec.otaPlatform = r.otaPlatform; if(r.otaPlatform) rec.otaHeld = true; }
       else if(r.committed){ rec.committed = true; rec.rate = Math.max(rec.rate, r.adr); }
       else rec.tentative = true; // unpaid quote — visible, never counted as occupied
     }
@@ -752,16 +752,20 @@ function computeMetrics(startISO, endISO, F){
   const marginPct = revenue>0 ? (net/revenue)*100 : null;
 
   const days = nightsBetween(startISO,endISO) || 1;
+  // Occupied: a real booking or an OTA calendar hold (a guest's booking whose
+  // details aren't in yet). Rates (ADR) only from nights with a known price.
   let nightsBooked=0, weekendNights=0, weekendAvail=0, weekdayAvail=0, weekendRevSum=0, weekdayRevSum=0;
+  let pricedNights=0, pricedWeekend=0;
   let highestBooking=null, lowestBooking=null;
   for(let iso=startISO; iso<endISO; iso=addDays(iso,1)){
     const rec = NIGHTS.get(iso);
     const weekend = isWeekendNight(dowOf(iso));
     if(weekend) weekendAvail++; else weekdayAvail++;
-    if(rec && rec.committed && rec.rows.some(r=>passRow(r,F))){
-      nightsBooked++;
-      if(weekend){ weekendNights++; weekendRevSum += rec.rate; } else { weekdayRevSum += rec.rate; }
-    }
+    if(!rec) continue;
+    // An OTA hold has no channel/status/payment yet, so it only counts unfiltered.
+    const priced = rec.committed && rec.rows.some(r=>passRow(r,F));
+    if(priced || (rec.otaHeld && !facetsActive(F))){ nightsBooked++; if(weekend) weekendNights++; }
+    if(priced){ pricedNights++; if(weekend){ pricedWeekend++; weekendRevSum += rec.rate; } else { weekdayRevSum += rec.rate; } }
   }
   for(const r of invoices){
     if(!highestBooking || r.total>highestBooking.total) highestBooking = r;
@@ -770,14 +774,14 @@ function computeMetrics(startISO, endISO, F){
   const occupancyPct = (nightsBooked/days)*100;
   const weekendOccPct = weekendAvail ? (weekendNights/weekendAvail)*100 : null;
   const weekdayOccPct = weekdayAvail ? ((nightsBooked-weekendNights)/weekdayAvail)*100 : null;
-  const weekendADR = weekendNights ? weekendRevSum/weekendNights : null;
-  const weekdayADR = (nightsBooked-weekendNights)>0 ? weekdayRevSum/(nightsBooked-weekendNights) : null;
+  const weekendADR = pricedWeekend ? weekendRevSum/pricedWeekend : null;
+  const weekdayADR = (pricedNights-pricedWeekend)>0 ? weekdayRevSum/(pricedNights-pricedWeekend) : null;
 
   // committedRevenue: contracted value of every real commitment (invoice OR
   // quote-with-advance) — used for ADR, the internally-consistent pricing
   // metric. "revenue"/RevPAN above stay invoice-only (accounting-grade).
   const committedRevenue = committed.reduce((s,r)=>s+r.total,0);
-  const adr = nightsBooked ? committedRevenue/nightsBooked : 0;
+  const adr = pricedNights ? committedRevenue/pricedNights : 0;
   const revPAN = stayRevenue/days;
 
   const leadVals = rows.filter(r=>r.leadDays!=null).map(r=>r.leadDays);
@@ -1265,7 +1269,7 @@ function renderKpis(cur, prev, S, R){
     { label:'Confirmed Bookings', value:cur.bookings, prev:prev.bookings, fmt:'int', sub:'invoiced this period', prevLabel:R.prev.label },
     { label:'Nights Booked', value:cur.nightsBooked, prev:prev.nightsBooked, fmt:'int', sub: cur.daysInRange+' nights available', prevLabel:R.prev.label },
     { label:'Villa Occupancy', value:cur.occupancyPct, prev:prev.occupancyPct, fmt:'pct', sub: R.endISO>todayISO() ? 'includes unsold future nights' : '', prevLabel:R.prev.label },
-    { label:'ADR', value:cur.adr, prev:prev.adr, fmt:'money', na: cur.nightsBooked===0, sub:'avg. contracted rate per night', prevLabel:R.prev.label },
+    { label:'ADR', value:cur.adr, prev:prev.adr, fmt:'money', na: !cur.adr, sub:'avg. contracted rate per night', prevLabel:R.prev.label },
   ];
   const secondaryCards = [
     { label:'Revenue / Available Night', value:cur.revPAN, prev:prev.revPAN, fmt:'money', sub:'RevPAN', prevLabel:R.prev.label },

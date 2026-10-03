@@ -6,7 +6,8 @@
 // every number follows the Reports page and the owner report on Telegram:
 //   revenue    invoices by check-in date, plus the advance on confirmed
 //              quotes not yet invoiced, plus food orders placed
-//   occupancy  nights held by a real booking; OTA holds counted apart
+//   occupancy  nights held by a real booking or an OTA calendar hold (a guest's
+//              booking whose details aren't in yet); manual blocks aren't stays
 // Caretakers get their own day view (check-in, check-out, checklists, issues,
 // inventory). Nothing here writes data: every action opens the module page.
 (function () {
@@ -72,10 +73,12 @@
       for (var i = 0; i < n; i++) {
         var d = addDays(s.checkin, i);
         if (d < start || d >= end) continue;
-        if (isBlock) otaNights[d] = 1; else if (!booked[d]) { booked[d] = 1; bookedN++; }
+        if (isBlock) otaNights[d] = 1; else booked[d] = 1;
       }
     });
+    // An OTA hold's nights count as booked; `ota` is how many came only from holds.
     Object.keys(otaNights).forEach(function (d) { if (!booked[d]) ota++; });
+    bookedN = Object.keys(booked).length + ota;
     return { booked: bookedN, ota: ota };
   }
   function metrics(stays, orders, expenses, start, end) {
@@ -213,7 +216,7 @@
       if (+TODAY.slice(8, 10) <= 7 && d !== null) setKpi('kRevenue', inr(cur.revenue), esc(t('Booked for')) + ' ' + esc(monthName(ms)) + ' · ' + esc(monthName(pms)) + ' ' + inr(prev.revenue));
       else setKpi('kRevenue', inr(cur.revenue), d === null ? esc(monthName(ms)) + ' · ' + inr(cur.collected) + ' received'
         : '<span class="' + (d >= 0 ? 'up' : 'down') + '">' + (d >= 0 ? '↑ ' : '↓ ') + Math.abs(d) + '%</span> vs ' + esc(monthName(pms)));
-      setKpi('kOcc', Math.round(cur.occupancy) + '%', cur.nights + ' of ' + cur.days + ' nights' + (cur.ota ? ' · +' + cur.ota + ' on OTAs' : ''));
+      setKpi('kOcc', Math.round(cur.occupancy) + '%', cur.nights + ' of ' + cur.days + ' nights' + (cur.ota ? ' · ' + cur.ota + ' via OTAs' : ''));
     }
     show($('#kArr'), !!list || loading('stays') || loading('reg'));
     if (list) {

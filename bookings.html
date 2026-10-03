@@ -273,7 +273,7 @@
     <div class="card">
       <div class="lbl">Revenue</div>
       <div class="val" id="cRev">—</div>
-      <div class="sub">invoices, this month</div>
+      <div class="sub">invoices + quote advances, this month</div>
     </div>
     <div class="card warn">
       <div class="lbl">Next 7 days</div>
@@ -640,6 +640,8 @@ function isConvertedQuote(d){
 // unpaid quote should still show up on the calendar and Agenda as a
 // tentative pill for the owner to track, it just shouldn't count as an
 // occupied night.
+// A calendar hold synced from an OTA (not a manual block): a guest's booking.
+function isOtaHold(d){ return (d.type||'invoice')==='block' && !isManualBlock(d); }
 function isNonBlockingStay(d){
   if((d.type||'invoice')==='block') return true;
   if((d.type||'invoice')==='quote') return !(Number(d.advance)>0);
@@ -1230,40 +1232,37 @@ function renderStats(){
   const monthStartISO = dateOnly(monthStart), monthEndISO = dateOnly(new Date(y,m+1,1));
 
   const filtered = STAYS.filter(passFilter);
-  const nextMonthStart = new Date(y,m+1,1);
-  let nights = 0, revenue = 0;
+  // Nights booked: real bookings (invoices, quotes with an advance) and OTA
+  // calendar holds — an OTA hold is a guest's booking we just don't have the
+  // details of yet. Manual blocks (maintenance, owner use) and unpaid quotes
+  // aren't stays. Each night counted once even if two entries overlap.
+  // Revenue (by check-in, same as the dashboard and Reports): invoice totals
+  // plus the advance on confirmed quotes not yet invoiced. An OTA hold adds
+  // its revenue once its guest details and amount are added.
+  const booked = new Set(), viaOta = new Set();
+  let revenue = 0;
   for(const d of filtered){
-    // Blocks (manual holds, OTA-synced Airbnb/Booking.com reservations) mark
-    // nights unavailable but aren't a booking — don't count them as "nights
-    // booked" or toward occupancy. Same reasoning for an unpaid quote: it's
-    // a proposal shared with a guest who hasn't confirmed or paid anything,
-    // not a real booking — mirrors stayBlocksDates in the proxy's
-    // server.js, which stops an unpaid quote from blocking real
-    // availability the same way. It stays visible on the calendar/agenda
-    // for tracking, it just doesn't count as an occupied night until there's
-    // real payment against it (advance > 0 covers both a partial advance
-    // and paid-in-full — there's no separate "fully paid" flag).
-    if(isNonBlockingStay(d)) continue;
-    // Nights of this booking that overlap the viewed month, via a closed-form
-    // range intersection rather than stepping day-by-day — a hand-entered
-    // date typo (checkout years out) would otherwise turn into a very long
-    // or effectively stuck loop.
-    const s = new Date(d.checkin+'T00:00:00'), e = new Date(d.checkout+'T00:00:00');
-    const overlapStart = s < monthStart ? monthStart : s;
-    const overlapEnd = e > nextMonthStart ? nextMonthStart : e;
-    nights += Math.max(0, Math.round((overlapEnd - overlapStart)/86400000));
-    if((d.type||'invoice')==='invoice' && d.checkin >= monthStartISO && d.checkin < monthEndISO) revenue += grandTotal(d);
+    const ota = isOtaHold(d);
+    if(!ota && isNonBlockingStay(d)) continue;
+    const n = Math.min(nightsBetween(d.checkin, d.checkout), 400); // typo guard
+    for(let i=0;i<n;i++){ const iso = addDays(d.checkin, i); if(iso < monthStartISO || iso >= monthEndISO) continue; booked.add(iso); if(ota) viaOta.add(iso); }
+    if(d.checkin < monthStartISO || d.checkin >= monthEndISO) continue;
+    if((d.type||'invoice')==='invoice') revenue += grandTotal(d);
+    else if((d.type||'invoice')==='quote') revenue += Number(d.advance)||0;
   }
+  // A night held by both an OTA hold and a real booking is the booking's.
+  for(const d of filtered){ if(isOtaHold(d) || isNonBlockingStay(d)) continue; for(let i=0;i<Math.min(nightsBetween(d.checkin,d.checkout),400);i++) viaOta.delete(addDays(d.checkin,i)); }
+  const nights = booked.size, otaNights = viaOta.size;
   const occ = daysInMonth ? Math.round((nights/daysInMonth)*100) : 0;
 
   const today = todayISO(), weekAhead = addDays(today,7);
   // Same exclusion as the nights count above — a block isn't a guest
   // arriving or leaving, and an unpaid quote isn't a confirmed arrival
   // either, so neither belongs in a "who's actually checking in/out" count.
-  const upcoming = filtered.filter(d => !isNonBlockingStay(d) && ((d.checkin>=today && d.checkin<=weekAhead) || (d.checkout>=today && d.checkout<=weekAhead)));
+  const upcoming = filtered.filter(d => (isOtaHold(d) || !isNonBlockingStay(d)) && ((d.checkin>=today && d.checkin<=weekAhead) || (d.checkout>=today && d.checkout<=weekAhead)));
 
   $('#cNights').textContent = nights;
-  $('#cNightsSub').textContent = view.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  $('#cNightsSub').textContent = view.toLocaleDateString('en-IN',{month:'long',year:'numeric'}) + (otaNights ? ' · ' + otaNights + ' via OTA' + (otaNights===1?'':'s') : '');
   $('#cOcc').textContent = occ+'%';
   $('#cRev').textContent = money(revenue);
   $('#cUpcoming').textContent = upcoming.length;

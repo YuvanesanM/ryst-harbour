@@ -325,7 +325,7 @@
     [/^Cancelled\? Check it there · (.+)$/, function(m){ return 'ரத்தா? அங்கே சரிபாருங்கள் · ' + m[1]; }],
     [/^(.+) moved on (.+)'s calendar$/, function(m){ return m[1] + ' — ' + m[2] + ' நாட்காட்டியில் மாறியுள்ளது'; }],
     [/^Now (.+) → (.+) · update the dates$/, function(m){ return 'இப்போது ' + m[1] + ' → ' + m[2] + ' · தேதிகளைப் புதுப்பிக்கவும்'; }],
-    [/^(\d+) of (\d+) nights?( · \+(\d+) on OTAs)?$/, function(m){ return m[2] + ' இரவுகளில் ' + m[1] + (m[4] ? ' · OTA-க்களில் +' + m[4] : ''); }],
+    [/^(\d+) of (\d+) nights?( · (\d+) via OTAs)?$/, function(m){ return m[2] + ' இரவுகளில் ' + m[1] + (m[4] ? ' · ' + m[4] + ' OTA வழியாக' : ''); }],
     [/^(\d+) nights? · to (.+)$/, function(m){ return m[1] + ' இரவு · ' + m[2] + ' வரை'; }],
     [/^Booked for (\w+) · (\w+) (₹[\d,]+)$/, function(m){ return MONTHS[m[1].slice(0,3)] + ' முன்பதிவு · ' + MONTHS[m[2].slice(0,3)] + ' ' + m[3]; }],
     [/^Next: (.+)$/, function(m){ return 'அடுத்து: ' + m[1]; }],
