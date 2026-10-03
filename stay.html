@@ -246,6 +246,7 @@
     }
     .doc, .doc *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important }
   }
+  select.t.invalid{border-color:var(--danger,#b42318);box-shadow:0 0 0 3px rgba(180,35,24,.12)}
 </style>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -302,9 +303,9 @@
           <select class="t" id="loadQuoteSel"><option value="">— pick a quote —</option></select>
         </label>
         <label class="f"><span>Booking reference <span style="color:var(--muted2)">(optional)</span></span><input class="t" id="ref" placeholder="e.g. WhatsApp / Airbnb #"></label>
-        <label class="f"><span>Booking channel <span style="color:var(--muted2)">(for reports — optional)</span></span>
-          <select class="t" id="channel">
-            <option value="">—</option>
+        <label class="f"><span>Booking channel <span style="color:var(--danger,#b42318)" aria-hidden="true">*</span></span>
+          <select class="t" id="channel" required aria-required="true">
+            <option value="">Select channel…</option>
             <option>Website</option>
             <option>WhatsApp / Phone</option>
             <option>Walk-in</option>
@@ -835,7 +836,7 @@ function bind(){
   $("#checkout").addEventListener("input", syncNights);
   $("#discountInp").addEventListener("input", render);
   $("#settleInp").addEventListener("input", render);
-  $("#channel").addEventListener("change", render);
+  $("#channel").addEventListener("change", ()=>{ $("#channel").classList.remove("invalid"); render(); });
   $("#addLi").addEventListener("click", ()=>{ items.push({desc:"",qty:"1",rate:""}); renderItems(); render(); });
   $("#typeSeg").querySelectorAll("button").forEach(b=> b.addEventListener("click", ()=> setType(b.dataset.type)));
   $("#hdrBrand").addEventListener("click", ()=> window.location.href='login.html');
@@ -975,7 +976,7 @@ function newDoc(){
   syncCheckoutMin();
   $("#discountInp").value=""; $("#settleInp").value="";
   $("#mode").value="UPI"; // matches the <select>'s own default-selected option
-  $("#channel").value="";
+  $("#channel").value=defaultChannel();
   items=[{desc:"Villa Rental Charges",qty:"1",rate:rateFor("Villa Rental Charges"),_villaRow:true}];
   if(docType==="invoice"){ populateLoadQuoteSel(); $("#loadQuoteRow").style.display=""; }
   renderItems(); render();
@@ -1196,6 +1197,9 @@ function render(){
 // already run would silently erase whichever one it was: a guest's
 // submitted check-in, a payment link's paid status, or an automation
 // dedup flag that then lets a reminder/request go out a second time.
+// New quotes and invoices start as WhatsApp / Phone — most bookings come that
+// way; change it when one doesn't. The channel is required on every save.
+function defaultChannel(){ return 'WhatsApp / Phone'; }
 function collect(){
   const existing = currentStay();
   return {
@@ -1229,6 +1233,7 @@ async function saveDoc(){
   $("#phone").value = phoneNorm.value;
   if(!syncPhoneValidity()){ toast("Phone needs a country code and no spaces, e.g. +919876543210"); $("#phone").focus(); return; }
   const doc=collect(); if(!doc.no){ toast("No document number"); return; }
+  if(!doc.channel){ toast("Pick the booking channel"); $("#channel").classList.add("invalid"); $("#channel").focus(); return; }
   if(doc.otaSettlement!=null && doc.otaSettlement > grandNow()){ toast("The OTA settlement can't be more than the guest's charges"); $("#settleInp").focus(); return; }
   if(!doc.guest.trim()){ toast("Add a guest name first"); return; }
   if(!editingKey && getStays().some(x=>x.no===doc.no)){
