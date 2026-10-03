@@ -95,6 +95,22 @@
   .totals-mini{margin-top:14px;padding:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;font-size:13px}
   .totals-mini div{display:flex;justify-content:space-between;align-items:center;padding:3px 0;color:var(--muted)}
   .totals-mini div.grand{color:var(--ink);font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:9px}
+  .tot-inp{width:110px;padding:5px 8px;font-size:12.5px;text-align:right;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}
+  .conv-btn{width:100%;justify-content:center;margin-top:2px}
+  .ret-hint{margin:-6px 0 10px;color:var(--accent-d)}
+  .pay-row{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;margin-top:10px}
+  .pay-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+  .pay-list li{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px}
+  .pay-list li b{color:var(--ink);font-weight:600}
+  details.more{margin:6px 0 0;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+  details.more>summary{cursor:pointer;padding:11px 14px;font-size:13px;font-weight:600;color:var(--ink);list-style:none;display:flex;gap:8px;align-items:baseline}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+  details.more[open]>summary::before{transform:rotate(90deg)}
+  details.more>summary span{font-weight:400;color:var(--muted2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .more-body{padding:4px 14px 6px}
+  .form [hidden]{display:none!important}
+  .linkish{background:none;border:0;padding:0;color:var(--accent-d);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
   .hint{display:block;font-size:11.5px;color:var(--muted2);line-height:1.5;margin-top:6px}
   .hint.err{color:var(--danger)}
   .send-result.err{color:var(--danger)}
@@ -288,105 +304,125 @@
   <main class="work">
     <section class="form">
       <div class="group">
-        <p class="gh">Document</p>
         <div class="gst-note" id="gstNote" hidden></div>
         <div class="gst-note" id="holdNote" hidden style="background:#e4ecf0;border-color:#c8d6dc;color:#213a44"></div>
         <div class="seg" id="typeSeg">
           <button data-type="quote" class="on">Quotation</button>
           <button data-type="invoice">Invoice</button>
         </div>
-        <div class="row2" style="margin-top:12px">
-          <label class="f" style="position:relative"><span id="noLbl">Quote no. (auto)</span><input class="t" id="no" autocomplete="off" placeholder="Auto-generated — or type to search"><div class="no-dd" id="noDropdown" hidden></div></label>
-          <label class="f"><span id="dateLbl">Quote date</span><input class="t" id="date" type="date"></label>
-        </div>
+        <label class="f" style="position:relative;margin-top:12px"><span id="noLbl">Quote no. (auto)</span><input class="t" id="no" autocomplete="off" placeholder="Auto-generated — or type to search"><div class="no-dd" id="noDropdown" hidden></div></label>
         <label class="f" id="loadQuoteRow" style="display:none"><span>Load from quote</span>
           <select class="t" id="loadQuoteSel"><option value="">— pick a quote —</option></select>
         </label>
-        <label class="f"><span>Booking reference <span style="color:var(--muted2)">(optional)</span></span><input class="t" id="ref" placeholder="e.g. WhatsApp / Airbnb #"></label>
-        <label class="f"><span>Booking channel <span style="color:var(--danger,#b42318)" aria-hidden="true">*</span></span>
-          <select class="t" id="channel" required aria-required="true">
-            <option value="">Select channel…</option>
-            <option>Website</option>
-            <option>WhatsApp / Phone</option>
-            <option>Walk-in</option>
-            <option>Airbnb</option>
-            <option>Booking.com</option>
-            <option>MakeMyTrip</option>
-            <option>Agoda</option>
-            <option>Referral</option>
-            <option>Other</option>
-          </select>
-        </label>
+        <button type="button" class="btn conv-btn" id="btnConvert" hidden>Convert to invoice →</button>
       </div>
 
       <div class="group">
         <p class="gh">Guest</p>
-        <label class="f"><span>Guest name</span><input class="t" id="guest" placeholder="Mr. / Ms. ..."></label>
         <div class="row2">
-          <label class="f"><span>Email ID</span><input class="t" id="email" placeholder="guest@email.com"></label>
-          <label class="f"><span>Phone</span><input class="t" id="phone" inputmode="tel" type="tel" placeholder="+919876543210"><small class="hint" id="phoneHint"></small></label>
+          <label class="f"><span>Phone</span><input class="t" id="phone" inputmode="tel" type="tel" placeholder="+919876543210" autocomplete="off"><small class="hint" id="phoneHint"></small></label>
+          <label class="f"><span>Guest name</span><input class="t" id="guest" placeholder="Mr. / Ms. ..."></label>
         </div>
-        <label class="f"><span>No. of guests</span><input class="t" id="guests" type="number" min="1" step="1" inputmode="numeric" placeholder="2"></label>
-      </div>
-
-      <div class="group">
-        <p class="gh">Stay details</p>
+        <p class="hint ret-hint" id="returnHint" hidden></p>
         <div class="row2">
-          <label class="f"><span>Check-in</span><input class="t" id="checkin" type="date"></label>
-          <label class="f"><span>Check-out</span><input class="t" id="checkout" type="date"></label>
-        </div>
-        <div class="row2">
-          <label class="f"><span>No. of nights (auto)</span><input class="t locked" id="nights" readonly tabindex="-1"></label>
-          <label class="f"><span>Payment mode</span>
-            <select class="t" id="mode">
-              <option>Razorpay</option>
-              <option selected>UPI</option>
-              <option>Bank Transfer</option>
-              <option>Cash</option>
-              <option>OTA payout</option>
+          <label class="f"><span>No. of guests</span><input class="t" id="guests" type="number" min="1" step="1" inputmode="numeric" placeholder="2"></label>
+          <label class="f"><span>Channel <span style="color:var(--danger,#b42318)" aria-hidden="true">*</span></span>
+            <select class="t" id="channel" required aria-required="true">
+              <option value="">Select channel…</option>
+              <option>Website</option>
+              <option>WhatsApp / Phone</option>
+              <option>Walk-in</option>
+              <option>Airbnb</option>
+              <option>Booking.com</option>
+              <option>MakeMyTrip</option>
+              <option>Agoda</option>
+              <option>Referral</option>
+              <option>Other</option>
             </select>
           </label>
         </div>
       </div>
 
       <div class="group">
+        <p class="gh">Stay</p>
+        <div class="row2">
+          <label class="f"><span>Check-in</span><input class="t" id="checkin" type="date"></label>
+          <label class="f"><span>Check-out</span><input class="t" id="checkout" type="date"></label>
+        </div>
+        <input type="hidden" id="nights">
+        <p class="hint" id="nightsHint" style="margin-top:-4px"></p>
+      </div>
+
+      <div class="group">
         <p class="gh">Charges</p>
         <div class="li-head"><div>Description</div><div class="num">Qty</div><div class="num">Rate</div><div class="num">Amount</div><div></div></div>
         <div id="liBody"></div>
+        <p class="hint" id="rateHint" style="margin:-2px 0 8px"></p>
         <button class="add-li" id="addLi">+ Add charge</button>
-
         <div class="totals-mini">
           <div><span>Subtotal</span><b id="mSub">₹0</b></div>
-
           <div style="align-items:center">
-            <span>Discount</span>
-            <input id="discountInp" type="number" min="0" step="1" inputmode="decimal" placeholder="0"
-              style="width:90px;padding:5px 8px;font-size:12.5px;text-align:right;border:1px solid var(--line);border-radius:7px;background:var(--panel2)">
+            <span>Agreed total <small style="color:var(--muted2);font-weight:400">(optional)</small></span>
+            <input id="agreedInp" type="number" min="0" step="1" inputmode="numeric" aria-label="Agreed total in rupees" class="tot-inp">
           </div>
+          <div id="mDiscRow" hidden><span>Discount</span><b id="mDisc">—</b></div>
+          <input id="discountInp" type="hidden">
           <div class="grand"><span>Grand Total</span><b id="mGrand">₹0</b></div>
           <div id="settleRow" hidden style="align-items:center">
             <span>OTA settlement <small style="color:var(--muted2);font-weight:400">(what the OTA pays you)</small></span>
-            <input id="settleInp" type="number" min="0" step="1" inputmode="decimal" placeholder="from statement" aria-label="OTA settlement in rupees"
-              style="width:110px;padding:5px 8px;font-size:12.5px;text-align:right;border:1px solid var(--line);border-radius:7px;background:var(--panel2)">
+            <input id="settleInp" type="number" min="0" step="1" inputmode="decimal" placeholder="from statement" aria-label="OTA settlement in rupees" class="tot-inp">
           </div>
           <div id="keptRow" hidden><span>OTA keeps</span><b id="mKept">—</b></div>
         </div>
       </div>
 
       <div class="group">
-        <p class="gh">Deposit & advance</p>
-        <div class="row2">
-          <label class="f"><span>Security deposit (refundable)</span><input class="t" id="deposit" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></label>
-          <label class="f"><span>Booking advance received</span><input class="t" id="advance" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></label>
+        <p class="gh">Payment</p>
+        <div class="totals-mini" style="margin-top:0">
+          <div><span>Received so far</span><b id="mAdv">₹0</b></div>
+          <div><span>Balance due</span><b id="mBal">₹0</b></div>
         </div>
-        <p class="hint">Balance due = Grand total − Advance received. Security deposit is collected separately and refundable.</p>
+        <button type="button" class="add-li" id="btnPay" style="margin-top:10px">+ Record a payment</button>
+        <div class="pay-row" id="payRow" hidden>
+          <input class="t" id="payAmt" type="number" min="1" step="1" inputmode="numeric" aria-label="Amount received in rupees" placeholder="Amount">
+          <select class="t" id="payMethod" aria-label="How it was paid"><option>UPI</option><option>Cash</option><option>Bank Transfer</option><option>Card</option></select>
+          <button type="button" class="btn primary" id="payAdd">Add</button>
+          <button type="button" class="btn" id="payCancel" aria-label="Cancel">×</button>
+        </div>
+        <ul class="pay-list" id="payList"></ul>
+        <p class="hint">Online payments through the guest's link are added by themselves.</p>
       </div>
 
-      <div class="group" style="margin-bottom:0">
+      <details class="more" id="moreBox">
+        <summary>More details <span id="moreSum"></span></summary>
+        <div class="more-body">
+          <div class="row2">
+            <label class="f"><span id="dateLbl">Quote date</span><input class="t" id="date" type="date"></label>
+            <label class="f"><span>Payment mode <small style="color:var(--muted2)">(auto)</small></span>
+              <select class="t" id="mode">
+                <option>Razorpay</option>
+                <option selected>UPI</option>
+                <option>Bank Transfer</option>
+                <option>Cash</option>
+                <option>Card</option>
+                <option>OTA payout</option>
+              </select>
+            </label>
+          </div>
+          <label class="f"><span>Email ID</span><input class="t" id="email" placeholder="guest@email.com"></label>
+          <label class="f"><span>Booking reference</span><input class="t" id="ref" placeholder="e.g. Airbnb / Booking.com confirmation #"></label>
+          <div class="row2">
+            <label class="f"><span>Security deposit (refundable)</span><input class="t" id="deposit" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></label>
+            <label class="f"><span>Advance received (total)</span><input class="t" id="advance" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></label>
+          </div>
+          <p class="hint" style="margin-top:-4px">Balance due = Grand total − Advance received. Use “Record a payment” above; edit the total here only to correct it. The security deposit is collected separately and refunded.</p>
+        </div>
+      </details>
+
+      <div class="group" style="margin:18px 0 0">
         <button class="btn primary" id="btnSave" disabled style="width:100%;justify-content:center;padding:12px">Save</button>
       </div>
     </section>
-
     <section class="preview">
       <div class="doc" id="stayDoc">
         <div class="d-top">
@@ -669,6 +705,50 @@ function rateFor(desc){
   const hit=(settings.rates||[]).find(r=>r.desc===desc);
   return hit && hit.rate!=="" && hit.rate!=null ? String(hit.rate) : "";
 }
+// The villa's rate card, same as the booking website (server.js
+// nightlyVillaRate/computeQuoteItems): Fri, Sat and Sun nights get the
+// weekend hike, holidays the holiday hike (a holiday on a weekend takes the
+// holiday rate, not both), blended into the one villa-rental line as the
+// average per night so qty × rate is the exact total.
+function isHolidayISO(iso){ return Array.isArray(settings.holidays) && settings.holidays.some(h=> (h && h.date || h) === iso); }
+function villaRateCard(inISO,outISO){
+  const base = parseFloat(rateFor("Villa Rental Charges"));
+  const n = nightsBetween(inISO,outISO);
+  if(!(base>0) || !n) return null;
+  const pct = k => (parseFloat(settings[k])||0)/100, r2 = x => Math.round(x*100)/100;
+  const tiers = { weekday:{n:0,rate:base}, weekend:{n:0,rate:r2(base*(1+pct("weekendHikePercent")))}, holiday:{n:0,rate:r2(base*(1+pct("holidayHikePercent")))} };
+  let total = 0; const d = new Date(inISO+"T00:00:00");
+  for(let i=0;i<n;i++){
+    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`, dow = d.getDay();
+    const t = isHolidayISO(iso) ? "holiday" : (dow===5||dow===6||dow===0) ? "weekend" : "weekday";
+    tiers[t].n++; total += tiers[t].rate; d.setDate(d.getDate()+1);
+  }
+  const avg = r2(total/n);
+  return { rate: Number.isInteger(avg) ? String(avg) : avg.toFixed(2), total: r2(total), tiers, n };
+}
+// The villa row follows the rate card until someone types a rate on it.
+function autoPriceVilla(){
+  const row = items.find(it=>it._villaRow); if(!row || row._rateAuto===false) return;
+  const card = villaRateCard($("#checkin").value,$("#checkout").value);
+  if(card) row.rate = card.rate;
+}
+// A saved document's villa row counts as "rate card" only if it still matches it.
+function markVillaRateAuto(){
+  const row = items.find(it=>it._villaRow); if(!row) return;
+  const card = villaRateCard($("#checkin").value,$("#checkout").value);
+  row._rateAuto = !!card && Math.abs((parseFloat(row.rate)||0) - parseFloat(card.rate)) < 0.01;
+}
+function syncRateHint(){
+  const el = $("#rateHint"); if(!el) return;
+  const row = items.find(it=>it._villaRow);
+  const card = row ? villaRateCard($("#checkin").value,$("#checkout").value) : null;
+  if(!card){ el.innerHTML = ""; return; }
+  const parts = [["weekday","weekday"],["weekend","Fri–Sun"],["holiday","holiday"]].filter(([k])=>card.tiers[k].n)
+    .map(([k,l])=> `${card.tiers[k].n} ${l} night${card.tiers[k].n===1?"":"s"} at ${money(card.tiers[k].rate)}`);
+  if(row._rateAuto===false && Math.abs((parseFloat(row.rate)||0) - parseFloat(card.rate)) >= 0.01)
+    el.innerHTML = `Villa rate typed by hand. Rate card: ${esc(parts.join(" + "))}. <button type="button" class="linkish" id="useCard">Use rate card</button>`;
+  else el.textContent = "Villa priced from the rate card: " + parts.join(" + ") + ".";
+}
 let settings = loadSettings();
 
 /* ---------- STATE ---------- */
@@ -678,6 +758,8 @@ let staysCache = [];              // loaded from proxy
 let editingKey = null;
 let curHold = null;                // the OTA calendar hold this booking is being captured from (stay.html?hold=<no>)
 let curNo = "", curDateISO = "";
+let curPayments = [];              // payments recorded with "Record a payment" (a log; the advance holds the total)
+let modeTouched = false;           // payment mode picked by hand → stop setting it automatically
 
 /* ---------- CLOUD ---------- */
 async function fetchStaysFromProxy(){
@@ -771,6 +853,7 @@ async function initApp(){
     staysCache = Array.isArray(d.stays) ? d.stays : [];
     await fetchStaySettings(); // best-effort — falls back to cached/default settings, not data-destructive
     setConnected(true);
+    if(!editingKey) autoPriceVilla();
     renderItems();
     // refresh the auto number (prefixes may come from settings) now that data is known
     if(!editingKey){ curNo=nextNo(docType); $("#no").value=curNo; }
@@ -816,12 +899,14 @@ function bind(){
     const cleaned = (raw.trim().startsWith("+") ? "+" : "") + raw.replace(/[^\d]/g,"");
     if(cleaned !== raw) e.target.value = cleaned;
     syncPhoneValidity();
+    fillReturning();
     render();
   });
   $("#phone").addEventListener("blur", ()=>{
     const n = normalizePhoneStrict($("#phone").value);
     if(n.value !== $("#phone").value) $("#phone").value = n.value;
     syncPhoneValidity();
+    fillReturning();
   });
   $("#guests").addEventListener("input", ()=>{
     const cap = parseInt(settings.guestCapacity) || 0;
@@ -834,9 +919,46 @@ function bind(){
   $("#date").addEventListener("input", e=>{ curDateISO=e.target.value; render(); });
   $("#checkin").addEventListener("input", syncNights);
   $("#checkout").addEventListener("input", syncNights);
-  $("#discountInp").addEventListener("input", render);
+  $("#agreedInp").addEventListener("input", ()=>{
+    const v = $("#agreedInp").value.trim();
+    $("#discountInp").value = v==="" ? "" : String(Math.max(0, Math.round((subNow() - (parseFloat(v)||0))*100)/100));
+    render();
+  });
+  $("#agreedInp").addEventListener("blur", ()=>{
+    const want = parseFloat($("#agreedInp").value), sub = subNow();
+    render();
+    const g = grandNow();
+    if(isFinite(want) && want > sub + 0.5) toast("The agreed total can't be more than the charges — add a charge instead");
+    else if(isFinite(want) && want < g - 0.5) toast("Most discount allowed is "+(parseFloat(settings.maxDiscountPercent)||20)+"% — lowest total "+money(g));
+    syncAgreed(true);
+  });
+  $("#mode").addEventListener("change", ()=>{ modeTouched = true; });
+  $("#btnPay").addEventListener("click", ()=>{
+    const bal = Math.max(0, grandNow() - (parseFloat($("#advance").value)||0));
+    $("#payAmt").value = bal > 0 ? String(Math.round(bal)) : "";
+    const m = $("#mode").value; if(["UPI","Cash","Bank Transfer","Card"].includes(m)) $("#payMethod").value = m;
+    $("#payRow").hidden = false; $("#btnPay").hidden = true; $("#payAmt").focus();
+  });
+  $("#payCancel").addEventListener("click", ()=>{ $("#payRow").hidden = true; $("#btnPay").hidden = false; });
+  $("#payAdd").addEventListener("click", recordPayment);
+  $("#payAmt").addEventListener("keydown", e=>{ if(e.key==="Enter") recordPayment(); });
+  $("#btnConvert").addEventListener("click", convertToInvoice);
+  $("#rateHint").addEventListener("click", e=>{
+    if(e.target.id!=="useCard") return;
+    const row = items.find(it=>it._villaRow); if(!row) return;
+    row._rateAuto = true; autoPriceVilla(); renderItems(); render();
+  });
   $("#settleInp").addEventListener("input", render);
-  $("#channel").addEventListener("change", ()=>{ $("#channel").classList.remove("invalid"); render(); });
+  $("#channel").addEventListener("change", ()=>{
+    $("#channel").classList.remove("invalid");
+    // OTA bookings need the OTA's confirmation number: show it.
+    if(otaChannel($("#channel").value)) $("#moreBox").open = true;
+    if(!modeTouched){
+      if(otaChannel($("#channel").value)) $("#mode").value = "OTA payout";
+      else if($("#mode").value === "OTA payout") $("#mode").value = "UPI";
+    }
+    render();
+  });
   $("#addLi").addEventListener("click", ()=>{ items.push({desc:"",qty:"1",rate:""}); renderItems(); render(); });
   $("#typeSeg").querySelectorAll("button").forEach(b=> b.addEventListener("click", ()=> setType(b.dataset.type)));
   $("#hdrBrand").addEventListener("click", ()=> window.location.href='login.html');
@@ -909,6 +1031,9 @@ function loadFromQuote(qno){
   $("#advance").value = d.advance||"";
   $("#discountInp").value = d.discount!=null ? String(d.discount) : "";
   items = d.items ? JSON.parse(JSON.stringify(d.items)) : [];
+  curPayments = Array.isArray(d.payments) ? d.payments.slice() : [];
+  modeTouched = !!d.mode;
+  markVillaRateAuto();
   syncGuestCharges(); renderItems(); render();
   $("#loadQuoteSel").value = "";
 }
@@ -932,6 +1057,7 @@ function syncNights(){
   if(n){
     const villaIdx = items.findIndex(it=> it._villaRow);
     if(villaIdx>=0){ items[villaIdx].qty = String(n); }
+    autoPriceVilla();
   }
   // additional-guest qty is per-guest per-night, so it also depends on nights
   syncGuestCharges();
@@ -977,7 +1103,9 @@ function newDoc(){
   $("#discountInp").value=""; $("#settleInp").value="";
   $("#mode").value="UPI"; // matches the <select>'s own default-selected option
   $("#channel").value=defaultChannel();
-  items=[{desc:"Villa Rental Charges",qty:"1",rate:rateFor("Villa Rental Charges"),_villaRow:true}];
+  modeTouched=false; curPayments=[]; $("#moreBox").open=false;
+  $("#returnHint").hidden=true; $("#payRow").hidden=true; $("#btnPay").hidden=false; $("#agreedInp").value="";
+  items=[{desc:"Villa Rental Charges",qty:"1",rate:rateFor("Villa Rental Charges"),_villaRow:true,_rateAuto:true}];
   if(docType==="invoice"){ populateLoadQuoteSel(); $("#loadQuoteRow").style.display=""; }
   renderItems(); render();
 }
@@ -1048,6 +1176,7 @@ function renderItems(){
   body.querySelectorAll("input[data-k=\"qty\"],input[data-k=\"rate\"]").forEach(inp=>{
     inp.addEventListener("input", e=>{
       const i=+e.target.dataset.i, k=e.target.dataset.k; items[i][k]=e.target.value;
+      if(k==="rate" && items[i]._villaRow){ items[i]._rateAuto=false; syncRateHint(); }
       if(k==="rate"){
         const min=parseFloat(e.target.dataset.min||0);
         e.target.classList.toggle("warn-rate", min>0 && parseFloat(e.target.value||0)<min && e.target.value!=="");
@@ -1100,7 +1229,16 @@ function syncSettlement(grand){
   el.style.color = kept != null && kept < 0 ? 'var(--danger,#b42318)' : kept == null ? 'var(--muted2)' : '';
   el.style.fontWeight = kept == null ? '400' : '';
 }
-function grandNow(){ const sub = items.reduce((s,it)=>s+lineAmt(it),0); return Math.max(0, sub - (parseFloat($("#discountInp").value)||0)); }
+function subNow(){ return items.reduce((s,it)=>s+lineAmt(it),0); }
+function grandNow(){ return Math.max(0, subNow() - (parseFloat($("#discountInp").value)||0)); }
+// "Agreed total" is the discount seen the other way round: the total the
+// guest agreed to; the discount (what's saved and printed) is the difference.
+function syncAgreed(force){
+  const inp = $("#agreedInp"); if(!inp || (!force && document.activeElement === inp)) return;
+  const disc = parseFloat($("#discountInp").value)||0;
+  inp.value = disc > 0 ? String(Math.round(grandNow()*100)/100) : "";
+  inp.placeholder = String(Math.round(subNow()*100)/100);
+}
 function render(){
   const isInv = docType==="invoice";
   $("#pTitle").textContent  = isInv ? "INVOICE" : "QUOTATION";
@@ -1168,6 +1306,15 @@ function render(){
 
   $("#mSub").textContent   = money(sub);
   $("#mGrand").textContent = money(grand);
+  $("#mDiscRow").hidden = !(discount > 0); $("#mDisc").textContent = "− " + money(discount);
+  syncAgreed(false);
+  $("#mAdv").textContent = money(advance); $("#mBal").textContent = money(balance);
+  renderPayments();
+  syncRateHint();
+  const nN = nightsBetween($("#checkin").value,$("#checkout").value);
+  $("#nightsHint").textContent = nN ? nN + " night" + (nN===1?"":"s") : "";
+  $("#moreSum").textContent = [ $("#mode").value, $("#email").value.trim(), $("#ref").value.trim() && ("ref " + $("#ref").value.trim()), deposit > 0 && ("deposit " + money(deposit)) ].filter(Boolean).join(" · ");
+  syncConvertBtn();
   syncSettlement(grand);
 
   $("#pBank").innerHTML = esc(settings.bank).replace(/\n/g,"<br>") + `<div style="margin-top:6px;font-weight:600;color:var(--sea-d)">PAN: ${esc(settings.pan)}</div>`;
@@ -1206,7 +1353,8 @@ function collect(){
     ...(existing||{}),
     type: docType, no: curNo, date: curDateISO,
     guest:$("#guest").value, email:$("#email").value, phone:$("#phone").value, guests:$("#guests").value,
-    ref:$("#ref").value, checkin:$("#checkin").value, checkout:$("#checkout").value, mode:$("#mode").value,
+    ref:$("#ref").value, checkin:$("#checkin").value, checkout:$("#checkout").value, mode:$("#mode").value || autoMode(existing),
+    ...(curPayments.length && { payments: curPayments.slice() }),
     channel:$("#channel").value,
     ...(()=>{ const st = otaChannel($("#channel").value) ? settlementNow() : null;
       return st == null ? { otaSettlement: undefined, otaCommission: undefined } : { otaSettlement: st, otaCommission: Math.max(0, grandNow() - st) }; })(),
@@ -1231,11 +1379,11 @@ async function saveDoc(){
   // saving something the WhatsApp send would later choke on.
   const phoneNorm = normalizePhoneStrict($("#phone").value);
   $("#phone").value = phoneNorm.value;
-  if(!syncPhoneValidity()){ toast("Phone needs a country code and no spaces, e.g. +919876543210"); $("#phone").focus(); return; }
-  const doc=collect(); if(!doc.no){ toast("No document number"); return; }
-  if(!doc.channel){ toast("Pick the booking channel"); $("#channel").classList.add("invalid"); $("#channel").focus(); return; }
-  if(doc.otaSettlement!=null && doc.otaSettlement > grandNow()){ toast("The OTA settlement can't be more than the guest's charges"); $("#settleInp").focus(); return; }
-  if(!doc.guest.trim()){ toast("Add a guest name first"); return; }
+  if(!syncPhoneValidity()){ toast("Phone needs a country code and no spaces, e.g. +919876543210"); $("#phone").focus(); return false; }
+  const doc=collect(); if(!doc.no){ toast("No document number"); return false; }
+  if(!doc.channel){ toast("Pick the booking channel"); $("#channel").classList.add("invalid"); $("#channel").focus(); return false; }
+  if(doc.otaSettlement!=null && doc.otaSettlement > grandNow()){ toast("The OTA settlement can't be more than the guest's charges"); $("#settleInp").focus(); return false; }
+  if(!doc.guest.trim()){ toast("Add a guest name first"); return false; }
   if(!editingKey && getStays().some(x=>x.no===doc.no)){
     doc.no=curNo=nextNo(docType); $("#no").value=curNo; // number taken meanwhile → next free one
   }
@@ -1250,14 +1398,15 @@ async function saveDoc(){
     editingKey=wasEditing; syncPdfBtn();
     await fetchStaysFromProxy(); // drop the unsaved copy from this page's list
     alert("Not saved — "+(lastPushError||"check your connection and try again"));
-    return;
+    return false;
   }
   // Re-fetch so this doc's walletToken (a server-side HMAC, not something
   // the client can compute) comes back decorated, then the Wallet button
   // can actually be enabled.
   await fetchStaysFromProxy();
-  syncWalletBtn(); syncPortalBtn(); syncSendQuoteBtn();
+  syncWalletBtn(); syncPortalBtn(); syncSendQuoteBtn(); render();
   toast((doc.type==="invoice"?"Invoice":"Quote")+" saved");
+  return true;
 }
 function loadDoc(no){
   const d=getStays().find(x=>x.no===no); if(!d) return;
@@ -1279,15 +1428,106 @@ function loadDoc(no){
   $("#no").value=curNo; $("#date").value=curDateISO;
   $("#guest").value=d.guest||""; $("#email").value=d.email||""; $("#phone").value=d.phone||""; $("#guests").value=d.guests||"";
   syncPhoneValidity(); // flags an old record's phone if it predates this format check — doesn't block loading it
-  $("#ref").value=d.ref||""; $("#checkin").value=d.checkin||""; $("#checkout").value=d.checkout||""; $("#mode").value=d.mode||"";
+  $("#ref").value=d.ref||""; $("#checkin").value=d.checkin||""; $("#checkout").value=d.checkout||""; $("#mode").value=d.mode||autoMode(d);
+  modeTouched=!!d.mode; curPayments=Array.isArray(d.payments)?d.payments.slice():[];
+  $("#returnHint").hidden=true; $("#payRow").hidden=true; $("#btnPay").hidden=false;
   $("#channel").value=d.channel||"";
+  $("#moreBox").open = otaChannel(d.channel||"");
   $("#settleInp").value = d.otaSettlement!=null ? String(d.otaSettlement) : "";
   $("#deposit").value=d.deposit||""; $("#advance").value=d.advance||"";
   $("#discountInp").value=d.discount!=null ? String(d.discount) : "";
   syncCheckoutMin();
   $("#nights").value = nightsBetween(d.checkin,d.checkout)||"";
   items = (d.items&&d.items.length)? d.items.map(x=>({desc:x.desc||"",qty:(x.qty!=null?x.qty:"1"),rate:x.rate||"",...(x._villaRow&&{_villaRow:true}),...(x._autoLocked&&{_autoLocked:true})})) : [{desc:"",qty:"1",rate:""}];
+  markVillaRateAuto();
   syncGuestCharges(); renderItems(); render(); toast("Loaded "+d.no);
+}
+
+/* ---------- FEWER THINGS TO TYPE ---------- */
+// Payment mode when nobody picked one: OTA bookings are paid out by the OTA;
+// otherwise how the last recorded payment came in, else UPI (the usual way).
+// Online payments set it to Razorpay on the server when they land.
+function autoMode(d){
+  if(otaChannel((d && d.channel) || $("#channel").value)) return "OTA payout";
+  const pays = (d && Array.isArray(d.payments) && d.payments) || curPayments;
+  return pays.length ? pays[pays.length-1].method : "UPI";
+}
+// Returning guest: a phone number that has booked before fills in the name,
+// email and guest count from the last booking — only into empty fields.
+function lastStayByPhone(phone){
+  const k = String(phone||"").replace(/\D/g,"").slice(-10);
+  if(k.length < 10) return null;
+  return getStays().filter(d=> (d.type||"invoice")!=="block" && String(d.phone||"").replace(/\D/g,"").slice(-10)===k)
+    .sort((a,b)=>(b.savedAt||0)-(a.savedAt||0))[0] || null;
+}
+function fillReturning(){
+  const hint = $("#returnHint");
+  if(editingKey || curHold){ hint.hidden = true; return; }
+  const d = lastStayByPhone($("#phone").value);
+  if(!d){ hint.hidden = true; return; }
+  const filled = [];
+  if(!$("#guest").value.trim() && d.guest){ $("#guest").value = d.guest; filled.push("name"); }
+  if(!$("#email").value.trim() && d.email){ $("#email").value = d.email; filled.push("email"); }
+  if(!$("#guests").value && d.guests){ $("#guests").value = d.guests; filled.push("guests"); syncGuestCharges(); }
+  hint.textContent = "Returning guest — last booking " + d.no + (d.checkin ? " (" + fmtDate(d.checkin) + ")" : "") + (filled.length ? ". Filled in their " + filled.join(", ") + "." : ".");
+  hint.hidden = false;
+  render();
+}
+// "Record a payment": adds to the advance (the total received) and keeps a
+// log of each payment; saves straight away on a saved document.
+function renderPayments(){
+  const ul = $("#payList"); if(!ul) return;
+  ul.innerHTML = curPayments.map(p=> `<li><span><b>${money(p.amount)}</b> · ${esc(p.method)}</span><span>${esc(fmtDate(p.date))}${p.by ? " · " + esc(String(p.by).split("@")[0]) : ""}</span></li>`).join("");
+}
+async function recordPayment(){
+  const amt = Math.round(parseFloat($("#payAmt").value)||0), method = $("#payMethod").value;
+  if(!(amt > 0)){ toast("Enter the amount received"); $("#payAmt").focus(); return; }
+  const adv = parseFloat($("#advance").value)||0, g = grandNow();
+  if(g > 0 && adv + amt > g + 0.5 && !confirm("That's more than the balance due (" + money(Math.max(0, g - adv)) + "). Record it anyway?")) return;
+  $("#advance").value = String(adv + amt);
+  curPayments = curPayments.concat({ amount: amt, method, date: todayISO(), by: MYEMAIL || "" });
+  if(!modeTouched) $("#mode").value = method;
+  $("#payRow").hidden = true; $("#btnPay").hidden = false;
+  render();
+  if(editingKey){ if(await saveDoc()) toast("Payment of " + money(amt) + " recorded"); }
+  else toast("Payment added — Save to keep it");
+}
+// One tap from a saved quote to its invoice — the same conversion the server
+// does by itself once a paid stay is over (autoConvertPaidQuotes): a new
+// invoice with the quote's details and a fresh number; the quote stays as
+// it is, so links already sent to the guest keep working.
+function invoiceForQuote(q){
+  const stays = getStays();
+  return stays.find(s=> (s.type||"invoice")==="invoice" && s.convertedFrom===q.no)
+    || (isConvertedQuote(q, stays) ? stays.find(s=> (s.type||"invoice")==="invoice" && s.checkin===q.checkin && s.checkout===q.checkout
+        && ((q.email||"").trim() ? (s.email||"").trim().toLowerCase()===(q.email||"").trim().toLowerCase() : (s.guest||"").trim().toLowerCase()===(q.guest||"").trim().toLowerCase())) : null);
+}
+function syncConvertBtn(){
+  const b = $("#btnConvert"); if(!b) return;
+  const q = currentStay();
+  b.hidden = !(q && docType==="quote" && (q.type||"invoice")==="quote");
+  if(!b.hidden) b.textContent = invoiceForQuote(q) ? "Open its invoice →" : "Convert to invoice →";
+}
+async function convertToInvoice(){
+  let q = currentStay(); if(!q || (q.type||"invoice")!=="quote") return;
+  const done = invoiceForQuote(q);
+  if(done){ loadDoc(done.no); return; }
+  if(!confirm("Create an invoice from " + q.no + "? The quote stays as it is, and links already sent to the guest keep working.")) return;
+  if(!(await saveDoc())) return;
+  q = currentStay(); if(!q) return;
+  if(invoiceForQuote(q)){ loadDoc(invoiceForQuote(q).no); return; }
+  const no = nextNo("invoice");
+  const inv = { ...q, no, type: "invoice", date: todayISO(), savedAt: Date.now(), convertedFrom: q.no };
+  ["_h","_seen","_c","checkinToken","walletToken","portalToken"].forEach(k=> delete inv[k]);
+  staysCache = getStays().concat(inv);
+  if(!(await pushStays())){
+    await fetchStaysFromProxy();
+    alert("Not converted — " + (lastPushError || "check your connection and try again"));
+    return;
+  }
+  await fetchStaysFromProxy();
+  loadDoc(no);
+  toast("Invoice " + no + " created from " + q.no);
 }
 
 /* ---------- CAPTURE AN OTA BOOKING ----------
@@ -1306,6 +1546,7 @@ function startFromHold(no){
   const ch = label.includes("airbnb") ? "Airbnb" : label.includes("booking") ? "Booking.com" : label.includes("agoda") ? "Agoda" : (label.includes("makemytrip")||label.includes("mmt")||label.includes("goibibo")) ? "MakeMyTrip" : "Other";
   $("#checkin").value = b.checkin; $("#checkout").value = b.checkout; syncCheckoutMin(); syncNights();
   $("#channel").value = ch; $("#mode").value = "OTA payout";
+  $("#moreBox").open = true; // booking reference: the OTA's confirmation number
   const n = nightsBetween(b.checkin,b.checkout);
   const note = $("#holdNote");
   note.textContent = "Adding the guest for the " + (b.guest||"OTA") + " booking on " + fmtDate(b.checkin) + " → " + fmtDate(b.checkout) + " (" + n + " night" + (n===1?"":"s") + "). Fill in the guest's name and phone, what the guest paid on " + (b.guest||"the OTA") + " as the charges, and the settlement " + (b.guest||"the OTA") + " pays you (from its extranet) — WhatsApp messages and revenue start from there.";
