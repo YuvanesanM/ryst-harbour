@@ -515,6 +515,40 @@
   desktop.addEventListener('change', closePop);
 
 
+  // ── Phone widgets (RYST Harbour Android app 1.3+) ─────────────────────
+  // The app keeps a read-only widget key (POST /widget/token); this page hands
+  // it over with an intent link the app's WidgetSetupActivity answers. If the
+  // app isn't installed, Android offers it on the Play Store instead.
+  var ANDROID = /Android/i.test(navigator.userAgent);
+  function widgetNote(msg, bad) { var n = $('#wNote'); if (n) { n.textContent = t(msg); n.classList.toggle('wnote--bad', !!bad); } }
+  function appLink(path) { return 'intent://' + path + '#Intent;scheme=rystwidget;package=in.ryst.staff;end'; }
+  function widgetCall(method) {
+    return fetch(PROXY + '/widget/token', { method: method, headers: { 'X-Token': ls('ryst_proxy_token') || '' } })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || 'Could not reach RYST Harbour'); return j; }); });
+  }
+  doc.addEventListener('click', function (e) {
+    if (e.target.closest('#wConnect')) {
+      var b = e.target.closest('#wConnect'); b.disabled = true;
+      widgetCall('POST').then(function (j) {
+        widgetNote('Opening the RYST Harbour app…');
+        location.href = appLink('setup?k=' + encodeURIComponent(j.key));
+      }, function (err) { widgetNote(err.message, true); }).then(function () { b.disabled = false; });
+    }
+    if (e.target.closest('#wDisconnect')) {
+      var d = e.target.closest('#wDisconnect'); d.disabled = true;
+      widgetCall('DELETE').then(function () {
+        widgetNote('Widgets disconnected on all your phones.');
+        if (ANDROID) location.href = appLink('disconnect');
+      }, function (err) { widgetNote(err.message, true); }).then(function () { d.disabled = false; });
+    }
+  });
+  function wireWidgets() {
+    var btn = $('#widgetBtn'); if (btn) btn.hidden = !ANDROID || ls('ryst_demo') === '1';
+    // The widget's "Tap to connect" opens login.html#widget.
+    if (location.hash === '#widget' && ANDROID) setTimeout(function () { openPopFor('widgetSheet', $('.avatar')); }, 400);
+  }
+  window.addEventListener('hashchange', function () { if (location.hash === '#widget' && ANDROID && started) openPopFor('widgetSheet', $('.avatar')); });
+
   function renderChannels() {
     var card = $('#cChan'); if (!card) return;
     var on = can('bookings') || can('settings');
@@ -591,7 +625,7 @@
 
   var started = false;
   function start() {
-    readAccess(); renderHeader(); refreshNav();
+    readAccess(); renderHeader(); refreshNav(); wireWidgets();
     if (started) return;
     started = true;
     load();

@@ -248,3 +248,9 @@
   .utable td.u-bal .pill{white-space:normal;text-align:right}
 }
 @media (prefers-reduced-motion:reduce){.sk{animation:none}}
+
+/* Phone widgets sheet */
+.wsheet{gap:10px}
+.wsteps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px;color:var(--ink)}
+.wnote{margin:0;font-size:12.5px;color:var(--muted)}
+.wnote--bad{color:var(--bad,#b42318)}
