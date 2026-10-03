@@ -20,6 +20,8 @@
   var collapsed = function () { return doc.documentElement.classList.contains('hsb-collapsed'); };
   // The Harbour colour scheme applies to every staff page (and the sign-in screen).
   if (manual || ls('ryst_proxy_token')) doc.documentElement.classList.add('hth');
+  // Which staff page this is (pg-bookings, pg-issues, …) for the few page-specific theme rules.
+  doc.documentElement.classList.add('pg-' + ((location.pathname.split('/').pop() || 'login.html').replace(/\.html$/, '') || 'login'));
 
   var ICONS = {
     home: '<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',

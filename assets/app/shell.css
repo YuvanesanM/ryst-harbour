@@ -203,3 +203,77 @@ html.has-htb{padding-top:60px}
   html.has-hsb{padding-left:0!important}
   html.has-htb{padding-top:0!important}
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Dark mode — follows the phone/computer setting. Same warm teal family,
+   on a deep charcoal. Screen only: printing (quotes, invoices, reports)
+   stays light, and the quote/invoice preview (.doc) keeps paper colours.
+   ════════════════════════════════════════════════════════════════════════ */
+@media screen and (prefers-color-scheme: dark){
+  :root{color-scheme:dark}
+  .hsb{
+    --ivory:#111715; --paper:#161E1B; --white:#1B2421; --ink:#ECEFEC; --text-2:#C8D0CC; --muted:#9AA6A1;
+    --line:#2B3633; --line-2:#232D2A; --teal-ink:#9FD0C6;
+  }
+  .hsb__toggle:hover,.hsb__link:hover{background:rgba(255,255,255,.06)}
+  html.hth{
+    --bg:#111715; --panel:#1B2421; --panel2:#161E1B; --line:#2B3633;
+    --accent:#4F8F86; --accent-d:#6FB0A6; --accent-soft:#1D312D;
+    --ink:#ECEFEC; --muted:#A3AEA9; --muted2:#7A8681;
+    --danger:#D9694C; --danger-soft:#3A2018; --warn:#C9963E; --warn-soft:#382B15; --good:#5FB585;
+    --credit:#7FCB9F; --debit:#F08C70;
+    --inv:#6FC6CD; --inv-soft:#15302F; --qt:#E2B655; --qt-soft:#352A12; --block:#9AA3AE; --block-soft:#252B30;
+  }
+  html.hth .tbtn:hover{border-color:#44514D}
+  html.hth .tbtn.primary,html.hth .btn.primary:not(:disabled),html.hth .report-big{background:var(--ink);border-color:var(--ink);color:#111715}
+  html.hth .tbtn.primary:hover,html.hth .btn.primary:not(:disabled):hover,html.hth .report-big:hover{background:#D5DBD7;border-color:#D5DBD7;color:#111715}
+  /* Shared top bar, account menu, bottom navigation and sheets */
+  .htb{background:rgba(17,23,21,.94);border-bottom-color:#2B3633;color:#ECEFEC}
+  .htb__prop,.htb__icon{background:#1B2421!important;border-color:#2B3633!important;color:#ECEFEC}
+  .htb__date,.htb__head span,.htb__item .htb__i{color:#9AA6A1}
+  .htb__prop .htb__i{color:#9FD0C6}
+  .htb__new{background:#ECEFEC!important;color:#111715!important}
+  .htb__new:hover{background:#D5DBD7!important}
+  .htb__avatar{background:#3E615D!important;color:#ECEFEC!important}
+  .htb__menu{background:#1B2421;border-color:#2B3633;box-shadow:0 2px 6px rgba(0,0,0,.4),0 16px 40px rgba(0,0,0,.5)}
+  .htb__head{border-bottom-color:#232D2A}
+  .htb__role{color:#9FD0C6!important;background:#1D312D}
+  .htb__item:hover{background:#222C29}
+  .htb__item--danger{color:#F08C70}
+  .hbn{background:#161E1B!important;border-top-color:#2B3633!important}
+  .hbn__i{color:#9AA6A1!important}
+  .hbn__i[aria-current="page"]{color:#ECEFEC!important}
+  .hbn__i[aria-current="page"] .htb__i{color:#9FD0C6!important}
+  .hbn__plus{background:#ECEFEC!important;color:#111715!important}
+  .hbs-scrim{background:rgba(0,0,0,.55)}
+  .hbs{background:#1B2421!important;border-color:#2B3633!important;color:#ECEFEC!important}
+  .hbs__head{border-bottom-color:#232D2A}
+  .hbs__item{color:#ECEFEC!important}
+  .hbs__item .htb__i{color:#9AA6A1}
+  .hbs__item:hover,.hbs__item[aria-current="page"]{background:#222C29!important}
+  /* Common page pieces that set white directly */
+  html.hth input:not([type=checkbox]):not([type=radio]):not([type=range]),html.hth select,html.hth textarea{background-color:var(--panel2);color:var(--ink);border-color:var(--line)}
+  html.hth ::placeholder{color:#7A8681}
+  /* Pieces the pages colour directly */
+  html.hth #toast{background:#ECEFEC!important;color:#111715!important}
+  html.hth .cal-cell.out{background:#141B19!important}
+  html.hth .preview{background:#0C1110!important}
+  html.hth .pill.tg-on{background:#1A3326!important;color:#7FCB9F!important}
+  html.hth .type-badge.daily{background:#1C2738!important;color:#9DB8E6!important}
+  html.hth .rem-badge{color:#111715!important}
+  html.pg-issues .seg button.on,html.pg-stay .seg button.on{color:#111715!important}
+}
+
+/* Feels like an app: a quick cross-fade between staff pages (Chrome's
+   same-site view transitions), and buttons that respond to a press. */
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:ease-out}
+@media (prefers-reduced-motion: reduce){
+  @view-transition{navigation:none}
+}
+html{-webkit-tap-highlight-color:transparent}
+@media (hover:none){
+  html.hth :is(button,.btn,.tbtn,.chip,a.btn):not(:disabled):active,
+  .app :is(button,.btn,.kpi,.pop__item,.att,.bn__i):active,
+  .hbn__i:active,.hbs__item:active{transform:scale(.97);transition:transform .08s ease-out}
+}

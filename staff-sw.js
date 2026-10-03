@@ -12,6 +12,22 @@ h1{font-size:20px;margin:0 0 8px}p{margin:0 0 20px;opacity:.8}button{background:
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
+  // Android "Share → RYST Harbour" with a photo (staff.webmanifest share_target):
+  // keep the image for Petty cash, then open it to add the expense.
+  if (e.request.method === 'POST' && new URL(e.request.url).pathname === '/share-receipt') {
+    e.respondWith((async () => {
+      try {
+        const form = await e.request.formData();
+        const file = form.getAll('receipt').find(f => f && f.size);
+        if (file) {
+          const cache = await caches.open('ryst-share');
+          await cache.put('/shared-receipt', new Response(file, { headers: { 'Content-Type': file.type || 'image/jpeg', 'X-Shared-At': String(Date.now()) } }));
+        }
+      } catch (err) { /* open Petty cash anyway */ }
+      return Response.redirect('/petty-cash.html?shared=1', 303);
+    })());
+    return;
+  }
   if (e.request.mode !== 'navigate') return;
   e.respondWith(fetch(e.request).catch(() =>
     new Response(OFFLINE_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })));
