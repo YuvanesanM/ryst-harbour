@@ -352,7 +352,7 @@
     <p class="phint" id="chanHint">Invoices in this period, by booking channel</p>
     <div style="overflow-x:auto">
       <table class="trend" id="chanTable">
-        <thead><tr><th>Channel</th><th>Stays</th><th>Nights</th><th>Gross</th><th>Commission</th><th>Net</th></tr></thead>
+        <thead><tr><th>Channel</th><th>Stays</th><th>Nights</th><th>Gross</th><th>OTA kept</th><th>Net</th></tr></thead>
         <tbody id="chanBody"></tbody>
       </table>
     </div>
@@ -553,19 +553,19 @@ function leadDaysOf(s){
    4. ENRICH — one pass per load(), never per render
    ============================================================ */
 let STAYS = [], EXPENSES = [], ORDERS = [];
-let COMMISSION = {}; // channel -> % the OTA keeps (Settings → OTA Sync); empty if this login can't read settings
 let ROWS = [];       // enriched stays (quotes/invoices/blocks)
 let NIGHTS = new Map(); // ISO -> night record
 
-// What the channel keeps: the figure saved on the booking (typed from the
-// OTA's statement, or worked out from the channel's % when it was saved);
-// for older bookings without one, the channel's % from Settings.
+// What the OTA kept: the guest's charges minus the settlement the OTA paid,
+// both recorded on the booking from the OTA's extranet. No settlement yet →
+// nothing deducted (the booking is flagged in the Channels table instead).
 const OTA_CHANNELS = ['Airbnb','Booking.com','MakeMyTrip','Agoda'];
 function commissionOf(s, total){
+  if(s.otaSettlement!=null && isFinite(+s.otaSettlement)) return Math.max(0, total - +s.otaSettlement);
   if(s.otaCommission!=null && isFinite(+s.otaCommission)) return Math.max(0, +s.otaCommission);
-  const pct = parseFloat(COMMISSION[s.channel]);
-  return OTA_CHANNELS.includes(s.channel) && isFinite(pct) && pct>0 ? Math.round(total*pct/100) : 0;
+  return 0;
 }
+const settlementMissing = r => r.type==='invoice' && OTA_CHANNELS.includes(r.channel) && r.raw.otaSettlement==null && r.raw.otaCommission==null;
 function buildRows(){
   ROWS = STAYS.map(s=>{
     const type = s.type||'invoice';
@@ -829,7 +829,7 @@ function computeMetrics(startISO, endISO, F){
 // Invoices by channel: gross, what the channel keeps, what reaches the villa.
 function channelTable(invoices){
   const m = new Map();
-  invoices.forEach(r=>{ const k=r.channel; const e=m.get(k)||{channel:k,n:0,nights:0,gross:0,commission:0}; e.n++; e.nights+=r.nights; e.gross+=r.total; e.commission+=r.commission; m.set(k,e); });
+  invoices.forEach(r=>{ const k=r.channel; const e=m.get(k)||{channel:k,n:0,nights:0,gross:0,commission:0,missing:0}; e.n++; e.nights+=r.nights; e.gross+=r.total; e.commission+=r.commission; if(settlementMissing(r)) e.missing++; m.set(k,e); });
   return [...m.values()].map(e=>({...e, net:e.gross-e.commission})).sort((a,b)=>b.gross-a.gross);
 }
 function computeSeries(R, F){
@@ -1357,11 +1357,11 @@ function renderChannels(cur){
   const t = cur.byChannel;
   const tot = t.reduce((a,e)=>({n:a.n+e.n,nights:a.nights+e.nights,gross:a.gross+e.gross,commission:a.commission+e.commission,net:a.net+e.net}),{n:0,nights:0,gross:0,commission:0,net:0});
   const pct = e => e.gross>0 && e.commission>0 ? ' <span class="muted">('+(Math.round(e.commission/e.gross*1000)/10)+'%)</span>' : '';
-  $('#chanBody').innerHTML = t.length ? t.map(e=>`<tr><td>${esc(e.channel)}</td><td>${e.n}</td><td>${e.nights}</td><td>${money(e.gross)}</td><td>${e.commission?money(e.commission)+pct(e):'—'}</td><td class="net pos">${money(e.net)}</td></tr>`).join('')
+  $('#chanBody').innerHTML = t.length ? t.map(e=>`<tr><td>${esc(e.channel)}${e.missing?' *':''}</td><td>${e.n}</td><td>${e.nights}</td><td>${money(e.gross)}</td><td>${e.commission?money(e.commission)+pct(e):'—'}</td><td class="net pos">${money(e.net)}</td></tr>`).join('')
     + (t.length>1 ? `<tr class="current"><td><b>Total</b></td><td>${tot.n}</td><td>${tot.nights}</td><td>${money(tot.gross)}</td><td>${tot.commission?money(tot.commission)+pct(tot):'—'}</td><td class="net pos">${money(tot.net)}</td></tr>` : '')
     : '<tr><td colspan="6" class="empty">No invoices in this period.</td></tr>';
-  const missing = OTA_CHANNELS.filter(c=>t.some(e=>e.channel===c) && !(parseFloat(COMMISSION[c])>0));
-  $('#chanHint').textContent = 'Invoices in this period, by booking channel (by check-in date).' + (missing.length ? ' No commission % set for ' + missing.join(', ') + ' — add it in Settings → OTA Sync, or type the amount on each booking.' : '');
+  const missing = t.reduce((a,e)=>a+(e.missing||0),0);
+  $('#chanHint').textContent = 'Invoices in this period, by booking channel (by check-in date). Gross is what guests paid; for OTA bookings, net is the settlement the OTA paid you.' + (missing ? ' ' + missing + ' OTA booking' + (missing===1?' has':'s have') + ' no settlement recorded yet (marked *) — open ' + (missing===1?'it':'them') + ' and enter the settlement from the OTA\'s extranet.' : '');
 }
 
 function renderFootnotes(cur){
@@ -1369,13 +1369,13 @@ function renderFootnotes(cur){
     <b>Data notes:</b>
     Booking Channel is a new field — bookings entered before it shipped show as "Not tagged" (except online/website
     payments, which are inferred with certainty). An OTA booking counts as revenue once its guest details and amount are
-    added to the calendar hold (then its commission is deducted too); a hold without them appears as nights held only.
+    added to the calendar hold (with the settlement, what the OTA kept is deducted too); a hold without them appears as nights held only.
     Booking lead time only includes online/website bookings — staff-entered bookings don't have a reliable creation
     timestamp (it updates on every edit). Cancellation rate isn't shown: this system has no record of cancelled
     bookings (deleting one leaves no trace).
     Revenue includes ${esc(PROPERTY.restaurantName || 'restaurant')} food sales (every order except a cancelled one, counted on its order date) alongside
     stay invoices, plus the advance already received on confirmed quotes not yet invoiced (by check-in date; once the
-    invoice is made its full total counts instead) — Net Profit and Margin subtract petty-cash expenses and the commission OTAs keep on their bookings, not food's own ingredient cost, so
+    invoice is made its full total counts instead) — Net Profit and Margin subtract petty-cash expenses and what OTAs kept (charges minus the settlement recorded on each OTA booking), not food's own ingredient cost, so
     they run a little rich wherever food sales are a meaningful share of the period.
   `;
 }
@@ -1484,9 +1484,6 @@ async function load(){
       fetch(PROXY_URL+'/petty-cash', { headers:{'X-Token':TOKEN}, signal: ctrl.signal }),
       fetch(PROXY_URL+'/restaurant', { headers:{'X-Token':TOKEN}, signal: ctrl.signal }).catch(()=>null),
     ]);
-    // Commission %s live in the villa settings; a login without access just
-    // uses the amounts saved on each booking.
-    try{ const ss = await fetch(PROXY_URL+'/stay-settings', { headers:{'X-Token':TOKEN}, signal: ctrl.signal }); COMMISSION = ss.ok ? ((await ss.json()).channelCommission || {}) : {}; }catch(e){ COMMISSION = {}; }
     if(staysRes.status===401 || pcRes.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
     if(!staysRes.ok || !pcRes.ok) throw new Error('Server error');
     const staysData = await staysRes.json().catch(()=>({}));

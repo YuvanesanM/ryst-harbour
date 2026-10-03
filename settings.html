@@ -74,8 +74,6 @@
   .ical-row input{flex:1}
   .ical-copy{display:flex;gap:8px}
   .ical-copy input{flex:1;background:var(--panel2);color:var(--muted)}
-  .comm-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-  @media (max-width:640px){ .comm-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
   .feed-row{display:grid;grid-template-columns:160px 1fr 34px;gap:8px;margin-bottom:8px}
   .user-card{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;background:var(--panel2)}
   .user-row{display:grid;grid-template-columns:1fr 130px 74px 34px;gap:8px;align-items:center}
@@ -369,14 +367,6 @@
     </div>
     <div class="sync-results" id="icalSyncResults"></div>
 
-    <label class="f" style="margin-top:22px"><span>Commission each OTA keeps — for net payout in Reports</span></label>
-    <p class="sd" style="margin-bottom:10px">The share of the booking total the channel keeps, including any GST it charges on its commission. New bookings from that channel start with this; you can type the exact figure from the OTA's statement on any booking.</p>
-    <div class="comm-grid" id="commGrid">
-      <label class="f"><span>Airbnb %</span><input class="t" type="number" min="0" max="60" step="0.1" inputmode="decimal" data-comm="Airbnb" placeholder="e.g. 15.5"></label>
-      <label class="f"><span>Booking.com %</span><input class="t" type="number" min="0" max="60" step="0.1" inputmode="decimal" data-comm="Booking.com" placeholder="e.g. 18"></label>
-      <label class="f"><span>MakeMyTrip %</span><input class="t" type="number" min="0" max="60" step="0.1" inputmode="decimal" data-comm="MakeMyTrip" placeholder="e.g. 20"></label>
-      <label class="f"><span>Agoda %</span><input class="t" type="number" min="0" max="60" step="0.1" inputmode="decimal" data-comm="Agoda" placeholder="e.g. 18"></label>
-    </div>
   </div>
 
   <div class="rc-foot" id="stayGroupSave">
@@ -957,8 +947,6 @@ function renderFromStay(){
   document.getElementById("stayTerms").value=(stay.terms||[]).join("\n");
   icalFeedsDraft=(stay.icalFeeds||[]).map(f=>({...f}));
   renderIcalFeeds();
-  const cm = stay.channelCommission || {};
-  document.querySelectorAll('#commGrid [data-comm]').forEach(i=>{ const v=cm[i.dataset.comm]; i.value = v!=null && v!=='' ? String(v) : ''; });
 }
 
 /* ---------- ICAL FEEDS ---------- */
@@ -1931,8 +1919,6 @@ async function saveStay(){
   stay.icalFeeds=icalFeedsDraft
     .filter(f=>(f.url||"").trim()!=="")
     .map(f=>({id:f.id, label:(f.label||"").trim()||f.id, url:f.url.trim()}));
-  stay.channelCommission = {};
-  document.querySelectorAll('#commGrid [data-comm]').forEach(i=>{ const v=parseFloat(i.value); if(isFinite(v) && v>0) stay.channelCommission[i.dataset.comm] = Math.min(60, Math.round(v*10)/10); });
   localStorage.setItem(K_STAY,JSON.stringify(stay));
   if(proxyToken){
     try{
