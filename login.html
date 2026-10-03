@@ -75,9 +75,9 @@
   .install-app-btn[hidden]{display:none}
 </style>
 <link rel="stylesheet" href="/assets/app/shell.css?v=c4143046">
-<link rel="stylesheet" href="/assets/app/dashboard.css?v=c5b1af9b">
-<script src="/assets/app/shell.js?v=3e91213b"></script>
-<script src="/assets/app/dashboard.js?v=4b8f7b70" defer></script>
+<link rel="stylesheet" href="/assets/app/dashboard.css?v=f977a799">
+<script src="/assets/app/shell.js?v=fbd18e00"></script>
+<script src="/assets/app/dashboard.js?v=74dec95b" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -120,7 +120,7 @@
     </div>
     <button type="button" class="install-app-btn" hidden>📲 Install RYST Harbour app</button>
   </div>
-  <p class="legal-line">RYST Harbour is managed by Dreamour Multiventures · RYST is a trademark of Dreamour Multiventures. All rights reserved. · <a href="tel:+918608008608">+91 86080 08608</a></p>
+  <p class="legal-line">RYST Harbour is managed by Dreamour Multiventures · RYST is a trademark of Dreamour Multiventures. All rights reserved. · <a href="tel:+918608008608">+91 86080 08608</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></p>
 </div>
 
 <!-- ── HOME: owner operations dashboard (caretakers get their own day view) ── -->
@@ -185,6 +185,8 @@
               <button type="button" class="pop__item install-app-btn" hidden>📲 Install RYST Harbour app</button>
               <button type="button" class="pop__item" id="notifBtn" data-pop="notifSheet" hidden>🔔 Notifications</button>
               <button type="button" class="pop__item" id="widgetBtn" data-pop="widgetSheet" hidden>▦ Phone widgets</button>
+              <a class="pop__item" href="/privacy.html">🔒 Privacy &amp; terms</a>
+              <button type="button" class="pop__item" id="delBtn" data-pop="deleteSheet" hidden>🗑 Delete account</button>
               <button id="logoutBtn" class="pop__item pop__item--danger" type="button">⎋ Log out</button>
             </div>
           </div>
@@ -287,6 +289,18 @@
       <p class="wnote" id="wNote">Needs the RYST Harbour app from the Play Store, version 1.3.3 or later. The widget can only read today's summary; disconnect any time.</p>
       <button type="button" class="btn btn--primary" id="wConnect">Connect this phone</button>
       <button type="button" class="btn" id="wDisconnect">Disconnect widgets</button>
+    </div>
+  </div>
+  <div class="pop pop--sheet" id="deleteSheet" role="dialog" aria-label="Delete account" hidden>
+    <div class="pop__head pop__head--sheet"><b>Delete account</b><span id="delWho"></span></div>
+    <div class="pop__body pop__stack wsheet">
+      <p class="wnote" id="delWhatOwner" hidden>This closes your villa’s RYST Harbour account: its bookings, guests, invoices, photos, team and settings are deleted. We can send you an export first. Invoices and payment records are kept only as long as tax law requires.</p>
+      <p class="wnote" id="delWhatStaff" hidden>Your access to this villa is removed, along with your profile, notification settings and widgets. Records you made for the villa, such as checklists or expenses, stay with the villa.</p>
+      <p class="wnote">We complete it within 30 days. <a href="/delete-account.html">How account deletion works</a></p>
+      <label class="wnote" for="delReason" id="delReasonLbl">Anything you’d like us to know? (optional)</label>
+      <textarea id="delReason" rows="2" maxlength="500" style="width:100%;box-sizing:border-box;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)"></textarea>
+      <p class="wnote" id="delStatus" role="status"></p>
+      <button type="button" class="btn btn--danger" id="delGo">Request deletion</button>
     </div>
   </div>
   <div class="scrim" id="scrim" hidden></div>

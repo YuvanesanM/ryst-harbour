@@ -222,6 +222,15 @@
   .chk-row{display:flex;align-items:flex-start;gap:10px;margin:0 0 18px;font-size:13px;color:var(--muted-text);line-height:1.55}
   .chk-row input{margin-top:3px;flex-shrink:0;width:18px;height:18px}
   .chk-row a{color:var(--sea-mid);font-weight:600}
+  /* Another villa's house rules (Settings → Website), opened from the links above */
+  .hr-dlg{margin:auto;border:0;border-radius:18px;padding:0;width:min(520px,calc(100vw - 32px));max-height:min(80vh,640px);color:var(--ink);background:#fff;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+  .hr-dlg::backdrop{background:rgba(10,30,30,.45)}
+  .hr-dlg__in{padding:22px 22px 18px;overflow:auto;max-height:inherit;box-sizing:border-box}
+  .hr-dlg h2{font-size:19px;margin:0 0 12px}
+  .hr-dlg h3{font-size:14px;margin:18px 0 6px}
+  .hr-dlg ul{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px;line-height:1.5}
+  .hr-dlg p{font-size:14px;line-height:1.55;margin:0;white-space:pre-line;color:var(--muted-text)}
+  .hr-dlg button{margin-top:18px;width:100%;border:0;border-radius:12px;padding:12px;font:600 15px var(--sans);background:var(--sea);color:#fff;cursor:pointer}
 
   /* ── SUBMIT ── */
   .submit-bar{margin-top:4px}
@@ -373,12 +382,12 @@
             <p class="hr-item">✓ Government ID required</p>
             <p class="hr-item">✓ No loud music after 10 PM</p>
             <p class="hr-item">✓ Pool usage at your own risk</p>
-            <p class="hr-item"><a href="/terms.html" target="_blank" rel="noopener">✓ Read Full House Rules</a></p>
+            <p class="hr-item"><a href="https://stay.ryst.in/terms.html" class="hr-open" target="_blank" rel="noopener">✓ Read Full House Rules</a></p>
           </div>
 
           <label class="chk-row">
             <input type="checkbox" id="ci-agree">
-            <span>I confirm the details above are accurate and I have read and agree to the <a href="/terms.html" target="_blank" rel="noopener">House Rules &amp; Terms</a>.</span>
+            <span>I confirm the details above are accurate and I have read and agree to the <a href="https://stay.ryst.in/terms.html" class="hr-open" target="_blank" rel="noopener">House Rules &amp; Terms</a>.</span>
           </label>
         </fieldset>
 
@@ -943,6 +952,40 @@ $('#ciForm').addEventListener('submit', async e => {
   }
 });
 
+</script>
+<dialog class="hr-dlg" id="hrDlg" aria-labelledby="hrTitle"><div class="hr-dlg__in">
+  <h2 id="hrTitle">House rules</h2>
+  <p id="hrTimes" hidden></p>
+  <ul id="hrList"></ul>
+  <p id="hrNone" hidden>This villa hasn't put its house rules online. Please follow the rules your host shares with you.</p>
+  <div id="hrCancelWrap" hidden><h3>Cancellation policy</h3><p id="hrCancel"></p></div>
+  <button type="button" id="hrClose">Close</button>
+</div></dialog>
+<script>
+// House rules: RYST 109A's are on stay.ryst.in/terms.html (the links' default).
+// Any other villa's come from its own Settings → Website, shown here.
+(function(){
+  if (!window.RYST_VILLA) return;
+  var dlg = document.getElementById('hrDlg'), quick = document.querySelector('.house-rules-quick');
+  var open = function(e){ e.preventDefault(); if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); };
+  document.querySelectorAll('.hr-open').forEach(function(a){ a.removeAttribute('href'); a.removeAttribute('target'); a.setAttribute('role', 'button'); a.tabIndex = 0; a.style.cursor = 'pointer';
+    a.addEventListener('click', open); a.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') open(e); }); });
+  document.getElementById('hrClose').addEventListener('click', function(){ dlg.close ? dlg.close() : dlg.removeAttribute('open'); });
+  // RYST 109A's own quick rules don't apply here: show this villa's first ones instead.
+  var items = quick ? [].slice.call(quick.querySelectorAll('.hr-item')).filter(function(p){ return !p.querySelector('.hr-open'); }) : [];
+  items.slice(1).forEach(function(p){ p.hidden = true; });
+  fetch('https://data.ryst.in/house-rules').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+    if (!d) return;
+    var rules = Array.isArray(d.rules) ? d.rules : [], list = document.getElementById('hrList');
+    rules.forEach(function(t){ var li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
+    document.getElementById('hrNone').hidden = rules.length > 0;
+    var times = [d.checkinTime && rystT('Check-in') + ' ' + d.checkinTime, d.checkoutTime && rystT('Check-out') + ' ' + d.checkoutTime].filter(Boolean).join(' · ');
+    if (times) { var tp = document.getElementById('hrTimes'); tp.textContent = times; tp.hidden = false; tp.style.marginBottom = '12px'; }
+    if (d.cancellation) { document.getElementById('hrCancel').textContent = d.cancellation; document.getElementById('hrCancelWrap').hidden = false; }
+    var anchor = items[0];
+    rules.slice(0, 2).forEach(function(t){ var p = document.createElement('p'); p.className = 'hr-item'; p.textContent = '✓ ' + t; anchor.parentNode.insertBefore(p, anchor.nextSibling); anchor = p; });
+  }).catch(function(){ document.getElementById('hrNone').hidden = false; });
+})();
 </script>
 </body>
 </html>

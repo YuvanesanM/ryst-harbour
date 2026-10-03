@@ -601,6 +601,36 @@
     if (location.hash === '#notifications' && PUSH_OK) setTimeout(function () { openPopFor('notifSheet', $('.avatar')); }, 400);
   }
 
+  // ── Delete account (Google Play: an in-app way to ask; harbour.ryst.in/delete-account.html) ──
+  function delState(req) {
+    var st = $('#delStatus'), go = $('#delGo');
+    if (req) {
+      var by = new Date(new Date(req.at).getTime() + 30 * 864e5).toLocaleDateString(window.RYST_LANG === 'ta' ? 'ta-IN' : 'en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+      if (st) { st.className = 'wnote'; st.textContent = t('Requested. We’ll complete it by') + ' ' + by + '. ' + t('To cancel the request, email info@dreamour.in.'); }
+      show(go, false); show($('#delReason'), false); show($('#delReasonLbl'), false);
+    } else { if (st) st.textContent = ''; show(go, true); show($('#delReason'), true); show($('#delReasonLbl'), true); }
+  }
+  function wireDelete() {
+    var btn = $('#delBtn'); if (btn) btn.hidden = ls('ryst_demo') === '1';
+    var owner = ROLE === 'owner' && ls('ryst_user_admin') === 'true';
+    show($('#delWhatOwner'), owner); show($('#delWhatStaff'), !owner);
+    var who = $('#delWho'); if (who) who.textContent = ls('ryst_user_email') || '';
+    if (ls('ryst_demo') === '1') return;
+    fetch(PROXY + '/account/delete-request', { headers: { 'X-Token': ls('ryst_proxy_token') || '' }, cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j) delState(j.request); }).catch(function () {});
+    if (location.hash === '#delete-account') setTimeout(function () { openPopFor('deleteSheet', $('.avatar')); }, 400);
+  }
+  doc.addEventListener('click', function (e) {
+    var go = e.target.closest('#delGo'); if (!go) return;
+    var owner = ROLE === 'owner' && ls('ryst_user_admin') === 'true';
+    if (!window.confirm(t(owner ? 'Close this villa’s RYST Harbour account and delete its data?' : 'Delete your RYST Harbour account for this villa?'))) return;
+    go.disabled = true;
+    pushPost('/account/delete-request', { reason: ($('#delReason') || {}).value || '' })
+      .then(function (j) { delState(j.request); }, function (err) { var st = $('#delStatus'); if (st) { st.className = 'wnote wnote--bad'; st.textContent = t(err.message); } })
+      .then(function () { go.disabled = false; });
+  });
+  window.addEventListener('hashchange', function () { if (location.hash === '#delete-account' && started && $('#deleteSheet').hidden) openPopFor('deleteSheet', $('.avatar')); });
+
   function renderChannels() {
     var card = $('#cChan'); if (!card) return;
     var on = can('bookings') || can('settings');
@@ -677,7 +707,7 @@
 
   var started = false;
   function start() {
-    readAccess(); renderHeader(); refreshNav(); wireWidgets(); wireNotif();
+    readAccess(); renderHeader(); refreshNav(); wireWidgets(); wireNotif(); wireDelete();
     if (started) return;
     started = true;
     load();

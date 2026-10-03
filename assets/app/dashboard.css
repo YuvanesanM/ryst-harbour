@@ -40,6 +40,7 @@
 .btn:hover{border-color:#cfc6b8}
 .btn .i{width:16px;height:16px;stroke-width:2.2}
 .btn--primary{background:var(--ink);border-color:var(--ink);color:var(--ivory)}
+.btn--danger{background:var(--bad);border-color:var(--bad);color:var(--ivory)}
 .btn--primary:hover{background:#2d2c29;border-color:#2d2c29}
 .btn--sm{min-height:30px;padding:0 10px;font-size:13px}
 .icon-btn{position:relative;width:36px;height:36px;display:grid;place-items:center;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--white)}

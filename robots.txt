@@ -2,4 +2,9 @@ User-agent: *
 Allow: /$
 Allow: /index.html
 Allow: /assets/
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /refund-policy.html
+Allow: /contact.html
+Allow: /delete-account.html
 Disallow: /

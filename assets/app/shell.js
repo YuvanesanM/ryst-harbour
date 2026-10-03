@@ -31,6 +31,8 @@
     villa: '<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-5h6v5"/>',
     lang: '<path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 6 8M11 5c0 4-3 7-7 8M13 21l4-9 4 9M14.5 18h5"/>',
     out: '<path d="M14 7l5 5-5 5M19 12H7M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
     panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15.5 10l-2 2 2 2"/>',
     cal: '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
@@ -143,6 +145,8 @@
       + '<div class="htb__wrap"><button type="button" class="htb__avatar" aria-haspopup="true" aria-expanded="false" aria-controls="htbMe" aria-label="Your account">' + esc((name || email || 'R').charAt(0).toUpperCase()) + '</button>'
       + '<div class="htb__menu" id="htbMe" hidden><div class="htb__head" data-no-i18n><b>' + esc(name || email.split('@')[0] || 'Signed in') + '</b><span>' + esc(email) + '</span><span class="htb__role">' + esc(t(role)) + '</span></div>'
       + '<div class="htb__list">' + (window.rystSetLang ? '<button type="button" class="htb__item" data-htb-lang>' + svg('lang') + '<span data-no-i18n>' + (window.RYST_LANG === 'ta' ? 'English' : 'தமிழ்') + '</span></button>' : '')
+      + '<a class="htb__item" href="/privacy.html">' + svg('lock') + '<span>' + esc(t('Privacy & terms')) + '</span></a>'
+      + '<a class="htb__item" href="login.html#delete-account">' + svg('trash') + '<span>' + esc(t('Delete account')) + '</span></a>'
       + '<button type="button" class="htb__item htb__item--danger" data-htb-out>' + svg('out') + '<span>' + esc(t('⎋ Log out').replace(/^⎋\s*/, '')) + '</span></button></div></div></div>'
       + '</div>';
     var aside = doc.querySelector('.hsb');
