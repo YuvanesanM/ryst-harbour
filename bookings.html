@@ -640,8 +640,14 @@ function isConvertedQuote(d){
 // unpaid quote should still show up on the calendar and Agenda as a
 // tentative pill for the owner to track, it just shouldn't count as an
 // occupied night.
-// A calendar hold synced from an OTA (not a manual block): a guest's booking.
-function isOtaHold(d){ return (d.type||'invoice')==='block' && !isManualBlock(d); }
+// Dates closed on an OTA rather than a guest: the sync marks those it can
+// tell (otaClosed — e.g. Airbnb "Not available", or more than a year out);
+// the owner marks the rest "Not a booking" (notBooking). Still blocked here.
+function isOtaClosure(d){ return (d.type||'invoice')==='block' && !isManualBlock(d) && !!(d.otaClosed || d.notBooking); }
+// A calendar hold synced from an OTA: a guest's booking whose details aren't in yet.
+function isOtaHold(d){ return (d.type||'invoice')==='block' && !isManualBlock(d) && !isOtaClosure(d); }
+// Shown like a manual block: just closed dates.
+const isClosedOnly = b => isManualBlock(b) || isOtaClosure(b);
 function isNonBlockingStay(d){
   if((d.type||'invoice')==='block') return true;
   if((d.type||'invoice')==='quote') return !(Number(d.advance)>0);
@@ -1307,7 +1313,7 @@ function renderCalendar(){
     if(c.iso===today) cls.push('today');
     if(conflict) cls.push('conflict');
     if(c.dayBookings.length) cls.push('has-booking');
-    const onlyHeld = hasBlk && c.dayBookings.every(isManualBlock);
+    const onlyHeld = hasBlk && c.dayBookings.every(isClosedOnly);
     if(hasBlk && !onlyHeld) cls.push('blocked');
     if(onlyHeld) cls.push('held');
     if(hasConfirmed) cls.push('unavailable');
@@ -1316,6 +1322,7 @@ function renderCalendar(){
     else if(!hasInv && !hasQt && hasBlk) cls.push('has-block-only');
     const shown = c.dayBookings.slice(0,2).map(b=>{
       if(isManualBlock(b)) return `<div class="cal-pill block manual" title="${esc('Blocked: '+(b.guest||'Blocked')+' · '+blockSpan(b))}">${esc(b.guest||'Blocked')}</div>`;
+      if(isOtaClosure(b)) return `<div class="cal-pill block manual" title="${esc('Closed on '+otaNameOf(b.guest)+' · '+blockSpan(b))}">${esc('Closed · '+otaNameOf(b.guest))}</div>`;
       return `<div class="cal-pill ${pillClass(b.type)}"${b.type==='block' ? ` style="background:${otaBlockColor(b.guest)}"` : ''}>${esc(b.type==='block' ? (b.guest||'Blocked') : (b.guest||b.no||''))}</div>`;
     }).join('');
     const more = c.dayBookings.length>2 ? `<div class="cal-more">+${c.dayBookings.length-2} more</div>` : '';
@@ -1323,7 +1330,7 @@ function renderCalendar(){
     // the pill already uses) — first block of the day sets it, since a
     // day essentially never has two different-platform blocks at once.
     const firstBlk = hasBlk && c.dayBookings.find(b=>b.type==='block');
-    const style = hasBlk ? ` style="border-left-color:${isManualBlock(firstBlk) ? 'var(--block)' : otaBlockColor(firstBlk.guest)}"` : '';
+    const style = hasBlk ? ` style="border-left-color:${isClosedOnly(firstBlk) ? 'var(--block)' : otaBlockColor(firstBlk.guest)}"` : '';
     return `<div class="${cls.join(' ')}" data-iso="${c.iso}"${style}>
       <div class="daynum">${c.date.getDate()}</div>
       ${shown}${more}
@@ -1343,11 +1350,11 @@ function renderBlockList(filtered, y, m){
   box.hidden = !blocks.length;
   if(!blocks.length){ box.innerHTML = ''; return; }
   box.innerHTML = '<h3>Blocked this month</h3>' + blocks.map(b=>{
-    const manual = isManualBlock(b), n = nightsBetween(b.checkin,b.checkout);
-    const sw = manual ? 'background:repeating-linear-gradient(45deg,var(--block) 0 2px,var(--block-soft) 2px 4px)' : `background:${otaBlockColor(b.guest)}`;
+    const manual = isManualBlock(b), closed = isOtaClosure(b), n = nightsBetween(b.checkin,b.checkout);
+    const sw = manual || closed ? 'background:repeating-linear-gradient(45deg,var(--block) 0 2px,var(--block-soft) 2px 4px)' : `background:${otaBlockColor(b.guest)}`;
     return `<button type="button" class="blk-row" data-day="${esc(b.checkin < from ? from : b.checkin)}">
       <span class="blk-sw" style="${sw}"></span>
-      <span class="blk-why">${esc(manual ? (b.guest||'Blocked') : otaNameOf(b.guest)+' booking')}</span>
+      <span class="blk-why">${esc(manual ? (b.guest||'Blocked') : closed ? 'Closed on '+otaNameOf(b.guest) : otaNameOf(b.guest)+' booking')}</span>
       <span class="blk-kind">${manual ? 'Blocked by you' : 'Calendar sync'}</span>
       <span class="blk-when">${esc(blockSpan(b))} · ${n} night${n===1?'':'s'}</span>
     </button>`;
@@ -1369,9 +1376,14 @@ function openDay(iso){
               <span class="ag-no" style="color:${otaBlockColor(b.guest)}">${esc(b.guest||'Blocked')}</span>
               <span class="ag-tag" style="background:var(--block-soft);color:var(--block)">Blocked</span>
             </div>
-            <div class="ag-dates">${isManualBlock(b) ? 'Reason: '+esc(b.guest||'Blocked')+' · blocked by you' : 'Imported by calendar sync'}</div>
+            <div class="ag-dates">${isManualBlock(b) ? 'Reason: '+esc(b.guest||'Blocked')+' · blocked by you' : 'Imported by calendar sync' + (b.otaSummary ? ' · “'+esc(b.otaSummary)+'”' : '')}</div>
             <div class="ag-dates">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${nightsBetween(b.checkin,b.checkout)} night(s)</div>
-            ${isManualBlock(b) ? '' : `<a class="btn" style="align-self:flex-start;margin-top:4px" href="stay.html?hold=${encodeURIComponent(b.no)}">Add guest details</a><div class="ag-dates">An OTA calendar only shares the dates — add the guest's name, phone and amount to get WhatsApp messages and revenue for it.</div>`}
+            ${isManualBlock(b) ? '' : isOtaClosure(b)
+              ? `<div class="ag-dates"><b>Closed on ${esc(otaNameOf(b.guest))}</b> — not a guest's booking. The dates stay blocked here; it isn't counted as a stay.</div>`
+                + (b.notBooking ? `<button type="button" class="btn" style="align-self:flex-start;margin-top:4px" data-isbooking="${esc(b.no)}">It is a booking</button>`
+                  : `<div class="ag-dates">${b.checkin > addDays(todayISO(),365) ? 'More than a year away — that\'s ' + esc(otaNameOf(b.guest)) + '\'s calendar not yet open for booking.' : 'Marked by ' + esc(otaNameOf(b.guest)) + ' as not available.'}</div>`)
+              : `<a class="btn" style="align-self:flex-start;margin-top:4px" href="stay.html?hold=${encodeURIComponent(b.no)}">Add guest details</a><div class="ag-dates">An OTA calendar only shares the dates — add the guest's name, phone and amount to get WhatsApp messages and revenue for it.</div>
+                 <button type="button" class="btn" style="align-self:flex-start;margin-top:4px" data-notbooking="${esc(b.no)}">Not a booking — just closed dates</button>`}
             <button type="button" class="btn danger" style="align-self:flex-start;margin-top:4px" data-unblock="${esc(b.no)}">Remove block</button>
           </div>`;
         }
@@ -1416,12 +1428,34 @@ function openDay(iso){
       }).join('');
   $('#dayBody').querySelectorAll('[data-unblock]').forEach(btn=>
     btn.addEventListener('click', ()=> removeBlock(btn.dataset.unblock, iso)));
+  $('#dayBody').querySelectorAll('[data-notbooking]').forEach(btn=>
+    btn.addEventListener('click', ()=> markNotBooking(btn.dataset.notbooking, true, iso)));
+  $('#dayBody').querySelectorAll('[data-isbooking]').forEach(btn=>
+    btn.addEventListener('click', ()=> markNotBooking(btn.dataset.isbooking, false, iso)));
   $('#dayBody').querySelectorAll('[data-delstay]').forEach(btn=>
     btn.addEventListener('click', ()=> deleteStayEntry(btn.dataset.delstay, iso)));
   $('#dayOverlay').classList.add('show');
 }
 $('#dayClose').addEventListener('click', ()=> $('#dayOverlay').classList.remove('show'));
 $('#dayOverlay').addEventListener('click', e=>{ if(e.target===$('#dayOverlay')) $('#dayOverlay').classList.remove('show'); });
+
+// An OTA calendar entry that's only closed dates (not a guest): keep it
+// blocking the villa, but stop treating it as a stay. Sync keeps the mark.
+async function markNotBooking(no, on, reopenIso){
+  const b = STAYS.find(s=>s.no===no && s.type==='block');
+  if(!b) return;
+  const before = b.notBooking;
+  if(on) b.notBooking = true; else delete b.notBooking;
+  try{
+    const ok = await pushStays();
+    if(ok===false) return;
+    render();
+    if(reopenIso) openDay(reopenIso);
+  }catch(e){
+    if(before) b.notBooking = before; else delete b.notBooking;
+    alert('Could not save: '+e.message);
+  }
+}
 
 async function removeBlock(no, reopenIso){
   const idx = STAYS.findIndex(s=>s.no===no && s.type==='block');

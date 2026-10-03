@@ -59,7 +59,11 @@
   }
   // Calendar-sync imports carry source:<feedId> (no "OTA-…"); "Block dates"
   // entries (maintenance, owner use) have neither and are not bookings.
-  function isOtaBlock(s) { return typeOf(s) === 'block' && (!!s.source || String(s.no || '').indexOf('OTA-') === 0); }
+  function isOtaEntry(s) { return typeOf(s) === 'block' && (!!s.source || String(s.no || '').indexOf('OTA-') === 0); }
+  // Closed dates on an OTA (not a guest): still blocked, never a stay.
+  function isOtaClosure(s) { return isOtaEntry(s) && (!!s.otaClosed || !!s.notBooking); }
+  // An OTA hold: a guest's booking whose details aren't in yet.
+  function isOtaBlock(s) { return isOtaEntry(s) && !isOtaClosure(s); }
   // An OTA hold the owner turned into a booking (block.claimedBy = that booking's number).
   // The booking carries the dates, so the hold is left out — but only while the booking exists.
   function claimedHold(s, all) { return typeOf(s) === 'block' && !!s.claimedBy && all.some(function (x) { return x.no === s.claimedBy && typeOf(x) !== 'block'; }); }
@@ -156,7 +160,7 @@
   // Manual blocks ("Block dates") holding the villa today — shown as a note, never as a stay.
   function manualBlocksToday() {
     var all = D.stays && Array.isArray(D.stays.stays) ? D.stays.stays : [];
-    return all.filter(function (s) { return s && typeOf(s) === 'block' && !isOtaBlock(s) && s.checkin <= TODAY && s.checkout > TODAY; });
+    return all.filter(function (s) { return s && typeOf(s) === 'block' && !isOtaEntry(s) && s.checkin <= TODAY && s.checkout > TODAY; });
   }
   function runFor(stayNo, type, day) {
     var runs = D.cl && Array.isArray(D.cl.runs) ? D.cl.runs : [];

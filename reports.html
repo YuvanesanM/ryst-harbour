@@ -584,7 +584,8 @@ function buildRows(){
       payStatus: type==='block' ? null : payStatusOf(s),
       // Only calendar-sync imports (source:<feedId>) are OTA holds; "Block dates"
       // entries (maintenance, owner use) stay blocked nights with no platform.
-      otaPlatform: type==='block' && (s.source || String(s.no||'').startsWith('OTA-')) ? otaPlatformOf(s.guest) : null,
+      // Dates an OTA merely closed (otaClosed / notBooking) aren't a guest's stay.
+      otaPlatform: type==='block' && (s.source || String(s.no||'').startsWith('OTA-')) && !s.otaClosed && !s.notBooking ? otaPlatformOf(s.guest) : null,
       savedAt: s.savedAt||null, leadDays: leadDaysOf(s),
       converted: isConvertedQuote(s, STAYS),
       // An OTA hold turned into a booking: the booking carries those nights now.
