@@ -33,21 +33,28 @@ self.addEventListener('fetch', e => {
     new Response(OFFLINE_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })));
 });
 
-// Push notifications: the server sends {title, body, url, tag} (see
-// sendPushAlert in the data.ryst.in server). Tapping one opens that page —
-// in an open RYST Harbour window if there is one.
+// Push notifications: the server sends {title, body, url, tag, actions}
+// (see sendPushAlert in the data.ryst.in server). Tapping one opens its page,
+// and each button (e.g. "Start check-in checklist", "Update stock") opens
+// the screen where that job gets done — in an open RYST Harbour window if
+// there is one.
 self.addEventListener('push', e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: 'RYST Harbour', body: e.data ? e.data.text() : '' }; }
+  const acts = Array.isArray(d.actions) ? d.actions.filter(a => a && a.action && a.title).slice(0, 2) : [];
+  const urls = {}; acts.forEach(a => { urls[a.action] = a.url || d.url; });
   e.waitUntil(self.registration.showNotification(d.title || 'RYST Harbour', {
     body: d.body || '', tag: d.tag || undefined, renotify: !!d.tag,
     icon: '/assets/staff-icon-192.png', badge: '/assets/staff-badge-96.png',
-    data: { url: d.url || '/login.html' },
+    actions: acts.map(a => ({ action: a.action, title: a.title })),
+    data: { url: d.url || '/login.html', actions: urls },
   }));
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const url = new URL((e.notification.data && e.notification.data.url) || '/login.html', self.location.origin).href;
+  const data = e.notification.data || {};
+  const target = (e.action && data.actions && data.actions[e.action]) || data.url || '/login.html';
+  const url = new URL(target, self.location.origin).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
     const open = list.find(c => c.url.startsWith(self.location.origin));
     if (open) return open.navigate(url).then(c => (c || open).focus()).catch(() => open.focus());
