@@ -998,14 +998,10 @@ function renderHome(){
           ${row('Food bill', foodDue)}
           <div class="due-row due-total"><span>Total due</span><b>${money(stayDue + foodDue)}</b></div>
         </div>` : `<p>${foodDue ? 'Food bill outstanding' : 'Balance due'}: <strong>${money(stayDue || foodDue)}</strong>${stayDue && extras.length ? `<br><small>includes ${esc(extras.join(', '))}</small>` : ''}</p>`}
-        <div class="due-acts">
-          ${stayDue ? `<button type="button" class="pay-btn" id="payBalanceBtn">${foodDue ? 'Pay stay balance' : 'Pay Balance Now'}</button>` : ''}
-          ${foodDue ? `<button type="button" class="pay-btn" id="payFoodHomeBtn">${stayDue ? 'Pay food bill' : 'Pay Food Bill Now'}</button>` : ''}
-        </div>
+        <button type="button" class="pay-btn" id="payBalanceBtn">Pay ${money(stayDue + foodDue)}</button>
         <p class="pay-msg" id="payBalanceMsg" role="alert" aria-live="polite"></p>
       </div>`;
-    if(stayDue) $('#payBalanceBtn').addEventListener('click', () => payLink('balance', $('#payBalanceBtn'), $('#payBalanceMsg')));
-    if(foodDue) $('#payFoodHomeBtn').addEventListener('click', () => payLink('food', $('#payFoodHomeBtn'), $('#payBalanceMsg')));
+    $('#payBalanceBtn').addEventListener('click', () => payLink('total', $('#payBalanceBtn'), $('#payBalanceMsg')));
   } else {
     dueEl.innerHTML = '';
   }
@@ -1104,7 +1100,9 @@ async function payLink(kind, btn, msgEl){
   btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Preparing payment…';
   if(msgEl) msgEl.textContent = '';
   try{
-    const path = kind === 'balance' ? '/portal/balance-payment-link' : '/portal/food-payment-link';
+    // One payment for everything due — the stay balance and the food bill
+    // together (the server builds a single link and accounts it to both).
+    const path = '/portal/balance-payment-link';
     const res = await fetch(PROXY_URL+path, {
       method:'POST', headers:{ 'Content-Type':'application/json', 'X-Token': portalToken },
       body: JSON.stringify({ stayNo: (me.stay && me.stay.no) || undefined }),
@@ -1342,13 +1340,19 @@ function renderBill(){
   }
   const payEl = $('#billPay');
   if(me.foodBalance > 0){
+    // Paid together with the stay balance — one payment, not a separate food one.
+    const stayDue = me.stay && me.stay.balance > 0 ? me.stay.balance : 0;
     payEl.innerHTML = `
       <div class="due-banner">
-        <p>Food bill outstanding: <strong>${money(me.foodBalance)}</strong></p>
-        <button type="button" class="pay-btn" id="payFoodBtn">Pay Food Bill Now</button>
+        ${stayDue ? `<div class="due-rows">
+          <div class="due-row"><span>Food bill</span><b>${money(me.foodBalance)}</b></div>
+          <div class="due-row"><span>Stay balance</span><b>${money(stayDue)}</b></div>
+          <div class="due-row due-total"><span>Total due</span><b>${money(stayDue + me.foodBalance)}</b></div>
+        </div>` : `<p>Food bill outstanding: <strong>${money(me.foodBalance)}</strong></p>`}
+        <button type="button" class="pay-btn" id="payFoodBtn">Pay ${money(stayDue + me.foodBalance)}</button>
         <p class="pay-msg" id="payFoodMsg" role="alert" aria-live="polite"></p>
       </div>`;
-    $('#payFoodBtn').addEventListener('click', () => payLink('food', $('#payFoodBtn'), $('#payFoodMsg')));
+    $('#payFoodBtn').addEventListener('click', () => payLink('total', $('#payFoodBtn'), $('#payFoodMsg')));
   } else {
     payEl.innerHTML = '';
   }
