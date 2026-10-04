@@ -1028,6 +1028,10 @@ function bind(){
 
 function setType(t){
   if(t===docType) return;
+  // A saved invoice stays an invoice — switching it back to a quote is what
+  // let "Convert to invoice" give the same stay a second number (4 Oct).
+  const saved = editingKey ? currentStay() : null;
+  if(t==="quote" && saved && (saved.type||"invoice")==="invoice"){ toast(saved.no+" is already an invoice — it can't go back to being a quote"); return; }
   docType=t;
   $("#typeSeg").querySelectorAll("button").forEach(b=> b.classList.toggle("on", b.dataset.type===t));
   const isInv = t==="invoice";
@@ -1552,9 +1556,19 @@ async function recordPayment(){
 // does by itself once a paid stay is over (autoConvertPaidQuotes): a new
 // invoice with the quote's details and a fresh number; the quote stays as
 // it is, so links already sent to the guest keep working.
+// Same dates and the same guest (phone, else email, else name) — mirrors
+// server.js sameStayGuest, which refuses a second invoice for one stay.
+function sameStayGuest(a,b){
+  if(a.checkin!==b.checkin || a.checkout!==b.checkout) return false;
+  const ph = x => String(x.phone||"").replace(/\D/g,"").slice(-10), lc = v => String(v||"").trim().toLowerCase();
+  if(ph(a) && ph(b)) return ph(a)===ph(b);
+  if(lc(a.email) && lc(b.email)) return lc(a.email)===lc(b.email);
+  return !!lc(a.guest) && lc(a.guest)===lc(b.guest);
+}
 function invoiceForQuote(q){
   const stays = getStays();
   return stays.find(s=> (s.type||"invoice")==="invoice" && s.convertedFrom===q.no)
+    || stays.find(s=> (s.type||"invoice")==="invoice" && s.no!==q.no && q.checkin && sameStayGuest(s,q))
     || (isConvertedQuote(q, stays) ? stays.find(s=> (s.type||"invoice")==="invoice" && s.checkin===q.checkin && s.checkout===q.checkout
         && ((q.email||"").trim() ? (s.email||"").trim().toLowerCase()===(q.email||"").trim().toLowerCase() : (s.guest||"").trim().toLowerCase()===(q.guest||"").trim().toLowerCase())) : null);
 }
