@@ -148,6 +148,13 @@
   }
   .due-banner strong{font-size:15px;color:var(--coral)}
   .due-banner p{margin:0}
+  .due-banner small{display:block;font-size:11.5px;opacity:.8;font-weight:500}
+  .due-rows{display:flex;flex-direction:column;gap:6px;text-align:left}
+  .due-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .due-row b{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .due-total{border-top:1px solid rgba(201,106,59,.3);padding-top:8px;margin-top:2px;font-weight:700}
+  .due-total b{font-size:16px;color:var(--coral)}
+  .due-acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
   .pay-btn{
     margin-top:12px;background:linear-gradient(135deg,#d3764a,var(--coral));color:#fff;border:none;border-radius:12px;
     padding:12px 22px;font-family:var(--sans);font-size:13.5px;font-weight:700;letter-spacing:.1px;
@@ -976,15 +983,29 @@ function renderHome(){
     bookingEl.innerHTML = `<p class="empty-note">We couldn't find a confirmed booking for this account. If you've just booked, please check back shortly, or WhatsApp us.</p>`;
   }
 
+  // Everything the guest still owes in one place: the stay balance (villa
+  // plus extras such as the BBQ) and the food bill, with the total.
   const dueEl = $('#homeDue');
-  if(b && b.balance > 0){
+  const stayDue = b && b.balance > 0 ? b.balance : 0, foodDue = me.foodBalance > 0 ? me.foodBalance : 0;
+  if(stayDue || foodDue){
+    const extras = (b && Array.isArray(b.items) ? b.items : []).map(it => String(it.desc||'').trim())
+      .filter(d => d && !/^villa rental/i.test(d) && !/additional guest/i.test(d));
+    const row = (label, amt, note) => `<div class="due-row"><span>${esc(label)}${note ? `<small>${esc(note)}</small>` : ''}</span><b>${money(amt)}</b></div>`;
     dueEl.innerHTML = `
       <div class="due-banner">
-        <p>Balance due: <strong>${money(b.balance)}</strong></p>
-        <button type="button" class="pay-btn" id="payBalanceBtn">Pay Balance Now</button>
+        ${stayDue && foodDue ? `<div class="due-rows">
+          ${row('Stay balance', stayDue, extras.length ? 'includes ' + extras.join(', ') : '')}
+          ${row('Food bill', foodDue)}
+          <div class="due-row due-total"><span>Total due</span><b>${money(stayDue + foodDue)}</b></div>
+        </div>` : `<p>${foodDue ? 'Food bill outstanding' : 'Balance due'}: <strong>${money(stayDue || foodDue)}</strong>${stayDue && extras.length ? `<br><small>includes ${esc(extras.join(', '))}</small>` : ''}</p>`}
+        <div class="due-acts">
+          ${stayDue ? `<button type="button" class="pay-btn" id="payBalanceBtn">${foodDue ? 'Pay stay balance' : 'Pay Balance Now'}</button>` : ''}
+          ${foodDue ? `<button type="button" class="pay-btn" id="payFoodHomeBtn">${stayDue ? 'Pay food bill' : 'Pay Food Bill Now'}</button>` : ''}
+        </div>
         <p class="pay-msg" id="payBalanceMsg" role="alert" aria-live="polite"></p>
       </div>`;
-    $('#payBalanceBtn').addEventListener('click', () => payLink('balance', $('#payBalanceBtn'), $('#payBalanceMsg')));
+    if(stayDue) $('#payBalanceBtn').addEventListener('click', () => payLink('balance', $('#payBalanceBtn'), $('#payBalanceMsg')));
+    if(foodDue) $('#payFoodHomeBtn').addEventListener('click', () => payLink('food', $('#payFoodHomeBtn'), $('#payBalanceMsg')));
   } else {
     dueEl.innerHTML = '';
   }
