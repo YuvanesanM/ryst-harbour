@@ -710,7 +710,7 @@ const ICON_SUITCASE = `<svg viewBox="0 0 24 24" width="22" height="22" fill="non
 // checkout + grace-period logic is the real access gate; a wrong device
 // clock just means an occasional wrong chip, never a security issue) ──
 function tripStatusChip(b){
-  const today = new Date().toISOString().slice(0,10);
+  const today = localISO();
   if(today < b.checkin){
     const nights = Math.max(1, Math.round((new Date(b.checkin) - new Date(today)) / 86400000));
     return { cls:'status-upcoming', label: `${nights} night${nights===1?'':'s'} to go` };
@@ -875,7 +875,7 @@ async function loadAdminPicker(){
     if(res.status === 401){ logout(); return; }
     const data = await res.json().catch(()=>({}));
     if(!res.ok){ errEl.textContent = data.error || 'Could not load bookings.'; showScreen('adminpicker'); return; }
-    const today = new Date().toISOString().slice(0,10);
+    const today = localISO();
     const allStays = Array.isArray(data.stays) ? data.stays : [];
     adminStays = allStays
       .filter(s => (s.type||'invoice') !== 'block' && s.checkin && s.checkout && s.checkin <= today && today <= s.checkout &&
@@ -1029,7 +1029,7 @@ function renderHome(){
   // simple per-booking localStorage flag since there's no server-side
   // "already submitted" linkage to check against.
   const feedbackTile = $('#feedbackTile'), feedbackDesc = $('#feedbackDesc');
-  if(!b || new Date().toISOString().slice(0,10) < b.checkout){
+  if(!b || localISO() < b.checkout){
     feedbackTile.style.display = 'none';
   } else {
     feedbackTile.style.display = '';
@@ -1137,6 +1137,9 @@ let searchQuery = ''; let vegOnly = false; let specialOnly = false;
 // A reasonable starting meal for whenever the guest happens to open the
 // menu — before 11am defaults to Breakfast, before 4pm to Lunch, else
 // Dinner. Just a starting point; every option stays one tap away.
+// Today on the phone's own calendar (IST for guests at the villa) — not the
+// UTC date, which is still yesterday until 5:30 AM IST.
+function localISO(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function defaultMeal(){
   const h = new Date().getHours();
   return h < 11 ? 'Breakfast' : h < 16 ? 'Lunch' : 'Dinner';
@@ -1188,7 +1191,7 @@ function renderMenu(){
   if(b){
     dateInput.min = b.checkin; dateInput.max = b.checkout;
     if(!dateInput.value || dateInput.value < b.checkin || dateInput.value > b.checkout){
-      const today = new Date().toISOString().slice(0,10);
+      const today = localISO();
       dateInput.value = (today >= b.checkin && today <= b.checkout) ? today : b.checkin;
     }
   }
