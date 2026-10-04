@@ -5,19 +5,17 @@
 // as guest names and amounts, exactly as it is. Values the pages save are
 // never touched: only visible text, placeholders and tooltips change.
 //
-// Language: localStorage.ryst_lang ('ta' | 'en'). Caretakers start in Tamil,
-// everyone else in English. Any element with data-lang-toggle becomes the
-// switch; data-no-i18n keeps an element as written.
+// Language: localStorage.ryst_lang ('ta' | 'en'). Everyone starts in
+// English — staff, caretakers and guests alike; Tamil only once someone picks
+// it with the switch (remembered on that device). Any element with
+// data-lang-toggle becomes the switch; data-no-i18n keeps an element as written.
 (function(){
   var store = {};
-  try { store.lang = localStorage.getItem('ryst_lang'); store.role = localStorage.getItem('ryst_user_role'); } catch (e) {}
-  // <script src="/i18n.js" data-audience="guest"> — a guest page: the first
-  // visit follows the phone's language instead of the staff role, and the
-  // page keeps its own fonts (phones already carry a Tamil fallback font).
+  try { store.lang = localStorage.getItem('ryst_lang'); } catch (e) {}
+  // <script src="/i18n.js" data-audience="guest"> — a guest page keeps its
+  // own fonts (phones already carry a Tamil fallback font).
   var guest = !!(document.currentScript && document.currentScript.getAttribute('data-audience') === 'guest');
-  var phoneTamil = false;
-  try { phoneTamil = [].concat(navigator.languages || [], navigator.language || []).some(function(l){ return /^ta\b/i.test(l); }); } catch (e) {}
-  var lang = store.lang === 'ta' || store.lang === 'en' ? store.lang : (guest ? (phoneTamil ? 'ta' : 'en') : (store.role === 'caretaker' ? 'ta' : 'en'));
+  var lang = store.lang === 'ta' ? 'ta' : 'en';
   window.RYST_LANG = lang;
   window.rystSetLang = function(l){ try { localStorage.setItem('ryst_lang', l); } catch (e) {} location.reload(); };
 
