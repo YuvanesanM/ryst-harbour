@@ -137,21 +137,28 @@
 
   // Bookings in one shape, from /stays (owner) or /guest-register (staff).
   function stayList() {
+    // Unpaid food orders per stay number — "due" is the stay balance and the
+    // food bill together (they are collected as one payment).
+    var foodOpen = {};
+    ((D.rs && Array.isArray(D.rs.orders)) ? D.rs.orders : []).forEach(function (o) {
+      if (o && o.stayNo && o.status === 'open') foodOpen[o.stayNo] = (foodOpen[o.stayNo] || 0) + num(o.total);
+    });
+    var foodFor = function (s) { return Math.round((foodOpen[s.no] || 0) + (s.convertedFrom ? (foodOpen[s.convertedFrom] || 0) : 0)); };
     if (D.stays) {
       var all = Array.isArray(D.stays.stays) ? D.stays.stays : [];
       return all.filter(function (s) { return s && s.checkin && s.checkout && ((isOtaBlock(s) && !claimedHold(s, all)) || (typeOf(s) !== 'block' && committed(s) && !isConverted(s, all))); })
         .map(function (s) {
-          var block = typeOf(s) === 'block', total = grandTotal(s), paid = num(s.advance), ci = s.checkinInfo || null;
+          var block = typeOf(s) === 'block', total = grandTotal(s), paid = num(s.advance), ci = s.checkinInfo || null, food = block ? 0 : foodFor(s);
           return { no: s.no, block: block, guest: block ? otaName(s.guest) + ' booking' : (s.guest || 'Guest'), guests: s.guests || '', bedrooms: s.bedrooms || '',
             checkin: s.checkin, checkout: s.checkout, channel: block ? otaName(s.guest) : (s.channel || (s.mode === 'Razorpay' ? 'Website' : '')),
-            total: total, paid: paid, due: block ? 0 : Math.max(0, total - paid), checkedIn: !!ci, arrival: ci ? ci.arrivalTime : '',
+            total: total, paid: paid, stayDue: block ? 0 : Math.max(0, total - paid), food: food, due: block ? 0 : Math.max(0, total - paid) + food, checkedIn: !!ci, arrival: ci ? ci.arrivalTime : '',
             otaGone: !!s.otaHoldGone, otaMoved: s.otaHoldMoved || null };
         });
     }
     if (D.reg) {
       return (Array.isArray(D.reg.entries) ? D.reg.entries : []).filter(function (e) { return e.stayStatus !== 'unconfirmed'; }).map(function (e) {
         return { no: e.no, block: false, guest: e.guest || 'Guest', guests: e.guests || e.checkinGuestsCount || '', bedrooms: e.bedrooms || '', checkin: e.checkin, checkout: e.checkout,
-          channel: e.channel || (e.mode === 'Razorpay' ? 'Website' : ''), total: num(e.stayTotal), paid: num(e.stayPaid), due: num(e.stayDue),
+          channel: e.channel || (e.mode === 'Razorpay' ? 'Website' : ''), total: num(e.stayTotal), paid: num(e.stayPaid), stayDue: num(e.stayDue), food: num(e.foodDue), due: num(e.stayDue) + num(e.foodDue),
           checkedIn: !!e.checkedIn, arrival: e.arrivalTime || '' };
       });
     }
@@ -187,8 +194,10 @@
   function payPill(s) {
     if (s.block) return '<span class="pill">' + esc(t('Paid via')) + ' ' + esc(s.channel) + '</span>';
     if (s.due <= 0) return '<span class="pill pill--good">' + esc(t('Paid')) + '</span>';
-    if (s.paid > 0) return '<span class="pill pill--warn">' + inr(s.due) + ' ' + esc(t('due')) + '</span>';
-    return '<span class="pill pill--bad">' + esc(t('Unpaid')) + ' ' + inr(s.due) + '</span>';
+    var split = s.food > 0 ? ' title="' + esc(t('Stay') + ' ' + inr(s.stayDue) + ' + ' + t('food') + ' ' + inr(s.food)) + '"' : '';
+    var withFood = s.food > 0 ? ' · ' + esc(t('incl. food')) : '';
+    if (s.paid > 0) return '<span class="pill pill--warn"' + split + '>' + inr(s.due) + ' ' + esc(t('due')) + withFood + '</span>';
+    return '<span class="pill pill--bad"' + split + '>' + esc(t('Unpaid')) + ' ' + inr(s.due) + withFood + '</span>';
   }
   function chPill(s) { return s.channel ? '<span class="pill pill--teal">' + esc(s.channel) + '</span>' : '<span class="pill">' + esc(t('Direct')) + '</span>'; }
   function guestsTxt(s) {

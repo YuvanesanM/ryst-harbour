@@ -59,7 +59,7 @@
     'Revenue': 'வருவாய்', 'Occupancy': 'நிரம்பல்', "Today's arrivals": 'இன்றைய வருகைகள்', 'Today': 'இன்று',
     'All clear': 'எல்லாம் சரி', 'None urgent': 'அவசரம் எதுவும் இல்லை', 'None coming up': 'வரவிருப்பது எதுவும் இல்லை',
     'Attention required': 'கவனிக்க வேண்டியவை', 'Upcoming stays': 'வரவிருக்கும் தங்கல்கள்', 'All bookings': 'அனைத்து முன்பதிவுகள்',
-    'Dates': 'தேதிகள்', 'Channel': 'வழி', 'Payment': 'கட்டணம்', 'Direct': 'நேரடி', 'Paid': 'செலுத்தப்பட்டது', 'Unpaid': 'செலுத்தவில்லை',
+    'Dates': 'தேதிகள்', 'Channel': 'வழி', 'Payment': 'கட்டணம்', 'Direct': 'நேரடி', 'Paid': 'செலுத்தப்பட்டது', 'Unpaid': 'செலுத்தவில்லை', 'incl. food': 'உணவு உட்பட', 'Stay': 'தங்கல்', 'food': 'உணவு',
     'Collect': 'வசூலி', 'Checklist ✓': 'சரிபார்ப்பு ✓', 'Checking in': 'செக்-இன்', 'Checking out': 'செக்-அவுட்',
     'No check-ins or check-outs today.': 'இன்று செக்-இன் அல்லது செக்-அவுட் இல்லை.', 'Next arrival': 'அடுத்த வருகை',
     'Nothing booked after today yet.': 'இன்றைக்குப் பிறகு இன்னும் முன்பதிவு இல்லை.', 'Blocked today': 'இன்று மூடப்பட்டுள்ளது',

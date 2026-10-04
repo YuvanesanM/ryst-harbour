@@ -385,6 +385,8 @@
         <div class="totals-mini" style="margin-top:0">
           <div><span>Received so far</span><b id="mAdv">₹0</b></div>
           <div><span>Balance due</span><b id="mBal">₹0</b></div>
+          <div id="foodRow" hidden><span>Food bill (unpaid)</span><b id="mFood">₹0</b></div>
+          <div id="totDueRow" hidden><span>Total to collect</span><b id="mTotDue">₹0</b></div>
         </div>
         <button type="button" class="add-li" id="btnPay" style="margin-top:10px">+ Record a payment</button>
         <div class="pay-row" id="payRow" hidden>
@@ -800,6 +802,7 @@ let staysCache = [];              // loaded from proxy
 let editingKey = null;
 let curHold = null;                // the OTA calendar hold this booking is being captured from (stay.html?hold=<no>)
 let curNo = "", curDateISO = "";
+let curFood = { foodDue: 0, orders: [] }; // the saved stay's unpaid food orders — collected with the balance
 let curPayments = [];              // payments recorded with "Record a payment" (a log; the advance holds the total)
 let modeTouched = false;           // payment mode picked by hand → stop setting it automatically
 
@@ -986,7 +989,7 @@ function bind(){
   });
   $("#mode").addEventListener("change", ()=>{ modeTouched = true; });
   $("#btnPay").addEventListener("click", ()=>{
-    const bal = Math.max(0, grandNow() - (parseFloat($("#advance").value)||0));
+    const bal = Math.max(0, grandNow() - (parseFloat($("#advance").value)||0)) + (editingKey ? curFood.foodDue : 0);
     $("#payAmt").value = bal > 0 ? String(Math.round(bal)) : "";
     const m = $("#mode").value; if(["UPI","Cash","Bank Transfer","Card"].includes(m)) $("#payMethod").value = m;
     $("#payRow").hidden = false; $("#btnPay").hidden = true; $("#payAmt").focus();
@@ -1162,7 +1165,7 @@ function newDoc(){
   $("#discountInp").value=""; $("#settleInp").value="";
   $("#mode").value="UPI"; // matches the <select>'s own default-selected option
   $("#channel").value=defaultChannel();
-  modeTouched=false; curPayments=[]; $("#moreBox").open=false;
+  modeTouched=false; curPayments=[]; curFood={ foodDue:0, orders:[] }; $("#moreBox").open=false;
   $("#returnHint").hidden=true; $("#payRow").hidden=true; $("#btnPay").hidden=false; $("#agreedInp").value="";
   items=[{desc:"Villa Rental Charges",qty:"1",rate:tariffRows().length?"":rateFor("Villa Rental Charges"),_villaRow:true,_rateAuto:true}];
   if(docType==="invoice"){ populateLoadQuoteSel(); $("#loadQuoteRow").style.display=""; }
@@ -1373,6 +1376,9 @@ function render(){
   $("#mDiscRow").hidden = !(discount > 0); $("#mDisc").textContent = "− " + money(discount);
   syncAgreed(false);
   $("#mAdv").textContent = money(advance); $("#mBal").textContent = money(balance);
+  const fd = editingKey ? curFood.foodDue : 0;
+  $("#foodRow").hidden = $("#totDueRow").hidden = !(fd > 0);
+  $("#mFood").textContent = money(fd); $("#mTotDue").textContent = money(Math.max(0, balance) + fd);
   renderPayments();
   syncRateHint();
   const nN = nightsBetween($("#checkin").value,$("#checkout").value);
@@ -1507,6 +1513,16 @@ function loadDoc(no){
   items = (d.items&&d.items.length)? d.items.map(x=>({desc:x.desc||"",qty:(x.qty!=null?x.qty:"1"),rate:x.rate||"",...(x._villaRow&&{_villaRow:true}),...(x._autoLocked&&{_autoLocked:true})})) : [{desc:"",qty:"1",rate:""}];
   markVillaRateAuto();
   syncGuestCharges(); renderItems(); render(); toast("Loaded "+d.no);
+  loadFood(d.no);
+}
+// The stay's unpaid food bill, shown with the balance and collected together.
+async function loadFood(no){
+  curFood = { foodDue: 0, orders: [] };
+  try{
+    const r = await fetch(PROXY_URL+'/stays/food?no='+encodeURIComponent(no), { headers:{'X-Token':proxyToken}, cache:'no-store' });
+    if(r.ok){ const j = await r.json(); if(editingKey === no) curFood = { foodDue: j.foodDue||0, orders: j.orders||[] }; }
+  }catch(e){}
+  render();
 }
 
 /* ---------- FEWER THINGS TO TYPE ---------- */
@@ -1549,13 +1565,29 @@ async function recordPayment(){
   const amt = Math.round(parseFloat($("#payAmt").value)||0), method = $("#payMethod").value;
   if(!(amt > 0)){ toast("Enter the amount received"); $("#payAmt").focus(); return; }
   const adv = parseFloat($("#advance").value)||0, g = grandNow();
-  if(g > 0 && adv + amt > g + 0.5 && !confirm("That's more than the balance due (" + money(Math.max(0, g - adv)) + "). Record it anyway?")) return;
-  $("#advance").value = String(adv + amt);
-  curPayments = curPayments.concat({ amount: amt, method, date: todayISO(), by: MYEMAIL || "" });
+  // The stay balance and the food bill are collected together: the stay
+  // takes its balance first, the rest settles the unpaid food orders.
+  const food = editingKey ? curFood.foodDue : 0, stayBal = Math.max(0, g - adv);
+  if(g > 0 && amt > stayBal + food + 0.5 && !confirm("That's more than the total due (" + money(stayBal + food) + "). Record it anyway?")) return;
+  const foodShare = food > 0 ? Math.min(food, Math.max(0, amt - stayBal)) : 0;
+  let stayShare = amt - foodShare;
+  if(foodShare > 0){
+    try{
+      const r = await fetch(PROXY_URL+'/stays/food/settle', { method:'POST', headers:{'X-Token':proxyToken,'Content-Type':'application/json'}, body: JSON.stringify({ no: editingKey, amount: foodShare, method }) });
+      const j = await r.json().catch(()=>({}));
+      if(!r.ok){ toast(j.error || "Could not record the food payment"); return; }
+      stayShare += j.unused || 0; // part of a food order isn't settled — kept as a stay payment
+      curFood = { foodDue: j.foodDue||0, orders: j.orders||[] };
+      if((j.settled||[]).length) toast("Food bill settled: " + j.settled.join(", "));
+    }catch(e){ toast("Could not record the food payment — check your connection"); return; }
+  }
+  if(!(stayShare > 0)){ $("#payRow").hidden = true; $("#btnPay").hidden = false; render(); return; }
+  $("#advance").value = String(adv + stayShare);
+  curPayments = curPayments.concat({ amount: stayShare, method, date: todayISO(), by: MYEMAIL || "" });
   if(!modeTouched) $("#mode").value = method;
   $("#payRow").hidden = true; $("#btnPay").hidden = false;
   render();
-  if(editingKey){ if(await saveDoc()) toast("Payment of " + money(amt) + " recorded"); }
+  if(editingKey){ if(await saveDoc()) toast("Payment of " + money(amt) + " recorded" + (foodShare > 0 ? " (stay " + money(stayShare) + " + food " + money(amt - stayShare) + ")" : "")); }
   else toast("Payment added — Save to keep it");
 }
 // One tap from a saved quote to its invoice — the same conversion the server
