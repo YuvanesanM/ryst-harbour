@@ -255,7 +255,7 @@
     'No check-in today': 'இன்று செக்-இன் இல்லை', 'No check-out today': 'இன்று செக்-அவுட் இல்லை',
     'Start check-in checklist': 'செக்-இன் சரிபார்ப்பைத் தொடங்கு', 'Start check-out checklist': 'செக்-அவுட் சரிபார்ப்பைத் தொடங்கு',
     'Done ✓': 'முடிந்தது ✓', 'Arriving': 'வருகை', 'Checked in online': 'ஆன்லைனில் செக்-இன் செய்தார்', 'Check-in form pending': 'செக்-இன் படிவம் நிலுவையில்',
-    'guests': 'விருந்தினர்கள்', 'guest': 'விருந்தினர்', 'Done today': 'இன்று முடிந்தது', 'In progress': 'நடந்துகொண்டிருக்கிறது',
+    'guests': 'விருந்தினர்கள்', 'guest': 'விருந்தினர்', 'bedroom': 'படுக்கையறை', 'bedrooms': 'படுக்கையறைகள்', 'Done today': 'இன்று முடிந்தது', 'In progress': 'நடந்துகொண்டிருக்கிறது',
     'Nothing in progress': 'எதுவும் நடந்துகொண்டில்லை', 'No open issues': 'திறந்த பிரச்சனைகள் இல்லை', 'Everything is stocked': 'எல்லாம் இருப்பில் உள்ளது',
     'restock at': 'மறு நிரப்பல் அளவு', 'Report issue': 'பிரச்சனையைத் தெரிவி', 'Add expense': 'செலவைச் சேர்', 'Add inventory': 'இருப்பைச் சேர்',
     'Ask the owner for Guest Register access to see arrivals here.': 'வருகைகளை இங்கே பார்க்க, விருந்தினர் பதிவேடு அனுமதியை உரிமையாளரிடம் கேளுங்கள்.',

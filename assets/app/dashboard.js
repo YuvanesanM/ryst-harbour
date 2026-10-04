@@ -142,7 +142,7 @@
       return all.filter(function (s) { return s && s.checkin && s.checkout && ((isOtaBlock(s) && !claimedHold(s, all)) || (typeOf(s) !== 'block' && committed(s) && !isConverted(s, all))); })
         .map(function (s) {
           var block = typeOf(s) === 'block', total = grandTotal(s), paid = num(s.advance), ci = s.checkinInfo || null;
-          return { no: s.no, block: block, guest: block ? otaName(s.guest) + ' booking' : (s.guest || 'Guest'), guests: s.guests || '',
+          return { no: s.no, block: block, guest: block ? otaName(s.guest) + ' booking' : (s.guest || 'Guest'), guests: s.guests || '', bedrooms: s.bedrooms || '',
             checkin: s.checkin, checkout: s.checkout, channel: block ? otaName(s.guest) : (s.channel || (s.mode === 'Razorpay' ? 'Website' : '')),
             total: total, paid: paid, due: block ? 0 : Math.max(0, total - paid), checkedIn: !!ci, arrival: ci ? ci.arrivalTime : '',
             otaGone: !!s.otaHoldGone, otaMoved: s.otaHoldMoved || null };
@@ -150,7 +150,7 @@
     }
     if (D.reg) {
       return (Array.isArray(D.reg.entries) ? D.reg.entries : []).filter(function (e) { return e.stayStatus !== 'unconfirmed'; }).map(function (e) {
-        return { no: e.no, block: false, guest: e.guest || 'Guest', guests: e.guests || e.checkinGuestsCount || '', checkin: e.checkin, checkout: e.checkout,
+        return { no: e.no, block: false, guest: e.guest || 'Guest', guests: e.guests || e.checkinGuestsCount || '', bedrooms: e.bedrooms || '', checkin: e.checkin, checkout: e.checkout,
           channel: e.channel || (e.mode === 'Razorpay' ? 'Website' : ''), total: num(e.stayTotal), paid: num(e.stayPaid), due: num(e.stayDue),
           checkedIn: !!e.checkedIn, arrival: e.arrivalTime || '' };
       });
@@ -191,7 +191,10 @@
     return '<span class="pill pill--bad">' + esc(t('Unpaid')) + ' ' + inr(s.due) + '</span>';
   }
   function chPill(s) { return s.channel ? '<span class="pill pill--teal">' + esc(s.channel) + '</span>' : '<span class="pill">' + esc(t('Direct')) + '</span>'; }
-  function guestsTxt(s) { return s.guests ? esc(s.guests) + ' ' + esc(t(+s.guests === 1 ? 'guest' : 'guests')) : '—'; }
+  function guestsTxt(s) {
+    if (!s.guests) return '—';
+    return esc(s.guests) + ' ' + esc(t(+s.guests === 1 ? 'guest' : 'guests')) + (s.bedrooms ? ' · ' + esc(s.bedrooms) + ' ' + esc(t(+s.bedrooms === 1 ? 'bedroom' : 'bedrooms')) : '');
+  }
   function setHTML(id, html) { var el = doc.getElementById(id); if (el) el.innerHTML = html; }
   function loading(key) { return !(key in D) && !(key in ERR); }
   function errBox(key) { return '<p class="note">' + esc(ERR[key]) + '</p>'; }

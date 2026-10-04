@@ -44,6 +44,7 @@
   .gh-mini{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-d);font-weight:700;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
   .gh-mini::after{content:"";flex:1;height:1px;background:var(--line)}
   .gh-mini:first-of-type{margin-top:0}
+  .tf-note{font-size:12.5px;line-height:1.5;color:var(--muted);margin:-4px 0 10px}
   .f{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
   .f span{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
   .t{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13.5px;background:var(--panel);color:var(--ink);outline:none;transition:.15s}
@@ -258,6 +259,21 @@
       </table>
     </div>
     <button class="rc-add" id="stayRcAdd">+ Add charge</button>
+
+    <p class="gh-mini">Price by guest count</p>
+    <p class="tf-note">Weekday price for the whole villa at each headcount. A party is priced at the first row that seats them (5 guests on rows 4 and 6 → the 6 row), and the bedrooms show on the quote for the guest and caretaker. Weekend and holiday hikes below apply on top. While rows are set, the Villa Rental rate and Additional Guest charge above aren't used for new quotes.</p>
+    <div class="rc-table-wrap">
+      <table class="rc-table">
+        <thead><tr>
+          <th style="width:110px">Guests (up to)</th>
+          <th style="width:110px">Bedrooms</th>
+          <th class="r">Weekday price (₹)</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="stayTariffBody"></tbody>
+      </table>
+    </div>
+    <button class="rc-add" id="stayTariffAdd">+ Add guest count</button>
 
 
     <p class="gh-mini">Guests &amp; advance</p>
@@ -725,6 +741,7 @@ const TELEGRAM_ALERT_TYPES = [
 let stay = JSON.parse(JSON.stringify(STAY_DEFAULTS));
 let stayRcDraft = [];
 let stayHolDraft = [];
+let stayTariffDraft = [];
 let stayCouponDraft = [];
 let icalFeedsDraft = [];
 let icalExportKey = null; // set once /stay-settings returns it; never guessed client-side
@@ -934,6 +951,8 @@ function renderFromStay(){
   document.getElementById("stayHolidayHike").value=stay.holidayHikePercent!=null?stay.holidayHikePercent:"";
   stayHolDraft=(stay.holidays||[]).map(h=>({...h}));
   renderStayHolidays();
+  stayTariffDraft=(stay.tariff||[]).map(t=>({...t}));
+  renderStayTariff();
   document.getElementById("stayFullPayDiscount").value=stay.fullPaymentDiscountPercent!=null?stay.fullPaymentDiscountPercent:"";
   document.getElementById("stayMaxDiscount").value=stay.maxDiscountPercent!=null?stay.maxDiscountPercent:"";
   stayCouponDraft=(stay.coupons||[]).map(c=>({...c}));
@@ -1828,6 +1847,32 @@ function renderStayRates(){
 }
 document.getElementById("stayRcAdd").addEventListener("click",()=>{ stayRcDraft.push({desc:"",rate:""}); renderStayRates(); });
 
+/* ---------- PRICE BY GUEST COUNT ---------- */
+function renderStayTariff(){
+  const body=document.getElementById("stayTariffBody"); body.innerHTML="";
+  stayTariffDraft.forEach((t,i)=>{
+    const row=document.createElement("tr");
+    row.innerHTML=`
+      <td><input data-i="${i}" data-k="guests" type="number" min="1" step="1" inputmode="numeric" placeholder="2" value="${esc(t.guests)}"></td>
+      <td><input data-i="${i}" data-k="bedrooms" type="number" min="0" step="1" inputmode="numeric" placeholder="1" value="${esc(t.bedrooms)}"></td>
+      <td><input class="r" data-i="${i}" data-k="rate" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="${esc(t.rate)}"></td>
+      <td><button class="rc-del" data-del="${i}" title="Remove">×</button></td>`;
+    body.appendChild(row);
+  });
+  body.querySelectorAll("input[data-i]").forEach(inp=>{
+    inp.addEventListener("input",e=>{ const i=+e.target.dataset.i,k=e.target.dataset.k; stayTariffDraft[i][k]=e.target.value; });
+  });
+  body.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",e=>{
+    stayTariffDraft.splice(+e.target.dataset.del,1); renderStayTariff();
+  }));
+}
+document.getElementById("stayTariffAdd").addEventListener("click",()=>{
+  // Start the new row one guest above the last, same bedrooms — the usual next step.
+  const last=stayTariffDraft[stayTariffDraft.length-1];
+  stayTariffDraft.push(last?{guests:(parseInt(last.guests)||0)+1,bedrooms:last.bedrooms,rate:""}:{guests:2,bedrooms:1,rate:""});
+  renderStayTariff();
+});
+
 /* ---------- HOLIDAY DATES ---------- */
 function renderStayHolidays(){
   const body=document.getElementById("stayHolBody"); body.innerHTML="";
@@ -1896,6 +1941,11 @@ async function saveStay(){
   stay.weekendHikePercent = whVal!=="" ? Math.max(0, parseFloat(whVal)||0) : 0;
   const hhVal=document.getElementById("stayHolidayHike").value;
   stay.holidayHikePercent = hhVal!=="" ? Math.max(0, parseFloat(hhVal)||0) : 0;
+  const tfSeen=new Set();
+  stay.tariff = stayTariffDraft
+    .map(t=>({guests:parseInt(t.guests)||0, bedrooms:parseInt(t.bedrooms)||0, rate:parseFloat(t.rate)||0}))
+    .filter(t=>t.guests>0 && t.rate>0 && !tfSeen.has(t.guests) && tfSeen.add(t.guests))
+    .sort((a,b)=>a.guests-b.guests);
   stay.holidays = stayHolDraft
     .filter(h=>(h.date||"").trim()!=="")
     .map(h=>({date:h.date.trim(), label:(h.label||"").trim()}));

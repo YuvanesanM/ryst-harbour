@@ -117,6 +117,10 @@
   .rate-key small{color:var(--muted2)}
   .day-rate{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:0 0 10px}
   .day-acts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+  .day-tariff{width:100%;border-collapse:collapse;font-size:13px;margin:0 0 12px;font-variant-numeric:tabular-nums}
+  .day-tariff th{font-size:11px;font-weight:650;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 6px 6px}
+  .day-tariff td{padding:6px;border-top:1px solid var(--line)}
+  .day-tariff th:last-child,.day-tariff td:last-child{text-align:right}
   .day-acts .btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none}
   .cal-pill.inv{background:var(--inv)}
   .cal-pill.qt{background:var(--qt)}
@@ -1300,12 +1304,18 @@ async function loadRates(){
     if(!r.ok) return;
     const st = await r.json();
     const v = (st.rates||[]).find(x=>x && x.desc==='Villa Rental Charges');
-    const base = v ? parseFloat(v.rate) : 0;
+    // With a price-by-guest-count table the calendar shows the "from"
+    // price (smallest party); the day sheet lists every headcount.
+    const tariff = (Array.isArray(st.tariff) ? st.tariff : [])
+      .map(t=>({guests:parseInt(t.guests)||0, bedrooms:parseInt(t.bedrooms)||0, rate:parseFloat(t.rate)||0}))
+      .filter(t=>t.guests>0 && t.rate>0).sort((a,b)=>a.guests-b.guests);
+    const base = tariff.length ? tariff[0].rate : (v ? parseFloat(v.rate) : 0);
     if(!(base > 0)) return;
     const hol = {};
     (Array.isArray(st.holidays) ? st.holidays : []).forEach(h=>{ const d = h && (h.date || h); if(d) hol[d] = (h && h.name) || ''; });
     const r2 = x => Math.round(x*100)/100;
-    RATES = { base, weekend: r2(base*(1+(parseFloat(st.weekendHikePercent)||0)/100)), peak: r2(base*(1+(parseFloat(st.holidayHikePercent)||0)/100)), hol };
+    const mult = { weekday:1, weekend:1+(parseFloat(st.weekendHikePercent)||0)/100, peak:1+(parseFloat(st.holidayHikePercent)||0)/100 };
+    RATES = { base, weekend: r2(base*mult.weekend), peak: r2(base*mult.peak), hol, tariff, mult };
     render();
   }catch(e){ /* prices are a nice-to-have on the calendar */ }
 }
@@ -1316,6 +1326,14 @@ function dayRate(iso){
   if(dow===5 || dow===6 || dow===0) return { tier:'weekend', label:'Weekend', rate:RATES.weekend, name:'' };
   return { tier:'weekday', label:'Weekday', rate:RATES.base, name:'' };
 }
+// The day sheet's guests → bedrooms → price list for that night's tier.
+function tariffTable(tier){
+  const m = RATES.mult[tier] || 1, r2 = x => Math.round(x*100)/100;
+  return `<table class="day-tariff"><thead><tr><th>Guests</th><th>Bedrooms</th><th>Per night</th></tr></thead><tbody>`
+    + RATES.tariff.map((t,i)=>{ const prev = i ? RATES.tariff[i-1].guests : 0;
+        return `<tr><td>${i && t.guests - prev > 1 ? (prev+1) + '–' + t.guests : t.guests}</td><td>${t.bedrooms || '—'}</td><td>${money(r2(t.rate*m))}</td></tr>`; }).join('')
+    + `</tbody></table>`;
+}
 const kRate = n => '₹' + (n >= 1000 ? (Math.round(n/100)/10).toString().replace(/\.0$/,'') + 'k' : Math.round(n));
 function renderRateKey(y, m){
   const box = $('#rateKey'); if(!box) return;
@@ -1323,7 +1341,8 @@ function renderRateKey(y, m){
   const from = dateOnly(new Date(y,m,1)), to = dateOnly(new Date(y,m+1,1));
   const peaks = Object.keys(RATES.hol).filter(d=>d>=from && d<to).sort().map(d=>new Date(d+'T00:00:00').getDate() + (RATES.hol[d] ? ' ' + RATES.hol[d] : ''));
   box.innerHTML = `<span class="cal-rate t-weekday">Weekday ${money(RATES.base)}</span><span class="cal-rate t-weekend">Fri–Sun ${money(RATES.weekend)}</span><span class="cal-rate t-peak">Peak ${money(RATES.peak)}</span>`
-    + (peaks.length ? `<small>Peak this month: ${esc(peaks.join(', '))}</small>` : '') + '<small>per night, before extra guests</small>';
+    + (peaks.length ? `<small>Peak this month: ${esc(peaks.join(', '))}</small>` : '')
+    + (RATES.tariff.length ? `<small>per night from ${RATES.tariff[0].guests} guests — tap a date for every guest count</small>` : '<small>per night, before extra guests</small>');
   box.hidden = false;
 }
 
@@ -1427,7 +1446,8 @@ function openDay(iso){
   const upcoming = iso >= todayISO();
   const taken = dayBookings.some(b=> b.type==='block' || !isNonBlockingStay(b));
   const dr = upcoming ? dayRate(iso) : null, next = addDays(iso, 1);
-  const quick = (dr ? `<div class="day-rate"><span class="cal-rate t-${dr.tier}" style="margin:0">${esc(dr.label)}</span><b>${money(dr.rate)}</b> a night${dr.name ? ' · ' + esc(dr.name) : ''}</div>` : '')
+  const quick = (dr ? `<div class="day-rate"><span class="cal-rate t-${dr.tier}" style="margin:0">${esc(dr.label)}</span>${RATES.tariff.length ? 'from ' : ''}<b>${money(dr.rate)}</b> a night${dr.name ? ' · ' + esc(dr.name) : ''}</div>` : '')
+    + (dr && RATES.tariff.length ? tariffTable(dr.tier) : '')
     + (upcoming && !taken ? `<div class="day-acts"><a class="btn primary" href="stay.html?new=quote&checkin=${iso}&checkout=${next}">＋ Create quote</a><button type="button" class="btn" data-blockday="${iso}">🚫 Block this date</button></div>` : '');
   $('#dayBody').innerHTML = quick + (!dayBookings.length ? '<div class="empty">Nothing booked this day.</div>'
     : dayBookings.map(b=>{

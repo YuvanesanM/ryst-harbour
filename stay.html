@@ -324,8 +324,7 @@
           <label class="f"><span>Guest name</span><input class="t" id="guest" placeholder="Mr. / Ms. ..."></label>
         </div>
         <p class="hint ret-hint" id="returnHint" hidden></p>
-        <div class="row2">
-          <label class="f"><span>No. of guests</span><input class="t" id="guests" type="number" min="1" step="1" inputmode="numeric" placeholder="2"></label>
+        <div>
           <label class="f"><span>Channel <span style="color:var(--danger,#b42318)" aria-hidden="true">*</span></span>
             <select class="t" id="channel" required aria-required="true">
               <option value="">Select channel…</option>
@@ -351,6 +350,11 @@
         </div>
         <input type="hidden" id="nights">
         <p class="hint" id="nightsHint" style="margin-top:-4px"></p>
+        <div class="row2">
+          <label class="f"><span>No. of guests</span><input class="t" id="guests" type="number" min="1" step="1" inputmode="numeric" placeholder="2"></label>
+          <label class="f"><span>Bedrooms</span><input class="t" id="bedrooms" type="number" min="0" step="1" inputmode="numeric" placeholder="—"></label>
+        </div>
+        <p class="hint" id="bedHint" style="margin-top:-4px"></p>
       </div>
 
       <div class="group">
@@ -446,6 +450,7 @@
             <div class="kv"><span>Email ID</span><b id="pEmail"></b></div>
             <div class="kv"><span>Phone</span><b id="pPhone"></b></div>
             <div class="kv"><span>No. of Guests</span><b id="pGuests"></b></div>
+            <div class="kv" id="pBedRow" hidden><span>Bedrooms</span><b id="pBeds"></b></div>
             <div class="kv" id="pBuyerGstinRow" hidden><span>GSTIN</span><b id="pBuyerGstin"></b></div>
             <div class="kv" id="pBuyerAddrRow" hidden><span>Address</span><b id="pBuyerAddr"></b></div>
           </div>
@@ -711,8 +716,38 @@ function rateFor(desc){
 // holiday rate, not both), blended into the one villa-rental line as the
 // average per night so qty × rate is the exact total.
 function isHolidayISO(iso){ return Array.isArray(settings.holidays) && settings.holidays.some(h=> (h && h.date || h) === iso); }
+// Price by guest count (Settings → Tariffs): weekday price for the whole
+// villa at each headcount, the smallest row that seats the party (same rule
+// as server.js tariffFor). null when no tariff is set.
+function tariffRows(){
+  return (Array.isArray(settings.tariff) ? settings.tariff : [])
+    .map(t=>({guests:parseInt(t.guests)||0, bedrooms:parseInt(t.bedrooms)||0, rate:parseFloat(t.rate)||0}))
+    .filter(t=>t.guests>0 && t.rate>0).sort((a,b)=>a.guests-b.guests);
+}
+function tariffRow(guests){
+  const rows = tariffRows(); if(!rows.length) return null;
+  const g = Math.max(1, parseInt(guests)||1);
+  return rows.find(r=>r.guests>=g) || rows[rows.length-1];
+}
+// Old documents priced the flat way (villa + extra-guest line) keep that
+// way when reopened, so a saved total never shifts under the owner.
+let legacyGuestPricing = false;
+function tariffActive(){ return !legacyGuestPricing && tariffRows().length > 0; }
+function villaBaseRate(){
+  if(tariffActive()){ const g = parseInt($("#guests").value); return g ? tariffRow(g).rate : NaN; } // priced once the guest count is in
+  return parseFloat(rateFor("Villa Rental Charges"));
+}
+// Bedrooms follow the tariff for the guest count until typed by hand.
+let bedTouched = false;
+function syncBedrooms(){
+  const row = tariffRows().length && parseInt($("#guests").value) ? tariffRow($("#guests").value) : null;
+  if(!bedTouched){ $("#bedrooms").value = row && row.bedrooms ? String(row.bedrooms) : ($("#bedrooms").value && !row ? $("#bedrooms").value : ""); }
+  const h = $("#bedHint"); if(!h) return;
+  const differs = bedTouched && row && String(row.bedrooms) !== $("#bedrooms").value;
+  h.textContent = row && tariffActive() ? `${$("#guests").value} guest${$("#guests").value==="1"?"":"s"} → ${differs ? "tariff says " : ""}${row.bedrooms} bedroom${row.bedrooms===1?"":"s"} · ${money(row.rate)} a weekday night` : "";
+}
 function villaRateCard(inISO,outISO){
-  const base = parseFloat(rateFor("Villa Rental Charges"));
+  const base = villaBaseRate();
   const n = nightsBetween(inISO,outISO);
   if(!(base>0) || !n) return null;
   const pct = k => (parseFloat(settings[k])||0)/100, r2 = x => Math.round(x*100)/100;
@@ -742,12 +777,15 @@ function syncRateHint(){
   const el = $("#rateHint"); if(!el) return;
   const row = items.find(it=>it._villaRow);
   const card = row ? villaRateCard($("#checkin").value,$("#checkout").value) : null;
-  if(!card){ el.innerHTML = ""; return; }
+  if(!card){ el.textContent = row && tariffActive() && !parseInt($("#guests").value) ? "Enter the number of guests to price the villa." : ""; return; }
   const parts = [["weekday","weekday"],["weekend","Fri–Sun"],["holiday","holiday"]].filter(([k])=>card.tiers[k].n)
     .map(([k,l])=> `${card.tiers[k].n} ${l} night${card.tiers[k].n===1?"":"s"} at ${money(card.tiers[k].rate)}`);
   if(row._rateAuto===false && Math.abs((parseFloat(row.rate)||0) - parseFloat(card.rate)) >= 0.01)
     el.innerHTML = `Villa rate typed by hand. Rate card: ${esc(parts.join(" + "))}. <button type="button" class="linkish" id="useCard">Use rate card</button>`;
-  else el.textContent = "Villa priced from the rate card: " + parts.join(" + ") + ".";
+  else {
+    const tr = tariffActive() && parseInt($("#guests").value) ? tariffRow($("#guests").value) : null;
+    el.textContent = (tr ? `Villa priced for ${$("#guests").value} guests (${tr.bedrooms} bedroom${tr.bedrooms===1?"":"s"}): ` : "Villa priced from the rate card: ") + parts.join(" + ") + ".";
+  }
 }
 let settings = loadSettings();
 
@@ -923,8 +961,9 @@ function bind(){
       $("#guests").value = String(cap);
       toast("Maximum capacity is "+cap+" guests");
     }
-    syncGuestCharges(); render();
+    syncBedrooms(); autoPriceVilla(); syncGuestCharges(); render();
   });
+  $("#bedrooms").addEventListener("input", ()=>{ bedTouched = $("#bedrooms").value !== ""; syncBedrooms(); render(); });
   $("#date").addEventListener("input", e=>{ curDateISO=e.target.value; render(); });
   $("#checkin").addEventListener("input", syncNights);
   $("#checkout").addEventListener("input", syncNights);
@@ -1030,6 +1069,8 @@ function loadFromQuote(qno){
   $("#phone").value   = d.phone||"";
   syncPhoneValidity();
   $("#guests").value  = d.guests||"";
+  legacyGuestPricing = (d.items||[]).some(it=>/additional.*guest/i.test(it.desc||""));
+  $("#bedrooms").value = d.bedrooms||""; bedTouched=!!d.bedrooms; syncBedrooms();
   $("#checkin").value = d.checkin||"";
   $("#checkout").value= d.checkout||"";
   syncNights();
@@ -1076,7 +1117,7 @@ function syncNights(){
 function syncGuestCharges(){
   const guests = parseInt($("#guests").value) || 0;
   const max = parseInt(settings.maxGuests) || 0;
-  const extra = max > 0 ? Math.max(0, guests - max) : 0;
+  const extra = (!tariffActive() && max > 0) ? Math.max(0, guests - max) : 0;
   const nights = nightsBetween($("#checkin").value, $("#checkout").value) || 1;
   const qty = extra * nights;
   // Matches by description alone, not description+_autoLocked — a staff
@@ -1106,7 +1147,8 @@ function newDoc(){
   editingKey=null; curHold=null; if($("#holdNote")) $("#holdNote").hidden=true; syncPdfBtn(); syncWalletBtn(); syncPortalBtn(); syncSendQuoteBtn();
   curNo=nextNo(docType); curDateISO=todayISO();
   $("#no").value=curNo; $("#date").value=curDateISO;
-  ["guest","email","phone","guests","ref","checkin","checkout","nights","deposit","advance"].forEach(id=> $("#"+id).value="");
+  ["guest","email","phone","guests","bedrooms","ref","checkin","checkout","nights","deposit","advance"].forEach(id=> $("#"+id).value="");
+  legacyGuestPricing=false; bedTouched=false; $("#bedHint").textContent="";
   syncPhoneValidity();
   syncCheckoutMin();
   $("#discountInp").value=""; $("#settleInp").value="";
@@ -1114,7 +1156,7 @@ function newDoc(){
   $("#channel").value=defaultChannel();
   modeTouched=false; curPayments=[]; $("#moreBox").open=false;
   $("#returnHint").hidden=true; $("#payRow").hidden=true; $("#btnPay").hidden=false; $("#agreedInp").value="";
-  items=[{desc:"Villa Rental Charges",qty:"1",rate:rateFor("Villa Rental Charges"),_villaRow:true,_rateAuto:true}];
+  items=[{desc:"Villa Rental Charges",qty:"1",rate:tariffRows().length?"":rateFor("Villa Rental Charges"),_villaRow:true,_rateAuto:true}];
   if(docType==="invoice"){ populateLoadQuoteSel(); $("#loadQuoteRow").style.display=""; }
   renderItems(); render();
 }
@@ -1138,10 +1180,11 @@ function renderItems(){
     // the usual catalog-minimum warning unchanged.
     const guestsNow = parseInt($("#guests").value) || 0;
     const maxGNow = parseInt(settings.maxGuests) || 0;
-    const noFloor = it._villaRow && maxGNow>0 && guestsNow>0 && guestsNow < maxGNow;
+    const byTariff = it._villaRow && tariffActive();
+    const noFloor = it._villaRow && (byTariff || (maxGNow>0 && guestsNow>0 && guestsNow < maxGNow));
     const minRate = noFloor ? "" : rateFor(it.desc);
     const rateWarn = minRate!=="" && parseFloat(it.rate||0) < parseFloat(minRate) && it.rate!=="";
-    const rateTitle = minRate!=="" ? `Min catalog price: ₹${inr(minRate)}` : (noFloor ? `Reduced rate allowed — fewer than ${maxGNow} guests` : "");
+    const rateTitle = minRate!=="" ? `Min catalog price: ₹${inr(minRate)}` : (byTariff ? "Priced by guest count (Settings → Tariffs)" : noFloor ? `Reduced rate allowed — fewer than ${maxGNow} guests` : "");
     row.innerHTML=`
       <div class="li-desc-wrap">
         ${isAutoRow
@@ -1261,6 +1304,8 @@ function render(){
   $("#pEmail").textContent  = $("#email").value || "—";
   $("#pPhone").textContent  = $("#phone").value || "—";
   $("#pGuests").textContent = $("#guests").value || "—";
+  $("#pBeds").textContent = $("#bedrooms").value || "";
+  $("#pBedRow").hidden = !$("#bedrooms").value;
 
   $("#pNo").textContent   = curNo;
   $("#pDate").textContent = fmtDate(curDateISO);
@@ -1361,7 +1406,7 @@ function collect(){
   return {
     ...(existing||{}),
     type: docType, no: curNo, date: curDateISO,
-    guest:$("#guest").value, email:$("#email").value, phone:$("#phone").value, guests:$("#guests").value,
+    guest:$("#guest").value, email:$("#email").value, phone:$("#phone").value, guests:$("#guests").value, bedrooms:$("#bedrooms").value,
     ref:$("#ref").value, checkin:$("#checkin").value, checkout:$("#checkout").value, mode:$("#mode").value || autoMode(existing),
     ...(curPayments.length && { payments: curPayments.slice() }),
     channel:$("#channel").value,
@@ -1436,6 +1481,8 @@ function loadDoc(no){
   curNo=d.no; curDateISO=d.date||todayISO();
   $("#no").value=curNo; $("#date").value=curDateISO;
   $("#guest").value=d.guest||""; $("#email").value=d.email||""; $("#phone").value=d.phone||""; $("#guests").value=d.guests||"";
+  legacyGuestPricing = (d.items||[]).some(it=>/additional.*guest/i.test(it.desc||""));
+  $("#bedrooms").value=d.bedrooms||""; bedTouched=!!d.bedrooms; syncBedrooms();
   syncPhoneValidity(); // flags an old record's phone if it predates this format check — doesn't block loading it
   $("#ref").value=d.ref||""; $("#checkin").value=d.checkin||""; $("#checkout").value=d.checkout||""; $("#mode").value=d.mode||autoMode(d);
   modeTouched=!!d.mode; curPayments=Array.isArray(d.payments)?d.payments.slice():[];
@@ -1477,7 +1524,7 @@ function fillReturning(){
   const filled = [];
   if(!$("#guest").value.trim() && d.guest){ $("#guest").value = d.guest; filled.push("name"); }
   if(!$("#email").value.trim() && d.email){ $("#email").value = d.email; filled.push("email"); }
-  if(!$("#guests").value && d.guests){ $("#guests").value = d.guests; filled.push("guests"); syncGuestCharges(); }
+  if(!$("#guests").value && d.guests){ $("#guests").value = d.guests; filled.push("guests"); syncBedrooms(); autoPriceVilla(); syncGuestCharges(); }
   hint.textContent = "Returning guest — last booking " + d.no + (d.checkin ? " (" + fmtDate(d.checkin) + ")" : "") + (filled.length ? ". Filled in their " + filled.join(", ") + "." : ".");
   hint.hidden = false;
   render();

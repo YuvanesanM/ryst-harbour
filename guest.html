@@ -959,6 +959,7 @@ function renderHome(){
           <div class="bc-cell"><span class="bc-label">Check-in</span><span class="bc-value">${fmtDateShort(b.checkin)}</span></div>
           <div class="bc-cell"><span class="bc-label">Check-out</span><span class="bc-value">${fmtDateShort(b.checkout)}</span></div>
           ${b.guests ? `<div class="bc-cell"><span class="bc-label">Guests</span><span class="bc-value">${esc(String(b.guests))}</span></div>` : ''}
+          ${b.bedrooms ? `<div class="bc-cell"><span class="bc-label">Bedrooms</span><span class="bc-value">${esc(String(b.bedrooms))}</span></div>` : ''}
         </div>
         <div class="bc-pills">
           <button type="button" class="bc-id pdf-link" id="homePdfBtn">🔖 ${esc(b.no)} · ${b.gstInvoice && (b.type||'invoice')!=='quote' ? 'Tax invoice' : 'View PDF'} ↓</button>
@@ -1045,6 +1046,7 @@ function renderQuoteReview(){
         <div class="bc-cell"><span class="bc-label">Check-in</span><span class="bc-value">${fmtDateShort(b.checkin)}</span></div>
         <div class="bc-cell"><span class="bc-label">Check-out</span><span class="bc-value">${fmtDateShort(b.checkout)}</span></div>
         ${b.guests ? `<div class="bc-cell"><span class="bc-label">Guests</span><span class="bc-value">${esc(String(b.guests))}</span></div>` : ''}
+          ${b.bedrooms ? `<div class="bc-cell"><span class="bc-label">Bedrooms</span><span class="bc-value">${esc(String(b.bedrooms))}</span></div>` : ''}
       </div>
       <div class="bc-pills"><button type="button" class="bc-id pdf-link" id="qrPdfBtn">🔖 ${esc(b.no)} · ${b.gstInvoice && (b.type||'invoice')!=='quote' ? 'Tax invoice' : 'View PDF'} ↓</button></div>
     </div>`;
@@ -1495,6 +1497,7 @@ function viewQuotePdf(b){
           <div class="kv"><span>Email ID</span><b>${esc(b.email||'—')}</b></div>
           <div class="kv"><span>Phone</span><b>${esc(b.phone||'—')}</b></div>
           <div class="kv"><span>No. of Guests</span><b>${esc(b.guests ? String(b.guests) : '—')}</b></div>
+          ${b.bedrooms ? `<div class="kv"><span>Bedrooms</span><b>${esc(String(b.bedrooms))}</b></div>` : ''}
           ${gi && gi.buyer.gstin ? `<div class="kv"><span>GSTIN</span><b>${esc(gi.buyer.gstin)}</b></div>` : ''}
           ${gi && gi.buyer.address ? `<div class="kv"><span>Address</span><b>${esc(gi.buyer.address)}</b></div>` : ''}
         </div>

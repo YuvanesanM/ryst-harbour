@@ -338,7 +338,7 @@ function render(){
   $('#empty').style.display = visible.length ? 'none' : 'block';
   list.innerHTML = visible.map(s => {
     const nightsStr = s.nights!=null ? (s.nights+' night'+(s.nights===1?'':'s')) : '';
-    const guestsStr = s.guests ? ' · '+esc(s.guests)+' guest'+(String(s.guests)==='1'?'':'s') : '';
+    const guestsStr = (s.guests ? ' · '+esc(s.guests)+' guest'+(String(s.guests)==='1'?'':'s') : '') + (s.bedrooms ? ' · '+esc(s.bedrooms)+' bedroom'+(String(s.bedrooms)==='1'?'':'s') : '');
     const checkinBlock = s.checkedIn
       ? `<div class="g-checkin done">✓ Checked in${s.arrivalTime ? ' · arrived '+esc(s.arrivalTime) : ''}${s.vehicleNumber ? ' · '+esc(s.vehicleNumber) : ''}${s.checkinGuestsCount!=null ? ' · '+s.checkinGuestsCount+' guest'+(s.checkinGuestsCount===1?'':'s')+' on arrival' : ''}${s.checkinNote ? '<div class="note">"'+esc(s.checkinNote)+'"</div>' : ''}</div>`
       : `<div class="g-checkin">Not checked in yet</div>`;
