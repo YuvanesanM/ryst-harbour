@@ -108,6 +108,16 @@
   .cal-cell.unavailable{background:var(--danger-soft)}
   .daynum{font-size:12px;font-weight:600;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
   .cal-pill{font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+  /* The night's price from the rate card, on upcoming free dates: weekday, Fri–Sun, peak (holiday) */
+  .cal-rate{margin-top:auto;align-self:flex-end;font-size:10.5px;font-weight:650;line-height:1;padding:3px 6px;border-radius:6px;font-variant-numeric:tabular-nums;white-space:nowrap;background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+  .cal-rate.t-weekend{background:var(--qt-soft);color:var(--qt);border-color:transparent}
+  .cal-rate.t-peak{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+  .rate-key{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted);margin:0 0 10px;padding:0 16px}
+  .rate-key .cal-rate{margin:0;font-size:11.5px;padding:4px 8px}
+  .rate-key small{color:var(--muted2)}
+  .day-rate{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:0 0 10px}
+  .day-acts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+  .day-acts .btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none}
   .cal-pill.inv{background:var(--inv)}
   .cal-pill.qt{background:var(--qt)}
   .cal-pill.block{background:var(--block)}
@@ -232,6 +242,7 @@
     .cal-legend{flex-basis:100%}
     .cal-cell{min-height:64px;padding:4px}
     .cal-pill{display:none}
+    .cal-rate{align-self:center;font-size:9.5px;padding:2px 4px;margin-bottom:8px}
     .cal-cell.has-booking::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--inv)}
     .cal-cell.has-quote-only::after{background:var(--qt)}
     .cal-cell.has-block-only::after{background:var(--block)}
@@ -303,6 +314,7 @@
           <span><i class="i-conf"></i>Overlap</span>
         </div>
       </div>
+      <div class="rate-key" id="rateKey" hidden></div>
       <div class="cal-grid" id="calDow"></div>
       <div class="cal-grid" id="calGrid"></div>
       <div class="blk-list" id="blkList" hidden></div>
@@ -676,6 +688,7 @@ async function load(){
     setStays(data);
     render();
     loader.classList.add('hide');
+    loadRates();
     syncOta(true); // best-effort, silent — keeps OTA blocks fresh without an extra click
   }catch(e){
     $('#loaderSpin').style.display = 'none';
@@ -1276,6 +1289,44 @@ function renderStats(){
 
 /* ---------- CALENDAR ---------- */
 const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+/* ---------- RATE CARD ----------
+   The villa's nightly price from Settings → Stay: weekday base, Fri–Sun
+   nights +weekend %, holidays (peak) +holiday % — the same rule the booking
+   website and the quote form use (server.js nightlyVillaRate). */
+let RATES = null;
+async function loadRates(){
+  try{
+    const r = await fetch(PROXY_URL+'/stay-settings', { headers:{'X-Token':TOKEN}, cache:'no-store' });
+    if(!r.ok) return;
+    const st = await r.json();
+    const v = (st.rates||[]).find(x=>x && x.desc==='Villa Rental Charges');
+    const base = v ? parseFloat(v.rate) : 0;
+    if(!(base > 0)) return;
+    const hol = {};
+    (Array.isArray(st.holidays) ? st.holidays : []).forEach(h=>{ const d = h && (h.date || h); if(d) hol[d] = (h && h.name) || ''; });
+    const r2 = x => Math.round(x*100)/100;
+    RATES = { base, weekend: r2(base*(1+(parseFloat(st.weekendHikePercent)||0)/100)), peak: r2(base*(1+(parseFloat(st.holidayHikePercent)||0)/100)), hol };
+    render();
+  }catch(e){ /* prices are a nice-to-have on the calendar */ }
+}
+function dayRate(iso){
+  if(!RATES) return null;
+  if(Object.prototype.hasOwnProperty.call(RATES.hol, iso)) return { tier:'peak', label:'Peak', rate:RATES.peak, name:RATES.hol[iso] };
+  const dow = new Date(iso+'T00:00:00').getDay();
+  if(dow===5 || dow===6 || dow===0) return { tier:'weekend', label:'Weekend', rate:RATES.weekend, name:'' };
+  return { tier:'weekday', label:'Weekday', rate:RATES.base, name:'' };
+}
+const kRate = n => '₹' + (n >= 1000 ? (Math.round(n/100)/10).toString().replace(/\.0$/,'') + 'k' : Math.round(n));
+function renderRateKey(y, m){
+  const box = $('#rateKey'); if(!box) return;
+  if(!RATES){ box.hidden = true; return; }
+  const from = dateOnly(new Date(y,m,1)), to = dateOnly(new Date(y,m+1,1));
+  const peaks = Object.keys(RATES.hol).filter(d=>d>=from && d<to).sort().map(d=>new Date(d+'T00:00:00').getDate() + (RATES.hol[d] ? ' ' + RATES.hol[d] : ''));
+  box.innerHTML = `<span class="cal-rate t-weekday">Weekday ${money(RATES.base)}</span><span class="cal-rate t-weekend">Fri–Sun ${money(RATES.weekend)}</span><span class="cal-rate t-peak">Peak ${money(RATES.peak)}</span>`
+    + (peaks.length ? `<small>Peak this month: ${esc(peaks.join(', '))}</small>` : '') + '<small>per night, before extra guests</small>';
+  box.hidden = false;
+}
+
 function renderCalendarDow(){
   $('#calDow').innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
 }
@@ -1326,6 +1377,9 @@ function renderCalendar(){
       return `<div class="cal-pill ${pillClass(b.type)}"${b.type==='block' ? ` style="background:${otaBlockColor(b.guest)}"` : ''}>${esc(b.type==='block' ? (b.guest||'Blocked') : (b.guest||b.no||''))}</div>`;
     }).join('');
     const more = c.dayBookings.length>2 ? `<div class="cal-more">+${c.dayBookings.length-2} more</div>` : '';
+    // Upcoming nights still open (nothing confirmed or blocked): show their price.
+    const dr = c.iso >= today && !hasConfirmed && !hasBlk ? dayRate(c.iso) : null;
+    const rateTag = dr ? `<div class="cal-rate t-${dr.tier}" title="${esc(dr.label + (dr.name ? ' — ' + dr.name : '') + ': ' + money(dr.rate) + ' a night')}">${kRate(dr.rate)}</div>` : '';
     // Left accent bar in that day's specific OTA color (same otaBlockColor()
     // the pill already uses) — first block of the day sets it, since a
     // day essentially never has two different-platform blocks at once.
@@ -1333,12 +1387,13 @@ function renderCalendar(){
     const style = hasBlk ? ` style="border-left-color:${isClosedOnly(firstBlk) ? 'var(--block)' : otaBlockColor(firstBlk.guest)}"` : '';
     return `<div class="${cls.join(' ')}" data-iso="${c.iso}"${style}>
       <div class="daynum">${c.date.getDate()}</div>
-      ${shown}${more}
+      ${shown}${more}${rateTag}
     </div>`;
   }).join('');
 
   $$('#calGrid .cal-cell').forEach(el=> el.addEventListener('click', ()=> openDay(el.dataset.iso)));
   renderBlockList(filtered, y, m);
+  renderRateKey(y, m);
 }
 // Every block touching the month on show, with its reason — the only place
 // phones (where the grid collapses to dots) can read why a date is closed.
@@ -1368,7 +1423,13 @@ function openDay(iso){
   const dayBookings = filtered.filter(b=>occupiesDate(b,iso));
   $('#dayTitle').textContent = new Date(iso+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
   $('#daySub').textContent = dayBookings.length>1 ? `${dayBookings.length} overlapping bookings` : (dayBookings.length ? '1 booking' : 'No bookings');
-  $('#dayBody').innerHTML = !dayBookings.length ? '<div class="empty">Nothing booked this day.</div>'
+  // An upcoming night: its price, and — while it's still open — quote or block it in one tap.
+  const upcoming = iso >= todayISO();
+  const taken = dayBookings.some(b=> b.type==='block' || !isNonBlockingStay(b));
+  const dr = upcoming ? dayRate(iso) : null, next = addDays(iso, 1);
+  const quick = (dr ? `<div class="day-rate"><span class="cal-rate t-${dr.tier}" style="margin:0">${esc(dr.label)}</span><b>${money(dr.rate)}</b> a night${dr.name ? ' · ' + esc(dr.name) : ''}</div>` : '')
+    + (upcoming && !taken ? `<div class="day-acts"><a class="btn primary" href="stay.html?new=quote&checkin=${iso}&checkout=${next}">＋ Create quote</a><button type="button" class="btn" data-blockday="${iso}">🚫 Block this date</button></div>` : '');
+  $('#dayBody').innerHTML = quick + (!dayBookings.length ? '<div class="empty">Nothing booked this day.</div>'
     : dayBookings.map(b=>{
         if(b.type==='block'){
           return `<div class="ag-item">
@@ -1425,7 +1486,7 @@ function openDay(iso){
           ${b.otaHoldMoved ? `<div class="ag-dates" style="color:var(--warn);font-weight:600">⚠ ${esc(b.channel||'The OTA')} now shows ${fmtDate(b.otaHoldMoved.checkin)} → ${fmtDate(b.otaHoldMoved.checkout)} for this booking — update the dates if it moved.</div>` : ''}
           ${checkinLine}${extra}${delBtn}
         </div>`;
-      }).join('');
+      }).join(''));
   $('#dayBody').querySelectorAll('[data-unblock]').forEach(btn=>
     btn.addEventListener('click', ()=> removeBlock(btn.dataset.unblock, iso)));
   $('#dayBody').querySelectorAll('[data-notbooking]').forEach(btn=>
@@ -1434,6 +1495,8 @@ function openDay(iso){
     btn.addEventListener('click', ()=> markNotBooking(btn.dataset.isbooking, false, iso)));
   $('#dayBody').querySelectorAll('[data-delstay]').forEach(btn=>
     btn.addEventListener('click', ()=> deleteStayEntry(btn.dataset.delstay, iso)));
+  $('#dayBody').querySelectorAll('[data-blockday]').forEach(btn=>
+    btn.addEventListener('click', ()=>{ $('#dayOverlay').classList.remove('show'); openBlockModal(btn.dataset.blockday); }));
   $('#dayOverlay').classList.add('show');
 }
 $('#dayClose').addEventListener('click', ()=> $('#dayOverlay').classList.remove('show'));
@@ -1551,9 +1614,10 @@ function syncBkEndMin(){
   end.min = $('#bkStart').value || '';
   if(end.min && end.value && end.value < end.min) end.value = end.min;
 }
-function openBlockModal(){
-  $('#bkStart').value = todayISO();
-  $('#bkEnd').value = todayISO();
+function openBlockModal(day){
+  const d = typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : todayISO();
+  $('#bkStart').value = d;
+  $('#bkEnd').value = d;
   syncBkEndMin();
   $('#bkReason').value = '';
   $('#bkErr').textContent = '';
@@ -1563,7 +1627,7 @@ function openBlockModal(){
 }
 $('#bkStart').addEventListener('input', syncBkEndMin);
 function closeBlockModal(){ $('#blockOverlay').classList.remove('show'); }
-$('#btnBlock').addEventListener('click', openBlockModal);
+$('#btnBlock').addEventListener('click', ()=> openBlockModal());
 $('#bkCancel').addEventListener('click', closeBlockModal);
 $('#blockOverlay').addEventListener('click', e=>{ if(e.target===$('#blockOverlay')) closeBlockModal(); });
 $('#bkChips').querySelectorAll('.reason-chip').forEach(chip=>{

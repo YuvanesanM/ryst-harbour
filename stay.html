@@ -869,6 +869,9 @@ async function initApp(){
     else {
       const qp = new URLSearchParams(location.search), nw = qp.get('new');
       if(nw === 'invoice' || nw === 'quote') setType(nw);
+      // Calendar "Create quote" on a date: stay.html?new=quote&checkin=<date>&checkout=<date>
+      const ci = qp.get('checkin'), co = qp.get('checkout'), isoRe = /^\d{4}-\d{2}-\d{2}$/;
+      if(isoRe.test(ci||'')){ $("#checkin").value = ci; if(isoRe.test(co||'') && co > ci) $("#checkout").value = co; syncNights(); }
       // Guests page "+ New quote" for a guest: stay.html?new=quote&phone=<their phone>
       const ph = qp.get('phone');
       if(ph){ $("#phone").value = normalizePhoneStrict(ph).value || ph; syncPhoneValidity(); fillReturning(); render(); }
