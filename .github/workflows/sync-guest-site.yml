@@ -1,0 +1,52 @@
+# Publishes guest-page changes to stay.ryst.in straight away. The guest pages
+# (check-in, guest portal, feedback, WhatsApp hand-off and their scripts) are
+# edited here; YuvanesanM/RYST-109A copies them in with its own "Sync guest
+# pages from RYST Harbour" workflow, which otherwise runs only hourly. This
+# starts that sync whenever one of those files changes on main.
+#
+# Needs one repository secret, GUEST_SITE_SYNC_TOKEN: a fine-grained GitHub
+# token with access to YuvanesanM/RYST-109A only, permission "Actions: Read
+# and write". Without it this job only prints a warning — the hourly sync
+# still runs.
+name: Sync guest pages to stay.ryst.in
+on:
+  push:
+    branches: [main]
+    paths:
+      - checkin.html
+      - guest.html
+      - feedback.html
+      - wa.html
+      - villa.js
+      - property.js
+      - i18n.js
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sync-guest-site
+  cancel-in-progress: true
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start the stay.ryst.in sync
+        env:
+          TOKEN: ${{ secrets.GUEST_SITE_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::GUEST_SITE_SYNC_TOKEN is not set — stay.ryst.in will pick this up on its hourly sync instead."
+            exit 0
+          fi
+          # A Pages deploy of this repository isn't needed first: the sync
+          # clones this repository's main branch, which already has the push.
+          code=$(curl -sS -o /tmp/resp.txt -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/YuvanesanM/RYST-109A/actions/workflows/sync-guest-pages.yml/dispatches \
+            -d '{"ref":"main"}')
+          if [ "$code" != "204" ]; then
+            echo "::error::Could not start the sync (HTTP $code): $(cat /tmp/resp.txt)"
+            exit 1
+          fi
+          echo "Sync started — stay.ryst.in updates in about a minute."
