@@ -73,11 +73,12 @@
   /* ── HOME: the dashboard's own styles are in /assets/app/dashboard.css ── */
   .install-app-btn{margin-top:14px;background:#0e2420;color:#f6f1e6;border:0;padding:11px 22px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.3px;display:inline-flex;align-items:center;gap:8px}
   .install-app-btn[hidden]{display:none}
+  .pop__item.install-app-btn{margin:0;background:none;color:inherit;padding:0 10px;border-radius:var(--r-sm,8px);font-size:inherit;font-weight:500;letter-spacing:0}
 </style>
-<link rel="stylesheet" href="/assets/app/shell.css?v=c4143046">
-<link rel="stylesheet" href="/assets/app/dashboard.css?v=f977a799">
-<script src="/assets/app/shell.js?v=2961ed25"></script>
-<script src="/assets/app/dashboard.js?v=74dec95b" defer></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=2f2cdf72">
+<link rel="stylesheet" href="/assets/app/dashboard.css?v=2c4bf431">
+<script src="/assets/app/shell.js?v=9eba99c2"></script>
+<script src="/assets/app/dashboard.js?v=9bd6ec9e" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -177,17 +178,19 @@
           </div>
         </div>
         <div class="pop-wrap">
-          <button type="button" class="avatar" data-pop="profileMenu" aria-haspopup="true" aria-expanded="false" aria-label="Your account"><span id="dInitial">R</span></button>
-          <div class="pop pop--right" id="profileMenu" hidden>
-            <div class="pop__head"><b id="dUserName">Signed in</b><span id="dUserEmail"></span><span class="role-tag" id="dUserRole"></span></div>
+          <button type="button" class="avatar" data-pop="profileMenu" aria-haspopup="true" aria-expanded="false" aria-label="Your account"><span id="dInitial" data-rh-av>R</span></button>
+          <div class="pop pop--right am" id="profileMenu" hidden>
+            <div class="am__head" data-no-i18n><span class="am__av" data-rh-av></span><div class="am__who"><b id="dUserName" data-rh-name>Signed in</b><span id="dUserEmail"></span><span class="am__meta"><span class="htb__role" id="dUserRole"></span><span data-hsb-villa2></span></span></div></div>
+            <button type="button" class="am__edit" data-am-edit><svg class="i" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span>Edit profile</span></button>
+            <div class="am__body"><p class="am__lbl">Appearance</p><div data-theme-switch></div></div>
             <div class="pop__body pop__stack">
-              <button type="button" class="pop__item" data-lang-toggle>தமிழ்</button>
-              <button type="button" class="pop__item install-app-btn" hidden>📲 Install RYST Harbour app</button>
-              <button type="button" class="pop__item" id="notifBtn" data-pop="notifSheet" hidden>🔔 Notifications</button>
-              <button type="button" class="pop__item" id="widgetBtn" data-pop="widgetSheet" hidden>▦ Phone widgets</button>
-              <a class="pop__item" href="/privacy.html">🔒 Privacy &amp; terms</a>
-              <button type="button" class="pop__item" id="delBtn" data-pop="deleteSheet" hidden>🗑 Delete account</button>
-              <button id="logoutBtn" class="pop__item pop__item--danger" type="button">⎋ Log out</button>
+              <button type="button" class="pop__item" data-am-lang><svg class="i" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 6 8M11 5c0 4-3 7-7 8M13 21l4-9 4 9M14.5 18h5"/></svg><span>Language</span><span class="am__val" id="dLangVal" data-no-i18n>English</span></button>
+              <button type="button" class="pop__item install-app-btn" hidden><svg class="i" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Install RYST Harbour app</span></button>
+              <button type="button" class="pop__item" id="notifBtn" data-pop="notifSheet" hidden><svg class="i" aria-hidden="true"><use href="#d-bell"/></svg><span>Notifications</span></button>
+              <button type="button" class="pop__item" id="widgetBtn" data-pop="widgetSheet" hidden><svg class="i" aria-hidden="true" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg><span>Phone widgets</span></button>
+              <a class="pop__item" href="/privacy.html"><svg class="i" aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Privacy &amp; terms</span></a>
+              <button type="button" class="pop__item" id="delBtn" data-pop="deleteSheet" hidden><svg class="i" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Delete account</span></button>
+              <button id="logoutBtn" class="pop__item pop__item--danger" type="button"><svg class="i" aria-hidden="true"><use href="#d-out"/></svg><span>Log out</span></button>
             </div>
           </div>
         </div>
@@ -624,6 +627,8 @@ function logout(){
   localStorage.removeItem('ryst_user_admin');
   localStorage.removeItem('ryst_user_modules');
   localStorage.removeItem('ryst_user_name');
+  localStorage.removeItem('ryst_user_photo');
+  localStorage.removeItem('ryst_user_phone');
   if(window.rystShell) window.rystShell.unmount();
   document.getElementById('homeView').setAttribute('hidden','');
   document.getElementById('loginView').removeAttribute('hidden');

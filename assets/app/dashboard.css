@@ -258,14 +258,15 @@
 .wsheet [hidden]{display:none!important}
 
 /* Dark mode (see shell.css) */
-@media screen and (prefers-color-scheme: dark){
-  .app{
+/* Dark theme: on when the phone is dark (Auto) or chosen in the account
+   menu; shell.js sets html.theme-dark before the page paints. */
+html.theme-dark .app{
     --ivory:#111715; --paper:#161E1B; --white:#1B2421; --ink:#ECEFEC; --text-2:#C8D0CC; --muted:#9AA6A1;
     --line:#2B3633; --line-2:#232D2A; --teal:#8BBDB4; --teal-ink:#9FD0C6; --teal-soft:#1D312D; --sand:#4A4234; --sand-soft:#2A2620;
     --good:#7FCB9F; --good-soft:#1A3326; --warn:#E8B865; --warn-soft:#382B15; --bad:#F08C70; --bad-soft:#3A2018;
     --shadow-pop:0 2px 6px rgba(0,0,0,.4),0 16px 40px rgba(0,0,0,.5);
   }
-  .tb{background:rgba(17,23,21,.92)}
-  .dot{background:#D9694C}
-  .avatar{background:#3E615D;color:#ECEFEC}
-}
+html.theme-dark .tb{background:rgba(17,23,21,.92)}
+html.theme-dark .dot{background:#D9694C}
+html.theme-dark .avatar{background:#3E615D;color:#ECEFEC}
+

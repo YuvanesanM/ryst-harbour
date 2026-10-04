@@ -272,7 +272,8 @@
 
 
   // ── Channels: is each OTA calendar still syncing? ──────────────────────
-  var STALE_H = 9;   // calendars are checked every 3 hours — three missed rounds is worth a flag
+  // Three missed rounds is worth a flag (the server says how often it checks: every 10 minutes, or 3 hours on older servers).
+  function staleH() { var m = (D.ota && D.ota.everyMinutes) || 180; return Math.max(1, 3 * m / 60); }
   function hoursSince(iso) { var t0 = iso ? Date.parse(iso) : NaN; return isNaN(t0) ? null : (Date.now() - t0) / 3600e3; }
   function agoIso(iso) { var t0 = iso ? Date.parse(iso) : NaN; return isNaN(t0) ? '' : ago(t0); }
   // One verdict per channel: lvl is '' (fine), 'warn' or 'bad'.
@@ -282,7 +283,7 @@
     if (c.kind === 'format') return { lvl: 'bad', label: 'Can’t read', why: c.error || 'The link does not return a calendar.' };
     if (c.kind === 'held') return { lvl: 'warn', label: 'Empty — rechecking', why: c.error || 'The calendar came back empty; rechecking before clearing holds.' };
     if (c.kind === 'unknown' || !c.lastRunAt) return { lvl: '', label: 'Waiting for first check', why: '' };
-    if (h != null && h > STALE_H) return { lvl: 'warn', label: 'Not checked for ' + Math.round(h) + 'h', why: 'The automatic check has not run recently.' };
+    if (h != null && h > staleH()) return { lvl: 'warn', label: 'Not checked for ' + Math.round(h) + 'h', why: 'The automatic check has not run recently.' };
     return { lvl: 'good', label: 'In sync', why: '' };
   }
   function channelProblems() {
@@ -466,7 +467,7 @@
     // More (phones): every sidebar destination this person can open.
     if (window.rystShell) window.rystShell.refresh();
     var more = $$('.hsb__link').filter(function (a) { return !a.hidden && a.style.display !== 'none' && a.getAttribute('aria-current') !== 'page'; });
-    setHTML('moreList', '<div class="pop__stack">' + more.map(function (a) { return '<a class="pop__item" href="' + esc(a.getAttribute('href')) + '">' + a.innerHTML + '</a>'; }).join('') + '</div>');
+    setHTML('moreList', (window.rystMoreTop ? window.rystMoreTop() : '') + '<div class="pop__stack">' + more.map(function (a) { return '<a class="pop__item" href="' + esc(a.getAttribute('href')) + '">' + a.innerHTML + '</a>'; }).join('') + '</div>');
     var bnIssues = $('#bnIssues'), bnCal = $('#bnCal');
     if (bnIssues && bnCal) { var cal = can('bookings'); bnCal.hidden = !cal; bnIssues.hidden = cal || !can('checklist'); }
     var nb = $('.tb__new'), plus = $('.bn__plus');
@@ -659,7 +660,7 @@
         + '<div class="chan__s"><span class="pill' + pillCls + '">' + esc(t(st.label.indexOf('Not checked for') === 0 ? 'Not checked' : st.label)) + '</span>' + (st.why ? '<small>' + esc(st.why) + '</small>' : '') + '</div>'
         + '<div class="chan__b">' + upLine + (needs ? '<small>' + needs + '</small>' : '') + gone + '</div>'
         + '<div class="chan__r">' + read + '</div></div>';
-    }).join('') + '<p class="chan-note">' + esc(t('Calendars are checked every 3 hours.')) + '</p>';
+    }).join('') + '<p class="chan-note">' + esc(t(((D.ota && D.ota.everyMinutes) || 180) <= 10 ? 'Calendars are checked every 10 minutes.' : 'Calendars are checked every 3 hours.')) + '</p>';
   }
   var syncing = false;
   function checkNow() {
@@ -677,11 +678,14 @@
   function renderHeader() {
     var h = new Date().getHours(), name = ls('ryst_user_name') || '';
     var greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    setHTML('dGreet', '<span>' + esc(t(greet)) + '</span>' + (name ? '<span data-no-i18n>, ' + esc(name) + '</span>' : ''));
+    var first = String(name).trim().split(/\s+/)[0] || '';
+    setHTML('dGreet', '<span>' + esc(t(greet)) + '</span>' + (first ? '<span data-no-i18n>, ' + esc(first) + '</span>' : ''));
     var date = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
     var dd = $('#dDate'); if (dd) { dd.textContent = date; dd.setAttribute('data-no-i18n', ''); }
     var email = ls('ryst_user_email') || '';
-    $('#dInitial').textContent = (name || email || 'R').trim().charAt(0).toUpperCase();
+    if (window.rystAvatarInner) $$('[data-rh-av]').forEach(function (el) { el.innerHTML = window.rystAvatarInner(); });
+    else $('#dInitial').textContent = (name || email || 'R').trim().charAt(0).toUpperCase();
+    var lv = $('#dLangVal'); if (lv) lv.textContent = window.RYST_LANG === 'ta' ? 'தமிழ்' : 'English';
     $('#dUserName').textContent = name || email.split('@')[0] || 'Signed in';
     $('#dUserEmail').textContent = email;
     $('#dUserRole').textContent = t(ROLE.charAt(0).toUpperCase() + ROLE.slice(1));
@@ -704,6 +708,9 @@
     show($('#cToday'), can('bookings') || can('guestRegister'));
     show($('#cUp'), can('bookings') || can('guestRegister'));
   }
+
+  // A new name or photo from Edit profile: greeting, avatars and menus follow.
+  doc.addEventListener('rh-profile', function () { if (started) { renderHeader(); refreshNav(); } });
 
   var started = false;
   function start() {
