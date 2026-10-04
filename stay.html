@@ -802,6 +802,11 @@ let staysCache = [];              // loaded from proxy
 let editingKey = null;
 let curHold = null;                // the OTA calendar hold this booking is being captured from (stay.html?hold=<no>)
 let curNo = "", curDateISO = "";
+// The amount received and payment log as they were when this document was
+// opened — a guest paying online while it's open changes the saved record,
+// so saving adds this form's own change on top instead of writing back the
+// old figure (which would erase the online payment).
+let loadedAdv = 0, loadedPays = 0;
 let curFood = { foodDue: 0, orders: [] }; // the saved stay's unpaid food orders — collected with the balance
 let curPayments = [];              // payments recorded with "Record a payment" (a log; the advance holds the total)
 let modeTouched = false;           // payment mode picked by hand → stop setting it automatically
@@ -1093,6 +1098,7 @@ function loadFromQuote(qno){
   $("#discountInp").value = d.discount!=null ? String(d.discount) : "";
   items = d.items ? JSON.parse(JSON.stringify(d.items)) : [];
   curPayments = Array.isArray(d.payments) ? d.payments.slice() : [];
+  loadedAdv = parseFloat(d.advance)||0; loadedPays = curPayments.length;
   modeTouched = !!d.mode;
   markVillaRateAuto();
   syncGuestCharges(); renderItems(); render();
@@ -1165,7 +1171,7 @@ function newDoc(){
   $("#discountInp").value=""; $("#settleInp").value="";
   $("#mode").value="UPI"; // matches the <select>'s own default-selected option
   $("#channel").value=defaultChannel();
-  modeTouched=false; curPayments=[]; curFood={ foodDue:0, orders:[] }; $("#moreBox").open=false;
+  modeTouched=false; curPayments=[]; curFood={ foodDue:0, orders:[] }; loadedAdv=0; loadedPays=0; $("#moreBox").open=false;
   $("#returnHint").hidden=true; $("#payRow").hidden=true; $("#btnPay").hidden=false; $("#agreedInp").value="";
   items=[{desc:"Villa Rental Charges",qty:"1",rate:tariffRows().length?"":rateFor("Villa Rental Charges"),_villaRow:true,_rateAuto:true}];
   if(docType==="invoice"){ populateLoadQuoteSel(); $("#loadQuoteRow").style.display=""; }
@@ -1417,6 +1423,15 @@ function render(){
 // New quotes and invoices start as WhatsApp / Phone — most bookings come that
 // way; change it when one doesn't. The channel is required on every save.
 function defaultChannel(){ return 'WhatsApp / Phone'; }
+function syncedAdvance(existing){
+  const formAdv = parseFloat($("#advance").value)||0;
+  const savedAdv = existing ? (parseFloat(existing.advance)||0) : loadedAdv;
+  return savedAdv === loadedAdv ? formAdv : Math.max(0, savedAdv + (formAdv - loadedAdv));
+}
+function syncedPayments(existing){
+  const saved = existing && Array.isArray(existing.payments) ? existing.payments : [];
+  return saved.length === loadedPays ? curPayments.slice() : saved.concat(curPayments.slice(loadedPays));
+}
 function collect(){
   const existing = currentStay();
   return {
@@ -1424,12 +1439,12 @@ function collect(){
     type: docType, no: curNo, date: curDateISO,
     guest:$("#guest").value, email:$("#email").value, phone:$("#phone").value, guests:$("#guests").value, bedrooms:$("#bedrooms").value,
     ref:$("#ref").value, checkin:$("#checkin").value, checkout:$("#checkout").value, mode:$("#mode").value || autoMode(existing),
-    ...(curPayments.length && { payments: curPayments.slice() }),
+    ...(curPayments.length && { payments: syncedPayments(existing) }),
     channel:$("#channel").value,
     ...(()=>{ const st = otaChannel($("#channel").value) ? settlementNow() : null;
       return st == null ? { otaSettlement: undefined, otaCommission: undefined } : { otaSettlement: st, otaCommission: Math.max(0, grandNow() - st) }; })(),
     ...(curHold && !(existing&&existing.otaHold) && { otaHold: curHold.no, otaFeed: curHold.source || "" }),
-    deposit: parseFloat($("#deposit").value)||0, advance: parseFloat($("#advance").value)||0,
+    deposit: parseFloat($("#deposit").value)||0, advance: syncedAdvance(existing),
     discount: parseFloat($("#discountInp").value)||0,
     items: items.map(({desc,qty,rate,_villaRow,_autoLocked})=>({desc,qty,rate,...(_villaRow&&{_villaRow:true}),...(_autoLocked&&{_autoLocked:true})})),
     savedAt: Date.now()
@@ -1474,6 +1489,9 @@ async function saveDoc(){
   // the client can compute) comes back decorated, then the Wallet button
   // can actually be enabled.
   await fetchStaysFromProxy();
+  // What's saved now is the new starting point for this open document.
+  const savedNow = currentStay();
+  if(savedNow){ loadedAdv = parseFloat(savedNow.advance)||0; $("#advance").value = savedNow.advance ? String(savedNow.advance) : ""; curPayments = Array.isArray(savedNow.payments) ? savedNow.payments.slice() : curPayments; loadedPays = curPayments.length; }
   syncWalletBtn(); syncPortalBtn(); syncSendQuoteBtn(); render();
   toast((doc.type==="invoice"?"Invoice":"Quote")+" saved");
   return true;
@@ -1502,6 +1520,7 @@ function loadDoc(no){
   syncPhoneValidity(); // flags an old record's phone if it predates this format check — doesn't block loading it
   $("#ref").value=d.ref||""; $("#checkin").value=d.checkin||""; $("#checkout").value=d.checkout||""; $("#mode").value=d.mode||autoMode(d);
   modeTouched=!!d.mode; curPayments=Array.isArray(d.payments)?d.payments.slice():[];
+  loadedAdv=parseFloat(d.advance)||0; loadedPays=curPayments.length;
   $("#returnHint").hidden=true; $("#payRow").hidden=true; $("#btnPay").hidden=false;
   $("#channel").value=d.channel||"";
   $("#moreBox").open = otaChannel(d.channel||"");
