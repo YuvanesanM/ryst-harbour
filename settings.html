@@ -261,7 +261,7 @@
     <button class="rc-add" id="stayRcAdd">+ Add charge</button>
 
     <p class="gh-mini">Price by guest count</p>
-    <p class="tf-note">Weekday price for the whole villa at each headcount. A party is priced at the first row that seats them (5 guests on rows 4 and 6 → the 6 row), and the bedrooms show on the quote for the guest and caretaker. Weekend and holiday hikes below apply on top. While rows are set, the Villa Rental rate and Additional Guest charge above aren't used for new quotes.</p>
+    <p class="tf-note">Weekday price for the whole villa at each headcount. A party is priced at the first row that seats them (5 guests on rows 4 and 6 → the 6 row), and the bedrooms show on the quote for the guest and caretaker. Weekend and holiday hikes below apply on top. This replaces the Villa Rental and Additional Guest charges — quotes fill the villa line from it automatically.</p>
     <div class="rc-table-wrap">
       <table class="rc-table">
         <thead><tr>
@@ -278,7 +278,7 @@
 
     <p class="gh-mini">Guests &amp; advance</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
-      <label class="f"><span>Guests included in the villa rate</span><input class="t" id="stayMaxGuests" type="number" min="0" step="1" placeholder="4"></label>
+      <label class="f" id="stayMaxGuestsWrap"><span>Guests included in the villa rate</span><input class="t" id="stayMaxGuests" type="number" min="0" step="1" placeholder="4"></label>
       <label class="f"><span>Guest capacity (hard cap)</span><input class="t" id="stayGuestCapacity" type="number" min="0" step="1" placeholder="10"></label>
       <label class="f"><span>Online booking advance (%)</span><input class="t" id="stayAdvancePercent" type="number" min="1" max="100" step="1" placeholder="30"></label>
     </div>
@@ -742,6 +742,8 @@ let stay = JSON.parse(JSON.stringify(STAY_DEFAULTS));
 let stayRcDraft = [];
 let stayHolDraft = [];
 let stayTariffDraft = [];
+let tariffModeShown = null;
+const TARIFF_REPLACES = ["Villa Rental Charges","Additional Guest Charges"];
 let stayCouponDraft = [];
 let icalFeedsDraft = [];
 let icalExportKey = null; // set once /stay-settings returns it; never guessed client-side
@@ -863,7 +865,7 @@ async function renderOnboarding(d){
     try{ const r = await fetch(PROXY_URL+'/users',{headers:{'X-Token':proxyToken}}); const u = await r.json(); team = Array.isArray(u.users) ? u.users.length : null; }catch(e){}
     try{ const r = await fetch(PROXY_URL+'/villa/connections',{headers:{'X-Token':proxyToken}}); if(r.ok) conn = await r.json(); }catch(e){}
   }
-  const rates = Array.isArray(d && d.rates) && d.rates.some(r => Number(r.rate) > 0);
+  const rates = (Array.isArray(d && d.tariff) && d.tariff.some(t => Number(t.rate) > 0)) || (Array.isArray(d && d.rates) && d.rates.some(r => Number(r.rate) > 0));
   const steps = [
     { done: !!(p.address && p.whatsapp), text: 'Add your villa details — address, WhatsApp number, logo', tab: 'profile', anchor: 'propName' },
     { done: rates && !!(d && d.bank), text: 'Set your rates and bank details for quotes and invoices', tab: 'tariffs' },
@@ -1828,9 +1830,19 @@ document.getElementById('userSave').addEventListener('click', async ()=>{
 });
 
 /* ---------- RATE TABLE ---------- */
+// With a price-by-guest-count table, the villa price and the extra-guest
+// charge come from it — those two charges aren't shown or saved.
+function tariffHasRows(){ return stayTariffDraft.some(t=>(parseInt(t.guests)||0)>0 && (parseFloat(t.rate)||0)>0); }
+function syncTariffMode(){
+  const on=tariffHasRows();
+  const w=document.getElementById("stayMaxGuestsWrap"); if(w) w.style.display=on?"none":"";
+  if(on!==tariffModeShown){ tariffModeShown=on; renderStayRates(); }
+}
 function renderStayRates(){
   const body=document.getElementById("stayRcBody"); body.innerHTML="";
+  const hide=tariffHasRows();
   stayRcDraft.forEach((r,i)=>{
+    if(hide && TARIFF_REPLACES.includes((r.desc||"").trim())) return;
     const row=document.createElement("tr");
     row.innerHTML=`
       <td><input data-i="${i}" data-k="desc" placeholder="Charge description" value="${esc(r.desc)}" style="min-width:200px"></td>
@@ -1860,11 +1872,12 @@ function renderStayTariff(){
     body.appendChild(row);
   });
   body.querySelectorAll("input[data-i]").forEach(inp=>{
-    inp.addEventListener("input",e=>{ const i=+e.target.dataset.i,k=e.target.dataset.k; stayTariffDraft[i][k]=e.target.value; });
+    inp.addEventListener("input",e=>{ const i=+e.target.dataset.i,k=e.target.dataset.k; stayTariffDraft[i][k]=e.target.value; syncTariffMode(); });
   });
   body.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",e=>{
     stayTariffDraft.splice(+e.target.dataset.del,1); renderStayTariff();
   }));
+  syncTariffMode();
 }
 document.getElementById("stayTariffAdd").addEventListener("click",()=>{
   // Start the new row one guest above the last, same bedrooms — the usual next step.
@@ -1920,10 +1933,11 @@ async function saveStay(){
   if(!prop.name){ toast("Property name is required"); document.getElementById('prop_name').focus(); return; }
   stay.property = prop;
   btn.disabled=true; btn.textContent="Saving…";
+  const byTariff = tariffHasRows();
   stay.rates = stayRcDraft
-    .filter(r=>(r.desc||"").trim()!=="")
+    .filter(r=>(r.desc||"").trim()!=="" && !(byTariff && TARIFF_REPLACES.includes(r.desc.trim())))
     .map(r=>({desc:r.desc.trim(), rate:(r.rate===""||r.rate==null)?"":parseFloat(r.rate)}));
-  if(!stay.rates.length) stay.rates=STAY_DEFAULTS.rates.map(r=>({...r}));
+  if(!stay.rates.length && !byTariff) stay.rates=STAY_DEFAULTS.rates.map(r=>({...r}));
   stay.company=document.getElementById("stayCompany").value;
   stay.pan=(document.getElementById("stayPan").value||"").trim();
   stay.invPrefix=(document.getElementById("stayInvPrefix").value||"").trim()||STAY_DEFAULTS.invPrefix;
@@ -1932,7 +1946,7 @@ async function saveStay(){
   stay.maxGuests = mgVal!=="" ? parseInt(mgVal)||0 : STAY_DEFAULTS.maxGuests;
   const gcVal=document.getElementById("stayGuestCapacity").value;
   stay.guestCapacity = gcVal!=="" ? parseInt(gcVal)||0 : STAY_DEFAULTS.guestCapacity;
-  if(stay.maxGuests > 0 && stay.guestCapacity > 0 && stay.maxGuests > stay.guestCapacity){
+  if(!byTariff && stay.maxGuests > 0 && stay.guestCapacity > 0 && stay.maxGuests > stay.guestCapacity){
     toast("⚠️ Max included guests ("+stay.maxGuests+") exceeds guest capacity ("+stay.guestCapacity+") — additional charge line can never appear");
   }
   const apVal=document.getElementById("stayAdvancePercent").value;

@@ -696,6 +696,9 @@ async function fetchStaySettings(){
       if(!Array.isArray(settings.rates) || !settings.rates.length) settings.rates = DEFAULTS.rates.map(r=>({...r}));
       try{ localStorage.setItem(K_SET, JSON.stringify(settings)); }catch(e){}
       applyGuestCap();
+      // The page may have opened with an older cached copy — re-price a new,
+      // unsaved document from the settings just loaded.
+      if(!editingKey && typeof items !== "undefined" && items.length){ syncBedrooms(); autoPriceVilla(); syncGuestCharges(); render(); }
     }
   }catch(e){ console.warn('Could not load stay settings', e); }
 }
@@ -766,6 +769,7 @@ function autoPriceVilla(){
   const row = items.find(it=>it._villaRow); if(!row || row._rateAuto===false) return;
   const card = villaRateCard($("#checkin").value,$("#checkout").value);
   if(card) row.rate = card.rate;
+  else if(tariffActive()) row.rate = ""; // priced once guests and dates are in
 }
 // A saved document's villa row counts as "rate card" only if it still matches it.
 function markVillaRateAuto(){
@@ -1168,7 +1172,9 @@ function newDoc(){
 /* ---------- LINE ITEMS ---------- */
 function renderItems(){
   const body=$("#liBody"); body.innerHTML="";
-  const allSugg = (settings.rates||[]).map(r=>r.desc);
+  // The villa and extra-guest lines keep their names even when the rate card
+  // no longer lists them (a guest-count tariff replaces both).
+  const allSugg = [...new Set((settings.rates||[]).map(r=>r.desc).concat(items.map(it=>it.desc).filter(d=>d==="Villa Rental Charges"||d==="Additional Guest Charges")))];
   const autoDescs = new Set(items.filter(it=>it._villaRow||it._autoLocked).map(it=>it.desc));
   const manualSugg = allSugg.filter(s=> !autoDescs.has(s));
   items.forEach((it,i)=>{
