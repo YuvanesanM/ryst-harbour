@@ -664,6 +664,10 @@ function isOtaClosure(d){ return (d.type||'invoice')==='block' && !isManualBlock
 function isOtaHold(d){ return (d.type||'invoice')==='block' && !isManualBlock(d) && !isOtaClosure(d); }
 // Shown like a manual block: just closed dates.
 const isClosedOnly = b => isManualBlock(b) || isOtaClosure(b);
+// Holds the night: an invoice, a quote with an advance paid, or a calendar
+// hold/block. Unpaid quotes are only proposals — several can sit on one date
+// without it being an overlap; two of these on one night is.
+function holdsNight(d){ return (d.type||'invoice')==='block' || !isNonBlockingStay(d); }
 function isNonBlockingStay(d){
   if((d.type||'invoice')==='block') return true;
   if((d.type||'invoice')==='quote') return !(Number(d.advance)>0);
@@ -1377,7 +1381,7 @@ function renderCalendar(){
     // commitment, not just a proposal. Same rule isNonBlockingStay uses
     // elsewhere on this page, inverted.
     const hasConfirmed = c.dayBookings.some(b=>!isNonBlockingStay(b));
-    const conflict = c.dayBookings.length > 1;
+    const conflict = c.dayBookings.filter(holdsNight).length > 1;
     const cls = ['cal-cell'];
     if(!c.inMonth) cls.push('out');
     if(c.iso===today) cls.push('today');
@@ -1441,7 +1445,10 @@ function openDay(iso){
   const filtered = STAYS.filter(passFilter);
   const dayBookings = filtered.filter(b=>occupiesDate(b,iso));
   $('#dayTitle').textContent = new Date(iso+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  $('#daySub').textContent = dayBookings.length>1 ? `${dayBookings.length} overlapping bookings` : (dayBookings.length ? '1 booking' : 'No bookings');
+  const holding = dayBookings.filter(holdsNight).length, tentative = dayBookings.length - holding;
+  $('#daySub').textContent = !dayBookings.length ? 'No bookings'
+    : (holding > 1 ? `${holding} overlapping bookings` : holding ? '1 booking' : '')
+      + (tentative ? `${holding ? ' · ' : ''}${tentative} unpaid quote${tentative===1?'':'s'}` : '');
   // An upcoming night: its price, and — while it's still open — quote or block it in one tap.
   const upcoming = iso >= todayISO();
   const taken = dayBookings.some(b=> b.type==='block' || !isNonBlockingStay(b));
