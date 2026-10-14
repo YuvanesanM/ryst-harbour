@@ -83,7 +83,8 @@
 
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}
 .kpis[data-n="5"]{grid-template-columns:repeat(5,minmax(0,1fr))}
-.kpis[data-n="6"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpis[data-n="6"]{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:1359px){ .kpis[data-n="6"]{grid-template-columns:repeat(3,minmax(0,1fr))} } /* one row of six needs a wide laptop window */
 .kpis[data-n="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
 .kpis[data-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
 .kpis[data-n="1"]{grid-template-columns:minmax(0,1fr)}
