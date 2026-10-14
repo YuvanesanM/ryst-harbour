@@ -239,7 +239,7 @@
     if (!g || !g.ok) return;
     var wk = g.weekChange || 0;
     setKpi('kInsta', fmtCount(g.followers), '<span class="wk' + (wk > 0 ? ' up' : wk < 0 ? ' dn' : '') + '">' + (wk > 0 ? '+' : '') + wk + '</span> ' + esc(t('this week')));
-    trend($('.spark', el), (g.history || []).map(function (p) { return { date: p.date, v: p.followers, tip: fmtCount(p.followers) + ' ' + t('followers') }; }), t('Followers'));
+    trend($('.spark', el), (g.history || []).map(function (p) { return { date: p.date, v: p.followers, tip: (p.est ? '≈ ' : '') + fmtCount(p.followers) + ' ' + t('followers') + (p.est ? ' (' + t('estimated') + ')' : '') }; }), t('Followers'));
   }
   function fmtCount(n) { return Number(n || 0).toLocaleString('en-IN'); }
   // One-series trend line with a light area under it; hover or tap a point
