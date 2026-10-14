@@ -82,6 +82,7 @@
 .greet p{margin-top:6px;color:var(--muted);font-size:15px}
 
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.kpis[data-n="5"]{grid-template-columns:repeat(5,minmax(0,1fr))}
 .kpis[data-n="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
 .kpis[data-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
 .kpis[data-n="1"]{grid-template-columns:minmax(0,1fr)}
@@ -92,6 +93,17 @@
 .kpi__s{font-size:13px;color:var(--muted)}
 .up{color:var(--good);font-weight:600}.down{color:var(--bad);font-weight:600}
 .kpi--alert .kpi__v{color:var(--bad)}
+/* Google reviews: count, stars, change this week, 30-day trend of the count */
+.kpi__star{color:#B8862E}
+.wk{display:inline-block;min-width:20px;padding:0 6px;margin:0 2px;border-radius:999px;background:var(--line-2);color:var(--text-2);font-weight:600;text-align:center}
+.wk.up{background:var(--good-soft);color:var(--good)}
+.spark{display:block;position:relative;margin-top:6px}
+.spark svg{display:block;width:100%;height:34px;overflow:visible}
+.spark .ln{fill:none;stroke:var(--teal);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.spark .dot{fill:var(--teal);stroke:var(--white);stroke-width:2}
+.spark .ax{display:flex;justify-content:space-between;gap:6px;white-space:nowrap;font-size:11.5px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.spark .tip{position:absolute;top:-26px;transform:translateX(-50%);white-space:nowrap;font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:6px;background:var(--ink);color:var(--white);pointer-events:none}
+.spark .tip[hidden]{display:none}
 
 .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;align-items:start}
 .card{background:var(--white);border:1px solid var(--line);border-radius:var(--r);min-width:0}
@@ -203,6 +215,7 @@
   .greet h1{font-size:30px}
   .kpis,.kpis[data-n]{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
   .kpis[data-n="1"]{grid-template-columns:minmax(0,1fr)}
+  .kpis[data-n="5"] .kpi--rev,.kpis[data-n="3"] .kpi--rev{grid-column:1/-1}
   .kpi{min-height:0;padding:14px}
   .kpi__v{font-size:24px}
   .grid{gap:10px}
