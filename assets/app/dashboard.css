@@ -83,6 +83,7 @@
 
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}
 .kpis[data-n="5"]{grid-template-columns:repeat(5,minmax(0,1fr))}
+.kpis[data-n="6"]{grid-template-columns:repeat(3,minmax(0,1fr))}
 .kpis[data-n="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
 .kpis[data-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
 .kpis[data-n="1"]{grid-template-columns:minmax(0,1fr)}
@@ -100,7 +101,10 @@
 .spark{display:block;position:relative;margin-top:6px}
 .spark svg{display:block;width:100%;height:34px;overflow:visible}
 .spark .ln{fill:none;stroke:var(--teal);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
-.spark .dot{fill:var(--teal);stroke:var(--white);stroke-width:2}
+.spark .ar{fill:var(--teal-soft);opacity:.7}
+.spark .sdot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 2px var(--white);transform:translate(-50%,-50%);pointer-events:none}
+.spark .sdot[hidden]{display:none}
+.wk.dn{background:var(--bad-soft);color:var(--bad)}
 .spark .ax{display:flex;justify-content:space-between;gap:6px;white-space:nowrap;font-size:11.5px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
 .spark .tip{position:absolute;top:-26px;transform:translateX(-50%);white-space:nowrap;font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:6px;background:var(--ink);color:var(--white);pointer-events:none}
 .spark .tip[hidden]{display:none}

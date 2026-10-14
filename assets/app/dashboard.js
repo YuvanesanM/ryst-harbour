@@ -131,7 +131,7 @@
     if (can('checklist')) { jobs.push(get('/issues', 'issues')); jobs.push(get('/checklist', 'cl')); }
     if (can('inventory')) jobs.push(get('/inventory', 'inv'));
     if (can('bookings') || can('settings')) jobs.push(get('/ota-status', 'ota'));
-    if (can('bookings') || can('reports')) jobs.push(get('/google-reviews', 'gr'));
+    if (can('bookings') || can('reports')) { jobs.push(get('/google-reviews', 'gr')); jobs.push(get('/instagram-stats', 'ig')); }
     render();
     return Promise.all(jobs);
   }
@@ -229,34 +229,48 @@
     var wk = g.weekChange || 0;
     setKpi('kReviews', String(g.count), '<span class="kpi__star">★</span> ' + Number(g.rating).toFixed(1)
       + ' &nbsp;<span class="wk' + (wk > 0 ? ' up' : '') + '">' + (wk > 0 ? '+' : '') + wk + '</span> ' + esc(t('this week')));
-    var h = Array.isArray(g.history) ? g.history : [], box = $('.spark', el);
-    var short = function (iso) { return new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
+    trend($('.spark', el), (g.history || []).map(function (p) { return { date: p.date, v: p.count, tip: p.count + ' · ★ ' + Number(p.rating).toFixed(1) }; }), t('Review count'));
+  }
+  // Instagram: followers today, change over 7 days, 30-day trend.
+  function renderInstagram() {
+    var el = doc.getElementById('kInsta'); if (!el) return;
+    var g = D.ig;
+    show(el, (can('bookings') || can('reports')) && !!(g && g.ok));
+    if (!g || !g.ok) return;
+    var wk = g.weekChange || 0;
+    setKpi('kInsta', fmtCount(g.followers), '<span class="wk' + (wk > 0 ? ' up' : wk < 0 ? ' dn' : '') + '">' + (wk > 0 ? '+' : '') + wk + '</span> ' + esc(t('this week')));
+    trend($('.spark', el), (g.history || []).map(function (p) { return { date: p.date, v: p.followers, tip: fmtCount(p.followers) + ' ' + t('followers') }; }), t('Followers'));
+  }
+  function fmtCount(n) { return Number(n || 0).toLocaleString('en-IN'); }
+  // One-series trend line with a light area under it; hover or tap a point
+  // for that day's figure. pts: [{date, v, tip}] oldest first.
+  function trend(box, pts, label) {
     if (!box) return;
-    if (h.length < 2) { box.innerHTML = '<div class="ax"><span>' + esc(t('Trend starts')) + ' ' + esc(fmtDay(h.length ? h[0].date : TODAY)) + '</span></div>'; return; }
-    var W = 200, Hh = 30, lo = Math.min.apply(null, h.map(function (p) { return p.count; })), hi = Math.max.apply(null, h.map(function (p) { return p.count; }));
-    var x = function (i) { return i / (h.length - 1) * W; }, y = function (c) { return hi === lo ? Hh / 2 : Hh - (c - lo) / (hi - lo) * (Hh - 4) - 2; };
-    var pts = h.map(function (p, i) { return x(i).toFixed(1) + ',' + y(p.count).toFixed(1); }).join(' ');
-    box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + Hh + '" preserveAspectRatio="none" role="img" aria-label="' + esc(t('Review count')) + ': ' + h[0].count + ' → ' + h[h.length - 1].count + '">'
-      + '<polyline class="ln" vector-effect="non-scaling-stroke" points="' + pts + '"/></svg>'
+    var short = function (iso) { return new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
+    if (pts.length < 2) { box.innerHTML = '<div class="ax"><span>' + esc(t('Trend starts')) + ' ' + esc(short(pts.length ? pts[0].date : TODAY)) + '</span></div>'; return; }
+    var W = 200, Hh = 30, vals = pts.map(function (p) { return p.v; }), lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    var x = function (i) { return i / (pts.length - 1) * W; }, y = function (v) { return hi === lo ? Hh / 2 : Hh - (v - lo) / (hi - lo) * (Hh - 4) - 2; };
+    var line = pts.map(function (p, i) { return x(i).toFixed(1) + ',' + y(p.v).toFixed(1); }).join(' ');
+    box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + Hh + '" preserveAspectRatio="none" role="img" aria-label="' + esc(label) + ': ' + pts[0].v + ' → ' + pts[pts.length - 1].v + '">'
+      + '<polygon class="ar" points="0,' + Hh + ' ' + line + ' ' + W + ',' + Hh + '"/>'
+      + '<polyline class="ln" vector-effect="non-scaling-stroke" points="' + line + '"/></svg>'
       + '<span class="tip" hidden></span>'
-      + '<div class="ax"><span>' + esc(short(h[0].date)) + '</span><span>' + h.length + ' ' + esc(t('days')) + '</span><span>' + esc(short(h[h.length - 1].date)) + '</span></div>';
+      + '<div class="ax"><span>' + esc(short(pts[0].date)) + '</span><span>' + pts.length + ' ' + esc(t('days')) + '</span><span>' + esc(short(pts[pts.length - 1].date)) + '</span></div>';
     var svg = $('svg', box), tip = $('.tip', box);
-    var dot = doc.createElement('span'); dot.style.cssText = 'position:absolute;width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 2px var(--white);transform:translate(-50%,-50%);pointer-events:none';
-    dot.hidden = true; box.appendChild(dot);
+    var dot = doc.createElement('span'); dot.className = 'sdot'; dot.hidden = true; box.appendChild(dot);
     var at = function (e) {
       var r = svg.getBoundingClientRect(), cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-      var i = Math.max(0, Math.min(h.length - 1, Math.round(cx / r.width * (h.length - 1)))), p = h[i];
-      var px = x(i) / W * r.width, py = y(p.count) / Hh * r.height;
+      var i = Math.max(0, Math.min(pts.length - 1, Math.round(cx / r.width * (pts.length - 1)))), p = pts[i];
+      var px = x(i) / W * r.width, py = y(p.v) / Hh * r.height;
       dot.style.left = px + 'px'; dot.style.top = py + 'px'; dot.hidden = false;
-      tip.textContent = short(p.date) + ' · ' + p.count + ' · ★ ' + Number(p.rating).toFixed(1); tip.hidden = false;
+      tip.textContent = short(p.date) + ' · ' + p.tip; tip.hidden = false;
       var half = tip.offsetWidth / 2; tip.style.left = Math.max(half, Math.min(r.width - half, px)) + 'px'; // stay inside the card
       if (e.cancelable && e.touches) e.preventDefault();
     };
     var off = function () { dot.hidden = true; tip.hidden = true; };
     svg.addEventListener('mousemove', at); svg.addEventListener('touchstart', at, { passive: false }); svg.addEventListener('touchmove', at, { passive: false });
     svg.addEventListener('mouseleave', off); svg.addEventListener('touchend', off);
-    // the trend is for reading here, not a link to Google
-    box.addEventListener('click', function (e) { e.preventDefault(); });
+    box.addEventListener('click', function (e) { e.preventDefault(); }); // the trend is for reading here
   }
   function renderKpis(list) {
     var ms = monthStart(TODAY), me = nextMonth(ms), pms = monthStart(TODAY, 1);
@@ -283,7 +297,7 @@
         : (dep.length ? dep.length + ' checking out' : next ? 'Next: ' + esc(fmtDay(next.checkin)) : 'None coming up'));
     }
     show($('#kIssues'), can('checklist'));
-    renderReviews();
+    renderReviews(); renderInstagram();
     var kp = $('.kpis'); if (kp) kp.setAttribute('data-n', $$('.kpi', kp).filter(function (k) { return !k.hidden && k.style.display !== 'none'; }).length);
     if (D.issues) {
       var open = openIssues(), urgent = open.filter(function (i) { return i.urgency === 'urgent'; }).length;
