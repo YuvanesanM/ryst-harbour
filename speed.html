@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Server speed check</title>
+<style>
+  :root{--bg:#F6F3ED;--card:#fff;--ink:#171717;--muted:#6B665E;--line:#E6E0D5;--good:#2F6B4F;--teal:#547A76}
+  @media (prefers-color-scheme:dark){:root{--bg:#111715;--card:#1b2220;--ink:#eef1ef;--muted:#9aa5a1;--line:#2a3330;--good:#7fc4a0;--teal:#8fb5b0}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:640px;margin:0 auto;padding:24px 16px}
+  h1{font-size:22px;margin:0 0 6px}
+  p{color:var(--muted);margin:0 0 16px}
+  button{font:inherit;font-weight:650;padding:12px 20px;border:0;border-radius:10px;background:var(--ink);color:var(--bg);cursor:pointer}
+  button:disabled{opacity:.5}
+  table{width:100%;border-collapse:collapse;margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-variant-numeric:tabular-nums}
+  th,td{padding:10px 12px;text-align:left;border-top:1px solid var(--line)}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-top:0}
+  td:nth-child(n+2),th:nth-child(n+2){text-align:right}
+  .win{color:var(--good);font-weight:700}
+  #status{margin-top:12px;color:var(--muted)}
+  #verdict{margin-top:16px;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <h1>Server speed check</h1>
+  <p>Times the current server (Oregon) and the new one (Singapore) from this device, with the same read-only requests, 8 rounds each. Takes about a minute. Nothing is saved or changed.</p>
+  <button id="go">Run the check</button>
+  <div id="status" aria-live="polite"></div>
+  <table id="out" hidden>
+    <thead><tr><th>Request</th><th>Oregon (now)</th><th>Singapore (new)</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div id="verdict" aria-live="polite"></div>
+</main>
+<script>
+const SERVERS = [['Oregon (now)', 'https://data.ryst.in'], ['Singapore (new)', 'https://ryst-quss.onrender.com']];
+const d = new Date(); d.setDate(d.getDate() + 20); while (d.getDay() !== 2) d.setDate(d.getDate() + 1);
+const iso = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+const out = new Date(d); out.setDate(out.getDate() + 1);
+const TESTS = [
+  ['Simple request (no database)', '/property'],
+  ['Booking calendar (1 database read)', '/house-rules'],
+  ['Price check (2 database reads)', `/quote-preview?checkin=${iso(d)}&checkout=${iso(out)}&guests=5`],
+];
+const ROUNDS = 8;
+const median = a => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+async function time(url) {
+  const t0 = performance.now();
+  const r = await fetch(url + (url.includes('?') ? '&' : '?') + '_=' + Math.random(), { cache: 'no-store' });
+  await r.text();
+  return performance.now() - t0;
+}
+document.getElementById('go').addEventListener('click', async () => {
+  const btn = document.getElementById('go'), status = document.getElementById('status');
+  btn.disabled = true; document.getElementById('verdict').textContent = '';
+  const res = {};
+  try {
+    for (const [, base] of SERVERS) await time(base + '/'); // open the connections first, so both start equal
+    for (let r = 1; r <= ROUNDS; r++) {
+      status.textContent = `Round ${r} of ${ROUNDS}…`;
+      for (const [label, path] of TESTS) for (const [name, base] of SERVERS) {
+        (res[label + name] = res[label + name] || []).push(await time(base + path));
+      }
+    }
+  } catch (e) { status.textContent = 'Could not reach a server: ' + e.message; btn.disabled = false; return; }
+  status.textContent = 'Done — typical (median) time per request on this device:';
+  const tb = document.querySelector('#out tbody'); tb.innerHTML = '';
+  let sumO = 0, sumS = 0;
+  for (const [label] of TESTS) {
+    const o = median(res[label + SERVERS[0][0]]), s = median(res[label + SERVERS[1][0]]);
+    sumO += o; sumS += s;
+    tb.insertAdjacentHTML('beforeend', `<tr><td>${label}</td><td class="${o < s ? 'win' : ''}">${Math.round(o)} ms</td><td class="${s < o ? 'win' : ''}">${Math.round(s)} ms</td></tr>`);
+  }
+  document.getElementById('out').hidden = false;
+  document.getElementById('verdict').textContent = sumS < sumO
+    ? `Singapore is ${(sumO / sumS).toFixed(1)}× faster from here (${Math.round(sumO - sumS)} ms saved across these three requests).`
+    : `Oregon is faster from here by ${Math.round(sumS - sumO)} ms across these three requests.`;
+  btn.disabled = false; btn.textContent = 'Run again';
+});
+</script>
+</body>
+</html>
