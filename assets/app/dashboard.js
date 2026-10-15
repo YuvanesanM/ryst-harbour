@@ -105,6 +105,13 @@
     try { MODS = JSON.parse(ls('ryst_user_modules') || 'null'); } catch (e) { MODS = null; }
     if (!Array.isArray(MODS)) MODS = ROLE === 'caretaker' ? ['petty-cash', 'inventory', 'checklist', 'guestRegister'] : [];
   }
+  // Owners and coordinators can switch the home screen to the caretaker's
+  // day view (remembered on this device).
+  function careView() {
+    if (ROLE === 'caretaker') return true;
+    var v = ''; try { v = localStorage.getItem('ryst_dash_view') || ''; } catch (e) {}
+    return v === 'care' && (can('guestRegister') || can('bookings'));
+  }
   function can(mod) {
     if (mod === 'checklist' && NO_CARETAKER_PLAN) return false;
     return ROLE === 'owner' || MODS.indexOf(mod) >= 0;
@@ -158,8 +165,10 @@
     }
     if (D.reg) {
       return (Array.isArray(D.reg.entries) ? D.reg.entries : []).filter(function (e) { return e.stayStatus !== 'unconfirmed'; }).map(function (e) {
-        return { no: e.no, block: false, guest: e.guest || 'Guest', guests: e.guests || e.checkinGuestsCount || '', bedrooms: e.bedrooms || '', checkin: e.checkin, checkout: e.checkout,
-          channel: e.channel || (e.mode === 'Razorpay' ? 'Website' : ''), total: num(e.stayTotal), paid: num(e.stayPaid), stayDue: num(e.stayDue), food: num(e.foodDue), due: num(e.stayDue) + num(e.foodDue),
+        var ota = e.type === 'ota';
+        return { no: e.no, block: ota, guest: e.guest || 'Guest', guests: e.guests || e.checkinGuestsCount || '', bedrooms: e.bedrooms || '', checkin: e.checkin, checkout: e.checkout,
+          channel: ota ? e.ota : (e.channel || (e.mode === 'Razorpay' ? 'Website' : '')), total: num(e.stayTotal), paid: num(e.stayPaid), stayDue: num(e.stayDue), food: num(e.foodDue),
+          due: e.due != null ? num(e.due) : num(e.stayDue) + num(e.foodDue),
           checkedIn: !!e.checkedIn, arrival: e.arrivalTime || '' };
       });
     }
@@ -509,9 +518,23 @@
         + '</div>';
     }).join('');
   }
+  // Next 7 days of arrivals: how many days away, nights, party, what's left to collect.
+  function careUpcoming(list) {
+    if (!can('guestRegister') && !can('bookings')) return '';
+    if (!list) return loading('reg') || loading('stays') ? '<div class="sk sk--row"></div>' : errBox(ERR.reg ? 'reg' : 'stays');
+    var later = list.filter(function (s) { return s.checkin > TODAY; }).sort(function (a, b) { return a.checkin.localeCompare(b.checkin); });
+    var week = later.filter(function (s) { return s.checkin <= addDays(TODAY, 7); });
+    if (!week.length) return '<div class="empty">' + ICON('cal') + '<span>' + esc(t('No arrivals in the next 7 days')) + (later[0] ? ' · ' + esc(t('Next')) + ': <span data-no-i18n>' + esc(fmtDay(later[0].checkin)) + '</span>' : '') + '</span></div>';
+    return week.map(function (s) {
+      var d = nightsBetween(TODAY, s.checkin), n = nightsBetween(s.checkin, s.checkout);
+      return '<div class="mini"><span><b data-no-i18n>' + esc(s.guest) + '</b><small><span class="care-in">' + esc(d === 1 ? t('Tomorrow') : t('In') + ' ' + d + ' ' + t('days')) + '</span> · <span data-no-i18n>' + esc(fmtDay(s.checkin)) + '</span> · ' + n + ' ' + esc(t(n === 1 ? 'night' : 'nights'))
+        + (s.guests ? ' · ' + guestsTxt(s) : '') + '</small></span>' + payPill(s) + '</div>';
+    }).join('');
+  }
   function renderCare(list) {
     setHTML('careIn', careStay(list, 'checkin'));
     setHTML('careOut', careStay(list, 'checkout'));
+    setHTML('careUp', careUpcoming(list));
     if (can('checklist')) {
       if (!D.cl) setHTML('careCl', ERR.cl ? errBox('cl') : '<div class="sk sk--row"></div>');
       else {
@@ -795,8 +818,10 @@
 
   // ── Render everything from whatever has arrived so far ─────────────────
   function render() {
-    var caretaker = ROLE === 'caretaker';
+    var caretaker = careView();
     show($('#dashOwner'), !caretaker); show($('#dashCare'), caretaker);
+    var sw = $('#viewSwitch');
+    if (sw) { sw.hidden = ROLE === 'caretaker' || !(can('guestRegister') || can('bookings')); $$('button', sw).forEach(function (b) { b.setAttribute('aria-pressed', String((b.getAttribute('data-view') === 'care') === caretaker)); }); }
     var list = stayList();
     if (caretaker) { renderCare(list); renderAttention(list); return; }
     renderKpis(list); renderToday(list); renderAttention(list); renderUpcoming(list); renderChannels();
@@ -806,6 +831,12 @@
 
   // A new name or photo from Edit profile: greeting, avatars and menus follow.
   doc.addEventListener('rh-profile', function () { if (started) { renderHeader(); refreshNav(); } });
+
+  doc.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('#viewSwitch button'); if (!b) return;
+    try { localStorage.setItem('ryst_dash_view', b.getAttribute('data-view')); } catch (x) {}
+    render();
+  });
 
   var started = false;
   function start() {

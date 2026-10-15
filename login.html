@@ -76,9 +76,9 @@
   .pop__item.install-app-btn{margin:0;background:none;color:inherit;padding:0 10px;border-radius:var(--r-sm,8px);font-size:inherit;font-weight:500;letter-spacing:0}
 </style>
 <link rel="stylesheet" href="/assets/app/shell.css?v=2f2cdf72">
-<link rel="stylesheet" href="/assets/app/dashboard.css?v=98352b20">
+<link rel="stylesheet" href="/assets/app/dashboard.css?v=aea49459">
 <script src="/assets/app/shell.js?v=9eba99c2"></script>
-<script src="/assets/app/dashboard.js?v=ce6b77c7" defer></script>
+<script src="/assets/app/dashboard.js?v=0ef392c7" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -199,8 +199,11 @@
 
     <main class="content" id="dContent">
       <div class="greet">
-        <h1 id="dGreet">Good morning</h1>
-        <p><span>Here's what's happening at</span> <span data-prop="name" data-no-i18n>RYST 109A</span> <span>today.</span></p>
+        <div class="greet__txt">
+          <h1 id="dGreet">Good morning</h1>
+          <p><span>Here's what's happening at</span> <span data-prop="name" data-no-i18n>RYST 109A</span> <span>today.</span></p>
+        </div>
+        <div class="viewsw" id="viewSwitch" role="group" aria-label="Dashboard view" hidden><button type="button" data-view="owner" aria-pressed="true">Owner view</button><button type="button" data-view="care" aria-pressed="false">Caretaker view</button></div>
       </div>
 
       <!-- Owner / coordinator -->
@@ -242,6 +245,7 @@
         <div class="care-grid">
           <section class="card" aria-labelledby="hCi"><div class="card__head"><h2 id="hCi">Today's check-in</h2></div><div class="card__body" id="careIn"><div class="sk sk--row"></div></div></section>
           <section class="card" aria-labelledby="hCo"><div class="card__head"><h2 id="hCo">Today's check-out</h2></div><div class="card__body" id="careOut"><div class="sk sk--row"></div></div></section>
+          <section class="card care-up" aria-labelledby="hCu" data-module="guestRegister"><div class="card__head"><h2 id="hCu">Coming up · next 7 days</h2><a class="card__link" href="guest-register.html?f=week">All bookings</a></div><div class="card__body" id="careUp"><div class="sk sk--row"></div></div></section>
           <section class="card" aria-labelledby="hCl" data-module="checklist"><div class="card__head"><h2 id="hCl">Checklists</h2><a class="card__link" href="checklist.html">Open</a></div><div class="card__body" id="careCl"><div class="sk sk--row"></div></div></section>
           <section class="card" aria-labelledby="hIs" data-module="checklist"><div class="card__head"><h2 id="hIs">Issues</h2><a class="card__link" href="issues.html">Open</a></div><div class="card__body" id="careIs"><div class="sk sk--row"></div></div></section>
           <section class="card" aria-labelledby="hInv" data-module="inventory"><div class="card__head"><h2 id="hInv">Inventory</h2><a class="card__link" href="inventory.html">Open</a></div><div class="card__body" id="careInv"><div class="sk sk--row"></div></div></section>

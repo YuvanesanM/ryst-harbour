@@ -85,6 +85,9 @@
   .g-badge.unpaid{background:var(--danger-soft);color:var(--danger)}
   .g-badge.unconfirmed{background:var(--panel2);color:var(--muted)}
   .g-badge.none{background:var(--panel2);color:var(--muted2)}
+  .g-badge.ota{background:var(--panel2);color:var(--text-2,var(--muted))}
+  .g-tag.ota{background:var(--panel2);color:var(--muted)}
+  .g-split{font-size:12px;color:var(--muted);margin-top:6px}
   .g-checkin{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);font-size:14px;color:var(--muted)}
   .g-checkin.done{color:var(--accent-d)}
   .g-checkin .note{color:var(--ink);margin-top:4px;font-style:italic}
@@ -134,7 +137,8 @@
   </div>
   <div class="chips" id="chips" style="margin-bottom:10px">
     <button class="chip on" data-f="all">All</button>
-    <button class="chip" data-f="arriving">Arriving</button>
+    <button class="chip" data-f="arriving">Arriving today</button>
+    <button class="chip" data-f="week">Next 7 days</button>
     <button class="chip" data-f="inhouse">In-house</button>
     <button class="chip" data-f="unpaid">Balance due</button>
     <button class="chip" data-f="foodDue">Food due</button>
@@ -233,18 +237,6 @@ async function load(){
 }
 $('#loaderRetry').addEventListener('click', load);
 
-function stayStatusLabel(s){
-  if(s.stayStatus==='paid') return 'Stay paid in full';
-  if(s.stayStatus==='partial') return 'Stay: ' + money(s.stayDue) + ' due';
-  if(s.stayStatus==='unconfirmed') return 'Unconfirmed quote';
-  return 'Stay: ' + money(s.stayDue) + ' due';
-}
-function foodStatusLabel(s){
-  if(s.foodStatus==='none') return 'No food orders';
-  if(s.foodStatus==='paid') return 'Food paid (' + money(s.foodPaid) + ')';
-  if(s.foodStatus==='partial') return 'Food: ' + money(s.foodDue) + ' due';
-  return 'Food: ' + money(s.foodDue) + ' due';
-}
 // Arrival countdown while the guest hasn't checked in yet, departure
 // countdown once they're in-house — both answer "how soon does this need
 // my attention", which the plain dates row doesn't at a glance. `days`
@@ -269,11 +261,25 @@ function countdownInfo(s){
 
 function matchesFilter(s){
   if(FILTER==='arriving') return s.checkin === TODAY;
+  if(FILTER==='week') return s.checkin >= TODAY && s.checkin <= addDaysISO(TODAY, 7);
   if(FILTER==='inhouse') return s.checkin <= TODAY && TODAY <= s.checkout;
-  if(FILTER==='unpaid') return s.stayStatus==='unpaid' || s.stayStatus==='partial' || s.stayStatus==='unconfirmed';
+  if(FILTER==='unpaid') return (s.due || 0) > 0;
   if(FILTER==='foodDue') return s.foodStatus==='unpaid' || s.foodStatus==='partial';
   if(FILTER==='notCheckedIn') return !s.checkedIn;
   return true;
+}
+function addDaysISO(iso, n){ const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+// One amount to collect — the stay balance and the open food bill are paid
+// together. The split shows underneath when there's food on it.
+function dueBadge(s){
+  if(s.type==='ota') return `<span class="g-badge ota">Booked on ${esc(s.ota||'OTA')} · guest details not in yet</span>`;
+  if(s.stayStatus==='unconfirmed') return `<span class="g-badge unconfirmed">Unconfirmed quote</span>`;
+  if(!(s.due > 0)) return `<span class="g-badge paid">Paid in full</span>`;
+  return `<span class="g-badge ${s.stayPaid > 0 || s.foodPaid > 0 ? 'partial' : 'unpaid'}">To collect ${esc(money(s.due))}</span>`;
+}
+function dueSplit(s){
+  if(s.type==='ota' || !(s.due > 0) || !(s.foodDue > 0)) return '';
+  return `<div class="g-split">Stay ${esc(money(s.stayDue))} · Food ${esc(money(s.foodDue))}</div>`;
 }
 function matchesSearch(s){
   if(!Q) return true;
@@ -339,25 +345,23 @@ function render(){
   list.innerHTML = visible.map(s => {
     const nightsStr = s.nights!=null ? (s.nights+' night'+(s.nights===1?'':'s')) : '';
     const guestsStr = (s.guests ? ' · '+esc(s.guests)+' guest'+(String(s.guests)==='1'?'':'s') : '') + (s.bedrooms ? ' · '+esc(s.bedrooms)+' bedroom'+(String(s.bedrooms)==='1'?'':'s') : '');
-    const checkinBlock = s.checkedIn
+    const checkinBlock = s.type==='ota' ? '' : s.checkedIn
       ? `<div class="g-checkin done">✓ Checked in${s.arrivalTime ? ' · arrived '+esc(s.arrivalTime) : ''}${s.vehicleNumber ? ' · '+esc(s.vehicleNumber) : ''}${s.checkinGuestsCount!=null ? ' · '+s.checkinGuestsCount+' guest'+(s.checkinGuestsCount===1?'':'s')+' on arrival' : ''}${s.checkinNote ? '<div class="note">"'+esc(s.checkinNote)+'"</div>' : ''}</div>`
       : `<div class="g-checkin">Not checked in yet</div>`;
-    const metaTags = [s.channel, s.mode].filter(Boolean).map(t=>`<span>${esc(t)}</span>`).join('');
+    const metaTags = s.type==='ota' ? '' : [s.channel, s.mode].filter(Boolean).map(t=>`<span>${esc(t)}</span>`).join('');
     const cd = countdownInfo(s);
     return `<div class="g-card">
       <div class="g-top">
         <span class="g-name">${esc(s.guest||'Guest')}</span>
-        <span class="g-tag ${s.type}">${s.type==='quote'?'Quote':'Invoice'}</span>
-        <span class="g-no">${esc(s.no)}</span>
+        <span class="g-tag ${s.type}">${s.type==='quote'?'Quote':s.type==='ota'?esc(s.ota||'OTA'):'Invoice'}</span>
+        ${s.type==='ota' ? '' : `<span class="g-no">${esc(s.no)}</span>`}
       </div>
       <div class="g-body">
         <div class="g-main">
           <div class="g-dates">${esc(fmtDate(s.checkin))}<span class="arrow">→</span>${esc(fmtDate(s.checkout))}</div>
           <div class="g-sub">${esc(nightsStr)}${guestsStr}</div>
-          <div class="g-badges">
-            <span class="g-badge ${s.stayStatus}">${esc(stayStatusLabel(s))}</span>
-            <span class="g-badge ${s.foodStatus}">${esc(foodStatusLabel(s))}</span>
-          </div>
+          <div class="g-badges">${dueBadge(s)}</div>
+          ${dueSplit(s)}
           ${metaTags ? `<div class="g-meta">${metaTags}</div>` : ''}
         </div>
         <div class="g-side">
