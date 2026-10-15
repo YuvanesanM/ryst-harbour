@@ -229,6 +229,7 @@
     var wk = g.weekChange || 0;
     setKpi('kReviews', String(g.count), '<span class="kpi__star">★</span> ' + Number(g.rating).toFixed(1)
       + ' &nbsp;<span class="wk' + (wk > 0 ? ' up' : '') + '">' + (wk > 0 ? '+' : '') + wk + '</span> ' + esc(t('this week')));
+    rfTitle('kReviews', g);
     trend($('.spark', el), (g.history || []).map(function (p) { return { date: p.date, v: p.count, tip: p.count + ' · ★ ' + Number(p.rating).toFixed(1) }; }), t('Review count'));
   }
   // Instagram: followers today, change over 7 days, 30-day trend.
@@ -239,7 +240,33 @@
     if (!g || !g.ok) return;
     var wk = g.weekChange || 0;
     setKpi('kInsta', fmtCount(g.followers), '<span class="wk' + (wk > 0 ? ' up' : wk < 0 ? ' dn' : '') + '">' + (wk > 0 ? '+' : '') + wk + '</span> ' + esc(t('this week')));
+    rfTitle('kInsta', g);
     trend($('.spark', el), (g.history || []).map(function (p) { return { date: p.date, v: p.followers, tip: (p.est ? '≈ ' : '') + fmtCount(p.followers) + ' ' + t('followers') + (p.est ? ' (' + t('estimated') + ')' : '') }; }), t('Followers'));
+  }
+  // ↻ in the card corner: fetch fresh figures now (the server limits how
+  // often it really asks Google/Instagram). Its tooltip says when the
+  // figures were last fetched.
+  function rfTitle(kid, g) {
+    var b = doc.querySelector('[data-rf="' + kid + '"]'); if (!b) return;
+    var when = g && g.updatedAt ? new Date(g.updatedAt) : null;
+    var txt = when && !isNaN(when) ? t('Updated') + ' ' + (when.toDateString() === new Date().toDateString() ? '' : when.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ', ') + when.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) + ' · ' + t('tap to refresh') : t('Tap to refresh');
+    b.title = txt; b.setAttribute('aria-label', txt);
+  }
+  doc.addEventListener('click', rfPress, true);
+  doc.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('[data-rf]')) rfPress(e); }, true);
+  function rfPress(e) {
+    var b = e.target.closest && e.target.closest('[data-rf]'); if (!b) return;
+    e.preventDefault(); e.stopPropagation(); // the card itself opens Google Maps / Instagram
+    if (b.classList.contains('is-busy')) return;
+    var kid = b.getAttribute('data-rf'), key = kid === 'kInsta' ? 'ig' : 'gr', path = kid === 'kInsta' ? '/instagram-stats' : '/google-reviews';
+    b.classList.add('is-busy');
+    fetch(PROXY + path + '?refresh=1', { headers: { 'X-Token': ls('ryst_proxy_token') || '' }, cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (j && j.ok) { D[key] = j; render(); }
+        if (j && j.refreshError) b.title = j.refreshError;
+      }, function () {})
+      .then(function () { b.classList.remove('is-busy'); });
   }
   function fmtCount(n) { return Number(n || 0).toLocaleString('en-IN'); }
   // One-series trend line with a light area under it; hover or tap a point

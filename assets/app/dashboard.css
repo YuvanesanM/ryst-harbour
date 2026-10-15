@@ -97,6 +97,13 @@
 .kpi--alert .kpi__v{color:var(--bad)}
 /* Google reviews: count, stars, change this week, 30-day trend of the count */
 .kpi__star{color:#B8862E}
+/* refresh button in the corner of the Google / Instagram cards */
+.kpi--rev{position:relative}
+.kpi__rf{position:absolute;top:10px;right:10px;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.kpi__rf:hover,.kpi__rf:focus-visible{background:var(--line-2);color:var(--ink);outline:none}
+.kpi__rf.is-busy svg{animation:kpi-spin .8s linear infinite}
+@keyframes kpi-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.kpi__rf.is-busy svg{animation:none;opacity:.5}}
 .wk{display:inline-block;min-width:20px;padding:0 6px;margin:0 2px;border-radius:999px;background:var(--line-2);color:var(--text-2);font-weight:600;text-align:center}
 .wk.up{background:var(--good-soft);color:var(--good)}
 .spark{display:block;position:relative;margin-top:6px}
