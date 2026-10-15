@@ -288,6 +288,7 @@
       <label class="f"><span>Weekend hike — Fri/Sat/Sun nights (%)</span><input class="t" id="stayWeekendHike" type="number" min="0" step="1" placeholder="0"></label>
       <label class="f"><span>Holiday hike (%)</span><input class="t" id="stayHolidayHike" type="number" min="0" step="1" placeholder="0"></label>
     </div>
+    <label class="f"><span>Minimum guests on weekends &amp; holidays — website bookings only</span><input class="t" id="stayPeakMinGuests" type="number" min="0" step="1" placeholder="No minimum"></label>
     <div class="rc-table-wrap">
       <table class="rc-table">
         <thead><tr>
@@ -951,6 +952,7 @@ function renderFromStay(){
   document.getElementById("stayAdvancePercent").value=stay.advancePercent!=null?stay.advancePercent:"";
   document.getElementById("stayWeekendHike").value=stay.weekendHikePercent!=null?stay.weekendHikePercent:"";
   document.getElementById("stayHolidayHike").value=stay.holidayHikePercent!=null?stay.holidayHikePercent:"";
+  document.getElementById("stayPeakMinGuests").value=stay.peakMinGuests>0?stay.peakMinGuests:"";
   stayHolDraft=(stay.holidays||[]).map(h=>({...h}));
   renderStayHolidays();
   stayTariffDraft=(stay.tariff||[]).map(t=>({...t}));
@@ -1955,6 +1957,7 @@ async function saveStay(){
   stay.weekendHikePercent = whVal!=="" ? Math.max(0, parseFloat(whVal)||0) : 0;
   const hhVal=document.getElementById("stayHolidayHike").value;
   stay.holidayHikePercent = hhVal!=="" ? Math.max(0, parseFloat(hhVal)||0) : 0;
+  stay.peakMinGuests = Math.max(0, parseInt(document.getElementById("stayPeakMinGuests").value)||0);
   const tfSeen=new Set();
   stay.tariff = stayTariffDraft
     .map(t=>({guests:parseInt(t.guests)||0, bedrooms:parseInt(t.bedrooms)||0, rate:parseFloat(t.rate)||0}))
