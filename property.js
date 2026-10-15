@@ -1,3 +1,12 @@
+// Refuse to run inside another site's frame (clickjacking): GitHub Pages
+// can't send X-Frame-Options / frame-ancestors, so the page hides itself
+// and breaks out instead. Framing by this same site is still allowed.
+(function () {
+  try { if (window.top === window.self || window.top.location.origin === location.origin) return; } catch (e) {}
+  document.documentElement.style.display = 'none';
+  try { window.top.location.replace(location.href); } catch (e) {}
+})();
+
 // Property profile for RYST Harbour pages (staff app + guest pages).
 // Every villa-specific name, address, link and logo comes from the proxy's
 // public GET /property (Settings → Stay → Property profile) instead of being
