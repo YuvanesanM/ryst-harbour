@@ -127,9 +127,9 @@
   </header>
 
   <div class="stats">
-    <div class="stat"><div class="val" id="statMonth">—</div><div class="lbl">This month</div></div>
+    <div class="stat"><div class="val" id="statMonth">—</div><div class="lbl" id="statMonthLbl">This month</div></div>
     <div class="stat"><div class="val" id="statUpcoming">—</div><div class="lbl">Upcoming</div></div>
-    <div class="stat"><div class="val" id="statFillRate">—</div><div class="lbl">Fill rate</div></div>
+    <div class="stat"><div class="val" id="statFillRate">—</div><div class="lbl" id="statFillLbl">Fill rate</div></div>
   </div>
 
   <div class="toolbar">
@@ -333,13 +333,21 @@ function render(){
   // narrows it to bookings starting in the current calendar month.
   const confirmed = ENTRIES.filter(s => s.stayStatus !== 'unconfirmed');
   const monthPrefix = TODAY.slice(0, 7);
-  $('#statMonth').textContent = confirmed.filter(s => s.checkin && s.checkin.slice(0, 7) === monthPrefix).length;
   $('#statUpcoming').textContent = confirmed.filter(s => s.checkout >= TODAY).length;
-
-  const [monthStart, monthEnd] = monthRange(monthPrefix);
-  const daysInMonth = Math.round((monthEnd - monthStart) / 86400000);
-  const occupiedNights = confirmed.reduce((sum, s) => sum + nightsOverlap(s.checkin, s.checkout, monthStart, monthEnd), 0);
-  $('#statFillRate').textContent = daysInMonth ? Math.round(occupiedNights / daysInMonth * 100) + '%' : '—';
+  // Caretakers see the work ahead, not how the business is doing: arrivals
+  // this week and bookings with money to collect instead of month / fill rate.
+  if(ROLE === 'caretaker'){
+    $('#statMonthLbl').textContent = 'Next 7 days';
+    $('#statMonth').textContent = confirmed.filter(s => s.checkin >= TODAY && s.checkin <= addDaysISO(TODAY, 7)).length;
+    $('#statFillLbl').textContent = 'To collect';
+    $('#statFillRate').textContent = confirmed.filter(s => s.checkout >= TODAY && (s.due || 0) > 0).length;
+  } else {
+    $('#statMonth').textContent = confirmed.filter(s => s.checkin && s.checkin.slice(0, 7) === monthPrefix).length;
+    const [monthStart, monthEnd] = monthRange(monthPrefix);
+    const daysInMonth = Math.round((monthEnd - monthStart) / 86400000);
+    const occupiedNights = confirmed.reduce((sum, s) => sum + nightsOverlap(s.checkin, s.checkout, monthStart, monthEnd), 0);
+    $('#statFillRate').textContent = daysInMonth ? Math.round(occupiedNights / daysInMonth * 100) + '%' : '—';
+  }
 
   $('#empty').style.display = visible.length ? 'none' : 'block';
   list.innerHTML = visible.map(s => {
