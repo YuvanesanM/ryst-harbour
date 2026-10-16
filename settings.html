@@ -289,6 +289,9 @@
       <label class="f"><span>Holiday hike (%)</span><input class="t" id="stayHolidayHike" type="number" min="0" step="1" placeholder="0"></label>
     </div>
     <label class="f"><span>Minimum guests on weekends &amp; holidays — website bookings only</span><input class="t" id="stayPeakMinGuests" type="number" min="0" step="1" placeholder="No minimum"></label>
+    <p class="gh-mini">WhatsApp</p>
+    <label class="chk-toggle"><input type="checkbox" id="stayWaAvail"> Reply to availability questions on WhatsApp automatically</label>
+    <p class="tf-note">When a guest asks about dates (for example "is 25–27 Dec free for 10?"), Interakt answers straight away from the live calendar: free or booked with the nearest free dates, the price for their group and a booking link with the dates filled in. Other messages are left for you, and you get a Telegram alert for each reply. Needs the Interakt webhook (Settings → WhatsApp) with <b>Message received</b> ticked in Interakt.</p>
     <div class="rc-table-wrap">
       <table class="rc-table">
         <thead><tr>
@@ -953,6 +956,7 @@ function renderFromStay(){
   document.getElementById("stayWeekendHike").value=stay.weekendHikePercent!=null?stay.weekendHikePercent:"";
   document.getElementById("stayHolidayHike").value=stay.holidayHikePercent!=null?stay.holidayHikePercent:"";
   document.getElementById("stayPeakMinGuests").value=stay.peakMinGuests>0?stay.peakMinGuests:"";
+  document.getElementById("stayWaAvail").checked=!!stay.waAvailabilityReply;
   stayHolDraft=(stay.holidays||[]).map(h=>({...h}));
   renderStayHolidays();
   stayTariffDraft=(stay.tariff||[]).map(t=>({...t}));
@@ -1350,7 +1354,7 @@ function connRender(d){
   document.getElementById('connForm').hidden = !!d.managedByServer;
   const hook=(title,url,how,id)=>`<div class="sync-result"><span>${esc(title)}</span><span style="text-align:right">${how}</span></div><input class="t" readonly value="${esc(url)}" id="${id}" style="margin:6px 0 4px"><div class="rc-foot" style="margin-top:0;margin-bottom:10px"><button type="button" class="btn" data-copy="${id}">Copy</button></div>`;
   document.getElementById('connHooks').innerHTML =
-    hook('Interakt webhook', d.webhooks.interakt, 'Interakt → Developer Setting → Webhook URL (for delivery and read ticks)', 'connHookI')
+    hook('Interakt webhook', d.webhooks.interakt, 'Interakt → Developer Setting → Webhook URL (delivery ticks, and Message received for the availability auto-reply)', 'connHookI')
     + hook('Razorpay webhook', d.webhooks.razorpay, 'Razorpay → Webhooks → Add: events payment.captured and payment_link.paid, with the webhook secret above', 'connHookR');
   document.querySelectorAll('#connHooks [data-copy]').forEach(b=>b.addEventListener('click', async ()=>{
     const v=document.getElementById(b.dataset.copy).value;
@@ -1958,6 +1962,7 @@ async function saveStay(){
   const hhVal=document.getElementById("stayHolidayHike").value;
   stay.holidayHikePercent = hhVal!=="" ? Math.max(0, parseFloat(hhVal)||0) : 0;
   stay.peakMinGuests = Math.max(0, parseInt(document.getElementById("stayPeakMinGuests").value)||0);
+  stay.waAvailabilityReply = document.getElementById("stayWaAvail").checked;
   const tfSeen=new Set();
   stay.tariff = stayTariffDraft
     .map(t=>({guests:parseInt(t.guests)||0, bedrooms:parseInt(t.bedrooms)||0, rate:parseFloat(t.rate)||0}))
