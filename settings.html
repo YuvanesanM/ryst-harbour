@@ -58,6 +58,23 @@
   .wa-chips button{font:inherit;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
   .wa-chips button:hover{border-color:var(--accent-d,#1f6f5c)}
   .wa-row{display:flex;gap:8px}.wa-row .t{flex:1;min-width:0}
+  .wa-chips button.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  .wa-review{border:1px solid var(--line);border-radius:14px;background:var(--panel2);padding:12px;margin-bottom:22px}
+  .wa-rstats{font-size:13px;color:var(--muted);margin-bottom:6px}
+  .wa-rlist{display:grid;gap:8px;max-height:520px;overflow-y:auto}
+  .wa-r{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+  .wa-r .q{font-size:13.5px;color:var(--ink);overflow-wrap:anywhere}
+  .wa-r .m{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .wa-r .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .wa-r .acts button{font:inherit;font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer}
+  .wa-r .teach{display:grid;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+  .wa-tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--panel2);color:var(--muted)}
+  .wa-tag.ok{background:var(--accent-soft,#e3f1ec);color:var(--accent-d,#1f6f5c)}.wa-tag.no{background:#fbeee6;color:#a3532b}
+  .wa-taught{margin-top:10px;font-size:12px;color:var(--muted)}
+  .wa-taught .ph{display:inline-flex;align-items:center;gap:4px;margin:3px 4px 0 0;padding:2px 4px 2px 8px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--ink)}
+  .wa-taught .ph button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1}
+  .wa-cq{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:8px}
+  .wa-cq .hd{display:flex;gap:8px}.wa-cq .hd .t{flex:1}
   .tf-note{font-size:12.5px;line-height:1.5;color:var(--muted);margin:-4px 0 10px}
   .f{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
   .f span{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
@@ -188,7 +205,7 @@
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
 <script>
 // WhatsApp auto-reply: the common questions it can answer (server: wa-availability.js TOPICS)
-const WA_FAQ_KEYS=['location','timings','pets','food','pool','alcohol','wifi','parties','beach','screen','parking'];
+const WA_FAQ_KEYS=['location','timings','pets','food','pool','alcohol','wifi','parties','beach','screen','parking','photos'];
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
 <meta name="theme-color" content="#F6F3ED" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
 </head>
@@ -413,7 +430,7 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
     <p class="sd" style="margin:6px 0 22px">When a guest asks about dates on WhatsApp (for example "is 25–27 Dec free for 10?"), Interakt answers straight away from the live calendar: free or booked with the nearest free dates, the price for their group and a booking link with the dates filled in. Other messages are left for you, and you get a Telegram alert for each reply. Needs the Interakt webhook below with <b>Message received</b> ticked in Interakt. Saves as soon as you tick it.</p>
     <p class="sd" style="margin:-10px 0 12px">It also answers <b>month and festival</b> questions ("any weekends in November?", "Deepavali?" — from your holiday names under Tariffs), and when a guest replies <b>BOOK</b> it sends them the stay.ryst.in payment page with their dates, name and number filled in. Every date enquiry is saved as a quote (channel WhatsApp). When you reply to a guest yourself in Interakt, auto-replies to them pause for 6 hours; each Telegram alert also has a pause link. In a chat, type <b>#auto</b> to turn them back on for that guest, or <b>#pause</b> to stop them for 7 days. Messages about cancelling, refunds, changes or payments, and date questions from guests who already have a booking, are always left for you — with a Telegram alert.</p>
     <p class="gh-mini">Answers to common questions</p>
-    <p class="sd" style="margin:0 0 10px">Sent when a guest clearly asks about one of these. Leave one blank and that question is left for you (location and timings fall back to your property address and check-in times).</p>
+    <p class="sd" style="margin:0 0 10px">Sent when a guest clearly asks about one of these. Leave one blank and that question is left for you (location, timings and photos fall back to your address, check-in times and website gallery).</p>
     <div id="waFaqBox" style="display:grid;gap:10px;margin-bottom:22px">
       <label class="f"><span>📍 Location</span><textarea class="t" id="waFaq_location" rows="2" placeholder="Blank = your address and map link"></textarea></label>
       <label class="f"><span>🕒 Check-in / check-out times</span><textarea class="t" id="waFaq_timings" rows="2" placeholder="Blank = check-in and check-out times from the website settings"></textarea></label>
@@ -426,7 +443,22 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f"><span>🏖️ Beach</span><textarea class="t" id="waFaq_beach" rows="2"></textarea></label>
       <label class="f"><span>🎬 LED screen</span><textarea class="t" id="waFaq_screen" rows="2"></textarea></label>
       <label class="f"><span>🚗 Parking</span><textarea class="t" id="waFaq_parking" rows="2"></textarea></label>
+      <label class="f"><span>📸 Photos &amp; videos</span><textarea class="t" id="waFaq_photos" rows="2" placeholder="Blank = your website gallery link and Instagram"></textarea></label>
     </div>
+    <p class="gh-mini">Your own questions &amp; answers</p>
+    <p class="sd" style="margin:0 0 10px">For anything not covered above — BBQ, extra mattress, decorations… A message containing any of the words gets your answer.</p>
+    <div id="waCustomList" style="display:grid;gap:10px;margin-bottom:8px"></div>
+    <button class="rc-add" type="button" id="waCustomAdd" style="margin-bottom:22px">+ Add a question</button>
+
+    <p class="gh-mini">Review &amp; teach</p>
+    <p class="sd" style="margin:0 0 10px">Every guest message the auto-reply sees, and what it did. Teach it the ones it couldn't answer — it uses what you teach straight away. You also get a Telegram summary every Monday.</p>
+    <div class="wa-review">
+      <div class="wa-rstats" id="waRevStats">—</div>
+      <div class="wa-chips" id="waRevFilter"><button type="button" data-f="un" class="on">Couldn't answer</button><button type="button" data-f="all">All</button><button type="button" data-f="you">Left for you</button><button type="button" data-f="flag">Marked wrong</button><button type="button" id="waRevRefresh" title="Refresh">⟳</button></div>
+      <div id="waRevList" class="wa-rlist"><div class="wa-empty">Loading…</div></div>
+      <div id="waTaught" class="wa-taught"></div>
+    </div>
+
     <p class="gh-mini">Test the auto-reply</p>
     <p class="sd" style="margin:0 0 10px">Type as a guest would. You see exactly what would be sent, using today's calendar, prices and the answers above — nothing goes to anyone and no lead is saved. Follow-ups like "for 6 adults" or "BOOK" continue the conversation.</p>
     <div class="wa-test">
@@ -1002,6 +1034,7 @@ function renderFromStay(){
   document.getElementById("stayPeakMinGuests").value=stay.peakMinGuests>0?stay.peakMinGuests:"";
   document.getElementById("stayWaAvail").checked=!!stay.waAvailabilityReply;
   WA_FAQ_KEYS.forEach(k=>{ const el=document.getElementById('waFaq_'+k); if(el) el.value=(stay.waFaq&&stay.waFaq[k])||''; });
+  renderWaCustom();
   stayHolDraft=(stay.holidays||[]).map(h=>({...h}));
   renderStayHolidays();
   stayTariffDraft=(stay.tariff||[]).map(t=>({...t}));
@@ -2098,6 +2131,120 @@ WA_FAQ_KEYS.forEach(k=>document.getElementById('waFaq_'+k).addEventListener('cha
   document.getElementById('waTestChips').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) send(b.textContent); });
   document.getElementById('waTestReset').addEventListener('click',()=>{ ctx=null; log.innerHTML='<div class="wa-empty">New conversation — try a message.</div>'; inp.focus(); });
 })();
+
+// ── Your own questions & answers (stay.waCustom) ──
+const WA_TOPIC_LABELS={location:'📍 Location',timings:'🕒 Check-in / out times',pets:'🐾 Pets',food:'🍽️ Food',pool:'🏊 Pool',alcohol:'🍷 Alcohol & smoking',wifi:'📶 Wi-Fi',parties:'🎉 Parties & celebrations',beach:'🏖️ Beach',screen:'🎬 LED screen',parking:'🚗 Parking',photos:'📸 Photos & videos'};
+function waCustomList(){ if(!Array.isArray(stay.waCustom)) stay.waCustom=[]; return stay.waCustom; }
+function renderWaCustom(){
+  const box=document.getElementById('waCustomList'); if(!box) return;
+  const list=waCustomList();
+  box.innerHTML=list.length?list.map((c,i)=>`<div class="wa-cq" data-i="${i}">
+      <div class="hd"><input class="t" data-k="label" placeholder="Name, e.g. BBQ" value="${esc(c.label||'')}"><button type="button" class="rc-del" data-del="${i}" title="Remove">✕</button></div>
+      <input class="t" data-k="keywords" placeholder="Words guests use, comma-separated: bbq, barbecue, grill" value="${esc((c.keywords||[]).join(', '))}">
+      <textarea class="t" data-k="answer" rows="2" placeholder="Your answer">${esc(c.answer||'')}</textarea></div>`).join('')
+    :'<p class="sd" style="margin:0">None yet.</p>';
+}
+document.getElementById('waCustomList').addEventListener('change',e=>{
+  const row=e.target.closest('.wa-cq'); if(!row) return;
+  const c=waCustomList()[+row.dataset.i], k=e.target.dataset.k; if(!c||!k) return;
+  if(k==='keywords') c.keywords=e.target.value.split(',').map(x=>x.trim().toLowerCase()).filter(x=>x.length>=3).slice(0,20);
+  else c[k]=e.target.value.trim().slice(k==='answer'?1000:60);
+  saveStay();
+});
+document.getElementById('waCustomList').addEventListener('click',e=>{
+  const d=e.target.closest('[data-del]'); if(!d) return;
+  if(!confirm('Remove this question and answer?')) return;
+  waCustomList().splice(+d.dataset.del,1); renderWaCustom(); saveStay();
+});
+document.getElementById('waCustomAdd').addEventListener('click',()=>{ waCustomList().push({id:'q'+Date.now().toString(36),label:'',keywords:[],answer:''}); renderWaCustom(); const last=document.querySelector('#waCustomList .wa-cq:last-child [data-k="label"]'); if(last) last.focus(); });
+
+// ── Review & teach (GET /whatsapp/review; teaching saves stay.waLearn) ──
+(function(){
+  let entries=[], filter='un';
+  const list=document.getElementById('waRevList');
+  const learn=()=>{ if(!stay.waLearn||typeof stay.waLearn!=='object') stay.waLearn={}; if(!stay.waLearn.phrases) stay.waLearn.phrases={}; if(!Array.isArray(stay.waLearn.ignore)) stay.waLearn.ignore=[]; return stay.waLearn; };
+  const phraseOf=t=>String(t||'').toLowerCase().replace(/[^a-z0-9 ']+/g,' ').replace(/\s+/g,' ').trim().slice(0,60);
+  const outcome=x=>x.flagged?'<span class="wa-tag no">marked wrong</span>':x.sent?'<span class="wa-tag ok">answered</span>':(x.kind==='handoff'||x.kind==='guest')?'<span class="wa-tag">left for you</span>':x.resolved?'<span class="wa-tag ok">taught</span>':'<span class="wa-tag no">couldn\'t answer</span>';
+  function show(){
+    const f={un:x=>!x.sent&&x.kind==='none'&&!x.resolved,all:()=>true,you:x=>x.kind==='handoff'||x.kind==='guest',flag:x=>x.flagged&&!x.resolved}[filter];
+    const rows=entries.filter(f);
+    list.innerHTML=rows.length?rows.slice(0,80).map(x=>{
+      const u=x.understood||{}, bits=[u.dates&&'📅 '+u.dates,u.guests&&'👥 '+u.guests,u.topics&&u.topics.length&&'❓ '+u.topics.join(', ')].filter(Boolean).join(' · ');
+      return `<div class="wa-r" data-id="${esc(x.id)}"><div class="q">“${esc(x.text)}”</div>
+        <div class="m">${esc(new Date(x.at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}))} · ${esc(x.name||'Guest')}${x.phone?' ··'+esc(x.phone):''} · ${outcome(x)}${bits?' · '+esc(bits):''}</div>
+        <div class="acts">${!x.sent&&x.kind==='none'&&!x.resolved?'<button type="button" data-a="teach">🧠 Teach an answer</button><button type="button" data-a="ignore">🙋 Always leave these for me</button>':''}${x.sent&&!x.flagged?'<button type="button" data-a="flag">⚠️ Wrong reply</button>':''}${x.flagged&&!x.resolved?'<button type="button" data-a="teach">🧠 Teach the right answer</button>':''}</div></div>`;
+    }).join(''):`<div class="wa-empty">${filter==='un'?'Nothing waiting — every recent message was answered or left for you. ✅':'Nothing here yet.'}</div>`;
+  }
+  function taught(){
+    const L=learn(), out=[];
+    Object.keys(L.phrases).forEach(k=>(L.phrases[k]||[]).forEach((p,i)=>out.push(`<span class="ph">“${esc(p)}” → ${esc(WA_TOPIC_LABELS[k]||(waCustomList().find(c=>'custom:'+c.id===k)||{}).label||k)}<button type="button" data-rm="${esc(k)}|${i}" title="Forget">×</button></span>`)));
+    L.ignore.forEach((p,i)=>out.push(`<span class="ph">“${esc(p)}” → 🙋 left for you<button type="button" data-rm="ignore|${i}" title="Forget">×</button></span>`));
+    document.getElementById('waTaught').innerHTML=out.length?'<b>Taught so far:</b><br>'+out.join(''):'';
+  }
+  async function load(){
+    if(!proxyToken) return;
+    try{
+      const r=await fetch(PROXY_URL+'/whatsapp/review',{headers:{'X-Token':proxyToken},cache:'no-store'}); const j=await r.json();
+      if(!r.ok){ list.innerHTML='<div class="wa-empty">'+esc(j.error||'Could not load')+'</div>'; return; }
+      entries=j.entries||[]; const w=j.week||{};
+      document.getElementById('waRevStats').innerHTML=w.total?`Last 7 days: <b>${w.total}</b> guest messages · <b>${w.answered}</b> answered automatically · <b>${w.unanswered}</b> it couldn't answer · <b>${w.forYou}</b> left for you${w.flagged?` · <b>${w.flagged}</b> marked wrong`:''}`:'No guest messages in the last 7 days yet.';
+      show(); taught();
+    }catch(e){ list.innerHTML='<div class="wa-empty">Could not reach the server</div>'; }
+  }
+  const mark=(id,body)=>fetch(PROXY_URL+'/whatsapp/review/flag',{method:'POST',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify(Object.assign({id},body))}).catch(()=>{});
+  list.addEventListener('click',async e=>{
+    const b=e.target.closest('button[data-a]'); if(!b) return;
+    const row=b.closest('.wa-r'), x=entries.find(y=>y.id===row.dataset.id); if(!x) return;
+    if(b.dataset.a==='ignore'){
+      const ph=prompt('Leave messages containing these words for you:',phraseOf(x.text)); if(!ph||phraseOf(ph).length<3) return;
+      learn().ignore.push(phraseOf(ph)); await saveStay(); x.resolved=true; await mark(x.id,{flagged:false,resolved:true}); load(); return;
+    }
+    if(b.dataset.a==='flag'){
+      const note=prompt('What should it have said? (kept so the reply can be improved)',''); if(note===null) return;
+      x.flagged=true; mark(x.id,{flagged:true,note}); show(); toast('Marked — teach the right answer below, or tell us what went wrong'); return;
+    }
+    if(row.querySelector('.teach')) return;
+    const opts=Object.keys(WA_TOPIC_LABELS).map(k=>`<option value="${k}">${esc(WA_TOPIC_LABELS[k])}</option>`).join('')+waCustomList().filter(c=>c.label).map(c=>`<option value="custom:${esc(c.id)}">⭐ ${esc(c.label)}</option>`).join('')+'<option value="new">＋ A new answer…</option>';
+    row.insertAdjacentHTML('beforeend',`<div class="teach"><label class="f"><span>When a message has these words</span><input class="t" data-t="ph" value="${esc(phraseOf(x.text))}"></label>
+      <label class="f"><span>answer with</span><select class="t" data-t="topic">${opts}</select></label>
+      <div data-t="newbox" hidden style="display:grid;gap:8px"><input class="t" data-t="label" placeholder="Name, e.g. Extra mattress"><textarea class="t" data-t="answer" rows="2" placeholder="Your answer"></textarea></div>
+      <div><button type="button" class="btn primary" data-t="save">Save</button> <button type="button" class="btn" data-t="cancel">Cancel</button></div>
+      <p class="sd" style="margin:0">Tip: keep just the key words ("extra mattress", not the whole sentence) so similar messages match too.</p></div>`);
+    const tb=row.querySelector('.teach'), sel=tb.querySelector('[data-t="topic"]');
+    sel.addEventListener('change',()=>{ tb.querySelector('[data-t="newbox"]').hidden=sel.value!=='new'; });
+    tb.querySelector('[data-t="cancel"]').addEventListener('click',()=>tb.remove());
+    tb.querySelector('[data-t="save"]').addEventListener('click',async()=>{
+      const ph=phraseOf(tb.querySelector('[data-t="ph"]').value);
+      if(ph.length<3){ toast('Add at least one word (3+ letters)'); return; }
+      let topic=sel.value;
+      if(topic==='new'){
+        const label=tb.querySelector('[data-t="label"]').value.trim(), answer=tb.querySelector('[data-t="answer"]').value.trim();
+        if(!label||!answer){ toast('Give the new answer a name and the text'); return; }
+        waCustomList().push({id:'q'+Date.now().toString(36),label:label.slice(0,60),keywords:[ph],answer:answer.slice(0,1000)}); renderWaCustom();
+      } else if(topic.startsWith('custom:')){
+        const c=waCustomList().find(c=>'custom:'+c.id===topic); if(c){ c.keywords=Array.from(new Set([...(c.keywords||[]),ph])).slice(0,30); renderWaCustom(); }
+      } else {
+        const L=learn(); L.phrases[topic]=Array.from(new Set([...(L.phrases[topic]||[]),ph])).slice(0,50);
+        const ta=document.getElementById('waFaq_'+topic); if(ta&&!ta.value.trim()) toast('Saved — now write the '+WA_TOPIC_LABELS[topic]+' answer above, it\'s still blank');
+      }
+      await saveStay(); x.resolved=true; x.flagged=false; await mark(x.id,{flagged:false,resolved:true}); load();
+    });
+  });
+  document.getElementById('waTaught').addEventListener('click',async e=>{
+    const b=e.target.closest('[data-rm]'); if(!b) return;
+    const [k,i]=b.dataset.rm.split('|'), L=learn();
+    if(k==='ignore') L.ignore.splice(+i,1); else if(L.phrases[k]) L.phrases[k].splice(+i,1);
+    await saveStay(); taught();
+  });
+  document.getElementById('waRevFilter').addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    if(b.id==='waRevRefresh') return load();
+    filter=b.dataset.f; document.querySelectorAll('#waRevFilter [data-f]').forEach(x=>x.classList.toggle('on',x===b)); show();
+  });
+  document.querySelector('.tab-btn[data-tab="whatsapp"]').addEventListener('click',()=>{ renderWaCustom(); load(); });
+  window.waReviewLoad=load;
+})();
+if(location.hash==='#whatsapp'){ setTimeout(()=>{ switchTab('whatsapp'); renderWaCustom(); if(window.waReviewLoad) window.waReviewLoad(); document.getElementById('cfgTabs').scrollIntoView({block:'start'}); }, 900); }
 
 /* ---------- GST ---------- */
 // Mirrors the proxy's gst.js: GSTIN format + check character, state codes.
