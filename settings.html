@@ -205,7 +205,7 @@
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
 <script>
 // WhatsApp auto-reply: the common questions it can answer (server: wa-availability.js TOPICS)
-const WA_FAQ_KEYS=['location','timings','pets','food','pool','alcohol','wifi','parties','beach','screen','parking','photos'];
+const WA_FAQ_KEYS=['location','timings','pets','food','pool','alcohol','wifi','parties','beach','screen','parking','caretaker','photos'];
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
 <meta name="theme-color" content="#F6F3ED" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
 </head>
@@ -443,6 +443,7 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f"><span>🏖️ Beach</span><textarea class="t" id="waFaq_beach" rows="2"></textarea></label>
       <label class="f"><span>🎬 LED screen</span><textarea class="t" id="waFaq_screen" rows="2"></textarea></label>
       <label class="f"><span>🚗 Parking</span><textarea class="t" id="waFaq_parking" rows="2"></textarea></label>
+      <label class="f"><span>🧑‍🔧 Caretaker &amp; help at the villa</span><textarea class="t" id="waFaq_caretaker" rows="2"></textarea></label>
       <label class="f"><span>📸 Photos &amp; videos</span><textarea class="t" id="waFaq_photos" rows="2" placeholder="Blank = your website gallery link and Instagram"></textarea></label>
     </div>
     <p class="gh-mini">Your own questions &amp; answers</p>
@@ -2133,7 +2134,7 @@ WA_FAQ_KEYS.forEach(k=>document.getElementById('waFaq_'+k).addEventListener('cha
 })();
 
 // ── Your own questions & answers (stay.waCustom) ──
-const WA_TOPIC_LABELS={location:'📍 Location',timings:'🕒 Check-in / out times',pets:'🐾 Pets',food:'🍽️ Food',pool:'🏊 Pool',alcohol:'🍷 Alcohol & smoking',wifi:'📶 Wi-Fi',parties:'🎉 Parties & celebrations',beach:'🏖️ Beach',screen:'🎬 LED screen',parking:'🚗 Parking',photos:'📸 Photos & videos'};
+const WA_TOPIC_LABELS={location:'📍 Location',timings:'🕒 Check-in / out times',pets:'🐾 Pets',food:'🍽️ Food',pool:'🏊 Pool',alcohol:'🍷 Alcohol & smoking',wifi:'📶 Wi-Fi',parties:'🎉 Parties & celebrations',beach:'🏖️ Beach',screen:'🎬 LED screen',parking:'🚗 Parking',caretaker:'🧑‍🔧 Caretaker',photos:'📸 Photos & videos'};
 function waCustomList(){ if(!Array.isArray(stay.waCustom)) stay.waCustom=[]; return stay.waCustom; }
 function renderWaCustom(){
   const box=document.getElementById('waCustomList'); if(!box) return;
