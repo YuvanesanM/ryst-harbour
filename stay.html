@@ -1063,6 +1063,7 @@ function setType(t){
 // then email else guest-name match against invoice records).
 function isConvertedQuote(d, stays){
   if((d.type||"invoice")!=="quote") return false;
+  if(stays.some(s=>(s.type||"invoice")==="invoice" && s.convertedFrom && s.convertedFrom===d.no)) return true;
   const email = (d.email||"").trim().toLowerCase();
   const guest = (d.guest||"").trim().toLowerCase();
   return stays.some(s=>

@@ -46,6 +46,7 @@
   var committed = function (s) { return typeOf(s) === 'invoice' || (typeOf(s) === 'quote' && num(s.advance) > 0); };
   function isConverted(q, stays) {
     if (typeOf(q) !== 'quote') return false;
+    if (stays.some(function (s) { return s !== q && typeOf(s) === 'invoice' && s.convertedFrom && s.convertedFrom === q.no; })) return true;
     var email = String(q.email || '').trim().toLowerCase(), guest = String(q.guest || '').trim().toLowerCase();
     return stays.some(function (s) {
       return s !== q && typeOf(s) === 'invoice' && s.checkin === q.checkin && s.checkout === q.checkout &&

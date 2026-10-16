@@ -638,6 +638,7 @@ function passFilter(d){
 // look double-booked and inflating the occupancy stats for one real stay.
 function isConvertedQuote(d){
   if((d.type||'invoice')!=='quote') return false;
+  if(STAYS.some(s=>(s.type||'invoice')==='invoice' && s.convertedFrom && s.convertedFrom===d.no)) return true;
   const email = (d.email||'').trim().toLowerCase();
   const guest = (d.guest||'').trim().toLowerCase();
   return STAYS.some(s=>
