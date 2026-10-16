@@ -429,6 +429,12 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
     <label class="chk-toggle"><input type="checkbox" id="stayWaAvail"> Auto-reply to date questions</label>
     <p class="sd" style="margin:6px 0 22px">When a guest asks about dates on WhatsApp (for example "is 25–27 Dec free for 10?"), Interakt answers straight away from the live calendar: free or booked with the nearest free dates, the price for their group and a booking link with the dates filled in. Other messages are left for you, and you get a Telegram alert for each reply. Needs the Interakt webhook below with <b>Message received</b> ticked in Interakt. Saves as soon as you tick it.</p>
     <p class="sd" style="margin:-10px 0 12px">It also answers <b>month and festival</b> questions ("any weekends in November?", "Deepavali?" — from your holiday names under Tariffs), and when a guest replies <b>BOOK</b> it sends a Razorpay payment link for the advance right in the chat (valid 30 minutes, dates held meanwhile; <b>FULL</b> for the whole amount with your full-payment discount). Payments confirm the booking automatically. A quote (channel WhatsApp) is made when they reply BOOK; if they haven't paid 2 hours later you get a Telegram nudge to follow up. Every enquiry stays in Review below. When you reply to a guest yourself in Interakt, auto-replies to them pause for 6 hours; each Telegram alert also has a pause link. In a chat, type <b>#auto</b> to turn them back on for that guest, or <b>#pause</b> to stop them for 7 days. Messages about cancelling, refunds, changes or payments, and date questions from guests who already have a booking, are always left for you — with a Telegram alert.</p>
+    <p class="gh-mini">Instagram DMs</p>
+    <label class="chk-toggle"><input type="checkbox" id="stayIgAuto"> Answer Instagram DMs the same way</label>
+    <p class="sd" style="margin:6px 0 8px">Same answers, BOOK payment links and Review as WhatsApp, for messages to your Instagram account (through Meta directly). Replying yourself in Instagram pauses them for that guest. Saves as soon as you tick it.</p>
+    <button class="btn" type="button" id="igSetupBtn" style="margin-bottom:8px">Show Instagram setup</button>
+    <div id="igSetup" class="sync-results" style="margin-bottom:22px"></div>
+
     <p class="gh-mini">Answers to common questions</p>
     <p class="sd" style="margin:0 0 10px">Sent when a guest clearly asks about one of these. Leave one blank and that question is left for you (location, timings, BBQ, LED screen and photos fall back to your address, check-in times, the BBQ Setup and LED Screen charges and your website gallery).</p>
     <div id="waFaqBox" style="display:grid;gap:10px;margin-bottom:22px">
@@ -1035,6 +1041,7 @@ function renderFromStay(){
   document.getElementById("stayHolidayHike").value=stay.holidayHikePercent!=null?stay.holidayHikePercent:"";
   document.getElementById("stayPeakMinGuests").value=stay.peakMinGuests>0?stay.peakMinGuests:"";
   document.getElementById("stayWaAvail").checked=!!stay.waAvailabilityReply;
+  document.getElementById("stayIgAuto").checked=!!stay.igAutoReply;
   WA_FAQ_KEYS.forEach(k=>{ const el=document.getElementById('waFaq_'+k); if(el) el.value=(stay.waFaq&&stay.waFaq[k])||''; });
   renderWaCustom();
   stayHolDraft=(stay.holidays||[]).map(h=>({...h}));
@@ -2043,6 +2050,7 @@ async function saveStay(){
   stay.holidayHikePercent = hhVal!=="" ? Math.max(0, parseFloat(hhVal)||0) : 0;
   stay.peakMinGuests = Math.max(0, parseInt(document.getElementById("stayPeakMinGuests").value)||0);
   stay.waAvailabilityReply = document.getElementById("stayWaAvail").checked;
+  stay.igAutoReply = document.getElementById("stayIgAuto").checked;
   stay.waFaq = {};
   WA_FAQ_KEYS.forEach(k=>{ const v=(document.getElementById('waFaq_'+k).value||'').trim().slice(0,1000); if(v) stay.waFaq[k]=v; });
   const tfSeen=new Set();
@@ -2101,6 +2109,25 @@ async function saveStay(){
 document.getElementById("staySave").addEventListener("click",saveStay);
 // The WhatsApp tab has no Save button of its own for this — save right away.
 document.getElementById("stayWaAvail").addEventListener("change",saveStay);
+document.getElementById("stayIgAuto").addEventListener("change",saveStay);
+// What to paste into the Meta app dashboard, and whether it's arriving (GET /instagram/webhook-info)
+document.getElementById("igSetupBtn").addEventListener("click",async()=>{
+  const out=document.getElementById('igSetup');
+  if(!proxyToken){ toast('Sign in required'); return; }
+  out.innerHTML='<div class="sync-result"><span>Loading…</span></div>';
+  try{
+    const r=await fetch(PROXY_URL+'/instagram/webhook-info',{headers:{'X-Token':proxyToken},cache:'no-store'}); const j=await r.json();
+    if(!r.ok||!j.ok){ out.innerHTML=`<div class="sync-result err"><span>${esc(j.error||(j.available===false?'Instagram DMs are available for RYST 109A only for now':'Could not load'))}</span></div>`; return; }
+    const row=(k,v,copy)=>`<div class="sync-result"><span>${k}</span><span style="word-break:break-all">${esc(v)}${copy?` <button type="button" class="rc-add" data-copy="${esc(v)}">Copy</button>`:''}</span></div>`;
+    const ok=(b,yes,no)=>`<div class="sync-result${b?'':' err'}"><span>${b?'✅':'⚠️'}</span><span>${b?yes:no}</span></div>`;
+    out.innerHTML=row('Callback URL',j.url,true)+row('Verify token',j.verifyToken,true)
+      +ok(j.token,'Instagram token is set','Instagram token missing — INSTAGRAM_ACCESS_TOKEN on Render')
+      +ok(j.appSecret,'Meta app secret is set (webhooks are checked)','Add INSTAGRAM_APP_SECRET on Render (Meta app → App settings → Basic → App secret) — until then Instagram DMs are refused')
+      +((j.recent||[]).length?(j.recent||[]).map(x=>row(new Date(x.at).toLocaleString('en-IN'),x.kind)).join(''):row('Last received','Nothing since the server last restarted — send your account a DM to test'))
+      +`<div class="sync-result"><span>Steps</span><span>1. Meta app dashboard → Instagram → API setup: add the <b>instagram_business_manage_messages</b> permission and generate a new token (put it in INSTAGRAM_ACCESS_TOKEN on Render).<br>2. Webhooks: paste the Callback URL and Verify token above, verify, then subscribe to <b>messages</b>.<br>3. In the Instagram app: Settings → Messages and story replies → Message controls → Connected tools → allow access to messages.<br>4. Submit the app for App Review (messages permission) so it can reply to everyone, not just test accounts.<br>5. Tick "Answer Instagram DMs the same way" above.</span></div>`;
+    out.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); }catch(e){ toast('Select and copy it manually'); } }));
+  }catch(e){ out.innerHTML='<div class="sync-result err"><span>Could not reach the server</span></div>'; }
+});
 WA_FAQ_KEYS.forEach(k=>document.getElementById('waFaq_'+k).addEventListener('change',saveStay));
 
 // ── WhatsApp auto-reply test chat (POST /whatsapp/test-reply — sends nothing) ──
@@ -2173,7 +2200,7 @@ document.getElementById('waCustomAdd').addEventListener('click',()=>{ waCustomLi
     list.innerHTML=rows.length?rows.slice(0,80).map(x=>{
       const u=x.understood||{}, bits=[u.dates&&'📅 '+u.dates,u.guests&&'👥 '+u.guests,u.topics&&u.topics.length&&'❓ '+u.topics.join(', ')].filter(Boolean).join(' · ');
       return `<div class="wa-r" data-id="${esc(x.id)}"><div class="q">“${esc(x.text)}”</div>
-        <div class="m">${esc(new Date(x.at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}))} · ${esc(x.name||'Guest')}${x.phone?' ··'+esc(x.phone):''} · ${outcome(x)}${bits?' · '+esc(bits):''}</div>
+        <div class="m">${esc(new Date(x.at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}))} · ${x.channel==='ig'?'📷 ':''}${esc(x.name||'Guest')}${x.phone?(x.channel==='ig'?' · '+esc(x.phone):' ··'+esc(x.phone)):''} · ${outcome(x)}${bits?' · '+esc(bits):''}</div>
         <div class="acts">${!x.sent&&x.kind==='none'&&!x.resolved?'<button type="button" data-a="teach">🧠 Teach an answer</button><button type="button" data-a="ignore">🙋 Always leave these for me</button>':''}${x.sent&&!x.flagged?'<button type="button" data-a="flag">⚠️ Wrong reply</button>':''}${x.flagged&&!x.resolved?'<button type="button" data-a="teach">🧠 Teach the right answer</button>':''}</div></div>`;
     }).join(''):`<div class="wa-empty">${filter==='un'?'Nothing waiting — every recent message was answered or left for you. ✅':'Nothing here yet.'}</div>`;
   }
