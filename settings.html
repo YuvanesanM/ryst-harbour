@@ -44,6 +44,20 @@
   .gh-mini{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-d);font-weight:700;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
   .gh-mini::after{content:"";flex:1;height:1px;background:var(--line)}
   .gh-mini:first-of-type{margin-top:0}
+  .wa-test{border:1px solid var(--line);border-radius:14px;background:var(--panel2);padding:12px;margin-bottom:22px}
+  .wa-log{max-height:420px;min-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px 10px}
+  .wa-empty{color:var(--muted);font-size:13px;text-align:center;padding:30px 10px}
+  .wa-b{max-width:86%;padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;overflow-wrap:anywhere}
+  .wa-b.me{align-self:flex-end;background:#d9fdd3;color:#111b21;border-bottom-right-radius:4px}
+  .wa-b.bot{align-self:flex-start;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:4px}
+  .wa-b.bot a{color:var(--accent-d,#1f6f5c);text-decoration:underline}
+  .wa-b.none,.wa-b.err{color:var(--muted)}
+  .wa-b.wait{color:var(--muted);letter-spacing:2px}
+  .wa-meta{margin-top:7px;padding-top:6px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--muted)}
+  .wa-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+  .wa-chips button{font:inherit;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+  .wa-chips button:hover{border-color:var(--accent-d,#1f6f5c)}
+  .wa-row{display:flex;gap:8px}.wa-row .t{flex:1;min-width:0}
   .tf-note{font-size:12.5px;line-height:1.5;color:var(--muted);margin:-4px 0 10px}
   .f{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
   .f span{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
@@ -172,7 +186,10 @@
 </style>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
-<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<script>
+// WhatsApp auto-reply: the common questions it can answer (server: wa-availability.js TOPICS)
+const WA_FAQ_KEYS=['location','timings','pets','food','pool','alcohol','wifi','parties','beach','screen','parking'];
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
 <meta name="theme-color" content="#F6F3ED" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
 </head>
 <body>
@@ -394,7 +411,7 @@
     <p class="gh-mini">Availability auto-reply</p>
     <label class="chk-toggle"><input type="checkbox" id="stayWaAvail"> Auto-reply to date questions</label>
     <p class="sd" style="margin:6px 0 22px">When a guest asks about dates on WhatsApp (for example "is 25–27 Dec free for 10?"), Interakt answers straight away from the live calendar: free or booked with the nearest free dates, the price for their group and a booking link with the dates filled in. Other messages are left for you, and you get a Telegram alert for each reply. Needs the Interakt webhook below with <b>Message received</b> ticked in Interakt. Saves as soon as you tick it.</p>
-    <p class="sd" style="margin:-10px 0 12px">It also answers <b>month and festival</b> questions ("any weekends in November?", "Deepavali?" — from your holiday names under Tariffs), and when a guest replies <b>BOOK</b> it sends them the stay.ryst.in payment page with their dates, name and number filled in. Every date enquiry is saved as a quote (channel WhatsApp). When you reply to a guest yourself in Interakt, auto-replies to them pause for 6 hours; each Telegram alert also has a pause link.</p>
+    <p class="sd" style="margin:-10px 0 12px">It also answers <b>month and festival</b> questions ("any weekends in November?", "Deepavali?" — from your holiday names under Tariffs), and when a guest replies <b>BOOK</b> it sends them the stay.ryst.in payment page with their dates, name and number filled in. Every date enquiry is saved as a quote (channel WhatsApp). When you reply to a guest yourself in Interakt, auto-replies to them pause for 6 hours; each Telegram alert also has a pause link. In a chat, type <b>#auto</b> to turn them back on for that guest, or <b>#pause</b> to stop them for 7 days. Messages about cancelling, refunds, changes or payments, and date questions from guests who already have a booking, are always left for you — with a Telegram alert.</p>
     <p class="gh-mini">Answers to common questions</p>
     <p class="sd" style="margin:0 0 10px">Sent when a guest clearly asks about one of these. Leave one blank and that question is left for you (location and timings fall back to your property address and check-in times).</p>
     <div id="waFaqBox" style="display:grid;gap:10px;margin-bottom:22px">
@@ -403,6 +420,23 @@
       <label class="f"><span>🐾 Pets</span><textarea class="t" id="waFaq_pets" rows="2"></textarea></label>
       <label class="f"><span>🍽️ Food</span><textarea class="t" id="waFaq_food" rows="3"></textarea></label>
       <label class="f"><span>🏊 Pool</span><textarea class="t" id="waFaq_pool" rows="3"></textarea></label>
+      <label class="f"><span>🍷 Alcohol &amp; smoking</span><textarea class="t" id="waFaq_alcohol" rows="2"></textarea></label>
+      <label class="f"><span>📶 Wi-Fi</span><textarea class="t" id="waFaq_wifi" rows="2"></textarea></label>
+      <label class="f"><span>🎉 Parties, music &amp; celebrations</span><textarea class="t" id="waFaq_parties" rows="3"></textarea></label>
+      <label class="f"><span>🏖️ Beach</span><textarea class="t" id="waFaq_beach" rows="2"></textarea></label>
+      <label class="f"><span>🎬 LED screen</span><textarea class="t" id="waFaq_screen" rows="2"></textarea></label>
+      <label class="f"><span>🚗 Parking</span><textarea class="t" id="waFaq_parking" rows="2"></textarea></label>
+    </div>
+    <p class="gh-mini">Test the auto-reply</p>
+    <p class="sd" style="margin:0 0 10px">Type as a guest would. You see exactly what would be sent, using today's calendar, prices and the answers above — nothing goes to anyone and no lead is saved. Follow-ups like "for 6 adults" or "BOOK" continue the conversation.</p>
+    <div class="wa-test">
+      <div class="wa-log" id="waTestLog" aria-live="polite"><div class="wa-empty">Try one of the examples below, or type your own.</div></div>
+      <div class="wa-chips" id="waTestChips">
+        <button type="button">Is 25 Dec available for 8?</button><button type="button">for 6 adults</button><button type="button">BOOK</button>
+        <button type="button">Any weekends free in November?</button><button type="button">Deepavali?</button><button type="button">What is the price</button>
+        <button type="button">Can we bring our dog?</button><button type="button">Where is the villa?</button><button type="button">I want to cancel my booking</button>
+      </div>
+      <form class="wa-row" id="waTestForm"><input class="t" id="waTestIn" maxlength="600" placeholder='e.g. "Is 14–16 Nov free for 12 people?"' autocomplete="off"><button class="btn primary" type="submit">Send</button><button class="btn" type="button" id="waTestReset" title="Start a new conversation">↺</button></form>
     </div>
     <p class="gh-mini">Automated sending</p>
     <p class="sd" style="margin-bottom:12px">When configured, the templates below go out automatically on a schedule (check-in requests, stay reminders, feedback requests, and booking confirmations) instead of needing a manual click from Bookings. A scenario with an Interakt template name set below (once that template is approved by Meta) sends for real, straight to the guest's WhatsApp — no tap needed. Every other scenario still falls back to a Telegram message with a one-tap link that opens WhatsApp pre-filled, so the actual send is you, from your own number.</p>
@@ -967,7 +1001,7 @@ function renderFromStay(){
   document.getElementById("stayHolidayHike").value=stay.holidayHikePercent!=null?stay.holidayHikePercent:"";
   document.getElementById("stayPeakMinGuests").value=stay.peakMinGuests>0?stay.peakMinGuests:"";
   document.getElementById("stayWaAvail").checked=!!stay.waAvailabilityReply;
-  ['location','timings','pets','food','pool'].forEach(k=>{ const el=document.getElementById('waFaq_'+k); if(el) el.value=(stay.waFaq&&stay.waFaq[k])||''; });
+  WA_FAQ_KEYS.forEach(k=>{ const el=document.getElementById('waFaq_'+k); if(el) el.value=(stay.waFaq&&stay.waFaq[k])||''; });
   stayHolDraft=(stay.holidays||[]).map(h=>({...h}));
   renderStayHolidays();
   stayTariffDraft=(stay.tariff||[]).map(t=>({...t}));
@@ -1975,7 +2009,7 @@ async function saveStay(){
   stay.peakMinGuests = Math.max(0, parseInt(document.getElementById("stayPeakMinGuests").value)||0);
   stay.waAvailabilityReply = document.getElementById("stayWaAvail").checked;
   stay.waFaq = {};
-  ['location','timings','pets','food','pool'].forEach(k=>{ const v=(document.getElementById('waFaq_'+k).value||'').trim().slice(0,1000); if(v) stay.waFaq[k]=v; });
+  WA_FAQ_KEYS.forEach(k=>{ const v=(document.getElementById('waFaq_'+k).value||'').trim().slice(0,1000); if(v) stay.waFaq[k]=v; });
   const tfSeen=new Set();
   stay.tariff = stayTariffDraft
     .map(t=>({guests:parseInt(t.guests)||0, bedrooms:parseInt(t.bedrooms)||0, rate:parseFloat(t.rate)||0}))
@@ -2032,7 +2066,38 @@ async function saveStay(){
 document.getElementById("staySave").addEventListener("click",saveStay);
 // The WhatsApp tab has no Save button of its own for this — save right away.
 document.getElementById("stayWaAvail").addEventListener("change",saveStay);
-['location','timings','pets','food','pool'].forEach(k=>document.getElementById('waFaq_'+k).addEventListener('change',saveStay));
+WA_FAQ_KEYS.forEach(k=>document.getElementById('waFaq_'+k).addEventListener('change',saveStay));
+
+// ── WhatsApp auto-reply test chat (POST /whatsapp/test-reply — sends nothing) ──
+(function(){
+  const log=document.getElementById('waTestLog'), inp=document.getElementById('waTestIn');
+  let ctx=null, busy=false;
+  // WhatsApp's own formatting: *bold*, and links that open
+  const fmt=t=>esc(t).replace(/\*([^*\n]+)\*/g,'<b>$1</b>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/\n/g,'<br>');
+  const add=(cls,html)=>{ const e=log.querySelector('.wa-empty'); if(e) e.remove(); const d=document.createElement('div'); d.className='wa-b '+cls; d.innerHTML=html; log.appendChild(d); log.scrollTop=log.scrollHeight; return d; };
+  async function send(text){
+    text=String(text||'').trim(); if(!text||busy) return;
+    if(!proxyToken){ toast('Sign in required'); return; }
+    busy=true; add('me',esc(text)); inp.value='';
+    const wait=add('bot wait','…');
+    try{
+      const res=await fetch(PROXY_URL+'/whatsapp/test-reply',{method:'POST',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify({text,ctx,name:(localStorage.getItem('ryst_user_name')||'').split(' ')[0]})});
+      const j=await res.json().catch(()=>({}));
+      wait.remove();
+      if(!res.ok){ add('bot err',esc(j.error||'Could not check ('+res.status+')')); return; }
+      ctx=j.ctx||ctx;
+      const u=j.understood||{}, bits=[];
+      if(u.dates) bits.push('📅 '+u.dates+(u.holiday?' ('+u.holiday+')':'')); else if(u.week) bits.push('📅 week of '+u.week); else if(u.month) bits.push('📅 '+u.month);
+      if(u.guests) bits.push('👥 '+u.guests); if(u.topics&&u.topics.length) bits.push('❓ '+u.topics.join(', '));
+      const meta=(bits.length?'<div class="wa-meta">Understood: '+esc(bits.join(' · '))+'</div>':'')+(j.note?'<div class="wa-meta">'+esc(j.note)+'</div>':'');
+      add(j.reply?'bot':'bot none', (j.reply?fmt(j.reply):'<i>(no reply sent)</i>')+meta);
+    }catch(e){ wait.remove(); add('bot err','Could not reach the server'); }
+    finally{ busy=false; inp.focus(); }
+  }
+  document.getElementById('waTestForm').addEventListener('submit',e=>{ e.preventDefault(); send(inp.value); });
+  document.getElementById('waTestChips').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) send(b.textContent); });
+  document.getElementById('waTestReset').addEventListener('click',()=>{ ctx=null; log.innerHTML='<div class="wa-empty">New conversation — try a message.</div>'; inp.focus(); });
+})();
 
 /* ---------- GST ---------- */
 // Mirrors the proxy's gst.js: GSTIN format + check character, state codes.
