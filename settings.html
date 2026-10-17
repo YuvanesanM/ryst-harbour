@@ -205,7 +205,7 @@
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
 <script>
 // WhatsApp auto-reply: the common questions it can answer (server: wa-availability.js TOPICS)
-const WA_FAQ_KEYS=['greeting','location','timings','pets','food','pool','alcohol','wifi','parties','beach','screen','parking','caretaker','bbq','photos','discount'];
+const WA_FAQ_KEYS=['greeting','location','timings','rooms','amenities','privacy','pets','food','kitchen','pool','kids','games','alcohol','wifi','ac','power','essentials','parties','beach','screen','parking','caretaker','bbq','photos','discount'];
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
 <meta name="theme-color" content="#F6F3ED" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
 </head>
@@ -441,11 +441,20 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f"><span>👋 Welcome (reply to "Hi" or "need details")</span><textarea class="t" id="waFaq_greeting" rows="6" placeholder="Blank = the RYST 109A welcome asking for guests (adults + children with ages), check-in and check-out"></textarea></label>
       <label class="f"><span>📍 Location</span><textarea class="t" id="waFaq_location" rows="2" placeholder="Blank = your address and map link"></textarea></label>
       <label class="f"><span>🕒 Check-in / check-out times</span><textarea class="t" id="waFaq_timings" rows="2" placeholder="Blank = check-in and check-out times from the website settings"></textarea></label>
+      <label class="f"><span>🛏️ Rooms, beds &amp; bathrooms</span><textarea class="t" id="waFaq_rooms" rows="3"></textarea></label>
+      <label class="f"><span>🏡 Amenities (overview)</span><textarea class="t" id="waFaq_amenities" rows="4"></textarea></label>
+      <label class="f"><span>🔒 Entire villa / privacy</span><textarea class="t" id="waFaq_privacy" rows="2"></textarea></label>
       <label class="f"><span>🐾 Pets</span><textarea class="t" id="waFaq_pets" rows="2"></textarea></label>
       <label class="f"><span>🍽️ Food</span><textarea class="t" id="waFaq_food" rows="3"></textarea></label>
+      <label class="f"><span>🍳 Kitchen</span><textarea class="t" id="waFaq_kitchen" rows="2"></textarea></label>
       <label class="f"><span>🏊 Pool</span><textarea class="t" id="waFaq_pool" rows="3"></textarea></label>
+      <label class="f"><span>🧒 Kids</span><textarea class="t" id="waFaq_kids" rows="2"></textarea></label>
+      <label class="f"><span>🎮 Games &amp; entertainment</span><textarea class="t" id="waFaq_games" rows="2"></textarea></label>
       <label class="f"><span>🍷 Alcohol &amp; smoking</span><textarea class="t" id="waFaq_alcohol" rows="2"></textarea></label>
       <label class="f"><span>📶 Wi-Fi</span><textarea class="t" id="waFaq_wifi" rows="2"></textarea></label>
+      <label class="f"><span>❄️ Air conditioning</span><textarea class="t" id="waFaq_ac" rows="2"></textarea></label>
+      <label class="f"><span>⚡ Power backup</span><textarea class="t" id="waFaq_power" rows="2"></textarea></label>
+      <label class="f"><span>🧴 Hot water, toiletries, kettle &amp; lift</span><textarea class="t" id="waFaq_essentials" rows="2"></textarea></label>
       <label class="f"><span>🎉 Parties, music &amp; celebrations</span><textarea class="t" id="waFaq_parties" rows="3"></textarea></label>
       <label class="f"><span>🏖️ Beach</span><textarea class="t" id="waFaq_beach" rows="2"></textarea></label>
       <label class="f"><span>🎬 LED screen</span><textarea class="t" id="waFaq_screen" rows="2" placeholder="Blank = available on request, with the LED Screen charge from Charge pricing (Tariffs tab)"></textarea></label>
@@ -2167,7 +2176,7 @@ WA_FAQ_KEYS.forEach(k=>document.getElementById('waFaq_'+k).addEventListener('cha
 })();
 
 // ── Your own questions & answers (stay.waCustom) ──
-const WA_TOPIC_LABELS={location:'📍 Location',timings:'🕒 Check-in / out times',pets:'🐾 Pets',food:'🍽️ Food',pool:'🏊 Pool',alcohol:'🍷 Alcohol & smoking',wifi:'📶 Wi-Fi',parties:'🎉 Parties & celebrations',beach:'🏖️ Beach',screen:'🎬 LED screen',parking:'🚗 Parking',caretaker:'🧑‍🔧 Caretaker',bbq:'🔥 BBQ',photos:'📸 Photos & videos',discount:'🏷️ Discounts & offers'};
+const WA_TOPIC_LABELS={location:'📍 Location',timings:'🕒 Check-in / out times',pets:'🐾 Pets',food:'🍽️ Food',pool:'🏊 Pool',alcohol:'🍷 Alcohol & smoking',wifi:'📶 Wi-Fi',parties:'🎉 Parties & celebrations',beach:'🏖️ Beach',screen:'🎬 LED screen',parking:'🚗 Parking',caretaker:'🧑‍🔧 Caretaker',bbq:'🔥 BBQ',photos:'📸 Photos & videos',discount:'🏷️ Discounts & offers',rooms:'🛏️ Rooms & beds',amenities:'🏡 Amenities',privacy:'🔒 Entire villa',kitchen:'🍳 Kitchen',kids:'🧒 Kids',games:'🎮 Games',ac:'❄️ AC',power:'⚡ Power backup',essentials:'🧴 Hot water & toiletries'};
 function waCustomList(){ if(!Array.isArray(stay.waCustom)) stay.waCustom=[]; return stay.waCustom; }
 function renderWaCustom(){
   const box=document.getElementById('waCustomList'); if(!box) return;
