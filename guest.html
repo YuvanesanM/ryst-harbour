@@ -561,7 +561,7 @@
         </a>
         <button type="button" class="menu-item" data-mode="wifi">
           <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8.5a16 16 0 0 1 20 0"/><path d="M5.5 12.5a11 11 0 0 1 13 0"/><path d="M9 16.5a6 6 0 0 1 6 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg></span>
-          <span class="menu-body"><span class="menu-title">Wi-Fi</span><span class="menu-desc">Network, password &amp; scan to join</span></span>
+          <span class="menu-body"><span class="menu-title">Wi-Fi</span><span class="menu-desc">Network &amp; your access code</span></span>
           <span class="menu-chevron" aria-hidden="true">›</span>
         </button>
         <a class="menu-item" href="/nearby.html" data-ryst-only>
@@ -1363,6 +1363,32 @@ function renderWifi(){
   const network = me.wifiNetwork || PROPERTY.name;
   const pass = me.wifiVoucher || '';
   const from = me.wifiFrom ? new Date(me.wifiFrom + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+  // Omada voucher per booking: join the network, then enter the code on the login page
+  if (me.wifiCode || me.wifiPending) {
+    const until = me.wifiUntil ? new Date(me.wifiUntil + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+    $('#wifiCard').innerHTML = `
+      ${me.wifiQr ? `<div class="wifi-field">
+        <img src="${me.wifiQr}" alt="Scan to join ${esc(network)}" width="180" height="180" style="display:block;margin:0 auto;width:180px;height:180px;border-radius:12px;background:#fff;padding:6px">
+      </div>` : ''}
+      <div class="wifi-field">
+        <span class="bc-label">1. Join the network</span>
+        <div class="wifi-value">${esc(network)}</div>
+        ${pass ? `<p class="sub">Password: <b>${esc(pass)}</b></p>` : ''}
+        <p class="sub">Scan the code above with your phone camera, or pick the network in your Wi-Fi settings.</p>
+      </div>
+      <div class="wifi-field">
+        <span class="bc-label">2. Enter your voucher code</span>
+        ${me.wifiCode ? `<div class="wifi-value" id="wifiVoucherVal" style="letter-spacing:3px">${esc(me.wifiCode)}</div>
+        <button type="button" class="copy-btn" id="wifiCopyBtn">Copy code</button>
+        <p class="sub">A login page opens when you join. Enter this code once on each device.${until ? ` It works for your whole group until check-out on ${esc(until)}.` : ''}</p>`
+        : `<p class="sub">Your code is being prepared. Please refresh this page in a minute.</p>`}
+      </div>`;
+    const btn = $('#wifiCopyBtn');
+    if (btn) btn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(me.wifiCode); btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy code'; }, 1500); } catch (e) {}
+    });
+    return;
+  }
   $('#wifiCard').innerHTML = pass ? `
     ${me.wifiQr ? `<div class="wifi-field">
       <img src="${me.wifiQr}" alt="Scan to join ${esc(network)}" width="180" height="180" style="display:block;margin:0 auto;width:180px;height:180px;border-radius:12px;background:#fff;padding:6px">
