@@ -739,13 +739,15 @@ function computeMetrics(startISO, endISO, F){
   const foodOrders = ORDERS.filter(o=>o.status!=='cancelled' && o.date && inRange(o.date,startISO,endISO));
   const foodRevenue = foodOrders.reduce((s,o)=>s+toNum(o.total),0);
   const foodCollected = foodOrders.filter(o=>o.status==='settled').reduce((s,o)=>s+toNum(o.total),0);
-  // A confirmed quote (advance paid, not yet invoiced) adds the advance it
-  // has received — money in hand — until its invoice replaces it with the
-  // full total (converted quotes are already out of ROWS). Kept out of
-  // stayRevenue so the per-night and per-booking rates stay invoice-based.
-  const advanceRevenue = rows.filter(r=>r.type==='quote' && r.advance>0).reduce((s,r)=>s+r.advance,0);
-  const revenue = stayRevenue + advanceRevenue + foodRevenue;
-  const collected = stayCollected + advanceRevenue + foodCollected;
+  // A confirmed quote (advance paid, not yet invoiced) counts at its full
+  // value, with only its advance received — so its balance is outstanding,
+  // the same as an invoice's (converted quotes are already out of ROWS).
+  // Kept out of stayRevenue so the per-night and per-booking rates stay invoice-based.
+  const confQuotes = rows.filter(r=>r.type==='quote' && r.advance>0);
+  const quoteRevenue = confQuotes.reduce((s,r)=>s+(r.total||r.advance),0);
+  const quoteCollected = confQuotes.reduce((s,r)=>s+Math.min(r.advance, r.total||r.advance),0);
+  const revenue = stayRevenue + quoteRevenue + foodRevenue;
+  const collected = stayCollected + quoteCollected + foodCollected;
   const outstanding = Math.max(0, revenue-collected);
   const expenses = sliceExpenses(startISO,endISO).filter(e=>e.type==='expense').reduce((s,e)=>s+toNum(e.amount),0);
   const commission = invoices.reduce((s,r)=>s+r.commission,0);
@@ -811,7 +813,7 @@ function computeMetrics(startISO, endISO, F){
 
   return {
     revenue, collected, outstanding, expenses, net, marginPct,
-    stayRevenue, foodRevenue, advanceRevenue, commission,
+    stayRevenue, foodRevenue, advanceRevenue: quoteRevenue, commission,
     byChannel: channelTable(invoices),
     bookings: invoices.length, quotesTotal: allQuotesInRange.length, quotesConverted: convertedInRange.length,
     conversionPct: allQuotesInRange.length>=3 ? (convertedInRange.length/allQuotesInRange.length)*100 : null,

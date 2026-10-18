@@ -89,11 +89,11 @@
   function metrics(stays, orders, expenses, start, end) {
     var inv = stays.filter(function (s) { return typeOf(s) === 'invoice' && s.checkin >= start && s.checkin < end; });
     var food = orders.filter(function (o) { return o.status !== 'cancelled' && o.date >= start && o.date < end; });
-    // Confirmed quotes not yet invoiced count the advance received.
-    var adv = stays.filter(function (s) { return typeOf(s) === 'quote' && num(s.advance) > 0 && s.checkin >= start && s.checkin < end && !isConverted(s, stays); })
-      .reduce(function (a, s) { return a + num(s.advance); }, 0);
-    var revenue = inv.reduce(function (a, s) { return a + grandTotal(s); }, 0) + adv + food.reduce(function (a, o) { return a + num(o.total); }, 0);
-    var collected = inv.reduce(function (a, s) { return a + num(s.advance); }, 0) + adv + food.filter(function (o) { return o.status === 'settled'; }).reduce(function (a, o) { return a + num(o.total); }, 0);
+    // Confirmed quotes not yet invoiced (advance paid) count at their full
+    // value; only the advance is received — so their balance shows as due.
+    var conf = stays.filter(function (s) { return typeOf(s) === 'quote' && num(s.advance) > 0 && s.checkin >= start && s.checkin < end && !isConverted(s, stays); });
+    var revenue = inv.reduce(function (a, s) { return a + grandTotal(s); }, 0) + conf.reduce(function (a, s) { return a + grandTotal(s); }, 0) + food.reduce(function (a, o) { return a + num(o.total); }, 0);
+    var collected = inv.reduce(function (a, s) { return a + num(s.advance); }, 0) + conf.reduce(function (a, s) { return a + Math.min(num(s.advance), grandTotal(s) || num(s.advance)); }, 0) + food.filter(function (o) { return o.status === 'settled'; }).reduce(function (a, o) { return a + num(o.total); }, 0);
     var spent = expenses.filter(function (e) { return e.type === 'expense' && e.date >= start && e.date < end; }).reduce(function (a, e) { return a + num(e.amount); }, 0);
     var days = nightsBetween(start, end) || 1, n = nightsIn(stays, start, end);
     return { revenue: revenue, collected: collected, expenses: spent, days: days, nights: n.booked, ota: n.ota, occupancy: n.booked / days * 100 };
