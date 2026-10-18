@@ -561,7 +561,7 @@
         </a>
         <button type="button" class="menu-item" data-mode="wifi">
           <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8.5a16 16 0 0 1 20 0"/><path d="M5.5 12.5a11 11 0 0 1 13 0"/><path d="M9 16.5a6 6 0 0 1 6 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg></span>
-          <span class="menu-body"><span class="menu-title">Wi-Fi</span><span class="menu-desc">Network &amp; voucher code</span></span>
+          <span class="menu-body"><span class="menu-title">Wi-Fi</span><span class="menu-desc">Network, password &amp; scan to join</span></span>
           <span class="menu-chevron" aria-hidden="true">›</span>
         </button>
         <a class="menu-item" href="/nearby.html" data-ryst-only>
@@ -1361,22 +1361,31 @@ function renderBill(){
 // ── Wi-Fi ────────────────────────────────────────────────────────────────
 function renderWifi(){
   const network = me.wifiNetwork || PROPERTY.name;
-  const voucher = me.wifiVoucher || '';
-  $('#wifiCard').innerHTML = `
+  const pass = me.wifiVoucher || '';
+  const from = me.wifiFrom ? new Date(me.wifiFrom + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+  $('#wifiCard').innerHTML = pass ? `
+    ${me.wifiQr ? `<div class="wifi-field">
+      <img src="${me.wifiQr}" alt="Scan to join ${esc(network)}" width="180" height="180" style="display:block;margin:0 auto;width:180px;height:180px;border-radius:12px;background:#fff;padding:6px">
+      <p class="sub" style="margin-top:8px">Point your phone camera at this code to join the Wi-Fi.</p>
+    </div>` : ''}
     <div class="wifi-field">
       <span class="bc-label">Network</span>
       <div class="wifi-value">${esc(network)}</div>
     </div>
-    ${voucher ? `<div class="wifi-field">
-      <span class="bc-label">Voucher Code</span>
-      <div class="wifi-value" id="wifiVoucherVal">${esc(voucher)}</div>
-      <button type="button" class="copy-btn" id="wifiCopyBtn">Copy code</button>
-    </div>` : `<p class="sub">Please check with the coordinator for your voucher code.</p>`}
-  `;
+    <div class="wifi-field">
+      <span class="bc-label">Password</span>
+      <div class="wifi-value" id="wifiVoucherVal">${esc(pass)}</div>
+      <button type="button" class="copy-btn" id="wifiCopyBtn">Copy password</button>
+    </div>`
+    : `<div class="wifi-field">
+      <span class="bc-label">Network</span>
+      <div class="wifi-value">${esc(network)}</div>
+    </div>
+    <p class="sub">${from ? `Your Wi-Fi password and a scan-to-join code will appear here on check-in day (${esc(from)}).` : 'Please check with the caretaker for the Wi-Fi password.'}</p>`;
   const copyBtn = $('#wifiCopyBtn');
   if(copyBtn) copyBtn.addEventListener('click', async () => {
-    try{ await navigator.clipboard.writeText(voucher); copyBtn.textContent = 'Copied!'; setTimeout(()=>{ copyBtn.textContent = 'Copy code'; }, 1500); }
-    catch(e){ /* clipboard unavailable — the code is already shown on screen */ }
+    try{ await navigator.clipboard.writeText(pass); copyBtn.textContent = 'Copied!'; setTimeout(()=>{ copyBtn.textContent = 'Copy password'; }, 1500); }
+    catch(e){ /* clipboard unavailable — the password is already shown on screen */ }
   });
 }
 // RYST Toys — a static promo (unlike Wi-Fi's network/voucher, this isn't

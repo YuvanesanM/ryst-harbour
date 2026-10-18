@@ -269,9 +269,9 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
     <label class="f"><span>Bank / payment details block</span><textarea class="t" id="stayBank" rows="6"></textarea></label>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <label class="f"><span>Wi-Fi network</span><input class="t" id="stayWifiNetwork" placeholder="e.g. Villa-Guest"></label>
-      <label class="f"><span>Wi-Fi voucher code</span><input class="t" id="stayWifiVoucher" placeholder="Welcome109"></label>
+      <label class="f"><span>Wi-Fi password</span><input class="t" id="stayWifiVoucher" placeholder="Guest network password" autocomplete="off"></label>
     </div>
-    <p class="sd" style="margin:-6px 0 14px">Shown to signed-in guests on the Manage My Stay portal (guest.html).</p>
+    <p class="sd" style="margin:-6px 0 14px">Paid guests see the network name in their guest portal. The password and a scan-to-join QR code appear from check-in day to check-out day only. Use a separate guest network, not the one your staff and cameras use.</p>
     <p class="gh-mini">Wallet passes</p>
     <p class="sd" style="margin-bottom:10px">Controls the "Add to Apple/Google Wallet" buttons everywhere they appear — the booking site, check-in page, and guest portal. Turning one off hides that button and blocks new passes of that kind from being issued; passes already saved to a guest's phone keep working.</p>
     <div style="display:flex;gap:12px;margin-bottom:14px">
