@@ -824,15 +824,21 @@ function reimburse(ids){
   const targets = DOC.entries.filter(e=>e.type==='expense'&&e.status==='pending'&&(!ids||ids.includes(e.id)));
   if(!targets.length){ toast('No pending expenses to reimburse', true); return; }
   const total=targets.reduce((s,e)=>s+(Number(e.amount)||0),0);
+  // Pay only what brings cash in hand back to the float (the server works it
+  // out the same way): extra cash the caretaker already holds covers the rest.
+  const cash=totals().cash, pay = DOC.float>0 ? Math.min(total, Math.max(0, Math.round(DOC.float-cash))) : total;
+  const why = pay>=total ? 'This records a cash top-up and marks them reimbursed, restoring the float.'
+    : pay>0 ? `The caretaker already holds ${money(cash)} against a float of ${money(DOC.float)}, so <b>${money(pay)}</b> brings them back to the float — the other ${money(total-pay)} is covered by the extra cash they hold.`
+    : `The caretaker already holds ${money(cash)}, at or above the float of ${money(DOC.float)} — nothing to pay; the expenses are marked reimbursed from the cash they hold.`;
   openGen('Reimburse caretaker', `
-    <p style="color:var(--muted);font-size:13.5px">Reimbursing <b>${targets.length}</b> expense(s) totalling <b>${money(total)}</b>. This records a cash top-up and marks them reimbursed, restoring the float.</p>
+    <p style="color:var(--muted);font-size:13.5px">Reimbursing <b>${targets.length}</b> expense(s) totalling <b>${money(total)}</b>. ${why}</p>
     <div class="field"><label>Date paid</label><input type="date" id="gDate" value="${todayISO()}" /></div>
     <div class="field"><label>Note (optional)</label><input id="gNote" placeholder="e.g. paid by UPI" /></div>
     <div class="merr" id="gErr"></div>
-    <div class="mfoot"><button class="btn ghost" id="gCancel">Cancel</button><button class="btn warn" id="gDo">Reimburse ${money(total)}</button></div>`);
+    <div class="mfoot"><button class="btn ghost" id="gCancel">Cancel</button><button class="btn warn" id="gDo">${pay>0 ? 'Pay '+money(pay) : 'Mark reimbursed'}</button></div>`);
   $('#gCancel').onclick=closeGen;
   $('#gDo').onclick=async()=>{
-    const ok=await command({action:'reimburse', entryIds:targets.map(t=>t.id), date:$('#gDate').value, note:$('#gNote').value}, 'Reimbursed '+money(total));
+    const ok=await command({action:'reimburse', entryIds:targets.map(t=>t.id), date:$('#gDate').value, note:$('#gNote').value}, pay>0 ? 'Reimbursed — paid '+money(pay) : 'Marked reimbursed');
     if(ok){ selected.clear(); closeGen(); }
   };
 }
