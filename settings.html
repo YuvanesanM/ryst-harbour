@@ -205,7 +205,7 @@
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
 <script>
 // WhatsApp auto-reply: the common questions it can answer (server: wa-availability.js TOPICS)
-const WA_FAQ_KEYS=['greeting','location','timings','rooms','amenities','privacy','pets','food','kitchen','pool','kids','games','alcohol','wifi','ac','power','essentials','parties','beach','screen','parking','caretaker','bbq','photos','discount','cancellation'];
+const WA_FAQ_KEYS=['greeting','location','timings','rooms','amenities','privacy','pets','food','kitchen','pool','kids','games','alcohol','wifi','ac','power','essentials','parties','beach','screen','parking','caretaker','bbq','photos','discount','cancellation','corporate','contact'];
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
 <meta name="theme-color" content="#F6F3ED" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
 </head>
@@ -463,6 +463,8 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f"><span>🔥 BBQ</span><textarea class="t" id="waFaq_bbq" rows="2" placeholder="Blank = available on request, with the BBQ Setup charge from Charge pricing (Tariffs tab)"></textarea></label>
       <label class="f"><span>📸 Photos &amp; videos</span><textarea class="t" id="waFaq_photos" rows="2" placeholder="Blank = your website gallery link and Instagram"></textarea></label>
       <label class="f"><span>📄 Cancellation &amp; refund policy</span><textarea class="t" id="waFaq_cancellation" rows="4" placeholder="Blank = the cancellation policy from Settings → Website. Guests actually cancelling or asking about their refund are always left for you."></textarea></label>
+      <label class="f"><span>💼 Corporate &amp; team outings</span><textarea class="t" id="waFaq_corporate" rows="3" placeholder="Blank = a private villa for your team alone (up to your guest capacity overnight), then it asks their dates and headcount"></textarea></label>
+      <label class="f"><span>📞 Contact number (when a guest asks for one)</span><textarea class="t" id="waFaq_contact" rows="2" placeholder="e.g. You can call or WhatsApp us on +91 98xxx xxxxx (10 AM to 8 PM). Blank = left for you, with a Telegram alert"></textarea></label>
       <label class="f"><span>🏷️ Discounts &amp; offers</span><textarea class="t" id="waFaq_discount" rows="2" placeholder="Blank = the full-payment discount from Settings (e.g. 5% off when paid in full), worked out for their dates"></textarea></label>
     </div>
     <p class="gh-mini">Your own questions &amp; answers</p>
@@ -2208,7 +2210,7 @@ document.getElementById('waCustomAdd').addEventListener('click',()=>{ waCustomLi
   const list=document.getElementById('waRevList');
   const learn=()=>{ if(!stay.waLearn||typeof stay.waLearn!=='object') stay.waLearn={}; if(!stay.waLearn.phrases) stay.waLearn.phrases={}; if(!Array.isArray(stay.waLearn.ignore)) stay.waLearn.ignore=[]; return stay.waLearn; };
   const phraseOf=t=>String(t||'').toLowerCase().replace(/[^a-z0-9 ']+/g,' ').replace(/\s+/g,' ').trim().slice(0,60);
-  const outcome=x=>x.flagged?'<span class="wa-tag no">marked wrong</span>':x.sent?'<span class="wa-tag ok">answered</span>':(x.kind==='handoff'||x.kind==='guest')?'<span class="wa-tag">left for you</span>':x.resolved?'<span class="wa-tag ok">taught</span>':'<span class="wa-tag no">couldn\'t answer</span>';
+  const outcome=x=>x.flagged?'<span class="wa-tag no">marked wrong</span>':x.sent?'<span class="wa-tag ok">answered</span>':(x.kind==='handoff'||x.kind==='guest')?'<span class="wa-tag">left for you</span>':x.kind==='quiet'?'<span class="wa-tag">nothing to answer</span>':x.resolved?'<span class="wa-tag ok">taught</span>':'<span class="wa-tag no">couldn\'t answer</span>';
   function show(){
     const f={un:x=>!x.sent&&x.kind==='none'&&!x.resolved,all:()=>true,you:x=>x.kind==='handoff'||x.kind==='guest',flag:x=>x.flagged&&!x.resolved}[filter];
     const rows=entries.filter(f);
