@@ -320,7 +320,7 @@
       <div class="group">
         <p class="gh">Guest</p>
         <div class="row2">
-          <label class="f"><span>Phone</span><input class="t" id="phone" inputmode="tel" type="tel" placeholder="+919876543210" autocomplete="off"><small class="hint" id="phoneHint"></small></label>
+          <label class="f"><span>Mobile <span style="color:var(--danger,#b42318)" aria-hidden="true">*</span></span><input class="t" id="phone" inputmode="tel" type="tel" placeholder="+919876543210" autocomplete="off" required aria-required="true"><small class="hint" id="phoneHint"></small></label>
           <label class="f"><span>Guest name</span><input class="t" id="guest" placeholder="Mr. / Ms. ..."></label>
         </div>
         <p class="hint ret-hint" id="returnHint" hidden></p>
@@ -652,7 +652,7 @@ const money = n => "₹"+inr(n);
 const PHONE_RE = /^\+[1-9]\d{7,14}$/;
 function normalizePhoneStrict(raw){
   let s = String(raw||"").trim();
-  if(!s) return { ok:true, value:"" }; // phone is optional — nothing to enforce on an empty field
+  if(!s) return { ok:true, value:"" }; // empty: the save itself asks for it (the mobile is required)
   const hadPlus = s[0]==="+";
   let digits = s.replace(/[^\d]/g,"");
   if(!hadPlus){
@@ -1466,6 +1466,8 @@ async function saveDoc(){
   const phoneNorm = normalizePhoneStrict($("#phone").value);
   $("#phone").value = phoneNorm.value;
   if(!syncPhoneValidity()){ toast("Phone needs a country code and no spaces, e.g. +919876543210"); $("#phone").focus(); return false; }
+  // every quote and invoice needs the guest's mobile (WhatsApp, reminders, their portal)
+  if(!phoneNorm.value){ toast("Add the guest's mobile number"); $("#phone").classList.add("err"); $("#phone").focus(); return false; }
   const doc=collect(); if(!doc.no){ toast("No document number"); return false; }
   if(!doc.channel){ toast("Pick the booking channel"); $("#channel").classList.add("invalid"); $("#channel").focus(); return false; }
   if(doc.otaSettlement!=null && doc.otaSettlement > grandNow()){ toast("The OTA settlement can't be more than the guest's charges"); $("#settleInp").focus(); return false; }
