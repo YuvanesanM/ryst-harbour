@@ -96,7 +96,11 @@
     var collected = inv.reduce(function (a, s) { return a + num(s.advance); }, 0) + conf.reduce(function (a, s) { return a + Math.min(num(s.advance), grandTotal(s) || num(s.advance)); }, 0) + food.filter(function (o) { return o.status === 'settled'; }).reduce(function (a, o) { return a + num(o.total); }, 0);
     var spent = expenses.filter(function (e) { return e.type === 'expense' && e.date >= start && e.date < end; }).reduce(function (a, e) { return a + num(e.amount); }, 0);
     var days = nightsBetween(start, end) || 1, n = nightsIn(stays, start, end);
-    return { revenue: revenue, collected: collected, expenses: spent, days: days, nights: n.booked, ota: n.ota, occupancy: n.booked / days * 100 };
+    // still to collect for the month: its bookings' balances (and unsettled food)
+    var owing = inv.concat(conf).filter(function (s) { return grandTotal(s) - num(s.advance) > 0.5; });
+    return { revenue: revenue, collected: collected, due: Math.max(0, revenue - collected), dueN: owing.length,
+      overdueN: owing.filter(function (s) { return s.checkout && s.checkout <= TODAY; }).length,
+      expenses: spent, days: days, nights: n.booked, ota: n.ota, occupancy: n.booked / days * 100 };
   }
 
   // ── Who may see what (mirrors login.html's applyRoleView + server hasModule) ─
@@ -316,6 +320,7 @@
     var exps = D.pc && Array.isArray(D.pc.entries) ? D.pc.entries : [];
     show($('#kRevenue'), !!stays || loading('stays'));
     show($('#kOcc'), !!stays || loading('stays'));
+    show($('#kDue'), !!stays || loading('stays'));
     if (stays) {
       var cur = metrics(stays, orders, exps, ms, me), prev = metrics(stays, orders, exps, pms, ms);
       var d = prev.revenue ? Math.round((cur.revenue - prev.revenue) / prev.revenue * 100) : null;
@@ -323,7 +328,11 @@
       // all of last month would read as a collapse. Show both figures instead.
       if (+TODAY.slice(8, 10) <= 7 && d !== null) setKpi('kRevenue', inr(cur.revenue), esc(t('Booked for')) + ' ' + esc(monthName(ms)) + ' · ' + esc(monthName(pms)) + ' ' + inr(prev.revenue));
       else setKpi('kRevenue', inr(cur.revenue), d === null ? esc(monthName(ms)) + ' · ' + inr(cur.collected) + ' received'
-        : '<span class="' + (d >= 0 ? 'up' : 'down') + '">' + (d >= 0 ? '↑ ' : '↓ ') + Math.abs(d) + '%</span> vs ' + esc(monthName(pms)));
+        : inr(cur.collected) + ' ' + esc(t('received')) + ' · <span class="' + (d >= 0 ? 'up' : 'down') + '">' + (d >= 0 ? '↑ ' : '↓ ') + Math.abs(d) + '%</span> vs ' + esc(monthName(pms)));
+      // what's still to collect this month, so the coordinator knows who to follow up
+      setKpi('kDue', inr(cur.due), cur.due > 0.5
+        ? cur.dueN + ' ' + esc(t(cur.dueN === 1 ? 'booking' : 'bookings')) + (cur.overdueN ? ' · <span class="down">' + cur.overdueN + ' ' + esc(t('checked out')) + '</span>' : '') + ' · ' + esc(monthName(ms))
+        : esc(t('All received for')) + ' ' + esc(monthName(ms)), cur.overdueN > 0);
       setKpi('kOcc', Math.round(cur.occupancy) + '%', cur.nights + ' of ' + cur.days + ' nights' + (cur.ota ? ' · ' + cur.ota + ' via OTAs' : ''));
     }
     show($('#kArr'), !!list || loading('stays') || loading('reg'));

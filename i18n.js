@@ -54,7 +54,7 @@
     // Owner dashboard
     'Add guest details': 'விருந்தினர் விவரங்களைச் சேர்', 'From calendar sync — add guest details': 'நாட்காட்டி ஒத்திசைவிலிருந்து — விருந்தினர் விவரங்களைச் சேர்க்கவும்',
     'Restaurant': 'உணவகம்', 'Finish setting up your villa': 'உங்கள் வில்லா அமைப்பை முடிக்கவும்', 'Add your address, WhatsApp number, rates and team': 'முகவரி, WhatsApp எண், கட்டணங்கள் மற்றும் குழுவைச் சேர்க்கவும்',
-    'Revenue': 'வருவாய்', 'Occupancy': 'நிரம்பல்', "Today's arrivals": 'இன்றைய வருகைகள்', 'Today': 'இன்று',
+    'Revenue': 'வருவாய்', 'Outstanding': 'நிலுவை', 'booking': 'முன்பதிவு', 'bookings': 'முன்பதிவுகள்', 'checked out': 'வெளியேறினர்', 'received': 'பெறப்பட்டது', 'All received for': 'முழுதும் பெறப்பட்டது —', 'Occupancy': 'நிரம்பல்', "Today's arrivals": 'இன்றைய வருகைகள்', 'Today': 'இன்று',
     'All clear': 'எல்லாம் சரி', 'None urgent': 'அவசரம் எதுவும் இல்லை', 'None coming up': 'வரவிருப்பது எதுவும் இல்லை',
     'Attention required': 'கவனிக்க வேண்டியவை', 'Upcoming stays': 'வரவிருக்கும் தங்கல்கள்', 'All bookings': 'அனைத்து முன்பதிவுகள்',
     'Dates': 'தேதிகள்', 'Channel': 'வழி', 'Payment': 'கட்டணம்', 'Direct': 'நேரடி', 'Paid': 'செலுத்தப்பட்டது', 'Unpaid': 'செலுத்தவில்லை', 'incl. food': 'உணவு உட்பட', 'Google reviews': 'கூகுள் மதிப்புரைகள்', 'followers': 'பின்தொடர்பவர்கள்', 'estimated': 'மதிப்பீடு', 'Followers': 'பின்தொடர்பவர்கள்', 'this week': 'இந்த வாரம்', 'days': 'நாட்கள்', 'Trend starts': 'போக்கு தொடங்குவது', 'Review count': 'மதிப்புரை எண்ணிக்கை', 'Stay': 'தங்கல்', 'food': 'உணவு',
