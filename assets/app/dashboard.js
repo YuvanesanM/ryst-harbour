@@ -335,13 +335,6 @@
         : esc(t('All received for')) + ' ' + esc(monthName(ms)), cur.overdueN > 0);
       setKpi('kOcc', Math.round(cur.occupancy) + '%', cur.nights + ' of ' + cur.days + ' nights' + (cur.ota ? ' · ' + cur.ota + ' via OTAs' : ''));
     }
-    show($('#kArr'), !!list || loading('stays') || loading('reg'));
-    if (list) {
-      var arr = list.filter(function (s) { return s.checkin === TODAY; }), dep = list.filter(function (s) { return s.checkout === TODAY; });
-      var next = list.filter(function (s) { return s.checkin > TODAY; }).sort(function (a, b) { return a.checkin.localeCompare(b.checkin); })[0];
-      setKpi('kArr', String(arr.length), arr.length ? esc(arr[0].guest) + (arr.length > 1 ? ' +' + (arr.length - 1) : '') + (dep.length ? ' · ' + dep.length + ' out' : '')
-        : (dep.length ? dep.length + ' checking out' : next ? 'Next: ' + esc(fmtDay(next.checkin)) : 'None coming up'));
-    }
     show($('#kIssues'), can('checklist'));
     renderReviews(); renderInstagram();
     var kp = $('.kpis'); if (kp) kp.setAttribute('data-n', $$('.kpi', kp).filter(function (k) { return !k.hidden && k.style.display !== 'none'; }).length);
