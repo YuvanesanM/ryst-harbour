@@ -271,7 +271,7 @@ function approvalText(r){
     + `Your stay: ${stay}\n`
     + (r.terms ? `What we've agreed: ${r.terms}\n` : '')
     + (r.code && !r.codeOff ? `Your follower code: ${r.code} gives your audience ${r.codePercent}% off when they book at ${SITE.replace('https://','')}\n` : '')
-    + `\nPlease tag @stay.ryst and invite us as a collaborator on your reel. Reply here to confirm and we'll share the check-in details.`;
+    + `\nPlease tag @stay.ryst and invite us as a collaborator on your reel. Reply here to confirm, and we'll book your dates and share the check-in details.`;
 }
 function card(r){
   const n = nightsOf(r), mine = r.checkout >= TODAY;

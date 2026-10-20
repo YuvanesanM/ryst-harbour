@@ -142,6 +142,7 @@
     if (can('petty-cash')) jobs.push(get('/petty-cash', 'pc'));
     if (can('checklist')) { jobs.push(get('/issues', 'issues')); jobs.push(get('/checklist', 'cl')); }
     if (can('inventory')) jobs.push(get('/inventory', 'inv'));
+    if (can('bookings')) jobs.push(get('/collabs', 'cr'));
     if (can('bookings') || can('settings')) jobs.push(get('/ota-status', 'ota'));
     if (can('bookings') || can('reports')) { jobs.push(get('/google-reviews', 'gr')); jobs.push(get('/instagram-stats', 'ig')); }
     render();
@@ -462,6 +463,11 @@
       var bills = D.rs.orders.filter(function (o) { return o.status === 'open' && o.date && o.date < addDays(TODAY, -1); });
       var billAmt = bills.reduce(function (a, o) { return a + num(o.total); }, 0);
       if (billAmt > 0) items.push({ lvl: 'warn', icon: 'food', title: inr(billAmt) + ' in food bills not settled', meta: bills.length + ' order' + (bills.length === 1 ? '' : 's') + ' since ' + fmtDay(bills.map(function (o) { return o.date; }).sort()[0]), href: 'restaurant.html' });
+    }
+    if (D.cr && Array.isArray(D.cr.requests)) {
+      // creators who applied on the collaboration page, waiting for a reply
+      var fresh = D.cr.requests.filter(function (r) { return r.status === 'new' && r.checkout >= TODAY; });
+      if (fresh.length) items.push({ lvl: '', icon: 'star', title: fresh.length + ' creator request' + (fresh.length === 1 ? '' : 's') + ' to review', meta: fresh.slice(0, 2).map(function (r) { return '@' + r.instagram; }).join(', ') + (fresh.length > 2 ? ' +' + (fresh.length - 2) : '') + ' · reply within 3 working days', href: 'creators.html' });
     }
     if (D.pc && Array.isArray(D.pc.entries)) {
       var pend = D.pc.entries.filter(function (e) { return e.type === 'expense' && e.status === 'pending'; });
