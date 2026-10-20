@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=2f2cdf72">
-<script src="/assets/app/shell.js?v=355172de"></script>
+<script src="/assets/app/shell.js?v=2de0570b"></script>
 <script src="/i18n.js"></script>
 <title data-title="Issues · {name}">Issues · RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
@@ -249,7 +249,7 @@ function render(){
   $('#list').innerHTML = rows.map(i=>{
     const fixed = i.status==='fixed';
     const photos = [i.photo, i.fixPhoto].filter(Boolean);
-    return `<div class="issue u-${esc(i.urgency)}${fixed?' fixed':''}">
+    return `<div class="issue u-${esc(i.urgency)}${fixed?' fixed':''}" id="iss-${esc(i.id)}">
       <div>
         <h3 data-no-i18n>${esc(i.title)}</h3>
         ${i.area?`<div class="where" data-no-i18n>📍 ${esc(i.area)}</div>`:''}
@@ -344,6 +344,11 @@ $('#fSave').addEventListener('click', async ()=>{
 ['repOverlay','fixOverlay'].forEach(id=>$('#'+id).addEventListener('click', e=>{ if(e.target.id===id) $('#'+id).classList.remove('show'); }));
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ ['repOverlay','fixOverlay'].forEach(id=>$('#'+id).classList.remove('show')); $('#lb').classList.remove('show'); } });
 if(location.hash==='#report') setTimeout(openReport, 300);
+// issues.html?id=<id> (from Villa 3D): bring that issue into view and mark it
+(function(){ const id = new URLSearchParams(location.search).get('id'); if(!id) return;
+  let n = 0; const tryShow = () => { const el = document.getElementById('iss-' + id); if(!el){ if(++n < 40) setTimeout(tryShow, 250); return; }
+    el.scrollIntoView({ block:'center' }); el.style.outline = '2px solid var(--accent)'; el.style.outlineOffset = '3px'; };
+  tryShow(); })();
 load();
 </script>
 </body>

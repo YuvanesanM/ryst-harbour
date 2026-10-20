@@ -87,6 +87,7 @@
     '/whatsapp/status': { configured:true, connected:true, botUsername:'demo_bot', recipientCount:1, alertTypes:[] },
     '/whatsapp/webhook-info': { url:'(hidden in demo mode)', recent:[] },
     '/telegram/chat-id': { chats:[] },
+    '/metrics': { ok:true, revenue:296723, received:144600, due:152123, expenses:1730, nights:11, days:31, occupancy:35 },
     '/collabs': { ok:true, requests:[
       { id:'crdemo1', at:now-2*3600e3, status:'new', name:'Sample Creator A', instagram:'sample.creator.a', followers:48200, phone:'+919000000101', email:'creator.a@example.com', city:'Chennai', niche:'Travel', checkin:iso(9), checkout:iso(10), guests:4, deliverables:['reel','stories'], links:['https://www.instagram.com/stay.ryst'], message:'A slow weekday by the sea with friends: one reel and a set of stories.', expectation:'complimentary', openToDiscount:true, datesFree:true },
       { id:'crdemo2', at:now-3*864e5, status:'approved', name:'Sample Creator B', instagram:'sample.creator.b', followers:126000, phone:'+919000000102', city:'Bengaluru', niche:'Family', checkin:iso(16), checkout:iso(18), guests:6, deliverables:['reel','post'], links:[], offer:'complimentary', offerPercent:100, codePercent:10, code:'SAMPLECREA10', terms:'1 reel + 3 stories within 2 weeks', expectation:'discount', openToDiscount:true, datesFree:true, codeStats:{ bookings:2, revenue:84000 } },

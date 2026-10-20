@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://data.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=2f2cdf72">
+<script src="/assets/app/shell.js?v=2de0570b"></script>
+<script src="/i18n.js"></script>
+<title data-title="Villa 3D · {name}">Villa 3D · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/app/villa3d.css?v=749ff7e9">
+<link rel="modulepreload" href="/assets/vendor/three/three.module.min.js">
+<script type="importmap">{ "imports": { "three": "/assets/vendor/three/three.module.min.js" } }</script>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#F6F3ED" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
+</head>
+<body>
+<div class="wrap v3">
+  <header class="top">
+    <img alt="" src="/assets/stay-logo.webp" data-prop-src="logoUrl" />
+    <div class="ttl"><span>Villa 3D</span><small><span data-prop="name" data-no-i18n>RYST 109A</span> <span>· Operations view</span></small></div>
+    <div class="spacer"></div>
+    <button class="tbtn" type="button" data-lang-toggle>தமிழ்</button>
+  </header>
+
+  <div class="v3-bar">
+    <div class="v3-seg" role="group" aria-label="Dates">
+      <button type="button" data-range="today" aria-pressed="true">Today</button>
+      <button type="button" data-range="week" aria-pressed="false">Next 7 days</button>
+      <button type="button" data-range="month" aria-pressed="false">This month</button>
+      <button type="button" data-range="custom" aria-pressed="false">Custom</button>
+    </div>
+    <div class="v3-custom" id="customRange" hidden>
+      <label>From <input type="date" id="rFrom"></label><label>To <input type="date" id="rTo"></label>
+      <button type="button" class="tbtn" id="rApply">Apply</button><span class="v3-err" id="rErr"></span>
+    </div>
+    <div class="v3-seg" role="group" aria-label="Show">
+      <button type="button" data-layer="all" aria-pressed="true">All</button>
+      <button type="button" data-layer="bookings" aria-pressed="false">Bookings</button>
+      <button type="button" data-layer="housekeeping" aria-pressed="false">Housekeeping</button>
+      <button type="button" data-layer="maintenance" aria-pressed="false">Maintenance</button>
+    </div>
+  </div>
+
+  <div class="v3-kpis" id="kpis" aria-live="polite"></div>
+
+  <div class="v3-main">
+    <section class="v3-stage" id="stage" aria-label="3D model of RYST 109A — select a room or amenity">
+      <div class="v3-labels" id="labels"></div>
+      <div class="v3-load" id="stageLoad">Loading the villa…</div>
+      <div class="v3-fallback" id="fallback" hidden></div>
+      <div class="v3-ctl" role="toolbar" aria-label="View">
+        <div class="v3-seg">
+          <button type="button" data-view="overview" aria-pressed="true">Overview</button>
+          <button type="button" data-view="cutaway" aria-pressed="false">Inside</button>
+          <button type="button" data-view="plan" aria-pressed="false">Plan</button>
+        </div>
+        <div class="v3-seg" id="floorSw" hidden>
+          <button type="button" data-floor="0" aria-pressed="false">Ground</button>
+          <button type="button" data-floor="1" aria-pressed="true">First</button>
+        </div>
+        <div class="v3-seg">
+          <button type="button" id="btnEvening" aria-pressed="false" title="Day / evening light">Evening</button>
+          <button type="button" id="btnMotion" aria-pressed="false" title="Stop the water and palm movement">Still</button>
+          <button type="button" id="btnReset" title="Back to the overview">Reset</button>
+        </div>
+      </div>
+      <div class="v3-legend" id="legend" aria-label="Legend"></div>
+      <p class="v3-note">Conceptual model, not to scale. Drag to turn · pinch or scroll to zoom</p>
+    </section>
+    <aside class="v3-panel" id="panel" aria-live="polite"><div id="panelBody"><p class="v3-muted">Loading…</p></div></aside>
+  </div>
+
+  <div class="v3-drawer">
+    <section><h2>Check-ins &amp; check-outs</h2><div id="actList"><p class="v3-muted">Loading…</p></div></section>
+    <section><h2>Maintenance queue</h2><div id="mtList"><p class="v3-muted">Loading…</p></div><a class="tbtn" href="issues.html">All issues</a></section>
+  </div>
+</div>
+<script type="module" src="/assets/app/villa3d.js?v=25dae0b5"></script>
+</body>
+</html>

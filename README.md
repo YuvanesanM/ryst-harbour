@@ -50,6 +50,31 @@ links: `stay.html?new=invoice|quote`, `checklist.html?start=<type>&stay=&guest=`
 `petty-cash.html#add`, `inventory.html#add`, `issues.html#report` and
 `guest-register.html?f=<filter>`.
 
+## Villa 3D (villa-3d.html)
+
+An operations view of the villa as an interactive 3D model, under Property →
+Villa 3D. Files: `villa-3d.html`, `assets/app/villa3d.js`, `assets/app/villa3d.css`,
+and Three.js r169 self-hosted in `assets/vendor/three/` (MIT, see its LICENSE),
+loaded only on this page through an import map.
+
+- The model is conceptual, not a surveyed plan. Rooms and outdoor areas are
+  defined in `LAYOUT` and `OUTDOOR` at the top of `villa3d.js` (metres; x east,
+  z towards the street); edit them to match the real drawings. Each place's
+  `match` words decide which checklist items and issues belong to it.
+- Everything it shows comes from existing endpoints with the user's own access:
+  `/guest-register` (bookings, paid/due), `/checklist` (check-in checklist items
+  per room, today's daily rounds), `/issues` (placed by their area and title),
+  `/inventory` (low stock) and `/metrics?from&to` (booked / received / due for
+  the chosen dates — the same definitions as the dashboard and Telegram report;
+  Reports module only). Nothing is edited from it: every action opens the page
+  that does it (`stay.html?open=`, `checklist.html?start=`, `issues.html?id=`).
+- Not in Harbour, so shown as such: which bedrooms a stay uses (the villa is
+  booked whole), who an issue is assigned to, and inspections.
+- Views: Overview (from the sea side), Inside (cutaway, ground/first floor),
+  Plan (top-down). Evening lighting, a "Still" switch (and the system's reduced
+  motion) stop the water and palms. Without WebGL, or with `?lite=1`, it shows a
+  clickable 2D plan with the same data.
+
 ## Guest pages are published on two addresses
 
 `checkin.html`, `guest.html`, `feedback.html`, `wa.html`, `villa.js` and `property.js`
