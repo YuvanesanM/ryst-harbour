@@ -205,7 +205,7 @@
       </div>
       <p class="hint">Their followers get this discount when they book on stay.ryst.in. Set 0 for no code.</p>
       <label class="field"><span>Terms to share (optional)</span><textarea id="apTerms" maxlength="500" placeholder="e.g. 1 reel + 3 stories within 2 weeks, collab invite to @stay.ryst. Food charged as per menu."></textarea></label>
-      <label class="opt"><input type="checkbox" id="apHold" checked> Hold their dates on the calendar</label>
+      <p class="hint">Their dates are not booked by approving. Once they confirm, make the quote in Quotes &amp; Invoices.</p>
       <div class="merr" id="apErr"></div>
     </div>
     <div class="mfoot"><button class="btn" type="button" id="apCancel">Cancel</button><button class="btn primary" type="button" id="apSave">Approve</button></div>
@@ -276,7 +276,10 @@ function approvalText(r){
 function card(r){
   const n = nightsOf(r), mine = r.checkout >= TODAY;
   const dates = `${fmtDay(r.checkin)} → ${fmtDay(r.checkout)} · ${n} night${n>1?'s':''} · ${r.guests} guest${r.guests>1?'s':''}`;
-  const free = r.status === 'done' || !mine ? '' : r.held ? '<span class="pill free">Held on calendar</span>' : r.datesFree ? '<span class="pill free">Dates free</span>' : '<span class="pill taken">Dates taken</span>';
+  const free = r.status === 'done' || !mine ? '' : r.datesFree ? '<span class="pill free">Dates free</span>' : '<span class="pill taken">Dates taken</span>';
+  const want = r.expectation === 'discount' ? 'Discounted stay' : r.expectation === 'complimentary' ? 'Complimentary stay' + (r.openToDiscount ? ' · open to a discount' : ' only')
+    : r.expectation === 'paid' ? 'Paid · ' + inr(r.rate) + (r.rateNote ? ' — ' + r.rateNote : '') : '';
+  const wantPill = r.expectation ? `<span class="pill ${r.expectation === 'discount' || r.openToDiscount ? 'free' : 'taken'}">${t(r.expectation === 'discount' ? 'Wants discount' : r.expectation === 'complimentary' ? (r.openToDiscount ? 'Free or discount' : 'Free only') : 'Paid')}</span>` : '';
   const links = (r.links||[]).map((l,i) => `<a href="${esc(l)}" target="_blank" rel="noopener">Link ${i+1}</a>`).join(' · ');
   const done = (r.contentLinks||[]).map((l,i) => `<a href="${esc(l)}" target="_blank" rel="noopener">Post ${i+1}</a>`).join(' · ');
   const offer = r.status === 'approved' || r.status === 'done' ? (r.offer === 'complimentary' ? 'Complimentary stay' : `${r.offerPercent}% off their stay`) : '';
@@ -294,11 +297,12 @@ function card(r){
       <div class="p-id">
         <div class="p-name" data-no-i18n>${esc(r.name)}</div>
         <div class="p-sub"><a href="https://instagram.com/${encodeURIComponent(r.instagram)}" target="_blank" rel="noopener" data-no-i18n>@${esc(r.instagram)}</a> · ${followers(r.followers)} ${t('followers')} · ${ago(r.at)}</div>
-        <div class="p-pills"><span class="pill st-${r.status}">${t(STATUS[r.status]||r.status)}</span>${free}${r.niche ? `<span class="pill" data-no-i18n>${esc(r.niche)}</span>` : ''}</div>
+        <div class="p-pills"><span class="pill st-${r.status}">${t(STATUS[r.status]||r.status)}</span>${wantPill}${free}${r.niche ? `<span class="pill" data-no-i18n>${esc(r.niche)}</span>` : ''}</div>
       </div>
     </div>
     <div class="rq-rows">
       <div class="rq-row"><span>${t('Dates')}</span><span data-no-i18n>${esc(dates)}</span></div>
+      ${want ? `<div class="rq-row"><span>${t('Looking for')}</span><span data-no-i18n>${esc(want)}</span></div>` : ''}
       <div class="rq-row"><span>${t('Will create')}</span><span>${esc((r.deliverables||[]).map(d => DELIV[d]||d).join(', '))}</span></div>
       <div class="rq-row"><span>${t('Contact')}</span><span data-no-i18n><a href="${esc(wa)}" target="_blank" rel="noopener">${esc(r.phone)}</a>${r.email ? ' · <a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : ''}${r.city ? ' · ' + esc(r.city) : ''}</span></div>
       ${links || r.youtube ? `<div class="rq-row"><span>${t('Work')}</span><span>${links}${r.youtube ? (links ? ' · ' : '') + `<a href="${esc(r.youtube)}" target="_blank" rel="noopener">Channel</a>` : ''}</span></div>` : ''}
@@ -351,14 +355,13 @@ function suggestCode(r, pct){
 function openApprove(r){
   CUR = r;
   $('#apSub').textContent = '@' + r.instagram + ' · ' + fmtDay(r.checkin) + ' → ' + fmtDay(r.checkout);
-  const disc = r.offer === 'discount';
+  const disc = r.offer ? r.offer === 'discount' : !(r.expectation === 'complimentary' && !r.openToDiscount);
   document.querySelector(`input[name=apOffer][value=${disc ? 'discount' : 'complimentary'}]`).checked = true;
-  $('#apPctWrap').hidden = !disc; $('#apPct').value = disc ? r.offerPercent : 50;
+  $('#apPctWrap').hidden = !disc; $('#apPct').value = r.offer === 'discount' ? r.offerPercent : 50;
   $('#apCodePct').value = r.codePercent != null ? r.codePercent : 10;
   $('#apCode').value = r.code || suggestCode(r, $('#apCodePct').value);
   $('#apCode').dataset.auto = r.code ? '' : '1';
   $('#apTerms').value = r.terms || '';
-  $('#apHold').checked = r.status !== 'approved' || r.held !== false;
   $('#apErr').textContent = ''; $('#apSave').textContent = r.status === 'approved' ? t('Save') : t('Approve');
   $('#apOverlay').classList.add('show');
 }
@@ -369,7 +372,7 @@ $('#apCancel').onclick = () => $('#apOverlay').classList.remove('show');
 $('#apSave').onclick = async () => {
   const offer = document.querySelector('input[name=apOffer]:checked').value;
   const b = $('#apSave'); b.disabled = true;
-  const d = await act(CUR.id, 'approve', { offer, offerPercent: +$('#apPct').value, codePercent: +$('#apCodePct').value || 0, code: $('#apCode').value, terms: $('#apTerms').value, hold: $('#apHold').checked });
+  const d = await act(CUR.id, 'approve', { offer, offerPercent: +$('#apPct').value, codePercent: +$('#apCodePct').value || 0, code: $('#apCode').value, terms: $('#apTerms').value });
   b.disabled = false;
   if(d){ $('#apOverlay').classList.remove('show'); TAB = 'approved'; render(); if(!d.warning) toast(t('Approved — now send them the details on WhatsApp')); }
 };
