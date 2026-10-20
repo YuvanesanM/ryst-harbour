@@ -74,7 +74,7 @@ loaded only on this page through an import map.
   that does it (`stay.html?open=`, `checklist.html?start=`, `issues.html?id=`).
 - Not in Harbour, so shown as such: which bedrooms a stay uses (the villa is
   booked whole), who an issue is assigned to, and inspections.
-- Views: Overview (from the south-west, the sea to the east), Inside (cutaway, ground/first/second floor),
+- Views: Overview (from the south-west, the sea to the east), Inside (cutaway, ground/first/second floor), Street (from the road, as in the night photo: the street wall slopes from the ground up to the extended second-floor rooftop),
   Plan (top-down). Evening lighting, a "Still" switch (and the system's reduced
   motion) stop the water and palms. Without WebGL, or with `?lite=1`, it shows a
   clickable 2D plan with the same data.
