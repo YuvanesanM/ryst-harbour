@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=2f2cdf72">
-<script src="/assets/app/shell.js?v=9eba99c2"></script>
+<script src="/assets/app/shell.js?v=355172de"></script>
 <title data-title="Settings — {name}">Settings — RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2019,7 +2019,7 @@ function renderStayCoupons(){
   stayCouponDraft.forEach((c,i)=>{
     const row=document.createElement("tr");
     row.innerHTML=`
-      <td><input data-i="${i}" data-k="code" placeholder="e.g. WELCOME10" value="${esc(c.code)}" style="text-transform:uppercase"></td>
+      <td><input data-i="${i}" data-k="code" placeholder="e.g. WELCOME10" value="${esc(c.code)}" style="text-transform:uppercase">${c.collab?`<small style="display:block;color:var(--muted);margin-top:3px">Creator code · ${esc(c.label||'')} — manage it in <a href="creators.html">Creators</a></small>`:''}</td>
       <td><input class="r" data-i="${i}" data-k="discountPercent" type="number" min="0" max="100" step="1" placeholder="0" value="${esc(c.discountPercent)}"></td>
       <td><button class="rc-del" data-del="${i}" title="Remove">×</button></td>`;
     body.appendChild(row);
@@ -2081,7 +2081,8 @@ async function saveStay(){
   stay.maxDiscountPercent = mdVal!=="" ? Math.min(100, Math.max(0, parseFloat(mdVal)||0)) : STAY_DEFAULTS.maxDiscountPercent;
   stay.coupons = stayCouponDraft
     .filter(c=>(c.code||"").trim()!=="")
-    .map(c=>({code:c.code.trim().toUpperCase(), discountPercent:(c.discountPercent===""||c.discountPercent==null)?0:Math.min(100,Math.max(0,parseFloat(c.discountPercent)||0))}));
+    .map(c=>({code:c.code.trim().toUpperCase(), discountPercent:(c.discountPercent===""||c.discountPercent==null)?0:Math.min(100,Math.max(0,parseFloat(c.discountPercent)||0)),
+      ...(c.collab?{collab:c.collab, label:c.label||""}:{})})); // a creator's follower code (Creators page) keeps its link
   stay.bank=document.getElementById("stayBank").value;
   stay.wifiNetwork=document.getElementById("stayWifiNetwork").value.trim();
   stay.wifiVoucher=document.getElementById("stayWifiVoucher").value.trim();
