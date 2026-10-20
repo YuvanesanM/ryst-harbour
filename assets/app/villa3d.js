@@ -31,43 +31,60 @@ const fmtDay = iso => iso ? new Date(iso + 'T00:00:00Z').toLocaleDateString('en-
 const ago = ms => { const d = Math.floor((Date.now() - ms) / 864e5); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'; };
 const reduceMotion = () => document.documentElement.classList.contains('v3-still') || matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ── The villa, room by room (metres; x east, z towards the street) ──────────
-// Conceptual: drawn from the façade photo and what the villa has, not from
-// a surveyed plan. `match` decides which checklist items and issues belong
-// to a place (an issue's "area" and title are searched, most specific first).
-const FLOOR_H = 3.2;
+// ── The villa, room by room ──────────────────────────────────────────────────
+// From the architect's layouts (Dreamour design, "Cheyyur villa": ground floor
+// sheet 21 and the first floor), read off at their printed dimensions — metres,
+// x east, z south (towards the road), origin near the stair. The second floor
+// (Bedroom 4 over the north-east bedroom, the rest terrace) is from the owner.
+// Which first-floor bedroom is "2" and which "3" follows west → east.
+// `match` decides which checklist items and issues belong to a place (an
+// issue's "area" and title are searched, most specific first). `bath` is the
+// attached bathroom inside a bedroom; `open` places have no roof; `win` puts
+// windows on that side (n/s/e/w).
+const FLOOR_H = 3.2, PLINTH = 0.3;
 const LAYOUT = [
-  // ground floor
-  { id: 'living', name: 'Living room', floor: 0, x: -9, z: -5, w: 7, d: 6, note: '65-inch TV', match: ['living', 'television', '\\btv\\b', 'sofa'] },
-  { id: 'dining', name: 'Dining', floor: 0, x: -2, z: -5, w: 5, d: 6, match: ['dining'] },
-  { id: 'kitchen', name: 'Kitchen', floor: 0, x: 3, z: -5, w: 6, d: 6, note: 'Fully equipped', match: ['kitchen', 'fridge', 'stove', '\\bgas\\b', 'microwave', 'induction', 'utensil', 'cutlery'] },
-  { id: 'rec', name: 'Recreation hall', floor: 0, x: -3, z: 1, w: 7, d: 4.5, note: 'Table tennis, foosball, darts, board games', match: ['recreation', 'table tennis', 'foosball', 'dart', 'board game', 'carrom', '\\bgames?\\b'] },
-  { id: 'bed1', name: 'Bedroom 1', floor: 0, x: -9, z: 1, w: 6, d: 4.5, bath: true, match: ['bedroom ?1\\b', '\\broom ?1\\b'] },
-  { id: 'lift', name: 'Lift & stairs', floor: 0, x: 4, z: 1, w: 2.4, d: 4.5, match: ['\\blift\\b', 'elevator', 'stair'] },
-  { id: 'powder', name: 'Powder room', floor: 0, x: 6.4, z: 1, w: 2.6, d: 4.5, match: ['powder room'] },
+  // ground floor (+2'6")
+  { id: 'kitchen', name: 'Kitchen', floor: 0, x: -5.02, z: -6.19, w: 4.56, d: 3.97, win: 'n', note: 'Fully equipped', match: ['kitchen', 'fridge', 'stove', '\\bgas\\b', 'microwave', 'induction', 'utensil', 'cutlery'] },
+  { id: 'dining', name: 'Dining', floor: 0, x: -5.02, z: -2.22, w: 4.56, d: 4.06, win: 'w', note: 'Folding doors to the deck', match: ['dining'] },
+  { id: 'bed1', name: 'Bedroom 1', floor: 0, x: -5.02, z: 1.94, w: 4.56, d: 4.99, bath: [-5.02, 1.94, 2.35, 1.66], win: 's', match: ['bedroom ?1\\b', '\\broom ?1\\b'] },
+  { id: 'stairs', name: 'Stairs & lift', floor: 0, x: -0.28, z: -6.1, w: 4.62, d: 5.17, lift: [0.83, -4.43, 2.4, 2.22], note: 'The lift sits inside the stairwell', match: ['\\blift\\b', 'elevator', 'stair'] },
+  { id: 'living', name: 'Living room', floor: 0, x: 4.56, z: -6.19, w: 3.47, d: 5.26, win: 'e', note: '65-inch TV', match: ['living', 'television', '\\btv\\b', 'sofa'] },
+  { id: 'foyer', name: 'Foyer', floor: 0, x: 1.48, z: -0.65, w: 5.91, d: 1.94, note: 'Entrance', match: ['foyer', 'entrance', 'main door'] },
+  { id: 'powder', name: 'Powder room', floor: 0, x: -0.46, z: -0.65, w: 1.75, d: 2.49, match: ['powder room'] },
+  { id: 'ebroom', name: 'EB room', floor: 0, x: -0.24, z: 1.94, w: 1.53, d: 2.03, note: 'Electricity board / meters', match: ['\\beb\\b', 'electric(al)? (board|panel|room)', '\\bmeter', '\\bmcb\\b', 'db board'] },
+  { id: 'store', name: 'Store room', floor: 0, x: -0.24, z: 4.06, w: 1.53, d: 2.86, match: ['store ?room', '\\bstore\\b'] },
+  { id: 'lounge', name: 'Poolside lounge', floor: 0, x: -8.07, z: -6.28, w: 2.9, d: 13.21, note: 'Wood deck under the balcony', open: true, match: ['lounge', 'wood deck', 'verandah', 'sit-?out'] },
   // first floor
-  { id: 'bed2', name: 'Bedroom 2', floor: 1, x: -9, z: -5, w: 6, d: 5.5, bath: true, match: ['bedroom ?2\\b', '\\broom ?2\\b'] },
-  { id: 'bed3', name: 'Bedroom 3', floor: 1, x: -3, z: -5, w: 6, d: 5.5, bath: true, match: ['bedroom ?3\\b', '\\broom ?3\\b'] },
-  { id: 'bed4', name: 'Bedroom 4', floor: 1, x: 3, z: -5, w: 6, d: 5.5, bath: true, match: ['bedroom ?4\\b', '\\broom ?4\\b'] },
-  { id: 'balcony', name: 'Chess balcony & lounge', floor: 1, x: -9, z: 0.5, w: 13, d: 4.5, match: ['balcony', 'terrace', '\\bchess\\b'] },
-  { id: 'lift1', name: 'Lift & stairs', floor: 1, x: 4, z: 0.5, w: 2.4, d: 4.5, same: 'lift' },
+  { id: 'bed2', name: 'Bedroom 2', floor: 1, x: -5.17, z: -6.91, w: 4.89, d: 5.67, bath: [-5.17, -6.91, 2.54, 1.78], win: 'n', match: ['bedroom ?2\\b', '\\broom ?2\\b'] },
+  { id: 'bed3', name: 'Bedroom 3', floor: 1, x: 4.58, z: -6.91, w: 4.29, d: 5.83, bath: [4.58, -6.91, 2.67, 1.78], win: 'e', match: ['bedroom ?3\\b', '\\broom ?3\\b'] },
+  { id: 'stairs1', name: 'Stairs & lift', floor: 1, x: -0.28, z: -6.1, w: 4.62, d: 4.78, same: 'stairs' },
+  { id: 'rec', name: 'Recreation room', floor: 1, x: -5.3, z: -1.24, w: 6.8, d: 8.23, win: 's', note: 'Table tennis, foosball, darts, board games', match: ['recreation', 'table tennis', 'foosball', 'dart', 'board game', 'carrom', '\\bgames?\\b'] },
+  { id: 'balcony', name: 'Balcony', floor: 1, x: -8.3, z: -6.91, w: 2.92, d: 13.9, open: true, note: 'Along the pool side', match: ['balcony'] },
+  { id: 'chess', name: 'Chess terrace', floor: 1, x: 1.5, z: -1.24, w: 7.78, d: 6.32, open: true, note: 'Open to the sky', match: ['chess', 'low terrace'] },
+  // second floor
+  { id: 'bed4', name: 'Bedroom 4', floor: 2, x: 4.58, z: -6.91, w: 4.29, d: 5.83, bath: [4.58, -6.91, 2.67, 1.78], win: 'e', match: ['bedroom ?4\\b', '\\broom ?4\\b'] },
+  { id: 'stairs2', name: 'Stairs & lift', floor: 2, x: -0.28, z: -6.1, w: 4.62, d: 4.78, same: 'stairs' },
+  { id: 'terrace', name: 'Roof terrace', floor: 2, x: -5.3, z: -6.91, w: 4.98, d: 14.23, open: true, match: ['roof', 'top terrace', '\\bterrace\\b'] },
 ];
-// Outdoors — the same idea, placed around the house.
+// Outdoors, from the same ground-floor sheet.
 const OUTDOOR = [
-  { id: 'pool', name: 'Swimming pool', x: -4, z: -12, w: 7, d: 3.8, note: 'About 22 × 12 ft, up to 4.5 ft deep', match: ['\\bpool\\b(?! deck)', 'swim', 'chlorine', 'skimm'] },
-  { id: 'jacuzzi', name: 'Jacuzzi', x: 3.2, z: -11.6, w: 2, d: 2, note: 'Corner of the pool', match: ['jacuzzi', '\\bspa\\b'] },
-  { id: 'deck', name: 'Pool deck & lounge', x: -9, z: -13.5, w: 4.5, d: 6, match: ['pool deck', 'lounger', '\\bdeck\\b', 'pool towel', 'ashtray', 'seating'] },
-  { id: 'screen', name: 'Outdoor LED screen', x: 6, z: -12.5, w: 1, d: 3.4, note: '150-inch, beside the jacuzzi', match: ['\\bled\\b', 'screen', 'projector'] },
-  { id: 'parking', name: 'Parking', x: 10, z: -1, w: 6, d: 9, note: 'Under the porch, gated', match: ['parking', '\\bcar\\b', '\\bgate', 'vehicle'] },
-  { id: 'garden', name: 'Garden & lawn', x: -14, z: -9, w: 4, d: 16, match: ['lawn', 'garden', 'grass', '\\btrees?\\b', 'plants?\\b', 'leaves'] },
+  { id: 'pool', name: 'Swimming pool', x: -13.39, z: -2.86, w: 3.38, d: 6.65, note: '22 ft long, 1.3 ft to 4.5 ft deep', match: ['\\bpool\\b(?! deck)', 'swim', 'chlorine', 'skimm'] },
+  { id: 'jacuzzi', name: 'Jacuzzi', x: -13.3, z: -2.77, w: 1.63, d: 1.57, note: 'North-west corner of the pool', match: ['jacuzzi', 'jaccuzi', '\\bspa\\b'] },
+  { id: 'deck', name: 'Pool deck', x: -9.98, z: -3.69, w: 1.9, d: 8.13, note: '225 sq ft', match: ['pool deck', 'lounger', '\\bdeck\\b', 'pool towel', 'ashtray'] },
+  { id: 'screen', name: 'Outdoor LED screen', x: -13.21, z: -3.66, w: 3.14, d: 0.3, note: '150-inch, beside the jacuzzi', match: ['\\bled\\b', 'screen', 'projector'] },
+  { id: 'counter', name: 'Food counter', x: -12.65, z: -7.67, w: 3.57, d: 2.77, note: 'Outdoor counter and toilet', match: ['food counter', '\\bbbq\\b', 'barbe', 'grill', 'outdoor toilet'] },
+  { id: 'parking', name: 'Parking', x: 1.48, z: 1.29, w: 7.67, d: 8.5, note: 'Partly under the chess terrace; 5 ft and 14 ft gates', match: ['parking', '\\bcar\\b', '\\bgates?\\b', 'vehicle'] },
+  { id: 'generator', name: 'Diesel generator', x: 7.76, z: 7.11, w: 1.39, d: 2.59, note: '35 kVA, south-east corner inside the gate', match: ['generator', '\\bd\\.?g\\b', 'diesel', 'genset'] },
+  { id: 'garden', name: 'Garden & lawn', x: -14.13, z: 4.53, w: 8.87, d: 5.63, match: ['lawn', 'garden', 'grass', '\\btrees?\\b', 'plants?\\b', 'leaves', 'pebble', 'cactus'] },
 ];
 // Villa-wide systems: issues and checks about the whole house.
-const SYSTEMS = { id: 'systems', name: 'Villa systems', note: 'AC, Wi-Fi, power, water', match: ['\\ba\\.?c\\b', 'air ?con', 'wi-?fi', 'internet', 'power', 'generator', 'inverter', '\\bups\\b', 'water tank', 'motor', 'electric', 'lights?\\b', 'fans?\\b'] };
+const SYSTEMS = { id: 'systems', name: 'Villa systems', note: 'AC, Wi-Fi, power, water', match: ['\\ba\\.?c\\b', 'air ?con', 'wi-?fi', 'internet', 'power', 'inverter', '\\bups\\b', 'water tank', 'motor', 'electric', 'lights?\\b', 'fans?\\b'] };
 const ZONES = [...LAYOUT.filter(z => !z.same), ...OUTDOOR, SYSTEMS];
 const ZONE = Object.fromEntries(ZONES.map(z => [z.id, z]));
 ZONES.forEach(z => { z.re = (z.match || []).map(m => new RegExp(m, 'i')); });
 // Most specific first, so "pool deck" isn't the pool and "jacuzzi" isn't the pool.
-const MATCH_ORDER = ['deck', 'jacuzzi', 'screen', 'bed1', 'bed2', 'bed3', 'bed4', 'powder', 'pool', 'kitchen', 'dining', 'rec', 'living', 'balcony', 'lift', 'parking', 'garden', 'systems'];
+const MATCH_ORDER = ['deck', 'jacuzzi', 'screen', 'counter', 'generator', 'ebroom', 'bed1', 'bed2', 'bed3', 'bed4', 'powder', 'pool', 'kitchen', 'dining', 'rec', 'living', 'chess', 'balcony', 'terrace', 'lounge', 'foyer', 'store', 'stairs', 'parking', 'garden', 'systems'];
+const placeOf = id => LAYOUT.find(z => (z.same || z.id) === id) || OUTDOOR.find(z => z.id === id) || null;
 function zoneOfText(text) {
   const s = String(text || '');
   for (const id of MATCH_ORDER) if (ZONE[id].re.some(r => r.test(s))) return id;
@@ -204,7 +221,7 @@ function webglOK() {
 const M = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.85, metalness: 0 }, o || {}));
 const MAT = {
   ground: M(0xe7dcc6), sand: M(0xead9b4), lawn: M(0x9fb48a), path: M(0xd8cfbf), road: M(0x8d8a84),
-  wall: M(0xf6f2ea), wallIn: M(0xefe9df), trim: M(0xdedbd3), glass: M(0x9fb8c4, { roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.55 }),
+  wall: M(0xf6f2ea), rail: M(0xb9cdd4, { roughness: 0.15, transparent: true, opacity: 0.28, depthWrite: false }), wallIn: M(0xefe9df), trim: M(0xdedbd3), glass: M(0x9fb8c4, { roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.55 }),
   win: M(0x2c3b45, { roughness: 0.3, emissive: 0x000000 }), gate: M(0x23272b, { roughness: 0.6 }), slab: M(0xe9e4da),
   wood: M(0xa27b56), dark: M(0x3a3f44), fabric: M(0xe3dccf), bed: M(0xf4f1ea), bedHead: M(0x8b7a66), cushion: M(0xc9b79c),
   poolTile: M(0x9cc9cf), water: new THREE.MeshStandardMaterial({ color: 0x3fa3b3, roughness: 0.12, metalness: 0.05, transparent: true, opacity: 0.82 }),
@@ -270,126 +287,152 @@ function applyLighting() {
   needRender = true;
 }
 
+const PLOT = { x: -14.41, z: -7.85, w: 24.38, d: 18.1 };
+const lvl = f => PLINTH + f * FLOOR_H; // the floor surface of each storey
 function buildSite() {
   const g = new THREE.Group(); scene.add(g); groups.site = g;
-  const plot = box(44, 0.4, 40, MAT.ground, 0, -0.2, -3, g); plot.castShadow = false;
-  const lawn = box(5, 0.05, 20, MAT.lawn, -14, 0.03, -7, g); lawn.castShadow = false;
-  const lawn2 = box(30, 0.05, 3, MAT.lawn, 0, 0.03, -18.3, g); lawn2.castShadow = false;
-  const drive = box(7, 0.06, 13, MAT.path, 13, 0.03, 3, g); drive.castShadow = false;
-  const road = box(60, 0.1, 6, MAT.road, 0, 0.0, 20, g); road.castShadow = false;
-  const kerb = box(60, 0.2, 0.4, MAT.trim, 0, 0.1, 16.8, g); kerb.castShadow = false;
-  // beach and sea behind the villa (Pearl Beach)
-  const beach = box(70, 0.3, 14, MAT.sand, 0, -0.25, -29, g); beach.castShadow = false;
-  const seaGeo = new THREE.PlaneGeometry(90, 40, 40, 16); seaGeo.rotateX(-Math.PI / 2);
-  const sea = new THREE.Mesh(seaGeo, MAT.sea); sea.position.set(0, -0.35, -55); sea.receiveShadow = true; g.add(sea);
+  const cx = PLOT.x + PLOT.w / 2, cz = PLOT.z + PLOT.d / 2;
+  const flat = (w, d, mat, x, z, y) => { const m = box(w, 0.06, d, mat, x, y || 0.03, z, g); m.castShadow = false; return m; };
+  box(70, 0.4, 56, MAT.ground, cx + 8, -0.21, cz, g).castShadow = false;
+  flat(PLOT.w, PLOT.d, M(0xe9e1d0), cx, cz, 0.0);
+  // lawns and the pebble bed, as on the ground-floor sheet
+  flat(8.87, 5.63, MAT.lawn, -9.7, 7.35); flat(5.9, 1.2, MAT.lawn, -11.2, -4.3); flat(3.8, 1.5, MAT.lawn, -6.4, -7.1); flat(0.7, 6.65, M(0xc9c0ae), -13.95, 0.47);
+  flat(7.67, 8.5, MAT.path, 5.32, 5.54); // paved drive
+  flat(1.66, 2.03, MAT.path, 0.09, 8.78); // front steps path
+  // road to the south, the coast to the east (Pearl Beach)
+  box(90, 0.1, 7, MAT.road, cx + 8, 0.0, 14.4, g).castShadow = false;
+  box(90, 0.2, 0.4, MAT.trim, cx + 8, 0.1, 10.8, g).castShadow = false;
+  box(14, 0.3, 80, MAT.sand, 30, -0.2, cz, g).castShadow = false;
+  const seaGeo = new THREE.PlaneGeometry(70, 110, 24, 30); seaGeo.rotateX(-Math.PI / 2);
+  const sea = new THREE.Mesh(seaGeo, MAT.sea); sea.position.set(72, -0.3, cz); sea.receiveShadow = true; g.add(sea);
   animated.push({ kind: 'waves', mesh: sea, base: seaGeo.attributes.position.array.slice(), amp: 0.12, speed: 0.6 });
-  // compound wall with the perforated screen, and the black gate (as in the photo)
-  box(17, 1.4, 0.35, MAT.wall, -6.5, 0.7, 9, g);
-  const screen = box(17, 1.1, 0.12, MAT.trim, -6.5, 1.95, 9, g); screen.material = M(0xf3f0ea, { transparent: true, opacity: 0.85 });
-  box(7, 2.5, 0.2, MAT.gate, 13, 1.25, 9.2, g);
-  box(0.35, 1.4, 25, MAT.wall, -16.2, 0.7, -3.5, g);
-  box(0.35, 1.4, 25, MAT.wall, 16.6, 0.7, -3.5, g);
-  // name sign
-  const sign = box(2.6, 0.5, 0.06, MAT.dark, 0.5, 1.0, 9.22, g); sign.castShadow = false;
-  // wall washers (evening)
-  [-12, -6, -1].forEach(x => { const l = box(0.2, 0.12, 0.12, MAT.lamp, x, 1.3, 9.25, g); l.castShadow = false; evenLamps.push(l); });
+  // compound walls: the perforated screen along the road, the black gates (5 ft and 14 ft)
+  box(16.3, 1.3, 0.3, MAT.wall, -6.25, 0.65, 10.1, g);
+  const scr = box(16.3, 1.0, 0.1, M(0xf3f0ea, { transparent: true, opacity: 0.8 }), -6.25, 1.8, 10.1, g); scr.castShadow = false;
+  box(1.48, 2.2, 0.15, MAT.gate, 2.77, 1.1, 10.2, g); box(4.25, 2.2, 0.15, MAT.gate, 6.55, 1.1, 10.2, g);
+  box(0.3, 2.3, 0.3, MAT.wall, 1.85, 1.15, 10.1, g); box(0.3, 2.3, 0.3, MAT.wall, 3.65, 1.15, 10.1, g); box(0.3, 2.3, 0.3, MAT.wall, 9.8, 1.15, 10.1, g);
+  box(0.3, 1.6, PLOT.d, MAT.wall, PLOT.x, 0.8, cz, g); box(0.3, 1.6, PLOT.d, MAT.wall, PLOT.x + PLOT.w, 0.8, cz, g); box(PLOT.w, 1.6, 0.3, MAT.wall, cx, 0.8, PLOT.z, g);
+  // the name sign and wall lights (evening)
+  box(2.2, 0.45, 0.06, MAT.dark, -1.3, 0.9, 10.27, g).castShadow = false;
+  [-10, -5.5, -2.5].forEach(x => { const l = box(0.2, 0.12, 0.12, MAT.lamp, x, 1.2, 10.28, g); l.castShadow = false; evenLamps.push(l); });
 }
-
-function walls(z0, parent, y0, h, full) {
-  // four walls around a room; low in the cutaway so you can look in
-  const { x, z, w, d } = z0, th = 0.14, H = full ? h : 1.1;
-  const m = MAT.wallIn;
-  box(w, H, th, m, x + w / 2, y0 + H / 2, z, parent);
-  box(w, H, th, m, x + w / 2, y0 + H / 2, z + d, parent);
-  box(th, H, d, m, x, y0 + H / 2, z + d / 2, parent);
-  box(th, H, d, m, x + w, y0 + H / 2, z + d / 2, parent);
+function walls(z, parent, y0, open) {
+  // four low walls around a room in the cutaway (railings for open places)
+  const { x, w, d } = z, zz = z.z, th = 0.12, H = open ? 1.0 : 1.15, m = open ? MAT.rail : MAT.wallIn;
+  box(w, H, th, m, x + w / 2, y0 + H / 2, zz, parent); box(w, H, th, m, x + w / 2, y0 + H / 2, zz + d, parent);
+  box(th, H, d, m, x, y0 + H / 2, zz + d / 2, parent); box(th, H, d, m, x + w, y0 + H / 2, zz + d / 2, parent);
 }
 function furniture(zone, parent, y0) {
   const cx = zone.x + zone.w / 2, cz = zone.z + zone.d / 2;
-  if (/^bed/.test(zone.id)) {
-    box(2.0, 0.45, 2.2, MAT.bed, cx - 0.6, y0 + 0.25, cz, parent);
-    box(2.1, 1.0, 0.15, MAT.bedHead, cx - 0.6, y0 + 0.5, cz - 1.15, parent);
-    box(1.6, 0.18, 0.4, MAT.cushion, cx - 0.6, y0 + 0.55, cz - 0.85, parent);
-    // attached bathroom
-    const bx = zone.x + zone.w - 1.4, bz = zone.z + 0.1;
-    const bath = box(1.3, 0.04, 2.0, M(0xd6e3e6), bx + 0.65, y0 + 0.04, bz + 1.0, parent); bath.castShadow = false;
-    box(0.1, 1.1, 2.0, MAT.wallIn, bx, y0 + 0.55, bz + 1.0, parent);
+  if (zone.bath) {
+    const [bx, bz, bw, bd] = zone.bath; // attached bathroom
+    box(bw, 0.04, bd, M(0xd6e3e6), bx + bw / 2, y0 + 0.04, bz + bd / 2, parent).castShadow = false;
+    box(bw, 1.15, 0.1, MAT.wallIn, bx + bw / 2, y0 + 0.58, bz + bd, parent);
+    box(0.1, 1.15, bd, MAT.wallIn, bx + bw, y0 + 0.58, bz + bd / 2, parent);
+    const by = cz + bd / 2; // the bed below the bathroom
+    box(2.0, 0.45, 2.2, MAT.bed, cx + 0.3, y0 + 0.25, by, parent);
+    box(0.15, 1.0, 2.1, MAT.bedHead, zone.x + 0.25, y0 + 0.5, by, parent);
+    box(0.4, 0.18, 1.6, MAT.cushion, zone.x + 0.6, y0 + 0.55, by, parent);
+    box(2.0, 0.45, 2.2, MAT.bed, cx + 0.3, y0 + 0.25, by, parent).rotation.y = Math.PI / 2;
   } else if (zone.id === 'living') {
-    box(3.2, 0.5, 0.9, MAT.fabric, cx, y0 + 0.3, cz + 1.2, parent);
-    box(1.2, 0.35, 0.7, MAT.wood, cx, y0 + 0.2, cz, parent);
-    box(1.6, 0.92, 0.06, MAT.screen, cx, y0 + 1.3, zone.z + 0.15, parent); // 65" TV
+    box(0.9, 0.5, 3.0, MAT.fabric, cx - 0.6, y0 + 0.3, cz, parent);
+    box(0.7, 0.35, 1.2, MAT.wood, cx + 0.4, y0 + 0.2, cz, parent);
+    box(0.06, 0.92, 1.6, MAT.screen, zone.x + zone.w - 0.15, y0 + 1.3, cz, parent); // 65" TV
   } else if (zone.id === 'dining') {
-    box(2.6, 0.08, 1.1, MAT.wood, cx, y0 + 0.75, cz, parent);
-    [-1, -0.35, 0.35, 1].forEach(dx => { box(0.4, 0.5, 0.4, MAT.fabric, cx + dx, y0 + 0.25, cz - 0.85, parent); box(0.4, 0.5, 0.4, MAT.fabric, cx + dx, y0 + 0.25, cz + 0.85, parent); });
+    box(1.1, 0.08, 2.6, MAT.wood, cx, y0 + 0.75, cz, parent);
+    [-1, -0.35, 0.35, 1].forEach(dz => { box(0.4, 0.5, 0.4, MAT.fabric, cx - 0.85, y0 + 0.25, cz + dz, parent); box(0.4, 0.5, 0.4, MAT.fabric, cx + 0.85, y0 + 0.25, cz + dz, parent); });
   } else if (zone.id === 'kitchen') {
     box(zone.w - 0.6, 0.9, 0.65, MAT.trim, cx, y0 + 0.45, zone.z + 0.45, parent);
-    box(2.2, 0.9, 0.9, MAT.trim, cx, y0 + 0.45, cz + 0.6, parent);
-    box(0.7, 1.9, 0.7, M(0xcfd3d6), zone.x + 0.6, y0 + 0.95, zone.z + 0.45, parent);
+    box(0.65, 0.9, zone.d - 1.2, MAT.trim, zone.x + zone.w - 0.45, y0 + 0.45, cz + 0.3, parent);
+    box(2.2, 0.9, 0.9, MAT.trim, cx - 0.4, y0 + 0.45, cz + 0.5, parent);
   } else if (zone.id === 'rec') {
-    box(2.7, 0.08, 1.5, M(0x2f5f6e), cx - 1.2, y0 + 0.76, cz, parent); // table tennis
-    box(0.05, 0.16, 1.5, MAT.trim, cx - 1.2, y0 + 0.88, cz, parent);
-    box(1.2, 0.85, 0.7, MAT.wood, cx + 1.6, y0 + 0.43, cz - 0.6, parent); // foosball
-    box(0.55, 0.55, 0.05, M(0x5b3b2e), cx + 2.6, y0 + 1.5, zone.z + zone.d - 0.12, parent); // darts
-  } else if (zone.id === 'balcony') {
-    box(0.9, 0.06, 0.9, MAT.wood, cx - 2, y0 + 0.7, cz, parent); // chess table
-    box(2.8, 0.45, 0.8, MAT.fabric, cx + 2, y0 + 0.25, cz + 0.8, parent);
-  } else if (zone.id === 'lift') {
-    box(1.4, 2.6, 1.4, MAT.dark, cx, y0 + 1.3, cz - 0.8, parent);
+    box(2.7, 0.08, 1.5, M(0x2f5f6e), cx - 1.2, y0 + 0.76, cz + 1, parent); // table tennis
+    box(0.05, 0.16, 1.5, MAT.trim, cx - 1.2, y0 + 0.88, cz + 1, parent);
+    box(1.2, 0.85, 0.7, MAT.wood, cx + 1.8, y0 + 0.43, cz - 2, parent); // foosball
+    box(0.05, 0.55, 0.55, M(0x5b3b2e), zone.x + zone.w - 0.1, y0 + 1.5, cz + 2.5, parent); // darts
+    box(3.0, 0.45, 0.9, MAT.fabric, cx, y0 + 0.25, zone.z + zone.d - 0.8, parent);
+  } else if (zone.id === 'chess') {
+    box(0.9, 0.06, 0.9, MAT.wood, cx - 1.5, y0 + 0.7, cz + 1, parent); box(0.12, 0.7, 0.12, MAT.wood, cx - 1.5, y0 + 0.35, cz + 1, parent);
+    box(2.6, 0.45, 0.8, MAT.fabric, cx + 1.2, y0 + 0.25, cz + 2.2, parent);
+  } else if (zone.id === 'terrace') {
+    for (let i = 0; i < 3; i++) box(0.7, 0.3, 1.9, MAT.fabric, zone.x + 1 + i * 1.2, y0 + 0.2, zone.z + zone.d - 3, parent);
+  } else if (zone.id === 'lounge') {
+    for (let i = 0; i < 3; i++) box(0.8, 0.4, 0.8, MAT.fabric, zone.x + 1.2, y0 + 0.2, zone.z + 3 + i * 3.2, parent);
+    box(0.9, 0.35, 0.9, MAT.wood, zone.x + 2.2, y0 + 0.18, zone.z + 6, parent);
+  } else if (zone.id === 'powder') {
+    box(0.5, 0.8, 0.5, M(0xd6e3e6), cx, y0 + 0.4, zone.z + 0.4, parent);
+  } else if (zone.id === 'ebroom') {
+    box(0.9, 1.6, 0.25, MAT.dark, cx, y0 + 0.8, zone.z + 0.2, parent);
+  } else if (zone.id === 'store') {
+    box(0.5, 1.8, zone.d - 0.6, MAT.wood, zone.x + 0.35, y0 + 0.9, cz, parent);
+  }
+  if (zone.lift) { const [lx, lz, lw, ld] = zone.lift; box(lw - 0.4, FLOOR_H - 0.3, ld - 0.4, MAT.dark, lx + lw / 2, y0 + (FLOOR_H - 0.3) / 2, lz + ld / 2, parent); }
+  if (/^stairs/.test(zone.id) || zone.same === 'stairs') { // flights either side of the lift
+    for (let i = 0; i < 8; i++) { box(0.9, 0.18 * (i + 1), 0.28, MAT.trim, zone.x + 0.6, y0 + 0.09 * (i + 1), zone.z + zone.d - 0.4 - i * 0.28, parent); box(0.9, 0.18 * (i + 1), 0.28, MAT.trim, zone.x + zone.w - 0.6, y0 + 0.09 * (i + 1), zone.z + zone.d - 0.4 - i * 0.28, parent); }
   }
 }
+function windowsOn(z, parent, y0) {
+  const sides = (z.win || '').split(''), h = 1.5, y = y0 + 1.55;
+  sides.forEach(sd => {
+    if (sd === 'n') box(z.w * 0.6, h, 0.08, MAT.win, z.x + z.w / 2, y, z.z - 0.03, parent);
+    if (sd === 's') box(z.w * 0.6, h, 0.08, MAT.win, z.x + z.w / 2, y, z.z + z.d + 0.03, parent);
+    if (sd === 'e') box(0.08, h, z.d * 0.55, MAT.win, z.x + z.w + 0.03, y, z.z + z.d / 2, parent);
+    if (sd === 'w') box(0.08, h + 0.5, z.d * 0.6, MAT.win, z.x - 0.03, y - 0.25, z.z + z.d / 2, parent);
+  });
+}
 function buildHouse() {
-  const ext = new THREE.Group(), cut = [new THREE.Group(), new THREE.Group()];
+  const ext = new THREE.Group(), cut = [0, 1, 2].map(() => new THREE.Group());
   scene.add(ext); cut.forEach(c => scene.add(c));
-  groups.exterior = ext; groups.cut = cut;
-  // slabs (shared by both views)
-  const slabs = new THREE.Group(); scene.add(slabs); groups.slabs = slabs;
-  box(18.6, 0.3, 10.6, MAT.slab, 0, 0.15, -0.2, slabs);
-  groups.slab1 = box(18.6, 0.25, 10.6, MAT.slab, 0, FLOOR_H + 0.12, -0.5, slabs);
-  // ── exterior shell (from the photo): ground block, the angled first-floor
-  // block with the lit window band, stepped right wing, glass balcony, porch
-  box(18, FLOOR_H, 10, MAT.wall, 0, FLOOR_H / 2 + 0.3, -0.2, ext);
-  // first floor: left angled block
-  const ang = new THREE.Shape(); ang.moveTo(-9.6, 0); ang.lineTo(3.2, 0); ang.lineTo(3.2, FLOOR_H + 0.2); ang.lineTo(-11.2, FLOOR_H + 0.2); ang.closePath();
-  const angGeo = new THREE.ExtrudeGeometry(ang, { depth: 10, bevelEnabled: false }); angGeo.translate(0, 0, -5.2);
-  const angM = new THREE.Mesh(angGeo, MAT.wall); angM.position.y = FLOOR_H + 0.25; angM.castShadow = angM.receiveShadow = true; ext.add(angM);
-  // window band with downlights on the street side
-  box(6.6, 1.6, 0.1, MAT.win, -3, FLOOR_H + 1.6, 4.86, ext);
-  for (let i = 0; i < 6; i++) box(0.06, 1.6, 0.12, MAT.trim, -6.3 + i * 1.32, FLOOR_H + 1.6, 4.9, ext);
-  [-5.6, -4.1, -2.6, -1.1].forEach(x => { const l = box(0.18, 0.08, 0.18, MAT.lamp, x, FLOOR_H + 2.55, 4.9, ext); l.castShadow = false; evenLamps.push(l); });
-  // right wing, set back, with the glass balcony
-  box(6, FLOOR_H, 8, MAT.wall, 6.2, FLOOR_H * 1.5 + 0.25, -1.5, ext);
-  box(6.6, 0.25, 2.4, MAT.slab, 6.2, FLOOR_H + 0.25, 3.6, ext);
-  box(6.6, 1.0, 0.06, MAT.glass, 6.2, FLOOR_H + 0.9, 4.8, ext);
-  box(5.4, 1.4, 0.08, MAT.win, 6.2, FLOOR_H + 1.5, 2.48, ext);
-  // terrace level
-  box(5, 2.2, 5, MAT.wall, 4.5, FLOOR_H * 2 + 1.4, -2.5, ext);
-  box(1.2, 0.8, 1.2, MAT.trim, 3.5, FLOOR_H * 2 + 2.9, -3.5, ext);
-  // ground floor openings
-  box(5, 2.2, 0.08, MAT.win, -4, 1.5, 4.82, ext);
-  box(9, 2.2, 0.08, MAT.win, 0, 1.6, -5.32, ext);
-  // the pool side: sliding doors below, a window for each bedroom above
-  [-6, 0, 6].forEach(x => box(3.4, 1.5, 0.08, MAT.win, x, FLOOR_H + 1.8, -5.32, ext));
-  box(18.4, 0.12, 0.6, MAT.trim, 0, FLOOR_H + 0.35, -5.5, ext);
-  // porch over the parking
-  box(7, 0.3, 9, MAT.slab, 12.5, FLOOR_H + 0.1, 3.2, ext);
-  [[9.2, 7.4], [15.8, 7.4]].forEach(([x, z]) => box(0.35, FLOOR_H, 0.35, MAT.wall, x, FLOOR_H / 2, z, ext));
-  [10.5, 12.5, 14.5].forEach(x => { const l = box(0.25, 0.06, 0.25, MAT.lamp, x, FLOOR_H - 0.06, 3, ext); l.castShadow = false; evenLamps.push(l); });
-
-  // ── cutaway: each floor's rooms (floor tile = the place you can select)
+  groups.exterior = ext; groups.cut = cut; groups.slabs = [];
+  // ── outside: each enclosed room as a solid block (so the shape follows the
+  // plans), roofs, railings on the open places, windows
   LAYOUT.forEach(z => {
-    const parent = cut[z.floor], y0 = z.floor ? FLOOR_H + 0.25 : 0.3;
-    const zone = z.same ? Object.assign({}, z, { id: z.same }) : z;
-    const tile = new THREE.Mesh(new THREE.BoxGeometry(z.w - 0.1, 0.06, z.d - 0.1), M(0xe6dfd2));
-    tile.position.set(z.x + z.w / 2, y0 + 0.03, z.z + z.d / 2); tile.receiveShadow = true;
+    const y0 = lvl(z.floor);
+    if (z.open) {
+      if (z.floor > 0) { const s = box(z.w, 0.22, z.d, MAT.slab, z.x + z.w / 2, y0 - 0.11, z.z + z.d / 2, ext); s.receiveShadow = true; }
+      const rail = z.id === 'lounge' ? null : MAT.rail;
+      if (rail) { box(z.w, 1.0, 0.06, rail, z.x + z.w / 2, y0 + 0.5, z.z + z.d, ext); box(0.06, 1.0, z.d, rail, z.id === 'balcony' || z.id === 'terrace' ? z.x : z.x + z.w, y0 + 0.5, z.z + z.d / 2, ext); }
+      return;
+    }
+    if (z.id === 'rec') return; // drawn below with its angled street wall
+    box(z.w, FLOOR_H, z.d, MAT.wall, z.x + z.w / 2, y0 + FLOOR_H / 2, z.z + z.d / 2, ext);
+    windowsOn(z, ext, y0);
+  });
+  // the recreation room: the street façade from the photo — a broad white
+  // wall whose west edge leans out over the balcony, with the lit window band
+  const R = ZONE.rec, y1 = lvl(1);
+  box(R.w, FLOOR_H, R.d, MAT.wall, R.x + R.w / 2, y1 + FLOOR_H / 2, R.z + R.d / 2, ext);
+  const ang = new THREE.Shape(); ang.moveTo(R.x, 0); ang.lineTo(R.x + R.w, 0); ang.lineTo(R.x + R.w, FLOOR_H + 0.3); ang.lineTo(R.x - 3.0, FLOOR_H + 0.3); ang.closePath();
+  const ag = new THREE.ExtrudeGeometry(ang, { depth: 1.6, bevelEnabled: false }); ag.translate(0, 0, R.z + R.d - 1.6);
+  const am = new THREE.Mesh(ag, MAT.wall); am.position.y = y1; am.castShadow = am.receiveShadow = true; ext.add(am);
+  box(R.w * 0.62, 1.5, 0.08, MAT.win, R.x + R.w * 0.45, y1 + 1.5, R.z + R.d + 0.04, ext);
+  for (let i = 0; i < 5; i++) box(0.05, 1.5, 0.1, MAT.trim, R.x + R.w * 0.14 + i * (R.w * 0.155), y1 + 1.5, R.z + R.d + 0.06, ext);
+  for (let i = 0; i < 4; i++) { const l = box(0.18, 0.08, 0.18, MAT.lamp, R.x + R.w * 0.22 + i * R.w * 0.155, y1 + 2.45, R.z + R.d + 0.08, ext); l.castShadow = false; evenLamps.push(l); }
+  // roofs over each storey's rooms (flat; the chess terrace and balcony stay open)
+  LAYOUT.filter(z => !z.open && z.floor < 2 && !LAYOUT.some(u => u.floor === z.floor + 1 && !u.open && u.x < z.x + z.w - 0.2 && u.x + u.w > z.x + 0.2 && u.z < z.z + z.d - 0.2 && u.z + u.d > z.z + 0.2))
+    .forEach(z => box(z.w + 0.2, 0.2, z.d + 0.2, MAT.slab, z.x + z.w / 2, lvl(z.floor) + FLOOR_H + 0.1, z.z + z.d / 2, ext));
+  LAYOUT.filter(z => z.floor === 2 && !z.open).forEach(z => box(z.w + 0.3, 0.25, z.d + 0.3, MAT.slab, z.x + z.w / 2, lvl(2) + FLOOR_H + 0.12, z.z + z.d / 2, ext));
+  // carport posts under the chess terrace, and its downlights
+  const C = ZONE.chess;
+  [[C.x + C.w - 0.2, C.z + C.d - 0.2], [C.x + 3.5, C.z + C.d - 0.2]].forEach(([x, z]) => box(0.3, FLOOR_H, 0.3, MAT.wall, x, PLINTH + FLOOR_H / 2, z, ext));
+  [C.x + 2.5, C.x + 4.5, C.x + 6.5].forEach(x => { const l = box(0.25, 0.06, 0.25, MAT.lamp, x, lvl(1) - 0.25, C.z + C.d - 1.5, ext); l.castShadow = false; evenLamps.push(l); });
+  // the plinth under the house
+  box(14.2, PLINTH, 14.3, MAT.slab, 1.05, PLINTH / 2, -0.6, scene);
+  // ── inside, floor by floor (each floor tile is the place you can select)
+  LAYOUT.forEach(z => {
+    const parent = cut[z.floor], y0 = lvl(z.floor);
+    const zone = z.same ? Object.assign({}, z, { id: z.same, lift: ZONE.stairs.lift }) : z;
+    const tile = new THREE.Mesh(new THREE.BoxGeometry(z.w - 0.08, 0.08, z.d - 0.08), M(z.open ? 0xd9cdb6 : 0xe6dfd2));
+    tile.position.set(z.x + z.w / 2, y0 + 0.04, z.z + z.d / 2); tile.receiveShadow = true;
     tile.userData.zone = zone.id; parent.add(tile); pickables.push(tile);
     (tiles[zone.id] = tiles[zone.id] || []).push(tile);
-    walls(z, parent, y0, FLOOR_H, false);
+    if (z.id !== 'lounge') walls(z, parent, y0, z.open);
     furniture(zone, parent, y0);
   });
-  // the first floor sits on its slab; the cutaway floor selector shows/hides it
 }
+const palms = [];
 function palm(x, z, h, parent) {
-  const g = new THREE.Group(); g.position.set(x, 0, z); parent.add(g);
+  const g = new THREE.Group(); g.position.set(x, 0, z); parent.add(g); palms.push(g);
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.22, h, 7), MAT.trunk);
   trunk.position.y = h / 2; trunk.rotation.z = 0.06; trunk.castShadow = true; g.add(trunk);
   const crown = new THREE.Group(); crown.position.y = h; g.add(crown);
@@ -399,61 +442,72 @@ function palm(x, z, h, parent) {
   }
   animated.push({ kind: 'sway', obj: crown, phase: Math.random() * 6, amp: 0.05 });
 }
+function pick(mesh, id) { mesh.userData.zone = id; pickables.push(mesh); return mesh; }
 function buildOutdoors() {
   const g = new THREE.Group(); scene.add(g); groups.out = g;
-  // pool: coping, shell, water (gently moving), steps, jacuzzi corner
+  // pool (22 ft, shallow ledge to the north-east) with the jacuzzi in its north-west corner
   const P = ZONE.pool, J = ZONE.jacuzzi;
-  box(P.w + 1.2, 0.35, P.d + 1.2, MAT.trim, P.x + P.w / 2, 0.17, P.z + P.d / 2, g);
-  const shell = box(P.w, 0.3, P.d, MAT.poolTile, P.x + P.w / 2, 0.2, P.z + P.d / 2, g); shell.castShadow = false;
-  const wGeo = new THREE.PlaneGeometry(P.w, P.d, 24, 12); wGeo.rotateX(-Math.PI / 2);
-  const water = new THREE.Mesh(wGeo, MAT.water); water.position.set(P.x + P.w / 2, 0.37, P.z + P.d / 2); water.userData.zone = 'pool'; g.add(water); pickables.push(water);
+  box(P.w + 0.9, 0.35, P.d + 0.9, MAT.trim, P.x + P.w / 2, 0.17, P.z + P.d / 2, g);
+  box(P.w, 0.3, P.d, MAT.poolTile, P.x + P.w / 2, 0.2, P.z + P.d / 2, g).castShadow = false;
+  const wGeo = new THREE.PlaneGeometry(P.w, P.d, 12, 24); wGeo.rotateX(-Math.PI / 2);
+  const water = pick(new THREE.Mesh(wGeo, MAT.water), 'pool'); water.position.set(P.x + P.w / 2, 0.37, P.z + P.d / 2); g.add(water);
   animated.push({ kind: 'waves', mesh: water, base: wGeo.attributes.position.array.slice(), amp: 0.025, speed: 1.4 });
-  const jac = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.5, 20), MAT.trim); jac.position.set(J.x + 1, 0.3, J.z + 1); jac.castShadow = true; g.add(jac);
-  const jw = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.82, 0.05, 20), MAT.water); jw.position.set(J.x + 1, 0.56, J.z + 1); jw.userData.zone = 'jacuzzi'; g.add(jw); pickables.push(jw);
-  // deck loungers + outdoor seating
-  for (let i = 0; i < 3; i++) { box(0.7, 0.3, 1.9, MAT.fabric, -8 + i * 1.1, 0.25, -9.6, g); box(0.7, 0.5, 0.15, MAT.fabric, -8 + i * 1.1, 0.45, -10.5, g); }
-  box(2.4, 0.45, 0.8, MAT.wood, -7, 0.25, -14.3, g); box(1, 0.35, 1, MAT.wood, -7, 0.2, -13.2, g);
-  const deck = box(ZONE.deck.w, 0.06, ZONE.deck.d, MAT.wood, ZONE.deck.x + ZONE.deck.w / 2, 0.06, ZONE.deck.z + ZONE.deck.d / 2, g);
-  deck.userData.zone = 'deck'; pickables.push(deck);
-  // the 150-inch LED screen
-  const S = ZONE.screen; box(0.2, 2.2, 0.2, MAT.dark, S.x + 0.5, 1.1, S.z + 0.3, g); box(0.2, 2.2, 0.2, MAT.dark, S.x + 0.5, 1.1, S.z + 3.1, g);
-  const scr = box(0.15, 1.9, 3.4, MAT.screen, S.x + 0.45, 2.1, S.z + 1.7, g); scr.userData.zone = 'screen'; pickables.push(scr);
-  // parking: a car under the porch
-  const Pk = ZONE.parking, park = box(Pk.w, 0.04, Pk.d, MAT.path, Pk.x + Pk.w / 2, 0.06, Pk.z + Pk.d / 2, g); park.userData.zone = 'parking'; pickables.push(park);
-  box(1.9, 0.7, 4.2, M(0x5c6870, { roughness: 0.4 }), 13, 0.55, 2.5, g); box(1.7, 0.55, 2.2, M(0x2a3238, { roughness: 0.3 }), 13, 1.15, 2.3, g);
-  const gd = ZONE.garden, gpick = new THREE.Mesh(new THREE.BoxGeometry(gd.w, 0.08, gd.d), new THREE.MeshBasicMaterial({ visible: false }));
-  gpick.position.set(gd.x + gd.w / 2, 0.08, gd.z + gd.d / 2); gpick.userData.zone = 'garden'; g.add(gpick); pickables.push(gpick);
-  // palms and shrubs
-  [[-14.5, -15, 6.5], [-13.5, -3, 5.5], [-14.2, 5, 6], [10.5, -15.5, 6.2], [14.8, -9, 5.4], [-10, 7.5, 4.8], [15.2, -16, 5.8]].forEach(([x, z, h]) => palm(x, z, h, g));
-  const shrubGeo = new THREE.IcosahedronGeometry(0.7, 0), shrubs = new THREE.InstancedMesh(shrubGeo, M(0x6f8f5c), 14), m4 = new THREE.Matrix4();
-  [[-15, -12], [-15, -6], [-15, 0], [-15, 3], [-11, 8], [-8, 8], [-4, 8], [-1, 8], [9, -15], [12, -14], [15, -12], [15, -5], [15.5, 0], [-12, -17]]
-    .forEach(([x, z], i) => { const s = 0.7 + ((i * 37) % 10) / 20; m4.compose(new THREE.Vector3(x, 0.45 * s, z), new THREE.Quaternion(), new THREE.Vector3(s, s, s)); shrubs.setMatrixAt(i, m4); });
+  box(J.w + 0.1, 0.5, 0.15, MAT.trim, J.x + J.w / 2, 0.42, J.z + J.d, g); box(0.15, 0.5, J.d + 0.1, MAT.trim, J.x + J.w, 0.42, J.z + J.d / 2, g);
+  const jw = pick(box(J.w - 0.1, 0.05, J.d - 0.1, MAT.water, J.x + J.w / 2, 0.55, J.z + J.d / 2, g), 'jacuzzi'); jw.castShadow = false;
+  // pool deck (wood) with loungers
+  const Dk = ZONE.deck; pick(box(Dk.w, 0.08, Dk.d, MAT.wood, Dk.x + Dk.w / 2, 0.36, Dk.z + Dk.d / 2, g), 'deck');
+  for (let i = 0; i < 3; i++) box(0.7, 0.3, 1.8, MAT.fabric, Dk.x + Dk.w / 2, 0.55, Dk.z + 1.5 + i * 2.2, g);
+  // the 150-inch screen between the jacuzzi and the food counter, facing the pool
+  const S = ZONE.screen;
+  box(0.18, 2.6, 0.18, MAT.dark, S.x + 0.3, 1.3, S.z, g); box(0.18, 2.6, 0.18, MAT.dark, S.x + S.w - 0.3, 1.3, S.z, g);
+  pick(box(S.w, 1.75, 0.12, MAT.screen, S.x + S.w / 2, 1.9, S.z + 0.1, g), 'screen');
+  // food counter and outdoor toilet
+  const Fc = ZONE.counter;
+  pick(box(Fc.w * 0.5, 2.6, Fc.d, MAT.wall, Fc.x + Fc.w * 0.25, 1.3, Fc.z + Fc.d / 2, g), 'counter');
+  pick(box(Fc.w * 0.5, 0.95, 0.7, MAT.trim, Fc.x + Fc.w * 0.75, 0.48, Fc.z + Fc.d - 0.5, g), 'counter');
+  box(Fc.w * 0.55, 0.12, Fc.d + 0.3, MAT.slab, Fc.x + Fc.w * 0.72, 2.7, Fc.z + Fc.d / 2, g);
+  // parking: drive, a car under the terrace
+  const Pk = ZONE.parking; pick(box(Pk.w, 0.04, Pk.d, MAT.path, Pk.x + Pk.w / 2, 0.07, Pk.z + Pk.d / 2, g), 'parking');
+  box(1.9, 0.7, 4.2, M(0x5c6870, { roughness: 0.4 }), 4.2, 0.55, 3.6, g); box(1.7, 0.55, 2.2, M(0x2a3238, { roughness: 0.3 }), 4.2, 1.15, 3.4, g);
+  // the 35 kVA diesel generator, south-east corner inside the gate
+  const Gn = ZONE.generator;
+  pick(box(Gn.w, 1.5, Gn.d, M(0x5d6b5f, { roughness: 0.55 }), Gn.x + Gn.w / 2, 0.8, Gn.z + Gn.d / 2, g), 'generator');
+  box(Gn.w * 0.6, 0.1, 0.3, MAT.dark, Gn.x + Gn.w / 2, 1.6, Gn.z + 0.4, g);
+  // garden pick area
+  const gd = ZONE.garden, gp = new THREE.Mesh(new THREE.BoxGeometry(gd.w, 0.08, gd.d), new THREE.MeshBasicMaterial({ visible: false }));
+  gp.position.set(gd.x + gd.w / 2, 0.08, gd.z + gd.d / 2); g.add(pick(gp, 'garden'));
+  // palms and shrubs (the hedge along the drive, as drawn)
+  [[-13.6, -7, 6.2], [-13.7, 5.2, 5.6], [-10.5, 9.3, 6], [-7, 9.4, 5.2], [-6.2, -7.3, 5.4], [-13.8, 9.5, 5.8]].forEach(([x, z, h]) => palm(x, z, h, g));
+  const pts = [];
+  for (let z = 1.6; z < 9.8; z += 0.75) pts.push([9.55, z]);
+  for (let x = -4.8; x < -0.6; x += 0.62) pts.push([x, 7.25]);
+  [[-11, -4.4], [-12.6, -4.4], [-9.4, -7.2], [-7.6, -7.2]].forEach(p => pts.push(p));
+  const shrubs = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.42, 0), M(0x6f8f5c), pts.length), m4 = new THREE.Matrix4();
+  pts.forEach(([x, z], i) => { const s = 0.85 + ((i * 37) % 10) / 40; m4.compose(new THREE.Vector3(x, 0.35 * s, z), new THREE.Quaternion(), new THREE.Vector3(s, s, s)); shrubs.setMatrixAt(i, m4); });
   shrubs.castShadow = true; g.add(shrubs);
   // pool lights (evening)
-  [[-3, -12.3], [2, -12.3], [-3, -7.9], [2, -7.9]].forEach(([x, z]) => { const l = box(0.18, 0.06, 0.18, MAT.lamp, x, 0.37, z, g); l.castShadow = false; evenLamps.push(l); });
+  [[P.x + 0.2, P.z + 2.5], [P.x + 0.2, P.z + 5.5], [P.x + P.w - 0.2, P.z + 2.5], [P.x + P.w - 0.2, P.z + 5.5]].forEach(([x, z]) => { const l = box(0.15, 0.06, 0.15, MAT.lamp, x, 0.37, z, g); l.castShadow = false; evenLamps.push(l); });
   evenLamps.forEach(l => { l.visible = EVENING; });
 }
 
 // ── Views ────────────────────────────────────────────────────────────────────
 const VIEWS = {
-  // from the sea side, like the reference: beach and pool in front, the house behind
-  overview: { pos: [-40, 44, -64], target: [0, 1, -5] },
-  cutaway: { pos: [-38, 50, -52], target: [0, 1.5, -3] },
-  plan: { pos: [0.01, 92, 0.5], target: [0, 0, -3] },
+  // from the south-west: the road façade and the pool side, the sea beyond to the east
+  overview: { pos: [-40, 40, 42], target: [-2, 1.5, 1] },
+  cutaway: { pos: [-30, 38, 32], target: [-2, 2, 0] },
+  plan: { pos: [-1.99, 66, 1.5], target: [-2, 0, 1] },
 };
 function setView(v, instant) {
   VIEW = v;
   const showExt = v === 'overview';
   groups.exterior.visible = showExt;
-  groups.cut[0].visible = !showExt && (v === 'plan' ? FLOOR === 0 : true);
-  groups.cut[1].visible = !showExt && FLOOR === 1;
-  groups.slab1.visible = showExt || FLOOR === 1;
+  palms.forEach(p => { p.visible = v !== 'plan'; }); // seen from straight above they'd cover the rooms
+  groups.cut.forEach((c, i) => { c.visible = !showExt && (v === 'plan' ? i === FLOOR : i <= FLOOR); });
   document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
   $('#floorSw').hidden = showExt;
   controls.maxPolarAngle = v === 'plan' ? 0.02 : Math.PI * 0.47;
-  controls.minPolarAngle = v === 'plan' ? 0 : 0;
   controls.enableRotate = v !== 'plan';
-  const tgt = selected && v !== 'plan' && v !== 'overview' ? focusOf(selected) : null;
+  const tgt = selected && v === 'cutaway' ? focusOf(selected) : null;
   flyTo(tgt ? tgt.pos : VIEWS[v].pos, tgt ? tgt.target : VIEWS[v].target, instant || v === 'plan'); // the plan is always north-up
   updateTiles(); needRender = true; kick();
 }
@@ -465,20 +519,23 @@ function setFloor(f) {
 let fly = null;
 function flyTo(pos, target, instant) {
   const p = new THREE.Vector3(...pos), tg = new THREE.Vector3(...target);
-  if (instant || reduceMotion()) { camera.position.copy(p); controls.target.copy(tg); controls.update(); needRender = true; return; }
+  if (instant || reduceMotion()) {
+    fly = null; camera.position.copy(p); controls.target.copy(tg);
+    controls.enableDamping = false; controls.update(); controls.enableDamping = true; // no drift left over from a previous move
+    needRender = true; kick(); return;
+  }
   fly = { t: 0, p0: camera.position.clone(), t0: controls.target.clone(), p, tg };
   kick();
 }
 // Where to look when a place is chosen
 function focusOf(id) {
-  const lz = LAYOUT.find(z => (z.same || z.id) === id && (z.floor === FLOOR || !LAYOUT.some(q => (q.same || q.id) === id && q.floor === FLOOR)));
-  const o = OUTDOOR.find(z => z.id === id);
-  const z = lz || o; if (!z) return null;
-  const cx = z.x + z.w / 2, cz = z.z + z.d / 2, y = lz && lz.floor ? FLOOR_H : 0;
+  const z = LAYOUT.find(q => (q.same || q.id) === id && q.floor === FLOOR) || placeOf(id);
+  if (!z) return null;
+  const cx = z.x + z.w / 2, cz = z.z + z.d / 2, y = z.floor != null ? lvl(z.floor) : 0;
   // keep the angle you're looking from; just come closer
-  const dir = camera ? camera.position.clone().sub(controls.target).normalize() : new THREE.Vector3(-0.45, 0.55, -0.7).normalize();
+  const dir = camera ? camera.position.clone().sub(controls.target).normalize() : new THREE.Vector3(-0.6, 0.55, 0.6).normalize();
   if (dir.y < 0.45) { dir.y = 0.45; dir.normalize(); }
-  return { pos: [cx + dir.x * 34, y + dir.y * 34, cz + dir.z * 34], target: [cx, y, cz] };
+  return { pos: [cx + dir.x * 30, y + dir.y * 30, cz + dir.z * 30], target: [cx, y, cz] };
 }
 
 // ── Picking ──────────────────────────────────────────────────────────────────
@@ -551,14 +608,15 @@ function updateTiles() {
 // ── Floating labels (HTML buttons kept over their 3D spot) ──────────────────
 let LABELS = [];
 function anchorOf(id) {
-  if (id === 'overview') return new THREE.Vector3(0, FLOOR_H * 2 + 3.4, -1);
-  if (id === 'systems') return new THREE.Vector3(5, FLOOR_H * 2 + 3.2, -3);
-  if (id === 'bedrooms') return new THREE.Vector3(-3, FLOOR_H * 2 + 0.6, 2);
-  const f = focusOf(id); if (!f) return null;
-  const lz = LAYOUT.find(z => (z.same || z.id) === id);
-  const lift = { screen: 3.4, jacuzzi: 0.9, parking: FLOOR_H + 0.8 }[id];
-  const y = lift != null ? lift : VIEW === 'overview' ? (lz ? (lz.floor ? FLOOR_H * 2 + 0.8 : FLOOR_H + 0.6) : 1.6) : (lz && lz.floor && FLOOR === 1 ? FLOOR_H + 1.6 : 1.5);
-  return new THREE.Vector3(f.target[0], y, f.target[2]);
+  if (id === 'overview') return VIEW === 'plan' ? new THREE.Vector3(-2, 0.5, PLOT.z - 0.6) : new THREE.Vector3(-3.5, lvl(2) + 2.6, 1.5);
+  if (id === 'systems') return new THREE.Vector3(2, lvl(3) + 0.4, -3.5);
+  if (id === 'bedrooms') return new THREE.Vector3(6.7, lvl(3) + 0.3, -4);
+  const z = (VIEW === 'overview' ? null : LAYOUT.find(q => (q.same || q.id) === id && q.floor === FLOOR)) || placeOf(id); if (!z) return null;
+  const cx = z.x + z.w / 2, cz = z.z + z.d / 2;
+  const up = { screen: 3.0, counter: 3.0, generator: 1.9, jacuzzi: 0.9, parking: 0.6, garden: 0.5 }[id];
+  // outside: on top of the building; inside: just above that floor
+  const y = up != null ? up : z.floor == null ? 1.2 : VIEW === 'overview' ? (z.open ? lvl(z.floor) + 1.2 : lvl(z.floor) + FLOOR_H + 0.5) : lvl(z.floor) + 1.4;
+  return new THREE.Vector3(cx, y, cz);
 }
 function buildLabels() {
   if (!renderer) { labelsEl.innerHTML = ''; LABELS = []; return; } // the plan without 3D has its own names
@@ -576,13 +634,13 @@ function buildLabels() {
     const bi = ['bed1', 'bed2', 'bed3', 'bed4'].reduce((a, b) => a + ((d && d.iss[b]) || []).length, 0);
     out.push({ id: 'bedrooms', title: 'Bedrooms 1–4', sub: [worst.key === 'untracked' ? '' : same ? worst.label : sts.filter(x => x.key === worst.key).length + ' · ' + worst.label, bi ? bi + ' issue' + (bi > 1 ? 's' : '') : ''].filter(Boolean).join(' · '), state: worst.key, issues: bi });
   }
-  const visibleIds = VIEW === 'overview' ? ['pool', 'jacuzzi', 'screen', 'parking', 'rec', 'kitchen', 'living', 'garden', 'systems', 'deck', 'balcony', 'dining', 'lift', 'powder', 'bed1', 'bed2', 'bed3', 'bed4']
-    : LAYOUT.filter(z => z.floor === FLOOR && !z.same).map(z => z.id).concat(FLOOR === 0 || VIEW === 'cutaway' ? OUTDOOR.map(z => z.id) : []).concat(['systems']);
+  const visibleIds = VIEW === 'overview' ? ['pool', 'jacuzzi', 'screen', 'parking', 'generator', 'rec', 'chess', 'counter', 'kitchen', 'living', 'garden', 'systems', 'deck', 'balcony', 'dining', 'stairs', 'powder', 'foyer', 'ebroom', 'store', 'lounge', 'terrace', 'bed1', 'bed2', 'bed3', 'bed4']
+    : LAYOUT.filter(z => z.floor === FLOOR && !z.same).map(z => z.id).concat(LAYOUT.some(z => z.same && z.floor === FLOOR) ? ['stairs'] : []).concat(FLOOR === 0 || VIEW === 'cutaway' ? OUTDOOR.map(z => z.id) : []).concat(VIEW === 'plan' ? [] : ['systems']);
   visibleIds.forEach(id => {
     const z = ZONE[id], st = zoneState(id), n = (d && d.iss[id] || []).length;
     const important = st.key !== 'untracked' && st.key !== 'idle';
     // the overview keeps it calm: the main places, plus anywhere that needs someone
-    if (VIEW === 'overview' && !(['pool', 'jacuzzi', 'screen', 'parking', 'rec'].includes(id) && !/^bed/.test(id)) && !(n && showMT && !/^bed/.test(id)) && !(n && LAYER === 'maintenance')) return;
+    if (VIEW === 'overview' && !['pool', 'jacuzzi', 'screen', 'parking', 'generator', 'rec', 'chess'].includes(id) && !(n && showMT && !/^bed/.test(id)) && !(n && LAYER === 'maintenance')) return;
     if (LAYER === 'maintenance' && !n) return;
     if (LAYER === 'bookings' && !/^bed/.test(id)) return;
     if (LAYER === 'housekeeping' && st.key === 'untracked' && !['pool', 'jacuzzi'].includes(id)) return;
@@ -613,9 +671,17 @@ labelsEl.addEventListener('click', e => { const b = e.target.closest('[data-zone
 
 // ── Side panel ───────────────────────────────────────────────────────────────
 function select(id) {
-  if (id === 'bedrooms') { if (renderer) { FLOOR = 1; document.querySelectorAll('[data-floor]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.floor === 1))); setView('cutaway'); } id = 'bed2'; }
+  if (id === 'bedrooms') id = 'bed2';
   selected = id;
-  if (id !== 'overview' && renderer) { const f = focusOf(id); if (f) { if (VIEW === 'overview' && LAYOUT.some(z => (z.same || z.id) === id)) { VIEW = 'cutaway'; const lz = LAYOUT.find(z => (z.same || z.id) === id); FLOOR = lz.floor; document.querySelectorAll('[data-floor]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.floor === FLOOR))); setView('cutaway'); } else if (VIEW !== 'plan') flyTo(f.pos, f.target); } }
+  if (id !== 'overview' && renderer) {
+    // a room: look inside, on its floor (the stairs stay on the floor you're on)
+    const rooms = LAYOUT.filter(z => (z.same || z.id) === id);
+    if (rooms.length) {
+      if (!rooms.some(z => z.floor === FLOOR)) FLOOR = rooms[0].floor;
+      document.querySelectorAll('[data-floor]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.floor === FLOOR)));
+      setView(VIEW === 'plan' ? 'plan' : 'cutaway');
+    } else { const f = focusOf(id); if (f && VIEW !== 'plan') flyTo(f.pos, f.target); }
+  }
   if (id === 'overview' && renderer) flyTo(VIEWS[VIEW].pos, VIEWS[VIEW].target);
   updateTiles(); buildLabels(); renderPanel();
   if (innerWidth < 900) $('#panel').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
@@ -720,7 +786,7 @@ function renderPlanSvg() {
   const pad = 1, minX = Math.min(...items.map(z => z.x)) - pad, minZ = Math.min(...items.map(z => z.z)) - pad;
   const W = Math.max(...items.map(z => z.x + z.w)) + pad - minX, H = Math.max(...items.map(z => z.z + z.d)) + pad - minZ;
   $('#fallback').innerHTML = `<div class="v3-fb-head"><b>Floor plan</b> <span class="v3-muted small">3D isn't available on this device, so here is the plan.</span>
-    <span class="v3-seg"><button type="button" data-ffloor="0" aria-pressed="${fl === 0}">Ground</button><button type="button" data-ffloor="1" aria-pressed="${fl === 1}">First</button></span></div>
+    <span class="v3-seg"><button type="button" data-ffloor="0" aria-pressed="${fl === 0}">Ground</button><button type="button" data-ffloor="1" aria-pressed="${fl === 1}">First</button><button type="button" data-ffloor="2" aria-pressed="${fl === 2}">Second</button></span></div>
     <svg viewBox="0 0 ${W * 10} ${H * 10}" role="img" aria-label="Floor plan of RYST 109A">` + items.map(z => { const st = zoneState(z.id);
       return `<g class="v3-svgz s-${st.key}${selected === z.id ? ' on' : ''}" data-zone="${z.id}" tabindex="0" role="button" aria-label="${esc(z.name)}: ${esc(st.label)}"><rect x="${(z.x - minX) * 10}" y="${(z.z - minZ) * 10}" width="${z.w * 10}" height="${z.d * 10}" rx="6"/><text x="${(z.x - minX + z.w / 2) * 10}" y="${(z.z - minZ + z.d / 2) * 10 - 7}">${esc(z.name)}</text><text class="st" x="${(z.x - minX + z.w / 2) * 10}" y="${(z.z - minZ + z.d / 2) * 10 + 9}">${esc(st.label)}</text></g>`; }).join('') + '</svg>';
 }

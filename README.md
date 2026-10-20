@@ -57,10 +57,14 @@ Villa 3D. Files: `villa-3d.html`, `assets/app/villa3d.js`, `assets/app/villa3d.c
 and Three.js r169 self-hosted in `assets/vendor/three/` (MIT, see its LICENSE),
 loaded only on this page through an import map.
 
-- The model is conceptual, not a surveyed plan. Rooms and outdoor areas are
-  defined in `LAYOUT` and `OUTDOOR` at the top of `villa3d.js` (metres; x east,
-  z towards the street); edit them to match the real drawings. Each place's
-  `match` words decide which checklist items and issues belong to it.
+- The model follows the architect's ground and first-floor layouts (Dreamour
+  design, "Cheyyur villa"), read off at their printed dimensions; the second
+  floor (Bedroom 4 over the north-east bedroom, the rest terrace) and the
+  35 kVA generator (south-east corner inside the gate) are from the owner.
+  Rooms and outdoor areas are `LAYOUT` and `OUTDOOR` at the top of `villa3d.js`
+  (metres; x east, z south towards the road). Heights and furniture are
+  approximate. Each place's `match` words decide which checklist items and
+  issues belong to it.
 - Everything it shows comes from existing endpoints with the user's own access:
   `/guest-register` (bookings, paid/due), `/checklist` (check-in checklist items
   per room, today's daily rounds), `/issues` (placed by their area and title),
@@ -70,7 +74,7 @@ loaded only on this page through an import map.
   that does it (`stay.html?open=`, `checklist.html?start=`, `issues.html?id=`).
 - Not in Harbour, so shown as such: which bedrooms a stay uses (the villa is
   booked whole), who an issue is assigned to, and inspections.
-- Views: Overview (from the sea side), Inside (cutaway, ground/first floor),
+- Views: Overview (from the south-west, the sea to the east), Inside (cutaway, ground/first/second floor),
   Plan (top-down). Evening lighting, a "Still" switch (and the system's reduced
   motion) stop the water and palms. Without WebGL, or with `?lite=1`, it shows a
   clickable 2D plan with the same data.
