@@ -38,7 +38,7 @@
     var t = total(s), paid = +s.advance||0, due = Math.max(0, t-paid);
     return { no:s.no, type:s.type, guest:s.guest, phone:s.phone, guests:s.guests, checkin:s.checkin, checkout:s.checkout,
       nights:Math.round((new Date(s.checkout)-new Date(s.checkin))/864e5), channel:'Direct', mode:s.mode||'',
-      stayTotal:t, stayPaid:paid, stayDue:due, stayStatus: due<=0?'paid':paid>0?'partial':'unpaid',
+      stayTotal:t, stayPaid:paid, stayDue:due, due:(s.type==='quote'&&paid<=0)?0:due, stayStatus: (s.type==='quote'&&paid<=0)?'unconfirmed':due<=0?'paid':paid>0?'partial':'unpaid',
       foodTotal:0, foodPaid:0, foodDue:0, foodOrderCount:0, foodStatus:'none', checkedIn:!!s.checkinInfo,
       arrivalTime:s.checkinInfo?s.checkinInfo.arrivalTime:'', vehicleNumber:'', checkinGuestsCount:s.checkinInfo?s.checkinInfo.guestsCount:null, checkinNote:'' };
   });

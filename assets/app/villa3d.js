@@ -257,10 +257,14 @@ function initScene() {
   lights();
   buildSite(); buildHouse(); buildOutdoors();
   setView('overview', true);
+  // arrive from high over the sea, swinging round to the road side
+  if (!reduceMotion()) { camera.position.set(55, 70, -60); controls.target.set(-2, 0, 1); controls.update(); flyTo(VIEWS.overview.pos, VIEWS.overview.target, false, 2.4); }
   resize();
   new ResizeObserver(resize).observe(stage);
   renderer.domElement.addEventListener('pointerdown', onDown);
   renderer.domElement.addEventListener('pointerup', onUp);
+  renderer.domElement.addEventListener('pointermove', onMove);
+  renderer.domElement.addEventListener('pointerleave', () => setHover(null));
   document.addEventListener('visibilitychange', () => { if (!document.hidden) kick(); });
   kick();
 }
@@ -310,7 +314,7 @@ function buildSite() {
   // compound walls: the perforated screen along the road, the black gates (5 ft and 14 ft)
   box(16.3, 1.3, 0.3, MAT.wall, -6.25, 0.65, 10.1, g);
   const scr = box(16.3, 1.0, 0.1, M(0xf3f0ea, { transparent: true, opacity: 0.8 }), -6.25, 1.8, 10.1, g); scr.castShadow = false;
-  box(1.48, 2.2, 0.15, MAT.gate, 2.77, 1.1, 10.2, g); box(4.25, 2.2, 0.15, MAT.gate, 6.55, 1.1, 10.2, g);
+  box(1.48, 2.2, 0.15, MAT.gate, 2.77, 1.1, 10.2, g); gate14 = box(4.25, 2.2, 0.15, MAT.gate, 6.55, 1.1, 10.2, g); // the 14 ft gate slides open along the road when the guests drive in
   box(0.3, 2.3, 0.3, MAT.wall, 1.85, 1.15, 10.1, g); box(0.3, 2.3, 0.3, MAT.wall, 3.65, 1.15, 10.1, g); box(0.3, 2.3, 0.3, MAT.wall, 9.8, 1.15, 10.1, g);
   box(0.3, 1.6, PLOT.d, MAT.wall, PLOT.x, 0.8, cz, g); box(0.3, 1.6, PLOT.d, MAT.wall, PLOT.x + PLOT.w, 0.8, cz, g); box(PLOT.w, 1.6, 0.3, MAT.wall, cx, 0.8, PLOT.z, g);
   // the name sign and wall lights (evening)
@@ -434,6 +438,7 @@ function buildHouse() {
   });
 }
 const palms = [];
+let car = null, gate14 = null; const CAR_PARK = 3.6, CAR_ROAD = 22, CAR_X = 4.2, GATE_X = 6.55;
 function palm(x, z, h, parent) {
   const g = new THREE.Group(); g.position.set(x, 0, z); parent.add(g); palms.push(g);
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.22, h, 7), MAT.trunk);
@@ -472,7 +477,15 @@ function buildOutdoors() {
   box(Fc.w * 0.55, 0.12, Fc.d + 0.3, MAT.slab, Fc.x + Fc.w * 0.72, 2.7, Fc.z + Fc.d / 2, g);
   // parking: drive, a car under the terrace
   const Pk = ZONE.parking; pick(box(Pk.w, 0.04, Pk.d, MAT.path, Pk.x + Pk.w / 2, 0.07, Pk.z + Pk.d / 2, g), 'parking');
-  box(1.9, 0.7, 4.2, M(0x5c6870, { roughness: 0.4 }), 4.2, 0.55, 3.6, g); box(1.7, 0.55, 2.2, M(0x2a3238, { roughness: 0.3 }), 4.2, 1.15, 3.4, g);
+  // the guests' car: parked only while a stay is in house (it drives in on check-in day)
+  car = new THREE.Group(); g.add(car); car.position.set(CAR_X, 0, CAR_PARK);
+  box(1.9, 0.7, 4.2, M(0x5c6870, { roughness: 0.4 }), 0, 0.55, 0, car); box(1.7, 0.55, 2.2, M(0x2a3238, { roughness: 0.3 }), 0, 1.15, -0.2, car);
+  [[-0.95, -1.3], [0.95, -1.3], [-0.95, 1.3], [0.95, 1.3]].forEach(([x, z]) => box(0.2, 0.5, 0.5, MAT.dark, x, 0.3, z, car));
+  car.visible = false;
+  // jacuzzi bubbles
+  const BN = 26, bub = new THREE.InstancedMesh(new THREE.SphereGeometry(0.045, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 }), BN);
+  bub.castShadow = false; g.add(bub);
+  animated.push({ kind: 'bubbles', mesh: bub, n: BN, seeds: Array.from({ length: BN }, (_, i) => [J.x + 0.15 + ((i * 53) % 97) / 97 * (J.w - 0.3), J.z + 0.15 + ((i * 31) % 89) / 89 * (J.d - 0.3), ((i * 17) % 23) / 23]) });
   // the 35 kVA diesel generator, south-east corner inside the gate
   const Gn = ZONE.generator;
   pick(box(Gn.w, 1.5, Gn.d, M(0x5d6b5f, { roughness: 0.55 }), Gn.x + Gn.w / 2, 0.8, Gn.z + Gn.d / 2, g), 'generator');
@@ -525,14 +538,14 @@ function setFloor(f) {
 }
 const isExt = () => VIEW === 'overview' || VIEW === 'street'; // looking at the outside
 let fly = null;
-function flyTo(pos, target, instant) {
+function flyTo(pos, target, instant, dur) {
   const p = new THREE.Vector3(...pos), tg = new THREE.Vector3(...target);
   if (instant || reduceMotion()) {
     fly = null; camera.position.copy(p); controls.target.copy(tg);
     controls.enableDamping = false; controls.update(); controls.enableDamping = true; // no drift left over from a previous move
     needRender = true; kick(); return;
   }
-  fly = { t: 0, p0: camera.position.clone(), t0: controls.target.clone(), p, tg };
+  fly = { t: 0, p0: camera.position.clone(), t0: controls.target.clone(), p, tg, dur: dur || 0.9 };
   kick();
 }
 // Where to look when a place is chosen
@@ -550,29 +563,62 @@ function focusOf(id) {
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 let downAt = null;
 function onDown(e) { downAt = { x: e.clientX, y: e.clientY }; }
-function onUp(e) {
-  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return;
+// what's under the pointer: a place, the house (outside), or nothing
+function pickAt(cx, cy) {
   const r = renderer.domElement.getBoundingClientRect();
-  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   const vis = pickables.filter(m => { let o = m; while (o) { if (!o.visible) return false; o = o.parent; } return true; });
   const hit = ray.intersectObjects(vis, false)[0];
-  if (hit && hit.object.userData.zone) select(hit.object.userData.zone);
-  else if (isExt()) { // the house itself: look inside
-    const houseHit = ray.intersectObject(groups.exterior, true)[0];
-    if (houseHit) { setView('cutaway'); select('overview'); }
+  if (hit && hit.object.userData.zone) return hit.object.userData.zone;
+  if (isExt() && ray.intersectObject(groups.exterior, true)[0]) return 'house';
+  return null;
+}
+function onUp(e) {
+  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) { downAt = null; return; }
+  downAt = null;
+  const id = pickAt(e.clientX, e.clientY);
+  if (id === 'house') { setView('cutaway'); select('overview'); } // the house itself: look inside
+  else if (id) select(id);
+}
+// Hover (mouse only): the place lights up, its pin opens, and a card says what's there.
+const tip = document.createElement('div'); tip.className = 'v3-tip'; tip.hidden = true; tip.setAttribute('role', 'status'); stage.appendChild(tip);
+let hoverReq = 0, hoverAt = null;
+function onMove(e) {
+  if (e.pointerType !== 'mouse' || (downAt && e.buttons)) { if (!tip.hidden) setHover(null); return; }
+  hoverAt = { x: e.clientX, y: e.clientY };
+  if (!hoverReq) hoverReq = requestAnimationFrame(() => { hoverReq = 0; if (hoverAt && renderer) setHover(pickAt(hoverAt.x, hoverAt.y), hoverAt); });
+}
+function setHover(id, at) {
+  const zid = id === 'house' ? 'overview' : id;
+  renderer.domElement.style.cursor = id ? 'pointer' : '';
+  if (zid !== HOVER) { HOVER = zid; updateTiles(); tip.innerHTML = zid ? tipHtml(zid, id === 'house') : ''; }
+  tip.hidden = !zid;
+  if (zid && at) {
+    const r = stage.getBoundingClientRect(), x = at.x - r.left, y = at.y - r.top, tw = tip.offsetWidth, th = tip.offsetHeight;
+    tip.style.transform = `translate(${Math.round(x + 16 + tw > r.width ? x - tw - 12 : x + 16)}px, ${Math.round(y + 14 + th > r.height ? y - th - 10 : y + 14)}px)`;
   }
+}
+function tipHtml(id, house) {
+  if (house) return `<b>RYST 109A</b><span>${esc(t('Click to look inside'))}</span>`;
+  const z = ZONE[id]; if (!z) return '';
+  const st = zoneState(id), f = factsOf(id), lines = [];
+  if (f.size) lines.push(f.size + (f.floor ? ' · ' + f.floor : ''));
+  if (f.open) lines.push(`${f.open} open issue${f.open > 1 ? 's' : ''}${f.urgent ? ' · urgent' : ''}`);
+  if (f.checked) lines.push('Last checked ' + f.checked);
+  return `<b>${esc(t(z.name))}</b><span class="v3-tip__st"><i class="v3-dot s-${st.key}" aria-hidden="true">${STATE_STYLE[st.key].icon}</i>${esc(st.label)}</span>${lines.map(l => `<span>${esc(l)}</span>`).join('')}<em>${esc(t('Click for details'))}</em>`;
 }
 
 // ── Render loop (only while something moves) ────────────────────────────────
 function kick() { if (!running && renderer) { running = true; requestAnimationFrame(frame); } }
-let last = 0;
+let last = 0, drive = null;
+const m4b = new THREE.Matrix4(), tmpS = new THREE.Vector3();
 function frame(now) {
   if (document.hidden) { running = false; return; }
   const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
   let moving = controls.update();
   if (fly) {
-    fly.t = Math.min(1, fly.t + dt / 0.9); const k = 1 - Math.pow(1 - fly.t, 3);
+    fly.t = Math.min(1, fly.t + dt / fly.dur); const k = 1 - Math.pow(1 - fly.t, 3);
     camera.position.lerpVectors(fly.p0, fly.p, k); controls.target.lerpVectors(fly.t0, fly.tg, k);
     if (fly.t >= 1) fly = null; moving = true;
   }
@@ -585,32 +631,60 @@ function frame(now) {
         const pos = a.mesh.geometry.attributes.position, b = a.base;
         for (let i = 0; i < pos.count; i++) { const x = b[i * 3], z = b[i * 3 + 2]; pos.array[i * 3 + 1] = b[i * 3 + 1] + Math.sin(x * 0.9 + T * a.speed) * a.amp + Math.cos(z * 1.3 + T * a.speed * 0.8) * a.amp; }
         pos.needsUpdate = true;
+      } else if (a.kind === 'bubbles') {
+        a.seeds.forEach(([x, z, ph], i) => { const k = (T * 0.45 + ph) % 1; m4b.makeTranslation(x + Math.sin(T * 3 + i) * 0.03, 0.5 + k * 0.12, z); m4b.scale(tmpS.setScalar(0.4 + k)); a.mesh.setMatrixAt(i, m4b); });
+        a.mesh.instanceMatrix.needsUpdate = true;
       }
     });
+    // the chosen place glows softly; a place with an issue breathes red
+    PULSE.forEach(p => { const v = 0.5 + 0.5 * Math.sin(T * (p.kind === 'sel' ? 3 : 2.2)); p.mats.forEach(m => { m.emissiveIntensity = p.kind === 'sel' ? 0.22 + 0.2 * v : 0.08 + 0.22 * v; }); });
+  }
+  if (drive) {
+    drive.t = Math.min(1, drive.t + dt / 5.5); const k = 1 - Math.pow(1 - drive.t, 3);
+    car.position.z = CAR_ROAD + (CAR_PARK - CAR_ROAD) * k;
+    car.position.x = GATE_X + (CAR_X - GATE_X) * Math.max(0, (k - 0.55) / 0.45); // in through the big gate, then over to its spot
+    const open = drive.t < 0.3 ? drive.t / 0.3 : drive.t < 0.75 ? 1 : Math.max(0, 1 - (drive.t - 0.75) / 0.25);
+    gate14.position.set(GATE_X + 4.1 * open, 1.1, 10.2 + 0.25 * Math.min(1, open * 4)); moving = true;
+    if (drive.t >= 1) drive = null;
   }
   if (moving || anim || needRender) { renderer.render(scene, camera); placeLabels(); needRender = false; }
-  if (moving || anim || fly) requestAnimationFrame(frame); else running = false;
+  if (moving || anim || fly || drive) requestAnimationFrame(frame); else running = false;
 }
 let STAGE_VISIBLE = true;
 new IntersectionObserver(es => { STAGE_VISIBLE = es[0].isIntersecting; if (STAGE_VISIBLE) kick(); }).observe(stage);
 function resize() {
   if (!renderer) return;
   const w = stage.clientWidth, h = stage.clientHeight;
-  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); needRender = true; kick();
+  measureCtl(); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); needRender = true; kick();
 }
 
 // ── Status colours on the floor tiles ───────────────────────────────────────
+const PULSE = [];
+let HOVER = null;
 function updateTiles() {
+  PULSE.length = 0;
   Object.keys(tiles).forEach(id => {
     const st = zoneState(id), c = new THREE.Color(STATE_STYLE[st.key].color), base = new THREE.Color(0xe9e2d6);
     const show = LAYER === 'all' || LAYER === 'housekeeping' || (LAYER === 'maintenance' && st.key === 'attention') || (LAYER === 'bookings' && st.key === 'occupied');
+    const sel = selected === id, hov = HOVER === id, iss = show && st.key === 'attention';
     tiles[id].forEach(m => {
-      m.material.color.copy(show ? base.clone().lerp(c, 0.55) : base);
-      m.material.emissive = new THREE.Color(selected === id ? 0x5a4520 : 0x000000);
-      m.material.emissiveIntensity = selected === id ? 0.35 : 0;
+      m.material.color.copy(show ? base.clone().lerp(c, hov ? 0.75 : 0.55) : base);
+      m.material.emissive.set(sel ? 0x5a4520 : iss ? 0x7a2214 : hov ? 0x3a3020 : 0x000000);
+      m.material.emissiveIntensity = sel ? 0.35 : iss ? 0.2 : hov ? 0.25 : 0;
     });
+    if (sel || iss) PULSE.push({ kind: sel ? 'sel' : 'iss', mats: tiles[id].map(m => m.material) });
   });
   needRender = true; kick();
+}
+// The guests' car is parked while a stay is in house, and drives in once on its check-in day.
+let droveIn = false;
+function syncCar() {
+  if (!car || !DERIVED) return;
+  const d = DERIVED, here = !!d.inHouse;
+  car.visible = here;
+  if (here && !droveIn && d.inHouse.checkin === d.T && !reduceMotion()) { droveIn = true; car.position.set(GATE_X, 0, CAR_ROAD); drive = { t: 0 }; kick(); }
+  else if (!drive) car.position.z = CAR_PARK;
+  needRender = true;
 }
 
 // ── Floating labels (HTML buttons kept over their 3D spot) ──────────────────
@@ -618,7 +692,7 @@ let LABELS = [];
 function anchorOf(id) {
   if (id === 'overview') return VIEW === 'plan' ? new THREE.Vector3(-2, 0.5, PLOT.z - 0.6) : new THREE.Vector3(-3.5, lvl(2) + 2.6, 1.5);
   if (id === 'systems') return new THREE.Vector3(2, lvl(3) + 0.4, -3.5);
-  if (id === 'bedrooms') return new THREE.Vector3(6.7, lvl(3) + 0.3, -4);
+  if (id === 'bedrooms') return new THREE.Vector3(6.7, lvl(2) + 1.2, -1.1); // on Bedroom 4's south face
   const z = (isExt() ? null : LAYOUT.find(q => (q.same || q.id) === id && q.floor === FLOOR)) || placeOf(id); if (!z) return null;
   const cx = z.x + z.w / 2, cz = z.z + z.d / 2;
   const up = { screen: 3.0, counter: 3.0, generator: 1.9, jacuzzi: 0.9, parking: 0.6, garden: 0.5 }[id];
@@ -626,56 +700,140 @@ function anchorOf(id) {
   const y = up != null ? up : z.floor == null ? 1.2 : isExt() ? (z.open ? lvl(z.floor) + 1.2 : lvl(z.floor) + FLOOR_H + 0.5) : lvl(z.floor) + 1.4;
   return new THREE.Vector3(cx, y, cz);
 }
+// Pins, not a wall of names: every place is a status dot; its name opens when
+// there's room (most important first), when hovered, or when chosen. A pin that
+// would land on a more important one is hidden — the list in the panel has them all.
+const RANK = ['attention', 'checkout', 'occupied', 'preparing', 'notprepared', 'ready', 'idle', 'untracked'];
 function buildLabels() {
   if (!renderer) { labelsEl.innerHTML = ''; LABELS = []; return; } // the plan without 3D has its own names
   const d = DERIVED, out = [];
-  // the villa itself
   const hl = d && d.inHouse ? `In house · ${d.inHouse.guests || '?'} guests · out ${fmtDay(d.inHouse.checkout)}`
     : d && d.next ? `Next check-in ${fmtDay(d.next.checkin)}${d.next.guests ? ' · ' + d.next.guests + ' guests' : ''}` : can('guestRegister') ? 'No upcoming stays' : '';
-  out.push({ id: 'overview', title: 'RYST 109A', sub: hl, kind: 'main' });
-  const showHK = LAYER === 'all' || LAYER === 'housekeeping', showMT = LAYER === 'all' || LAYER === 'maintenance';
-  if (isExt() && (LAYER !== 'maintenance')) {
-    // the four bedrooms as one label here; each room is in the Inside and Plan views
-    const sts = ['bed1', 'bed2', 'bed3', 'bed4'].map(zoneState), rank = ['attention', 'checkout', 'occupied', 'preparing', 'notprepared', 'ready', 'idle', 'untracked'];
-    const worst = sts.slice().sort((a, b) => rank.indexOf(a.key) - rank.indexOf(b.key))[0];
-    const same = sts.every(x => x.key === worst.key);
-    const bi = ['bed1', 'bed2', 'bed3', 'bed4'].reduce((a, b) => a + ((d && d.iss[b]) || []).length, 0);
-    out.push({ id: 'bedrooms', title: 'Bedrooms 1–4', sub: [worst.key === 'untracked' ? '' : same ? worst.label : sts.filter(x => x.key === worst.key).length + ' · ' + worst.label, bi ? bi + ' issue' + (bi > 1 ? 's' : '') : ''].filter(Boolean).join(' · '), state: worst.key, issues: bi });
+  out.push({ id: 'overview', title: 'RYST 109A', sub: hl, kind: 'main', prio: 1000 });
+  const showMT = LAYER === 'all' || LAYER === 'maintenance';
+  const issOf = id => (d && d.iss[id]) || [];
+  if (isExt() && LAYER !== 'maintenance') {
+    // the four bedrooms as one pin here; each room is in the Inside and Plan views
+    const ids = ['bed1', 'bed2', 'bed3', 'bed4'], sts = ids.map(zoneState);
+    const worst = sts.slice().sort((a, b) => RANK.indexOf(a.key) - RANK.indexOf(b.key))[0];
+    const same = sts.every(x => x.key === worst.key), bi = ids.reduce((a, b) => a + issOf(b).length, 0);
+    out.push({ id: 'bedrooms', title: 'Bedrooms 1–4', sub: worst.key === 'untracked' ? '' : same ? worst.label : sts.filter(x => x.key === worst.key).length + ' · ' + worst.label, state: worst.key, issues: showMT ? bi : 0, urgent: ids.some(b => issOf(b).some(i => i.urgency === 'urgent')) });
   }
-  const visibleIds = isExt() ? ['pool', 'jacuzzi', 'screen', 'parking', 'generator', 'rec', 'chess', 'counter', 'kitchen', 'living', 'garden', 'systems', 'deck', 'balcony', 'dining', 'stairs', 'powder', 'foyer', 'ebroom', 'store', 'lounge', 'terrace', 'bed1', 'bed2', 'bed3', 'bed4']
+  const visibleIds = isExt() ? ['pool', 'jacuzzi', 'screen', 'parking', 'generator', 'rec', 'chess', 'counter', 'kitchen', 'living', 'garden', 'systems', 'deck', 'balcony', 'dining', 'stairs', 'powder', 'foyer', 'ebroom', 'store', 'lounge', 'terrace'].concat(LAYER === 'maintenance' ? ['bed1', 'bed2', 'bed3', 'bed4'] : [])
     : LAYOUT.filter(z => z.floor === FLOOR && !z.same).map(z => z.id).concat(LAYOUT.some(z => z.same && z.floor === FLOOR) ? ['stairs'] : []).concat(FLOOR === 0 || VIEW === 'cutaway' ? OUTDOOR.map(z => z.id) : []).concat(VIEW === 'plan' ? [] : ['systems']);
   visibleIds.forEach(id => {
-    const z = ZONE[id], st = zoneState(id), n = (d && d.iss[id] || []).length;
-    const important = st.key !== 'untracked' && st.key !== 'idle';
-    // the overview keeps it calm: the main places, plus anywhere that needs someone
-    if (isExt() && !['pool', 'jacuzzi', 'screen', 'parking', 'generator', 'rec', 'chess'].includes(id) && !(n && showMT && !/^bed/.test(id)) && !(n && LAYER === 'maintenance')) return;
+    const z = ZONE[id], st = zoneState(id), list = issOf(id), n = list.length;
+    // outside, only the main amenities, plus anywhere that needs someone
+    if (isExt() && !['pool', 'jacuzzi', 'screen', 'parking', 'generator', 'rec', 'chess'].includes(id) && !(n && showMT)) return;
     if (LAYER === 'maintenance' && !n) return;
     if (LAYER === 'bookings' && !/^bed/.test(id)) return;
     if (LAYER === 'housekeeping' && st.key === 'untracked' && !['pool', 'jacuzzi'].includes(id)) return;
-    out.push({ id, title: z.name, sub: showMT && n ? `${n} issue${n > 1 ? 's' : ''}` + ((d.iss[id] || []).some(i => i.urgency === 'urgent') ? ' · urgent' : '') : (showHK || LAYER === 'bookings') && important ? st.label : '', state: st.key, issues: showMT ? n : 0 });
+    out.push({ id, title: z.name, sub: showMT && n ? `${n} issue${n > 1 ? 's' : ''}` + (list.some(i => i.urgency === 'urgent') ? ' · urgent' : '') : st.key !== 'untracked' && st.key !== 'idle' ? st.label : '', state: st.key, issues: showMT ? n : 0, urgent: showMT && list.some(i => i.urgency === 'urgent') });
   });
-  labelsEl.innerHTML = out.map((l, i) => `<button type="button" class="v3-lab${l.kind === 'main' ? ' v3-lab--main' : ''}${l.issues ? ' v3-lab--iss' : ''}${selected === l.id ? ' on' : ''}" data-i="${i}" data-zone="${esc(l.id)}">
-    ${l.state ? `<span class="v3-dot s-${l.state}" aria-hidden="true">${STATE_STYLE[l.state].icon}</span>` : ''}<span class="v3-lab__t">${esc(t(l.title))}</span>${l.sub ? `<span class="v3-lab__s">${esc(l.sub)}</span>` : ''}</button>`).join('');
-  LABELS = out.map((l, i) => ({ el: labelsEl.children[i], at: anchorOf(l.id) }));
+  // places with nothing to report stay quiet: a small dot, named on hover (and in the plan)
+  out.forEach(l => { l.quiet = l.kind !== 'main' && !l.issues && (l.state === 'untracked' || l.state === 'idle'); });
+  out.forEach(l => { if (l.prio == null) l.prio = (l.urgent ? 300 : 0) + (l.issues ? 200 : 0) + (8 - RANK.indexOf(l.state)) * 10; });
+  out.sort((a, b) => b.prio - a.prio);
+  labelsEl.innerHTML = out.map((l, i) => `<button type="button" class="v3-lab${l.kind === 'main' ? ' v3-lab--main' : ' v3-pin'}${l.issues ? ' v3-lab--iss' : ''}${l.urgent ? ' v3-lab--urg' : ''}${l.quiet ? ' v3-pin--q' : ''}" style="--i:${i}" data-zone="${esc(l.id)}" aria-label="${esc(t(l.title))}${l.sub ? ': ' + esc(l.sub) : ''}">
+    ${l.state ? `<span class="v3-dot s-${l.state}" aria-hidden="true">${STATE_STYLE[l.state].icon}${l.issues ? `<b class="v3-badge">${l.issues}</b>` : ''}</span>` : ''}<span class="v3-lab__t">${esc(t(l.title))}</span>${l.sub ? `<span class="v3-lab__s">${esc(l.sub)}</span>` : ''}</button>`).join('');
+  // measure each pin open once, so placing them each frame needs no layout reads
+  const els = [...labelsEl.children];
+  els.forEach(el => el.classList.add('open', 'full'));
+  const sizes = els.map(el => ({ w: el.offsetWidth, h: el.offsetHeight, wt: 0 }));
+  els.forEach(el => el.classList.remove('full'));
+  els.forEach((el, i) => { sizes[i].wt = el.offsetWidth; el.classList.remove('open'); });
+  LABELS = out.map((l, i) => ({ id: l.id, kind: l.kind, quiet: l.quiet, el: els[i], at: anchorOf(l.id), size: sizes[i] }));
+  measureCtl();
+  labelsEl.classList.remove('v3-in'); void labelsEl.offsetWidth; labelsEl.classList.add('v3-in'); // the pins drop in
   placeLabels();
 }
 const tmpV = new THREE.Vector3();
+let CTL_RECTS = [];
+function measureCtl() {
+  const sr = stage.getBoundingClientRect();
+  CTL_RECTS = [...stage.querySelectorAll('.v3-ctl .v3-seg, .v3-legend')].filter(e => e.offsetParent).map(e => { const r = e.getBoundingClientRect(); return { x: r.left - sr.left, y: r.top - sr.top, w: r.width, h: r.height }; });
+}
 function placeLabels() {
   if (!camera) return;
-  const w = stage.clientWidth, h = stage.clientHeight, rects = [];
-  LABELS.forEach(L => {
+  const w = stage.clientWidth, h = stage.clientHeight, rects = CTL_RECTS.slice(); // the buttons over the model are taken
+  const hit = r => rects.some(q => r.x < q.x + q.w + 4 && r.x + r.w + 4 > q.x && r.y < q.y + q.h + 3 && r.y + r.h + 3 > q.y);
+  // the chosen and hovered places claim their room first
+  const order = LABELS.filter(L => L.id === selected || L.id === HOVER || L.id === hoverOf(selected)).concat(LABELS.filter(L => !(L.id === selected || L.id === HOVER || L.id === hoverOf(selected))));
+  order.forEach(L => {
     if (!L.at) { L.el.hidden = true; return; }
     tmpV.copy(L.at).project(camera);
-    const x = (tmpV.x * 0.5 + 0.5) * w, y = (-tmpV.y * 0.5 + 0.5) * h;
-    const off = tmpV.z > 1 || x < -40 || x > w + 40 || y < -20 || y > h + 20;
-    L.el.hidden = off; if (off) return;
+    let x = (tmpV.x * 0.5 + 0.5) * w; const y = (-tmpV.y * 0.5 + 0.5) * h;
+    if (tmpV.z > 1 || x < -40 || x > w + 40 || y < -20 || y > h + 20) { L.el.hidden = true; return; }
+    const focus = L.kind === 'main' || L.id === selected || L.id === HOVER || L.id === hoverOf(selected);
+    if (focus || !L.quiet || VIEW === 'plan') x = Math.max(L.size.w / 2 + 6, Math.min(w - L.size.w / 2 - 6, x)); // named labels stay inside the frame
+    const full = { x: x - L.size.w / 2, y: y - L.size.h - 6, w: L.size.w, h: L.size.h };
+    const named = { x: x - L.size.wt / 2, y: y - L.size.h - 6, w: L.size.wt, h: L.size.h };
+    const dot = L.quiet ? { x: x - 8, y: y - 22, w: 16, h: 16 } : { x: x - 13, y: y - 32, w: 26, h: 26 };
+    let mode = focus ? 'full' : (!L.quiet || VIEW === 'plan') && !hit(named) ? 'open' : !hit(dot) ? 'pin' : 'off';
+    L.el.hidden = mode === 'off';
+    L.el.classList.toggle('open', mode === 'open' || mode === 'full');
+    L.el.classList.toggle('full', mode === 'full');
+    L.el.classList.toggle('on', L.id === selected || L.id === hoverOf(selected));
+    if (mode === 'off') return;
+    rects.push(mode === 'full' ? full : mode === 'open' ? named : dot);
     L.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
-    // keep labels from piling up: a label that lands on an earlier one is faded
-    const r = { x: x - 60, y: y - 34, w: 120, h: 34 }, clash = rects.some(q => Math.abs(q.x - r.x) < 110 && Math.abs(q.y - r.y) < 30);
-    L.el.classList.toggle('dim', clash && !L.el.classList.contains('on') && !L.el.classList.contains('v3-lab--main')); rects.push(r);
   });
 }
+const hoverOf = id => /^bed\d$/.test(id || '') && isExt() ? 'bedrooms' : null; // outside, a bedroom is the Bedrooms pin
 labelsEl.addEventListener('click', e => { const b = e.target.closest('[data-zone]'); if (b) select(b.dataset.zone); });
+labelsEl.addEventListener('pointerover', e => { const b = e.target.closest('[data-zone]'); if (b && renderer && b.dataset.zone !== HOVER && b.dataset.zone !== 'bedrooms') { HOVER = b.dataset.zone; tip.hidden = true; updateTiles(); } });
+labelsEl.addEventListener('pointerout', e => { const b = e.target.closest('[data-zone]'); if (b && !b.contains(e.relatedTarget) && HOVER === b.dataset.zone) { HOVER = null; updateTiles(); } });
+
+// ── Facts about a place, each from Harbour's own records ──────────────────
+const FLOOR_NAME = ['Ground floor', 'First floor', 'Second floor'];
+const allIssues = () => (D.issues && D.issues.issues) || [];
+const issuesHere = id => allIssues().filter(i => zoneOfText((i.area || '') + ' ' + i.title) === id);
+const who = e => String(e || '').split('@')[0];
+const dayOf = ms => ms ? fmtDay(new Date(ms + 5.5 * 3600e3).toISOString().slice(0, 10)) : '';
+function factsOf(id) {
+  const z = placeOf(id), f = {};
+  if (z && id !== 'systems') {
+    const m2 = z.w * z.d;
+    f.size = id === 'screen' ? '' : `${Math.round(m2)} m² · ${Math.round(m2 * 10.764)} sq ft`;
+    f.floor = id === 'stairs' ? 'All floors' : z.floor != null ? FLOOR_NAME[z.floor] : 'Outdoors';
+  }
+  if (can('checklist')) {
+    // the last finished checklist with an item for this place
+    const last = runs().filter(r => r.status === 'completed' && (r.items || []).some(it => zonesOfItem(it.text).includes(id)))
+      .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0))[0];
+    if (last) { f.checked = dayOf(last.completedAt) || fmtDay(last.date); f.checkedBy = who(last.completedBy); f.checkedType = { checkin: 'check-in checklist', checkout: 'check-out checklist', daily: 'daily rounds' }[last.type] || 'checklist'; }
+    const here = issuesHere(id), since = Date.now() - 90 * 864e5;
+    const fixed = here.filter(i => i.status === 'fixed' && i.fixedAt >= since).sort((a, b) => b.fixedAt - a.fixedAt);
+    f.open = here.filter(i => i.status !== 'fixed').length; f.urgent = here.some(i => i.status !== 'fixed' && i.urgency === 'urgent');
+    f.fixed90 = fixed.length; f.lastFix = fixed[0] || null; f.everReported = here.length;
+  }
+  return f;
+}
+function factsHtml(id) {
+  const f = factsOf(id), rows = [];
+  if (f.size) rows.push(['Size', f.size]);
+  if (f.floor) rows.push(['Where', f.floor]);
+  if (can('checklist')) {
+    rows.push(['Last checked', f.checked ? `${f.checked} · ${f.checkedType}${f.checkedBy ? ' · ' + f.checkedBy : ''}` : 'No finished checklist covers it']);
+    rows.push(['Fixed · 90 days', f.fixed90 ? `${f.fixed90} · last ${dayOf(f.lastFix.fixedAt)}` : 'None']);
+  }
+  return rows.length ? `<dl class="v3-facts">${rows.map(([k, v]) => `<div><dt>${esc(t(k))}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : '';
+}
+// The next 14 nights at a glance: who holds each night (from the bookings).
+function nightsStrip() {
+  const T = todayISO(), all = stays(), cells = [];
+  for (let i = 0; i < 14; i++) {
+    const day = addDays(T, i), s = all.find(x => x.checkin <= day && x.checkout > day);
+    const wd = new Date(day + 'T00:00:00Z').getUTCDay(), lbl = fmtDay(day);
+    const cls = s ? (s.type === 'ota' ? 'ota' : 'bk') + (s.checkin === day ? ' first' : '') : 'free';
+    const title = s ? `${lbl} · ${s.guest || 'Booked'}` : `${lbl} · free`;
+    cells.push(s ? `<a class="v3-n ${cls}" href="${esc(stayHref(s))}" title="${esc(title)}" style="--i:${i}"><span>${new Date(day + 'T00:00:00Z').getUTCDate()}</span></a>`
+      : `<span class="v3-n free${wd === 0 || wd === 6 ? ' we' : ''}" title="${esc(title)}" style="--i:${i}"><span>${new Date(day + 'T00:00:00Z').getUTCDate()}</span></span>`);
+  }
+  const booked = cells.filter(c => !c.includes('free')).length;
+  return `<h3>Next 14 nights <small>${booked} booked · ${14 - booked} free</small></h3><div class="v3-nights" role="img" aria-label="${booked} of the next 14 nights booked">${cells.join('')}</div>
+    <p class="v3-key"><i class="bk"></i>Direct <i class="ota"></i>OTA <i class="free"></i>Free</p>`;
+}
 
 // ── Side panel ───────────────────────────────────────────────────────────────
 function select(id) {
@@ -698,7 +856,9 @@ const stayHref = s => s.type === 'ota' ? (can('bookings') ? 'stay.html?hold=' + 
 const payPill = s => !can('guestRegister') ? '' : s.type === 'ota' ? '<span class="pill">Details pending</span>'
   : s.due > 0 ? `<span class="pill warn">${inr(s.due)} due</span>` : '<span class="pill good">Paid</span>';
 function stayCard(s, what) {
-  return `<a class="v3-row" href="${esc(stayHref(s))}"><span class="v3-row__m"><b data-no-i18n>${esc(s.guest || 'Guest')}</b><small>${esc(what)} · ${fmtDay(s.checkin)} → ${fmtDay(s.checkout)} · ${s.guests ? esc(s.guests) + ' guests' : ''}${s.bedrooms ? ' · ' + esc(s.bedrooms) + ' BR' : ''}${s.channel ? ' · ' + esc(s.channel) : ''}</small></span>${payPill(s)}</a>`;
+  const pct = s.stayTotal > 0 ? Math.min(100, Math.round(s.stayPaid / s.stayTotal * 100)) : 0;
+  const bar = can('guestRegister') && s.type !== 'ota' && s.stayTotal > 0 ? `<span class="v3-pay" title="${esc(inr(s.stayPaid))} of ${esc(inr(s.stayTotal))} received"><i style="--w:${pct}%"></i></span><small>${esc(inr(s.stayPaid))} of ${esc(inr(s.stayTotal))} received${s.nights ? ' · ' + s.nights + ' night' + (s.nights > 1 ? 's' : '') : ''}${s.arrivalTime && s.checkin >= todayISO() ? ' · arriving ' + esc(s.arrivalTime) : ''}</small>` : '';
+  return `<a class="v3-row" href="${esc(stayHref(s))}"><span class="v3-row__m"><b data-no-i18n>${esc(s.guest || 'Guest')}</b><small>${esc(what)} · ${fmtDay(s.checkin)} → ${fmtDay(s.checkout)} · ${s.guests ? esc(s.guests) + ' guests' : ''}${s.bedrooms ? ' · ' + esc(s.bedrooms) + ' BR' : ''}${s.channel ? ' · ' + esc(s.channel) : ''}</small>${bar}</span>${payPill(s)}</a>`;
 }
 function issueRow(i) {
   return `<a class="v3-row" href="issues.html?id=${encodeURIComponent(i.id)}"><span class="v3-row__m"><b data-no-i18n>${esc(i.title)}</b><small>${i.urgency === 'urgent' ? '<span class="urg">Urgent</span> · ' : ''}${esc(i.area || 'No area given')} · reported ${ago(i.reportedAt)} · assignee not tracked</small></span><span class="pill ${i.urgency === 'urgent' ? 'bad' : 'warn'}">Open</span></a>`;
@@ -718,6 +878,7 @@ function renderPanel() {
       if (d.leavingToday && d.leavingToday !== d.inHouse) parts.push('<h3>Leaving today</h3>' + stayCard(d.leavingToday, 'Check-out today'));
       if (d.next) parts.push('<h3>Next check-in</h3>' + stayCard(d.next, 'Arriving'));
       if (!d.inHouse && !d.next) parts.push('<p class="v3-muted">No current or upcoming stays.</p>');
+      parts.push(nightsStrip());
     }
     if (can('checklist') && d.prepFor) {
       const r = d.ciRun, n = r ? r.items.filter(i => i.checked).length : 0;
@@ -731,7 +892,7 @@ function renderPanel() {
   const z = ZONE[selected], st = zoneState(selected), hk = d.hk[selected], iss = d.iss[selected] || [];
   const stockKey = /^bed/.test(selected) ? 'bed' : selected;
   const parts = [`<button type="button" class="v3-back" data-back>← Villa overview</button><h2>${esc(t(z.name))}${z.note ? `<small>${esc(z.note)}</small>` : ''}</h2>`,
-    `<p class="v3-state"><span class="v3-dot s-${st.key}" aria-hidden="true">${STATE_STYLE[st.key].icon}</span> ${esc(st.label)}</p>`];
+    `<p class="v3-state"><span class="v3-dot s-${st.key}" aria-hidden="true">${STATE_STYLE[st.key].icon}</span> ${esc(st.label)}</p>`, factsHtml(selected)];
   if (/^bed/.test(selected) && can('guestRegister')) {
     if (d.inHouse) parts.push('<h3>Stay</h3>' + stayCard(d.inHouse, 'In house') + '<p class="v3-muted small">The villa is booked whole — Harbour records the number of bedrooms booked, not which ones.</p>');
     else if (d.next) parts.push('<h3>Next stay</h3>' + stayCard(d.next, 'Arriving'));
@@ -741,7 +902,7 @@ function renderPanel() {
     else if (d.prepFor && /^bed/.test(selected)) parts.push(`<h3>Housekeeping</h3><p class="v3-muted">The check-in checklist for ${esc(fmtDay(d.prepFor.checkin))} hasn't been started.</p>`);
     if (hk && hk.daily.length) parts.push(`<h3>Daily rounds · today</h3><ul class="v3-items">${itemRows(hk.daily, "From today's daily rounds")}</ul>`);
     if (!(hk && (hk.checkin.length || hk.daily.length)) && !/^bed/.test(selected)) parts.push('<p class="v3-muted small">No checklist item covers this place yet — add one in Settings → Checklists to track it here.</p>');
-    parts.push(`<h3>Maintenance</h3>${iss.length ? iss.map(issueRow).join('') : '<p class="v3-muted">No open issues here.</p>'}<a class="btn" href="issues.html#report">Report an issue</a>`);
+    parts.push(`<h3>Maintenance</h3>${iss.length ? iss.map(issueRow).join('') : '<p class="v3-muted">No open issues here.</p>'}<a class="btn" href="issues.html?area=${encodeURIComponent(z.name)}#report">Report an issue here</a>`);
   } else parts.push('<p class="v3-muted">Housekeeping and maintenance are hidden — your access doesn\'t include Checklists.</p>');
   if (can('inventory') && d.stock[stockKey]) parts.push('<h3>Low stock</h3>' + d.stock[stockKey].map(i => `<a class="v3-row" href="inventory.html"><span class="v3-row__m"><b data-no-i18n>${esc(i.name)}</b><small>${esc(i.quantity)} ${esc(i.unit || '')} left · restock at ${esc(i.threshold)}</small></span><span class="pill warn">Low</span></a>`).join(''));
   P.innerHTML = parts.join('');
@@ -768,6 +929,7 @@ function renderKpis() {
     const m = D.metrics;
     k.push(kpi('Booked', m ? inr(m.revenue) : ERR.metrics ? '—' : '…', m ? 'check-ins ' + rangeLabel() : ERR.metrics || ''));
     k.push(kpi('Received', m ? inr(m.received) : '—', m ? (m.due > 0 ? inr(m.due) + ' still due' : 'nothing due') : ''));
+    if (m && m.occupancy != null) k.push(kpi('Occupancy', m.occupancy + '%', (m.nights || 0) + ' night' + (m.nights === 1 ? '' : 's') + ' booked · ' + rangeLabel()));
   }
   $('#kpis').innerHTML = k.join('');
 }
@@ -786,7 +948,7 @@ function renderDrawer() {
   $('#mtList').innerHTML = !can('checklist') ? '<p class="v3-muted">Your access doesn\'t include Checklists.</p>'
     : ERR.issues ? `<p class="v3-err">${esc(ERR.issues)}</p>` : openIssues().length ? openIssues().slice(0, 12).map(issueRow).join('') : '<p class="v3-muted">No open issues.</p>';
 }
-function renderAll() { renderKpis(); renderLegend(); renderDrawer(); renderPanel(); if (renderer) { updateTiles(); buildLabels(); } else renderPlanSvg(); }
+function renderAll() { renderKpis(); renderLegend(); renderDrawer(); renderPanel(); if (renderer) { updateTiles(); buildLabels(); syncCar(); } else renderPlanSvg(); }
 
 // ── Without WebGL: the same places as a clickable plan ──────────────────────
 function renderPlanSvg() {

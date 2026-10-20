@@ -78,6 +78,16 @@ loaded only on this page through an import map.
   Plan (top-down). Evening lighting, a "Still" switch (and the system's reduced
   motion) stop the water and palms. Without WebGL, or with `?lite=1`, it shows a
   clickable 2D plan with the same data.
+- Labels are status pins: a place's name opens when there's room (issues and
+  busy places first), on hover or when chosen; places with nothing to report
+  are small grey dots. Hovering a place (mouse) lights it and shows a card. The
+  panel adds size, floor, last finished checklist covering the place, fixes in
+  the last 90 days, paid-of-total on stays, the next 14 nights, and "Report an
+  issue here" (`issues.html?area=…#report` fills in the place).
+- Motion (off with Still / reduced motion): a fly-in, the chosen place glowing,
+  places with an open issue pulsing red, jacuzzi bubbles, and the guests' car —
+  parked only while a stay is in house — driving in through the gate on its
+  check-in day.
 
 ## Guest pages are published on two addresses
 

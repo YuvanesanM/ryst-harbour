@@ -343,7 +343,8 @@ $('#fSave').addEventListener('click', async ()=>{
 });
 ['repOverlay','fixOverlay'].forEach(id=>$('#'+id).addEventListener('click', e=>{ if(e.target.id===id) $('#'+id).classList.remove('show'); }));
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ ['repOverlay','fixOverlay'].forEach(id=>$('#'+id).classList.remove('show')); $('#lb').classList.remove('show'); } });
-if(location.hash==='#report') setTimeout(openReport, 300);
+// issues.html?area=Pool#report (from Villa 3D): the place is filled in already
+if(location.hash==='#report') setTimeout(()=>{ openReport(); const a = new URLSearchParams(location.search).get('area'); if(a){ $('#rArea').value = a.slice(0,80); $('#rTitle').focus(); } }, 300);
 // issues.html?id=<id> (from Villa 3D): bring that issue into view and mark it
 (function(){ const id = new URLSearchParams(location.search).get('id'); if(!id) return;
   let n = 0; const tryShow = () => { const el = document.getElementById('iss-' + id); if(!el){ if(++n < 40) setTimeout(tryShow, 250); return; }
