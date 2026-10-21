@@ -122,7 +122,22 @@
         return { id:h[0], name:h[1], title:h[2], emoji:h[3], team:h[4], does:h[5], stats:{ pending: mine.length + (h[0] === 'crm' ? 3 : h[0] === 'coo' ? 2 : 1), urgent: mine.filter(function(x){ return x.priority === 1; }).length, value: mine.reduce(function(a, x){ return a + (x.value || 0); }, 0), reviewed: 18, accuracy: { crm:0.82, social:0.67, cfo:0.9, coo:0.96 }[h[0]], flows: fl } }; });
       var brief = { at: now, pending: 13, urgent: 3, value: 244123, headline: '13 things waiting, 3 urgent · ₹2,44,123 at stake.',
         heads: heads.map(function(h){ var mine = drafts.filter(function(x){ return x.head === h.id; }).sort(function(a, b){ return a.priority - b.priority; }); return { id:h.id, pending:h.stats.pending, urgent:h.stats.urgent, value:h.stats.value, top: mine.slice(0, 3).map(function(x){ return { id:x.id, title:x.title, priority:x.priority, value:x.value }; }) }; }) };
-      return { ok:true, agents:agents, drafts:drafts.concat(done), readyAt:{ reviews:20, rate:0.9 }, heads:heads, chief:{ id:'chief', name:'Aadhya', title:'Chief of Staff', emoji:'🗂️' }, brief:brief, briefOff:false,
+      // command-centre fields (same shape as the server's agentOps): real-looking states, a sample event log
+      drafts.concat(done).forEach(function(x, i){ x.hash = 'demo' + i; x.delivery = x.proposal.channel === 'telegram' ? 'Telegram + app notification to the caretaker' : ''; x.approvalCurrent = x.status === 'agree' || x.status === 'edit'; });
+      var status = agents.map(function(a){ var mine = drafts.filter(function(x){ return x.agent === a.id; }).sort(function(p, q){ return p.priority - q.priority; });
+        return { id:a.id, state: a.mode === 'paused' ? 'paused' : mine.length ? 'awaiting' : 'idle', current: mine[0] ? { id:mine[0].id, title:mine[0].title, at:mine[0].at, priority:mine[0].priority } : null, pending: mine.length, lastActivity: now - 12*60e3, runningSince:0, phase:'' }; });
+      var seq = 0, E = function(min, ev){ return Object.assign({ seq: ++seq, at: now - min*60e3 }, ev); };
+      var evx = function(x){ return { agent:x.agent, head:x.head, draftId:x.id, title:x.title }; };
+      var events = [
+        E(26*60, Object.assign({ type:'verdict.edited', source:'owner', by:'reviewer@example.com' }, evx(done[1]))),
+        E(5*60, { type:'mode.changed', source:'owner', agent:'creators', mode:'paused', by:'reviewer@example.com', title:'Set to paused' }),
+        E(3*60, Object.assign({ type:'verdict.approved', source:'owner', by:'reviewer@example.com' }, evx(done[0]))),
+        E(3*60 - 1, Object.assign({ type:'action.blocked', source:'owner', reason:'shadow', by:'reviewer@example.com' }, evx(done[0]), { title:'Shadow mode: not sent — ' + done[0].title }))
+      ].concat(drafts.map(function(x){ return E(12, Object.assign({ type:'draft.created', source:'agent', kind:'', priority:x.priority, channel:x.proposal.channel }, evx(x))); }))
+       .concat([E(12, { type:'run.finished', source:'system', title:'6 agents ran: 6 new drafts, 1 cleared', made:6, cleared:1, agents:A.map(function(a){ return a[0]; }) })]);
+      var kpis = { activeAgents:5, totalAgents:6, running:0, awaiting:drafts.length, failed:0, completedToday:1, sentToday:0 };
+      return { ok:true, status:status, kpis:kpis, mode:'shadow', health:{ key:'ok', text:'Agents ran on schedule' }, running:null, serverTime:now, seq:seq, events:events.slice().reverse(),
+        agents:agents, drafts:drafts.concat(done), readyAt:{ reviews:20, rate:0.9 }, heads:heads, chief:{ id:'chief', name:'Aadhya', title:'Chief of Staff', emoji:'🗂️' }, brief:brief, briefOff:false,
         log:[{ at: now - 12*60e3, agent:'operations', made:1, resolved:1 }, { at: now - 12*60e3, agent:'reservations', made:1, resolved:0 }, { at: now - 5*3600e3, agent:'creators', mode:'paused', by:'owner@example.com' }],
         totals:{ today: 13, pending: 13, urgent: 3, valuePending: 244123, reviewed: 72, accuracy: 0.83, minutesSaved: 361, resolvedByTeam: 12 },
         ai:{ configured:true, model:'claude-opus-5-5', cap:300, calls:41, inTok:38000, outTok:2900, errors:0 }, lastRun: now - 12*60e3,
@@ -142,6 +157,7 @@
     if (url.indexOf(PROXY) !== 0) return realFetch(input, init);
     var path = url.slice(PROXY.length).split('?')[0];
     var method = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+    if (method === 'GET' && path === '/agents/events') return reply(200, { seq: FIX['/agents'].seq, events: [], gap: false, running: null, serverTime: Date.now() });
     if (method === 'GET' && FIX.hasOwnProperty(path)) return reply(200, JSON.parse(JSON.stringify(FIX[path])));
     if (method === 'GET') return reply(200, {});
     if (path === '/ical-import') return reply(200, { results:[] }); // bookings.html's silent auto-sync
