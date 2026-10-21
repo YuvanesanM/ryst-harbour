@@ -143,6 +143,7 @@
     if (can('checklist')) { jobs.push(get('/issues', 'issues')); jobs.push(get('/checklist', 'cl')); }
     if (can('inventory')) jobs.push(get('/inventory', 'inv'));
     if (can('bookings')) jobs.push(get('/collabs', 'cr'));
+    if (ROLE === 'owner') jobs.push(get('/agents', 'ag'));
     if (can('bookings') || can('settings')) jobs.push(get('/ota-status', 'ota'));
     if (can('bookings') || can('reports')) { jobs.push(get('/google-reviews', 'gr')); jobs.push(get('/instagram-stats', 'ig')); }
     render();
@@ -468,6 +469,11 @@
       // creators who applied on the collaboration page, waiting for a reply
       var fresh = D.cr.requests.filter(function (r) { return r.status === 'new' && r.checkout >= TODAY; });
       if (fresh.length) items.push({ lvl: '', icon: 'star', title: fresh.length + ' creator request' + (fresh.length === 1 ? '' : 's') + ' to review', meta: fresh.slice(0, 2).map(function (r) { return '@' + r.instagram; }).join(', ') + (fresh.length > 2 ? ' +' + (fresh.length - 2) : '') + ' · reply within 3 working days', href: 'creators.html' });
+    }
+    if (D.ag && D.ag.totals && D.ag.totals.pending) {
+      // the AI agents' drafts (shadow mode) waiting for the owner's verdict
+      var agT = D.ag.totals;
+      items.push({ lvl: agT.urgent ? 'warn' : '', icon: 'agents', title: agT.pending + ' AI agent draft' + (agT.pending === 1 ? '' : 's') + ' to review', meta: (agT.urgent ? agT.urgent + ' urgent · ' : '') + (agT.valuePending ? inr(agT.valuePending) + ' at stake · ' : '') + 'shadow mode, nothing sent', href: 'agents.html' });
     }
     if (D.pc && Array.isArray(D.pc.entries)) {
       var pend = D.pc.entries.filter(function (e) { return e.type === 'expense' && e.status === 'pending'; });

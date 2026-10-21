@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://data.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=2f2cdf72">
+<script src="/assets/app/shell.js?v=40f3545f"></script>
+<script src="/i18n.js"></script>
+<title data-title="AI Agents · {name}">AI Agents · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097;
+    --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6; --good:#2f7d54; --blue:#3c6e8f; --blue-soft:#e8f0f5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  button,input,textarea{font-family:inherit}
+  button{cursor:pointer}
+  a{color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 16px 70px}
+  header.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 2px 14px}
+  header.top img{height:38px;object-fit:contain}
+  header.top .ttl{font-weight:700;font-size:18px;letter-spacing:.2px}
+  header.top .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px}
+  header.top .spacer{flex:1}
+  .tbtn{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1.5px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;text-decoration:none}
+  .tbtn:hover{border-color:var(--accent)}
+  .tbtn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tbtn:disabled{opacity:.6;cursor:default}
+
+  .shadow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--blue-soft);border:1px solid #d3e2ec;border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:1.45;color:#29485c}
+  .shadow b{color:#1d3646}
+  .shadow .grow{flex:1;min-width:240px}
+  .ai{font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:#fff;border:1px solid #d3e2ec;white-space:nowrap}
+  .ai.on{color:var(--good)} .ai.off{color:var(--muted)}
+
+  .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 13px;min-width:0}
+  .kpi .lbl{font-size:10.5px;font-weight:700;color:var(--muted2);letter-spacing:.5px;text-transform:uppercase}
+  .kpi .val{font-size:22px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+  .kpi .sub{font-size:11.5px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kpi.alert .val{color:var(--danger)}
+
+  h2.sec{font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2);margin:6px 2px 10px}
+  .agents{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px}
+  .agent{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+  .agent.paused{opacity:.72}
+  .a-head{display:flex;gap:11px;align-items:flex-start}
+  .a-ic{flex:none;width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-d)}
+  .a-ic svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .a-t{flex:1;min-width:0}
+  .a-t b{display:block;font-size:15px;line-height:1.25}
+  .a-t small{display:block;font-size:12px;color:var(--muted);line-height:1.4;margin-top:3px}
+  .mode{display:inline-flex;border:1px solid var(--line);border-radius:9px;padding:2px;background:var(--panel2);flex:none}
+  .mode button{border:0;background:none;font-size:11.5px;font-weight:600;color:var(--muted);padding:4px 8px;border-radius:7px}
+  .mode button[aria-pressed="true"]{background:var(--ink);color:#fff}
+  .mode button:disabled{opacity:.45;cursor:not-allowed}
+  .a-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .a-stats div{background:var(--panel2);border-radius:9px;padding:6px 8px;min-width:0}
+  .a-stats span{display:block;font-size:10px;font-weight:700;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase}
+  .a-stats b{font-size:16px;font-variant-numeric:tabular-nums}
+  .trust{font-size:12px;color:var(--muted)}
+  .trust .bar{height:6px;background:#eceee9;border-radius:4px;overflow:hidden;margin:5px 0 4px;position:relative}
+  .trust .bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .6s}
+  .trust .bar em{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.5;left:90%}
+  .trust.ready b{color:var(--good)}
+  .a-foot{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted2);flex-wrap:wrap}
+  .a-foot .err{color:var(--danger)}
+  .a-foot .spacer{flex:1}
+  .lnk{border:0;background:none;color:var(--accent-d);font-size:12px;font-weight:600;padding:0}
+
+  .bar2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .tabs{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px}
+  .tabs button{border:0;background:none;font-size:12.5px;font-weight:600;color:var(--muted);padding:7px 12px;border-radius:8px}
+  .tabs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:var(--panel);font-size:12px;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:20px}
+  .chip[aria-pressed="true"]{border-color:var(--ink);color:var(--ink)}
+
+  .drafts{display:grid;gap:10px}
+  .draft{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:9px;min-width:0}
+  .draft.p1{border-left:4px solid var(--danger)}
+  .draft.p2{border-left:4px solid var(--warn)}
+  .d-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);color:var(--muted)}
+  .badge.p1{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+  .badge.p2{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+  .badge.agent{background:var(--accent-soft);color:var(--accent-d);border-color:transparent}
+  .badge.val{background:#fff;color:var(--ink)}
+  .badge.st-agree{background:#e6efe9;color:var(--good);border-color:transparent}
+  .badge.st-edit{background:var(--blue-soft);color:var(--blue);border-color:transparent}
+  .badge.st-reject{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+  .d-title{font-size:15px;font-weight:650;line-height:1.3;overflow-wrap:anywhere}
+  .d-detail{font-size:13px;color:var(--muted);line-height:1.45;overflow-wrap:anywhere}
+  .prop{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+  .prop .via{display:flex;gap:6px;align-items:center;font-size:11px;font-weight:700;color:var(--muted2);letter-spacing:.3px;text-transform:uppercase;margin-bottom:5px;white-space:normal}
+  .prop .via .claude{color:#b0682b;text-transform:none;letter-spacing:0;font-weight:600}
+  .prop.better{background:var(--blue-soft);border-color:#d3e2ec}
+  .d-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .abtn{border:1.5px solid var(--line);background:var(--panel);font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:9px;color:var(--ink);text-decoration:none}
+  .abtn.ok{border-color:#bcd8c6;color:var(--good)}
+  .abtn.no{border-color:#e9c6c0;color:var(--danger)}
+  .abtn:hover{border-color:var(--ink)}
+  .abtn:disabled{opacity:.55}
+  .d-acts .spacer{flex:1}
+  .edit{display:grid;gap:8px}
+  .edit textarea{width:100%;min-height:90px;border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;font-size:14px;resize:vertical;background:var(--panel)}
+  .edit textarea:focus{outline:none;border-color:var(--accent)}
+  .empty{background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:26px;text-align:center;color:var(--muted);font-size:14px}
+  .log{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 14px}
+  .log li{list-style:none;display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px;align-items:baseline}
+  .log li:last-child{border:0}
+  .log time{flex:none;width:110px;color:var(--muted2);font-size:12px;font-variant-numeric:tabular-nums}
+  .log .err{color:var(--danger)}
+  .sk{background:linear-gradient(90deg,#eceee9,#f6f7f4,#eceee9);background-size:200% 100%;animation:sk 1.2s infinite;border-radius:14px}
+  @keyframes sk{to{background-position:-200% 0}}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90vw}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{background:var(--danger)}
+  @media(max-width:1000px){ .kpis{grid-template-columns:repeat(3,minmax(0,1fr))} .agents{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media(max-width:640px){
+    .wrap{padding:12px 12px 90px}
+    .kpis{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -12px 14px;padding:0 12px 4px;scrollbar-width:none}
+    .kpis::-webkit-scrollbar{display:none}
+    .kpi{flex:0 0 44%;scroll-snap-align:start}
+    .agents{grid-template-columns:1fr}
+    .log time{width:84px}
+  }
+  @media(prefers-reduced-motion:reduce){ .sk{animation:none} .trust .bar i{transition:none} }
+  html[data-theme="dark"]{--bg:#111715;--panel:#1a211e;--panel2:#202925;--line:#2c3531;--ink:#e9e6df;--muted:#a9b0aa;--muted2:#7f8781;--accent-soft:#1f3328;--blue-soft:#1b2a33;--danger-soft:#3a2321;--warn-soft:#3a3020}
+  html[data-theme="dark"] .shadow{color:#c4d6e2;border-color:#2b3c47} html[data-theme="dark"] .shadow b{color:#e3eef5}
+  html[data-theme="dark"] .ai,html[data-theme="dark"] .badge.val{background:var(--panel)}
+  html[data-theme="dark"] .tbtn.primary,html[data-theme="dark"] .tabs button[aria-pressed="true"],html[data-theme="dark"] .mode button[aria-pressed="true"]{background:#e9e6df;color:#111715}
+</style>
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#F6F3ED" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img alt="" src="/assets/stay-logo.webp" data-prop-src="logoUrl" />
+    <div class="ttl"><span>AI Agents</span><small><span data-prop="name" data-no-i18n>RYST 109A</span> <span>· Your digital team</span></small></div>
+    <div class="spacer"></div>
+    <button class="tbtn" type="button" data-lang-toggle>தமிழ்</button>
+    <button class="tbtn primary" type="button" id="runAll">Run all now</button>
+  </header>
+  <div class="shadow">
+    <div class="grow"><b>Shadow mode.</b> <span>The agents only draft — nothing is sent, changed or charged. Mark each draft <b>Right call</b>, <b>Better as…</b> or <b>Wrong</b>. An agent that gets 90% right over 20 reviews can move to one-tap approval.</span></div>
+    <span class="ai" id="aiState">Written replies: …</span>
+    <span class="ai" id="lastRun"></span>
+  </div>
+  <div class="kpis" id="kpis"><div class="kpi sk" style="height:78px"></div><div class="kpi sk" style="height:78px"></div><div class="kpi sk" style="height:78px"></div></div>
+  <h2 class="sec">The team</h2>
+  <div class="agents" id="agents"><div class="sk" style="height:220px"></div><div class="sk" style="height:220px"></div><div class="sk" style="height:220px"></div></div>
+  <div class="bar2">
+    <div class="tabs" role="tablist" id="tabs">
+      <button type="button" data-tab="pending" aria-pressed="true">Waiting for you</button>
+      <button type="button" data-tab="reviewed" aria-pressed="false">Reviewed</button>
+      <button type="button" data-tab="activity" aria-pressed="false">Activity</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div id="list"></div>
+</div>
+<div id="toast" role="status"></div>
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+if(!TOKEN) location.href = 'login.html';
+if((localStorage.getItem('ryst_user_role') || 'owner') !== 'owner') location.href = 'login.html';
+const $ = s => document.querySelector(s);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const t = s => (window.rystT ? window.rystT(s) : s);
+const inr = n => '₹' + Math.round(n||0).toLocaleString('en-IN');
+const when = ms => { if(!ms) return '—'; const m = Math.round((Date.now() - ms) / 60000); return m < 1 ? t('just now') : m < 60 ? m + ' ' + t('min ago') : m < 1440 ? Math.round(m/60) + ' ' + t('h ago') : new Date(ms).toLocaleDateString('en-IN', { day:'numeric', month:'short' }); };
+const clock = ms => new Date(ms).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'numeric', minute:'2-digit' });
+const ICON = {
+  chat: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/>',
+  trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  clipboard: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 12l2 2 4-4"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  rupee: '<path d="M7 5h10M7 9h10M7 5c5 0 7 1.5 7 4s-2 4-7 4l7 7"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+};
+const CH = { whatsapp:'WhatsApp', instagram:'Instagram DM', telegram:'Telegram to', decision:'Decision for you', report:'Report', google:'Google review reply' };
+const PRI = { 1:'Urgent', 2:'Today', 3:'When convenient' };
+let S = null, TAB = 'pending', AG = '', EDIT = null, BUSY = false;
+function toast(msg, err){ const el=$('#toast'); el.textContent=msg; el.className = err ? 'show err' : 'show'; clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'), 3600); }
+async function api(method, path, body){
+  const res = await fetch(PROXY_URL + path, { method, headers: Object.assign({ 'X-Token':TOKEN }, body ? { 'Content-Type':'application/json' } : {}), body: body ? JSON.stringify(body) : undefined, cache:'no-store' });
+  if(res.status === 401){ localStorage.removeItem('ryst_proxy_token'); location.href='login.html'; throw new Error('Signed out'); }
+  const d = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(d.error || ('Could not load (' + res.status + ')'));
+  return d;
+}
+async function load(){
+  try{ S = await api('GET', '/agents'); render(); }
+  catch(e){ $('#list').innerHTML = `<div class="empty">${esc(e.message)}</div>`; $('#agents').innerHTML = ''; $('#kpis').innerHTML = ''; }
+}
+const agentOf = id => (S.agents || []).find(a => a.id === id) || { title: id, icon: 'chat' };
+function kpi(l, v, s, alert){ return `<div class="kpi${alert ? ' alert' : ''}"><div class="lbl">${esc(t(l))}</div><div class="val">${esc(v)}</div><div class="sub">${esc(s)}</div></div>`; }
+function render(){
+  const T = S.totals || {}, ai = S.ai || {};
+  const hrs = (T.minutesSaved || 0) / 60;
+  $('#kpis').innerHTML = [
+    kpi('Drafted today', T.today || 0, 'by 6 agents'),
+    kpi('Waiting for you', T.pending || 0, (T.urgent || 0) + ' ' + t('urgent'), T.urgent > 0),
+    kpi('At stake', inr(T.valuePending), t('bookings and balances in drafts')),
+    kpi('Agreement', T.accuracy == null ? '—' : Math.round(T.accuracy * 100) + '%', (T.reviewed || 0) + ' ' + t('reviewed')),
+    kpi('Time it would save', hrs >= 1 ? hrs.toFixed(1) + ' h' : Math.round(T.minutesSaved || 0) + ' min', t('on drafts you agreed with')),
+    kpi('Handled before them', T.resolvedByTeam || 0, t('cleared by your team first')),
+  ].join('');
+  $('#aiState').className = 'ai ' + (ai.configured ? 'on' : 'off');
+  $('#aiState').textContent = ai.configured ? `${t('Written replies: Claude')} · ${ai.calls || 0}/${ai.cap} ${t('this month')}` : t('Written replies: templates (AI key not set)');
+  $('#lastRun').textContent = S.lastRun ? t('Last run') + ' ' + when(S.lastRun) : t('Not run yet');
+  $('#agents').innerHTML = S.agents.map(a => {
+    const st = a.stats, dec = st.agree + st.edit + st.reject, pct = st.accuracy == null ? 0 : Math.round(st.accuracy * 100);
+    const need = Math.max(0, S.readyAt.reviews - dec);
+    const trust = st.ready ? `<b>${t('Ready for one-tap approval')}</b>` : dec ? `${pct}% ${t('right')} · ${need ? need + ' ' + t('more reviews to go') : t('needs 90% to move up')}` : t('No reviews yet — mark its drafts below');
+    const run = a.run;
+    return `<div class="agent${a.mode === 'paused' ? ' paused' : ''}">
+      <div class="a-head"><div class="a-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[a.icon] || ICON.chat}</svg></div>
+        <div class="a-t"><b>${esc(t(a.title))}</b><small>${esc(t(a.does))}</small></div></div>
+      <div class="mode" role="group" aria-label="${esc(t('Mode'))}"><button type="button" data-mode="shadow" data-agent="${a.id}" aria-pressed="${a.mode === 'shadow'}">${t('Shadowing')}</button><button type="button" data-mode="paused" data-agent="${a.id}" aria-pressed="${a.mode === 'paused'}">${t('Paused')}</button><button type="button" disabled title="${esc(t('Unlocks at 90% right over 20 reviews'))}">🔒 ${t('One-tap')}</button><button type="button" disabled title="${esc(t('Unlocks after one-tap approval proves itself'))}">🔒 ${t('Auto')}</button></div>
+      <div class="a-stats"><div><span>${t('Waiting')}</span><b>${st.pending}</b></div><div><span>${t('Today')}</span><b>${st.today}</b></div><div><span>${t('At stake')}</span><b>${st.valuePending ? inr(st.valuePending) : '—'}</b></div></div>
+      <div class="trust${st.ready ? ' ready' : ''}"><div class="bar" title="${pct}%"><i style="width:${pct}%"></i><em></em></div>${trust}${dec ? ` <span>(${st.agree} ✓ · ${st.edit} ✎ · ${st.reject} ✗)</span>` : ''}</div>
+      <div class="a-foot">${run ? `<span>${t('Ran')} ${when(run.at)} · ${run.made} ${t('new')}${run.resolved ? ' · ' + run.resolved + ' ' + t('cleared') : ''}</span>${run.error ? `<span class="err">${esc(run.error)}</span>` : ''}` : `<span>${t('Not run yet')}</span>`}<span class="spacer"></span><button class="lnk" type="button" data-run="${a.id}">${t('Run now')}</button> · <button class="lnk" type="button" data-show="${a.id}">${t('See drafts')}</button></div>
+    </div>`;
+  }).join('');
+  $('#chips').innerHTML = TAB === 'activity' ? '' : `<button type="button" class="chip" data-ag="" aria-pressed="${!AG}">${t('All agents')}</button>` + S.agents.map(a => { const n = S.drafts.filter(d => d.agent === a.id && (TAB === 'pending' ? d.status === 'pending' : d.status !== 'pending')).length; return `<button type="button" class="chip" data-ag="${a.id}" aria-pressed="${AG === a.id}">${esc(t(a.title))} · ${n}</button>`; }).join('');
+  document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === TAB)));
+  const pend = S.drafts.filter(d => d.status === 'pending').length;
+  $('[data-tab="pending"]').textContent = t('Waiting for you') + ' · ' + pend;
+  renderList();
+}
+function renderList(){
+  if(TAB === 'activity'){
+    const L = S.log || [];
+    $('#list').innerHTML = L.length ? '<ul class="log">' + L.map(l => `<li><time>${esc(clock(l.at))}</time><span><b>${esc(t(agentOf(l.agent).title))}</b> — ${l.mode ? esc(t('set to')) + ' ' + esc(t(l.mode)) + (l.by ? ' · ' + esc(l.by.split('@')[0]) : '') : `${l.made} ${t('new draft' + (l.made === 1 ? '' : 's'))}${l.resolved ? `, ${l.resolved} ${t('cleared on their own')}` : ''}`}${l.error ? ` <span class="err">· ${esc(l.error)}</span>` : ''}</span></li>`).join('') + '</ul>' : `<div class="empty">${t('No activity yet — press Run all now.')}</div>`;
+    return;
+  }
+  const list = S.drafts.filter(d => (TAB === 'pending' ? d.status === 'pending' : d.status !== 'pending') && (!AG || d.agent === AG));
+  if(!list.length){ $('#list').innerHTML = `<div class="empty">${TAB === 'pending' ? t('Nothing waiting. The agents run every 30 minutes — or press Run all now.') : t('Nothing reviewed yet.')}</div>`; return; }
+  $('#list').innerHTML = '<div class="drafts">' + list.map(card).join('') + '</div>';
+}
+function card(d){
+  const a = agentOf(d.agent), p = d.proposal || {}, done = d.status !== 'pending';
+  const stLabel = { agree:'✓ Right call', edit:'✎ Better as…', reject:'✗ Wrong', resolved:'Handled before it', expired:'Expired' }[d.status] || '';
+  const editing = EDIT === d.id;
+  return `<article class="draft${!done ? ' p' + (d.priority || 3) : ''}" data-id="${d.id}">
+    <div class="d-top"><span class="badge agent">${esc(t(a.title))}</span>${!done ? `<span class="badge p${d.priority || 3}">${t(PRI[d.priority || 3])}</span>` : `<span class="badge st-${d.status}">${t(stLabel)}</span>`}${d.value ? `<span class="badge val">${inr(d.value)}</span>` : ''}<span>${esc(when(d.at))}</span></div>
+    <div class="d-title" data-no-i18n>${esc(d.title)}</div>
+    <div class="d-detail" data-no-i18n>${esc(d.detail)}</div>
+    <div class="prop"><div class="via">${esc(t(CH[p.channel] || 'Draft'))}${p.to && p.channel !== 'decision' && p.channel !== 'report' ? ' <span data-no-i18n>' + esc(p.to) + '</span>' : ''}${p.ai ? ' · <span class="claude">' + t('written by Claude') + '</span>' : ''}</div><span data-no-i18n>${esc(p.text)}</span></div>
+    ${d.better ? `<div class="prop better"><div class="via">${t('You would say')}</div><span data-no-i18n>${esc(d.better)}</span></div>` : ''}
+    ${d.note ? `<div class="d-detail">${t('Your note')}: <span data-no-i18n>${esc(d.note)}</span></div>` : ''}
+    ${editing ? `<div class="edit"><textarea id="betterTxt" maxlength="2000" aria-label="${esc(t('How you would put it'))}">${esc(d.better || p.text)}</textarea><div class="d-acts"><button class="abtn ok" type="button" data-save="${d.id}">${t('Save — better as this')}</button><button class="abtn" type="button" data-cancel>${t('Cancel')}</button></div></div>`
+    : `<div class="d-acts">${!done ? `<button class="abtn ok" type="button" data-v="agree">${t('✓ Right call')}</button><button class="abtn" type="button" data-v="edit">${t('✎ Better as…')}</button><button class="abtn no" type="button" data-v="reject">${t('✗ Wrong')}</button>` : `<button class="abtn" type="button" data-v="pending">${t('Undo')}</button>`}<span class="spacer"></span>${d.link ? `<a class="abtn" href="${esc(d.link)}">${t('Open')} →</a>` : ''}</div>`}
+  </article>`;
+}
+async function review(id, verdict, extra){
+  if(BUSY) return; BUSY = true;
+  try{ S = await api('POST', '/agents/review', Object.assign({ id, verdict }, extra || {})); EDIT = null; render(); toast({ agree:t('Marked right'), edit:t('Saved — the agent learns from it'), reject:t('Marked wrong'), pending:t('Back in the queue') }[verdict]); }
+  catch(e){ toast(e.message, true); }
+  finally{ BUSY = false; }
+}
+document.addEventListener('click', async e => {
+  const tab = e.target.closest('[data-tab]'); if(tab){ TAB = tab.dataset.tab; EDIT = null; return render(); }
+  const ag = e.target.closest('[data-ag]'); if(ag){ AG = ag.dataset.ag; return render(); }
+  const show = e.target.closest('[data-show]'); if(show){ AG = show.dataset.show; TAB = 'pending'; render(); $('#tabs').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start' }); return; }
+  const v = e.target.closest('[data-v]'); if(v){ const id = v.closest('[data-id]').dataset.id;
+    if(v.dataset.v === 'edit'){ EDIT = id; renderList(); const ta = $('#betterTxt'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } return; }
+    if(v.dataset.v === 'reject'){ const note = prompt(t('What was wrong? (optional — it helps the agent)')) ; if(note === null) return; return review(id, 'reject', { note }); }
+    return review(id, v.dataset.v); }
+  const sv = e.target.closest('[data-save]'); if(sv) return review(sv.dataset.save, 'edit', { text: $('#betterTxt').value });
+  if(e.target.closest('[data-cancel]')){ EDIT = null; return renderList(); }
+  const md = e.target.closest('[data-mode]'); if(md && md.getAttribute('aria-pressed') !== 'true'){
+    try{ S = await api('POST', '/agents/mode', { agent: md.dataset.agent, mode: md.dataset.mode }); render(); toast(md.dataset.mode === 'paused' ? t('Paused') : t('Shadowing again')); } catch(err){ toast(err.message, true); } return; }
+  const rn = e.target.closest('[data-run]'); if(rn) return runNow(rn.dataset.run, rn);
+});
+async function runNow(agent, btn){
+  const b = btn || $('#runAll'); const was = b.textContent; b.disabled = true; b.textContent = t('Running…');
+  try{
+    const d = await api('POST', '/agents/run', agent ? { agent } : {});
+    S = d; render();
+    const made = d.summary ? Object.values(d.summary).reduce((a, x) => a + (x.made || 0), 0) : 0;
+    toast(d.busy ? t('Already running — showing the latest') : made ? `${made} ${t(made === 1 ? 'new draft' : 'new drafts')}` : t('Nothing new — all caught up'));
+  }catch(e){ toast(e.message, true); }
+  finally{ b.disabled = false; b.textContent = was; }
+}
+$('#runAll').addEventListener('click', () => runNow('', $('#runAll')));
+load();
+</script>
+</body>
+</html>

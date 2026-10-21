@@ -88,6 +88,35 @@
     '/whatsapp/webhook-info': { url:'(hidden in demo mode)', recent:[] },
     '/telegram/chat-id': { chats:[] },
     '/metrics': { ok:true, revenue:296723, received:144600, due:152123, expenses:1730, nights:11, days:31, occupancy:35 },
+    '/agents': (function(){
+      var A = [['reservations','Reservations Concierge','chat',4,'Answers the WhatsApp and Instagram messages the auto-reply could not, and follows up quotes that went quiet.'],
+        ['revenue','Revenue Manager','trend',10,'Watches empty nights, booking pace and holidays; suggests weekday offers, weekend pushes and minimum stays.'],
+        ['operations','Operations Supervisor','clipboard',3,'Keeps arrivals ready: check-in and check-out checklists, daily rounds, overdue repairs and low stock.'],
+        ['guest','Guest Relations Manager','heart',4,'Catches pre-arrival and after-stay messages that did not go out, and drafts replies to Google reviews.'],
+        ['accounts','Accounts & Collections Officer','rupee',6,'Chases balances before arrival and after check-out, flags waiting expenses and open food bills, writes the month-end summary.'],
+        ['creators','Creator Partnerships Manager','camera',8,'Screens creator requests with a recommendation, follows up content after the stay, and watches follower-code returns.']];
+      var st = { reservations:[3,14,2,1,2,40000], revenue:[2,6,1,2,2,52000], operations:[3,22,1,0,3,0], guest:[2,9,2,0,2,0], accounts:[2,11,0,0,2,152123], creators:[1,4,1,1,1,0] };
+      var agents = A.map(function(a){ var s = st[a[0]], dec = s[1] + s[2] + s[3];
+        return { id:a[0], title:a[1], icon:a[2], minutes:a[3], does:a[4], mode: a[0] === 'creators' ? 'paused' : 'shadow', run:{ at: now - 12*60e3, ms: 40, made: s[4] > 1 ? 1 : 0, resolved: a[0] === 'operations' ? 1 : 0, error:'' },
+          stats:{ drafted: dec + s[0] + 3, today: s[4], pending: s[0], agree: s[1], edit: s[2], reject: s[3], resolved: 2, accuracy: s[1] / dec, ready: dec >= 20 && s[1] / dec >= 0.9, valuePending: s[5] } }; });
+      var D = function(id, agent, pri, title, detail, ch, to, text, value, link, extra){ return Object.assign({ id:id, key:id, agent:agent, at: now - (pri * 47) * 60e3, status:'pending', priority:pri, title:title, detail:detail, proposal:{ channel:ch, to:to, text:text }, value:value, link:link }, extra || {}); };
+      var drafts = [
+        D('d1','operations',1,'Get the villa ready for Sample Guest B (Fri 23 Oct)','Check-in checklist not started.','telegram','Caretaker','🧹 Sample Guest B arrive Fri 23 Oct (6 guests). Please start the check-in checklist and send photos of the bedrooms and pool when done.',0,'checklist.html'),
+        D('d2','accounts',1,'₹1,52,123 still to collect this month','Booked ₹2,96,723, received ₹1,44,600 for October stays.','report','','Three stays carry balances. Two arrive within 7 days — I\'ve drafted polite reminders with payment links for each.',152123,'guest-register.html?f=unpaid'),
+        D('d3','reservations',1,'Reply to Priya','"Can we bring a small cake and decorate the living room for a birthday?" — the auto-reply could not answer','whatsapp','Priya','Hi Priya! Yes, a small birthday setup is lovely — balloons and a cake are welcome. Please avoid confetti near the pool. Shall I check dates for you?',0,'settings.html#wa-review',{ proposal:{ channel:'whatsapp', to:'Priya', text:'Hi Priya! Yes, a small birthday setup is lovely — balloons and a cake are welcome. Please avoid confetti near the pool. Shall I check dates for you?', ai:true } }),
+        D('d4','revenue',2,'Weekday offer for 27–29 Oct','2 weekday nights unbooked, 6 days away. List price ₹80,000. An empty night earns nothing.','decision','','Offer 12% off these weekday nights to past guests and on Instagram stories: "Midweek escape at RYST 109A — 27–29 Oct, private pool villa, 12% off. Reply STAY to book."',70400,'calendar.html'),
+        D('d5','guest',2,'Reply to Sample Reviewer\'s 5★ Google review','"Beautiful villa, the pool and the beach were perfect for our family."','google','Sample Reviewer','Thank you so much! We\'re delighted you enjoyed the pool and the beach with your family. We\'d love to host you again. 🌊',0,'login.html'),
+        D('d6','reservations',2,'Follow up Sample Guest L — Sat 14 Nov → Mon 16 Nov','Quote DEMO/QT/108 sent 3 days ago, ₹72,000, not paid. The dates are still open.','whatsapp','Sample Guest L','Hi Sample, just checking in on your stay at RYST 109A for 14–16 Nov. The dates are still open (₹72,000 for 6). Reply BOOK and I\'ll send the link to confirm with an advance.',72000,'stay.html')
+      ];
+      var done = [
+        Object.assign(D('r1','operations',2,'Daily rounds not done yet','It\'s past 10:00 and today\'s daily rounds haven\'t been started.','telegram','Caretaker','🔁 Good morning! Please do today\'s daily rounds — pool chlorine and level, garden, water tank, power backup, gates.',0,'checklist.html'), { status:'agree', decidedAt: now - 3*3600e3 }),
+        Object.assign(D('r2','creators',2,'@sample.creator: offer a discounted stay','12k followers · wants free, open to a discount · 2 sample reels','whatsapp','@sample.creator','Hi! We\'d love to host you. We can offer 30% off the villa tariff for a reel and stories, and your own follower code.',0,'creators.html'), { status:'edit', better:'Hi! We\'d love to host you on a weekday. 40% off the tariff for a reel + 3 stories, and your own 10% follower code.', decidedAt: now - 26*3600e3 })
+      ];
+      return { ok:true, agents:agents, drafts:drafts.concat(done), readyAt:{ reviews:20, rate:0.9 },
+        log:[{ at: now - 12*60e3, agent:'operations', made:1, resolved:1 }, { at: now - 12*60e3, agent:'reservations', made:1, resolved:0 }, { at: now - 5*3600e3, agent:'creators', mode:'paused', by:'owner@example.com' }],
+        totals:{ today: 13, pending: 13, urgent: 3, valuePending: 244123, reviewed: 72, accuracy: 0.83, minutesSaved: 361, resolvedByTeam: 12 },
+        ai:{ configured:true, model:'claude-opus-5-5', cap:300, calls:41, inTok:38000, outTok:2900, errors:0 }, lastRun: now - 12*60e3 };
+    })(),
     '/collabs': { ok:true, requests:[
       { id:'crdemo1', at:now-2*3600e3, status:'new', name:'Sample Creator A', instagram:'sample.creator.a', followers:48200, phone:'+919000000101', email:'creator.a@example.com', city:'Chennai', niche:'Travel', checkin:iso(9), checkout:iso(10), guests:4, deliverables:['reel','stories'], links:['https://www.instagram.com/stay.ryst'], message:'A slow weekday by the sea with friends: one reel and a set of stories.', expectation:'complimentary', openToDiscount:true, datesFree:true },
       { id:'crdemo2', at:now-3*864e5, status:'approved', name:'Sample Creator B', instagram:'sample.creator.b', followers:126000, phone:'+919000000102', city:'Bengaluru', niche:'Family', checkin:iso(16), checkout:iso(18), guests:6, deliverables:['reel','post'], links:[], offer:'complimentary', offerPercent:100, codePercent:10, code:'SAMPLECREA10', terms:'1 reel + 3 stories within 2 weeks', expectation:'discount', openToDiscount:true, datesFree:true, codeStats:{ bookings:2, revenue:84000 } },
