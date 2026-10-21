@@ -707,18 +707,7 @@
     var b = on || off || test; b.disabled = true;
     var done = function () { b.disabled = false; };
     if (on) {
-      Notification.requestPermission().then(function (p) {
-        if (p !== 'granted') { notifState('Notifications weren’t allowed. Allow them in the phone or browser settings, then try again.', false); return; }
-        return Promise.all([pushReg(), fetch(PROXY + '/push/key').then(function (r) { return r.json(); })]).then(function (x) {
-          var reg = x[0], key = x[1].key;
-          return reg.pushManager.getSubscription().then(function (old) {
-            return old || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(key) });
-          });
-        }).then(function (sub) {
-          var j = sub.toJSON(); j.device = (navigator.userAgentData && navigator.userAgentData.platform) || (/Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Browser');
-          return pushPost('/push/subscribe', j);
-        }).then(function () { notifState('On for this device.', true); return pushPost('/push/test'); });
-      }).catch(function (err) { notifState(err.message || 'Could not turn notifications on.', false); }).then(done);
+      enablePush().catch(function () {}).then(done);
     } else if (test) {
       pushPost('/push/test').then(function (j) { notifState(j.sent ? 'Test sent — it should arrive in a few seconds.' : 'On for this device.', true); }, function (err) { notifState(err.message, true); }).then(done);
     } else {
@@ -729,7 +718,45 @@
       }).then(function () { notifState('Off for this device.', false); }, function (err) { notifState(err.message, false); }).then(done);
     }
   });
+  // Ask the phone, subscribe it, tell the server, send a test. Resolves true when on.
+  function enablePush() {
+    return Notification.requestPermission().then(function (p) {
+      if (p !== 'granted') { notifState('Notifications weren’t allowed. Allow them in the phone or browser settings, then try again.', false); throw new Error(t('Notifications weren’t allowed. Allow them for RYST Harbour in the phone settings, then try again.')); }
+      return Promise.all([pushReg(), fetch(PROXY + '/push/key').then(function (r) { return r.json(); })]).then(function (x) {
+        var reg = x[0], key = x[1].key;
+        return reg.pushManager.getSubscription().then(function (old) {
+          return old || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(key) });
+        });
+      }).then(function (sub) {
+        var j = sub.toJSON(); j.device = (navigator.userAgentData && navigator.userAgentData.platform) || (/Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'Browser');
+        return pushPost('/push/subscribe', j);
+      }).then(function () { notifState('On for this device.', true); return pushPost('/push/test').then(function () { return true; }, function () { return true; }); });
+    }, function (err) { throw err; }).catch(function (err) { notifState(err.message || 'Could not turn notifications on.', false); throw err; });
+  }
+  // The home-screen card: shown while this phone has no subscription (and isn't blocked or snoozed).
+  // Caretakers see it every time until it's on; others can snooze it for a week.
+  function wirePushCard() {
+    var card = $('#pushCard'); if (!card) return;
+    if (!PUSH_OK || ls('ryst_demo') === '1') return show(card, false);
+    var care = ROLE === 'caretaker';
+    var snoozed = !care && +(ls('ryst_push_later') || 0) > Date.now();
+    if (care) { $('#pushCardTitle').textContent = t('Get your jobs on this phone'); $('#pushCardSub').textContent = t('Arrivals, checklists and repairs pop up here — even when the app is closed. Telegram keeps working too.'); }
+    if (Notification.permission === 'denied') {
+      if (!care) return show(card, false);
+      $('#pushCardErr').textContent = t('Notifications are blocked for RYST Harbour. Open phone Settings → Apps → RYST Harbour → Notifications and allow them.');
+      show($('#pushCardOn'), false);
+    }
+    pushReg().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) { show(card, !sub && !snoozed); }, function () { show(card, false); });
+  }
+  doc.addEventListener('click', function (e) {
+    var on = e.target.closest('#pushCardOn'), later = e.target.closest('#pushCardLater');
+    if (later) { try { localStorage.setItem('ryst_push_later', String(Date.now() + (ROLE === 'caretaker' ? 864e5 : 7 * 864e5))); } catch (x) {} return show($('#pushCard'), false); }
+    if (!on) return;
+    on.disabled = true; $('#pushCardErr').textContent = '';
+    enablePush().then(function () { $('#pushCardTitle').textContent = t('Notifications are on ✓'); $('#pushCardSub').textContent = t('A test is on its way. You can turn them off any time from your profile → Notifications.'); show($('#pushCardOn'), false); show($('#pushCardLater'), false); setTimeout(function () { show($('#pushCard'), false); }, 6000); }, function (err) { $('#pushCardErr').textContent = err.message || t('Could not turn notifications on.'); }).then(function () { on.disabled = false; });
+  });
   function wireNotif() {
+    wirePushCard();
     var btn = $('#notifBtn'); if (btn) btn.hidden = !PUSH_OK || ls('ryst_demo') === '1';
     if (PUSH_OK && ls('ryst_demo') !== '1') refreshNotif();
     if (location.hash === '#notifications' && PUSH_OK) setTimeout(function () { openPopFor('notifSheet', $('.avatar')); }, 400);

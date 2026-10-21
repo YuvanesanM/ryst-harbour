@@ -312,6 +312,7 @@ function render(){
           <div class="p-pills">
             <span class="pill role">${esc(t(ROLE_LABEL[m.role] || m.role))}</span>
             <span class="pill ${m.telegram ? 'tg-on' : 'tg-off'}">${esc(t(m.telegram ? 'Telegram connected' : 'No Telegram alerts'))}</span>
+            ${m.phoneAlerts ? `<span class="pill ${m.phoneAlerts.length ? 'tg-on' : 'tg-off'}">📱 ${esc(m.phoneAlerts.length ? t('App notifications on') + (m.phoneAlerts.length > 1 ? ' · ' + m.phoneAlerts.length + ' ' + t('devices') : ' · ' + m.phoneAlerts[0].device) : t('App notifications off'))}</span>` : ''}
           </div>
         </div>
         <button class="p-edit" type="button" data-edit="${esc(m.email)}">${m.name || m.phone ? 'Edit' : 'Add details'}</button>
@@ -325,6 +326,7 @@ function render(){
       <div class="p-access">${esc(t('Can open'))}<div class="chips">${mods || `<span class="pill">${esc(t('Nothing yet'))}</span>`}</div></div>
       <div class="p-foot">
         <span class="p-last">${last ? esc(t('Last active')) + ' ' + esc(dayLabel(last.at)) : esc(t('No activity yet'))}</span>
+        ${m.phoneAlerts && !m.phoneAlerts.length && m.phone ? `<a class="abtn" href="https://wa.me/${esc(waNumber(m.phone))}?text=${encodeURIComponent(pushAsk(m))}" target="_blank" rel="noopener" title="${esc(t('Sends them a WhatsApp with a link that opens the switch'))}">🔔 ${esc(t('Ask to turn on'))}</a>` : ''}
         ${m.phone ? `<a class="abtn" href="tel:${esc(m.phone.replace(/[^\d+]/g,''))}">${ICON.phone}${esc(t('Call'))}</a><a class="abtn" href="https://wa.me/${esc(waNumber(m.phone))}" target="_blank" rel="noopener">${ICON.wa}WhatsApp</a>` : ''}
       </div>
       <details class="recent"><summary>${esc(t('Recent activity'))}</summary>
@@ -335,6 +337,12 @@ function render(){
   }).join('') + '</div>';
   $('#footNote').hidden = false;
   $('#footNote').textContent = t('Numbers are for this month. Owners are not listed here.') + ' ' + (admin ? t('Who can sign in and what they can open is set in Settings → Team.') : t('Only the villa admin can change who can sign in.'));
+}
+
+// A WhatsApp nudge with a link that opens the app's notification switch.
+function pushAsk(m){
+  const first = String(m.name || '').trim().split(/\s+/)[0];
+  return `${first ? first + ', p' : 'P'}lease turn on RYST Harbour notifications on your phone so the day's jobs, arrivals and repairs reach you even when the app is closed. Open this and tap "Turn on": https://harbour.ryst.in/login.html#notifications`;
 }
 
 /* ---- edit details ---- */
