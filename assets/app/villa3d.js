@@ -55,7 +55,7 @@ const LAYOUT = [
   { id: 'powder', name: 'Powder room', floor: 0, x: -0.46, z: -0.65, w: 1.75, d: 2.49, match: ['powder room'] },
   { id: 'ebroom', name: 'EB room', floor: 0, x: -0.24, z: 1.94, w: 1.53, d: 2.03, note: 'Electricity board / meters', match: ['\\beb\\b', 'electric(al)? (board|panel|room)', '\\bmeter', '\\bmcb\\b', 'db board'] },
   { id: 'store', name: 'Store room', floor: 0, x: -0.24, z: 4.06, w: 1.53, d: 2.86, match: ['store ?room', '\\bstore\\b'] },
-  { id: 'lounge', name: 'Poolside lounge', floor: 0, x: -8.07, z: -6.28, w: 2.9, d: 13.21, note: 'Wood deck out of the west doors, under the balcony; sun loungers at the north end', open: true, match: ['lounge', 'wood deck', 'verandah', 'sit-?out'] },
+  { id: 'lounge', name: 'Poolside lounge', floor: 0, x: -8.07, z: -6.28, w: 2.9, d: 13.21, note: 'Wood deck out of the west doors, under the balcony; sun loungers at the north end, a sofa set at the south end', open: true, match: ['lounge', 'wood deck', 'verandah', 'sit-?out'] },
   // first floor
   { id: 'bed2', name: 'Bedroom 2', floor: 1, tv: true, bedDz: -0.45, door: 'Door to the balcony', x: -5.17, z: -6.91, w: 4.89, d: 5.67, bath: [-5.17, -6.91, 2.54, 1.78], win: 'n', match: ['bedroom ?2\\b', '\\broom ?2\\b'] },
   { id: 'bed3', name: 'Bedroom 3', floor: 1, x: 4.58, z: -6.91, w: 4.29, d: 5.83, bath: [4.58, -6.91, 2.67, 1.78], win: 'e', sea: true, match: ['bedroom ?3\\b', '\\broom ?3\\b'] },
@@ -451,8 +451,7 @@ function furniture(zone, parent, y0) {
   } else if (zone.id === 'terrace') {
     for (let i = 0; i < 3; i++) box(0.7, 0.3, 1.9, MAT.fabric, zone.x + 1 + i * 1.2, y0 + 0.2, zone.z + zone.d - 3, parent);
   } else if (zone.id === 'lounge') {
-    for (let i = 0; i < 3; i++) box(0.8, 0.4, 0.8, MAT.fabric, zone.x + 1.2, y0 + 0.2, zone.z + 3 + i * 3.2, parent);
-    box(0.9, 0.35, 0.9, MAT.wood, zone.x + 2.2, y0 + 0.18, zone.z + 6, parent);
+    // furnished outside (deckSeating), visible in every view
   } else if (zone.id === 'powder') {
     box(0.5, 0.8, 0.5, M(0xd6e3e6), cx, y0 + 0.4, zone.z + 0.4, parent);
   } else if (zone.id === 'ebroom') {
@@ -549,6 +548,10 @@ function buildHouse() {
   box(R.w * 0.62, 1.5, 0.08, MAT.win, R.x + R.w * 0.45, y1 + 1.5, R.z + R.d + 0.04, ext);
   for (let i = 0; i < 5; i++) box(0.05, 1.5, 0.1, MAT.trim, R.x + R.w * 0.14 + i * (R.w * 0.155), y1 + 1.5, R.z + R.d + 0.06, ext);
   for (let i = 0; i < 4; i++) { const l = box(0.18, 0.08, 0.18, MAT.lamp, R.x + R.w * 0.22 + i * R.w * 0.155, y1 + 2.45, R.z + R.d + 0.08, ext); l.castShadow = false; evenLamps.push(l); }
+  // and the same tall window band on Bedroom 1, right below it on the ground floor
+  { const B1 = ZONE.bed1, y0 = lvl(0), bw = B1.w * 0.82, bx = B1.x + B1.w / 2;
+    box(bw, 1.5, 0.08, MAT.win, bx, y0 + 1.5, R.z + R.d + 0.04, ext);
+    for (let i = 0; i <= 4; i++) box(0.05, 1.5, 0.1, MAT.trim, bx - bw / 2 + i * bw / 4, y0 + 1.5, R.z + R.d + 0.06, ext); }
   // first floor, to the balcony: the recreation hall's sliding glass door and, beside it, Bedroom 2's door
   balconyDoors(ext, true);
   // roofs over each storey's rooms (flat; the chess terrace and balcony stay open); a room under
@@ -629,10 +632,57 @@ function lounger(x, y, z, rot, parent, towel) {
   if (towel) box(0.42, 0.03, 0.5, M(towel), 0, 0.41, 0.55, L);
   return L;
 }
+// South end of the wood deck: a teak modular sofa (four seats, white cushions) against the house wall,
+// facing the pool, an ottoman, a slatted teak coffee table with a black frame and a potted plant, a
+// round mirror on the end wall and a wall lantern — as in the owner's photo.
+const SOFA = () => { const Lg = ZONE.lounge; return { x: Lg.x + Lg.w + 0.15 - 0.48, z0: 2.05, n: 4, seat: 0.78 }; };
+function deckSeating(parent) {
+  const S = SOFA(), y = 0.4, teak = M(0xb8743a, { roughness: 0.55 }), cush = M(0xf1ece2, { roughness: 0.95 }), black = M(0x1d1f22, { metalness: 0.4, roughness: 0.45 });
+  for (let i = 0; i < S.n; i++) {
+    const zc = S.z0 + (i + 0.5) * S.seat;
+    box(0.72, 0.06, S.seat - 0.04, teak, S.x, y + 0.3, zc, parent);                       // seat frame
+    [[-0.32, -0.34], [0.32, -0.34], [-0.32, 0.34], [0.32, 0.34]].forEach(([a, b]) => box(0.05, 0.3, 0.05, teak, S.x + a, y + 0.15, zc + b * (S.seat / 0.78), parent));
+    box(0.66, 0.14, S.seat - 0.08, cush, S.x - 0.02, y + 0.4, zc, parent);                 // seat cushion
+    const bk = box(0.16, 0.48, S.seat - 0.1, cush, S.x + 0.28, y + 0.68, zc, parent); bk.rotation.z = -0.12; // back cushion
+  }
+  const zEnd = S.z0 + S.n * S.seat;
+  [S.z0 - 0.03, zEnd + 0.03].forEach((z, k) => { box(0.72, 0.05, 0.05, teak, S.x, y + 0.62, z, parent);
+    for (let j = 0; j < (k ? 4 : 1); j++) box(0.72, 0.06, 0.04, teak, S.x, y + 0.36 + j * 0.08, z, parent); }); // arm (slatted at the mirror end)
+  // ottoman in front of the end seat
+  const oz = zEnd - S.seat / 2, ox = S.x - 0.95;
+  box(0.7, 0.06, 0.7, teak, ox, y + 0.28, oz, parent); [[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]].forEach(([a, b]) => box(0.05, 0.28, 0.05, teak, ox + a, y + 0.14, oz + b, parent));
+  box(0.68, 0.14, 0.68, cush, ox, y + 0.38, oz, parent);
+  // coffee table: teak slats in a black steel frame, a plant on top
+  const tx = S.x - 1.15, tz = S.z0 + S.seat * 1.55, T = 0.75, H = 0.5;
+  box(T, 0.04, T, teak, tx, y + H, tz, parent);
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => box(0.035, H, 0.035, black, tx + a * T / 2, y + H / 2, tz + b * T / 2, parent));
+  [-1, 1].forEach(a => { box(T, 0.035, 0.035, black, tx, y + H, tz + a * T / 2, parent); box(0.035, 0.035, T, black, tx + a * T / 2, y + H, tz, parent); });
+  for (let i = 0; i < 6; i++) box(0.02, H - 0.06, T - 0.06, teak, tx - T / 2 + 0.01, y + H / 2, tz, parent).position.y = y + 0.04 + (i + 0.5) * (H - 0.08) / 6;
+  box(T - 0.06, H - 0.08, 0.02, teak, tx, y + H / 2, tz + T / 2 - 0.01, parent);
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.065, 0.13, 14), M(0xf4f2ee)); pot.position.set(tx, y + H + 0.085, tz); parent.add(pot);
+  const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.13, 2), M(0x4f8a3f)); leaf.position.set(tx, y + H + 0.25, tz); leaf.castShadow = true; parent.add(leaf);
+  // round mirror on the end wall, and the wall lantern above the sofa
+  const mz = 5.36, mx = S.x - 0.75;
+  const frame = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.035, 8, 40), M(0x5a3a22, { roughness: 0.4 })); frame.position.set(mx, 1.75, mz); parent.add(frame);
+  const glass = new THREE.Mesh(new THREE.CircleGeometry(0.42, 40), M(0xe4ebee, { metalness: 0.25, roughness: 0.08 })); glass.position.set(mx, 1.75, mz + 0.005); glass.rotation.y = Math.PI; parent.add(glass);
+  box(0.14, 0.24, 0.12, black, S.x + 0.42, 2.45, S.z0 + S.seat * 2.6, parent);
+  const lamp = box(0.08, 0.16, 0.06, MAT.lamp, S.x + 0.36, 2.45, S.z0 + S.seat * 2.6, parent); lamp.castShadow = false; evenLamps.push(lamp);
+}
 const palms = [];
 // the two sun loungers at the north end of the wood deck: [x, z, towel colour]
 const LOUNGERS = [[-7.75, -5.55, 0x2f7d7a], [-7.75, -4.45, 0xe8b9a0]];
-let car = null, gate14 = null; const CAR_PARK = 3.6, CAR_ROAD = 22, CAR_X = 6.4, GATE_X = 6.55; // room for a second car on the west side
+function makeCar(color, parent) {
+  const c = new THREE.Group(); parent.add(c);
+  const paint = M(color, { roughness: 0.25, metalness: 0.55 }), glass = M(0x1f2a33, { roughness: 0.08, metalness: 0.6 });
+  box(1.85, 0.62, 4.3, paint, 0, 0.58, 0, c);                // body
+  box(1.62, 0.5, 2.3, glass, 0, 1.12, -0.15, c);             // cabin glass
+  box(1.58, 0.06, 2.0, paint, 0, 1.39, -0.15, c);            // roof
+  [[-0.93, -1.35], [0.93, -1.35], [-0.93, 1.35], [0.93, 1.35]].forEach(([x, z]) => { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.22, 16), MAT.dark); w.rotation.z = Math.PI / 2; w.position.set(x, 0.32, z); w.castShadow = true; c.add(w); });
+  [-0.6, 0.6].forEach(x => { box(0.32, 0.12, 0.04, M(0xfff6dd, { emissive: 0x333322 }), x, 0.7, 2.16, c); box(0.32, 0.1, 0.04, M(0xb3241e), x, 0.72, -2.16, c); }); // lights
+  c.visible = false;
+  return c;
+}
+let car = null, car2 = null, gate14 = null; const CAR2_X = 3.3; const CAR_PARK = 3.6, CAR_ROAD = 22, CAR_X = 6.4, GATE_X = 6.55; // room for a second car on the west side
 // a small shade tree (frangipani-like): short trunk, a few leafy clumps
 function smallTree(x, z, parent) {
   const g = new THREE.Group(); g.position.set(x, 0, z); parent.add(g); palms.push(g);
@@ -666,6 +716,7 @@ function buildOutdoors() {
     box(0.95, 0.4, 2.55, plank(0.95, 2.55), Lg.x - 0.47, 0.2, Lg.z + 1.28, g)];
   groups.wood.forEach(m => { m.castShadow = false; pick(m, 'lounge'); });
   LOUNGERS.forEach(([x, z, towel]) => lounger(x, 0.4, z, -Math.PI / 2 + 0.25, g, towel));
+  deckSeating(g); // the sofa set at the other (south) end
   box(0.45, 0.4, 0.45, M(0x6e5a46), Lg.x + 1.75, 0.6, Lg.z + 1.28, g); // side table at their heads
   // pool ladder at the deep end, and the coping's drain line
   [-0.25, 0.25].forEach(dz => { const rl = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.025, 6, 12, Math.PI), M(0xd9dde0, { metalness: 0.8, roughness: 0.25 })); rl.position.set(P.x + P.w - 0.05, 0.4, P.z + P.d - 1.2 + dz); rl.rotation.y = Math.PI / 2; g.add(rl); });
@@ -694,10 +745,9 @@ function buildOutdoors() {
   // parking: drive, a car under the terrace
   const Pk = ZONE.parking; pick(box(Pk.w, 0.04, Pk.d, photo(M(0xd8cfbf), 'cement', Pk.w, Pk.d, 2.5, { normal: 0.5, tint: 0xd9e2ea, roughness: 0.9 }), Pk.x + Pk.w / 2, 0.07, Pk.z + Pk.d / 2, g), 'parking');
   // the guests' car: parked only while a stay is in house (it drives in on check-in day)
-  car = new THREE.Group(); g.add(car); car.position.set(CAR_X, 0, CAR_PARK);
-  box(1.9, 0.7, 4.2, M(0x5c6870, { roughness: 0.4 }), 0, 0.55, 0, car); box(1.7, 0.55, 2.2, M(0x2a3238, { roughness: 0.3 }), 0, 1.15, -0.2, car);
-  [[-0.95, -1.3], [0.95, -1.3], [-0.95, 1.3], [0.95, 1.3]].forEach(([x, z]) => box(0.2, 0.5, 0.5, MAT.dark, x, 0.3, z, car));
-  car.visible = false;
+  // the guests' two cars (the car park fits two): parked while a stay is in house; the first drives in on check-in day
+  car = makeCar(0x5c6870, g); car.position.set(CAR_X, 0, CAR_PARK);
+  car2 = makeCar(0xe9e7e2, g); car2.position.set(CAR2_X, 0, CAR_PARK + 0.3);
   // jacuzzi bubbles
   const BN = 26, bub = new THREE.InstancedMesh(new THREE.SphereGeometry(0.045, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 }), BN);
   bub.castShadow = false; g.add(bub);
@@ -804,9 +854,9 @@ function spotsByAct() {
   [-12.75, -11.85, -10.95, -10.4].forEach((x, i) => add('swim', { zone: 'pool', x, y: 0.2, z: -0.6 + i * 0.4, lane: [-0.9 + (i % 2) * 0.3, 3.3 - (i % 2) * 0.2] }));
   [[-12.95, -2.4, 0.8], [-12.1, -1.55, -2.4], [-12.95, -1.6, 2.2]].forEach(([x, z, f]) => add('soak', { zone: 'jacuzzi', x, y: 0.4, z, face: f }));
   LOUNGERS.forEach(([x, z]) => add('deck', { zone: 'lounge', x: x - 0.1, y: 0.82, z, face: -Math.PI / 2 + 0.25 }));
-  [0, 1, 2].forEach(i => add('lounge', { zone: 'lounge', floor: 0, open: true, x: Lg.x + 1.2, y: L0 + 0.4, z: Lg.z + 3 + i * 3.2, face: -Math.PI / 2 }));
-  add('chat', { zone: 'lounge', floor: 0, open: true, x: Lg.x + 2.1, y: L0, z: Lg.z + 11.6, face: Math.PI });
-  add('chat', { zone: 'lounge', floor: 0, open: true, x: Lg.x + 2.2, y: L0, z: Lg.z + 10.8, face: 0 });
+  { const S = SOFA(); [0, 1, 3].forEach(i => add('lounge', { zone: 'lounge', floor: 0, open: true, x: S.x - 0.08, y: 0.84, z: S.z0 + (i + 0.5) * S.seat, face: -Math.PI / 2 })); }
+  add('chat', { zone: 'lounge', floor: 0, open: true, x: Lg.x + 1.6, y: 0.4, z: Lg.z + 6.4, face: Math.PI });
+  add('chat', { zone: 'lounge', floor: 0, open: true, x: Lg.x + 1.7, y: 0.4, z: Lg.z + 5.6, face: 0 });
   add('counter', { zone: 'counter', x: -9.75, y: 0, z: -4.45, face: Math.PI }); add('counter', { zone: 'counter', x: -10.55, y: 0, z: -4.4, face: Math.PI * 0.9 });
   const loop = [[-12.8, 5.3], [-7.2, 5.2], [-6.6, 8.9], [-12.4, 9.3]];
   [0, 2, 1].forEach(k => add('walk', { zone: 'garden', x: loop[k][0], y: 0, z: loop[k][1], path: loop, at: k }));
@@ -1192,7 +1242,7 @@ let droveIn = false;
 function syncCar() {
   if (!car || !DERIVED) return;
   const d = DERIVED, here = !!d.inHouse;
-  car.visible = here;
+  car.visible = here; if (car2) car2.visible = here;
   if (here && !droveIn && d.inHouse.checkin === d.T && !reduceMotion()) { droveIn = true; car.position.set(GATE_X, 0, CAR_ROAD); drive = { t: 0 }; kick(); }
   else if (!drive) car.position.z = CAR_PARK;
   needRender = true;
