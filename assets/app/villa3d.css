@@ -181,3 +181,4 @@ html[data-theme="dark"] .v3-row__m small,html[data-theme="dark"] .v3-muted,html[
   .v3-main.v3-full .v3-panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:38vh;border-radius:16px}
 }
 html[data-theme="dark"] .v3-main.v3-full{background:#121916}
+.v3-main.v3-full.v3-nopanel .v3-panel{display:none}

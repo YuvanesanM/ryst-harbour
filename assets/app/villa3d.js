@@ -23,6 +23,7 @@ const ROLE = ls('ryst_user_role') || 'owner';
 let MODS = []; try { MODS = JSON.parse(ls('ryst_user_modules') || '[]') || []; } catch (e) {}
 const can = mod => ROLE === 'owner' || MODS.includes(mod);
 const $ = s => document.querySelector(s);
+const v3main = $('#v3main'); // the model and its panel (what goes full screen)
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const t = s => (window.rystT ? window.rystT(s) : s);
 const inr = n => '₹' + Math.round(n || 0).toLocaleString('en-IN');
@@ -1278,6 +1279,7 @@ function nightsStrip() {
 // ── Side panel ───────────────────────────────────────────────────────────────
 function select(id) {
   if (id === 'bedrooms') id = 'bed2';
+  if (id && id !== 'overview' && v3main.classList.contains('v3-nopanel')) setPanel(true);
   selected = id;
   if (id !== 'overview' && renderer) {
     // a room: look inside, on its floor (the stairs stay on the floor you're on)
@@ -1415,14 +1417,21 @@ $('#btnReset').addEventListener('click', () => { selected = null; if (renderer) 
 $('#btnEvening').addEventListener('click', e => { EVENING = !EVENING; e.currentTarget.setAttribute('aria-pressed', String(EVENING)); if (renderer) { applyLighting(); buildPeople(); } kick(); });
 // Full screen: the real thing where the browser allows it (the model and its panel together);
 // otherwise (iPhone Safari) the same layout filling the window. Esc leaves either way.
-const v3main = $('#v3main');
 const nativeFs = () => document.fullscreenElement || document.webkitFullscreenElement;
 function setFull(on) {
   v3main.classList.toggle('v3-full', on); $('#btnFull').setAttribute('aria-pressed', String(on));
   $('#btnFull').title = on ? 'Leave full screen (Esc)' : 'Full screen (Esc to leave)'; $('#btnFull').setAttribute('aria-label', on ? 'Leave full screen' : 'Full screen');
   document.documentElement.style.overflow = on ? 'hidden' : '';
+  $('#btnPanel').hidden = !on; if (!on) setPanel(true);
   if (renderer) { resize(); placeLabels(); }
 }
+// In full screen the details panel can be hidden for a clear view; picking a place brings it back.
+function setPanel(show) {
+  v3main.classList.toggle('v3-nopanel', !show);
+  $('#btnPanel').setAttribute('aria-pressed', String(show)); $('#btnPanel').title = show ? 'Hide the details panel' : 'Show the details panel';
+  if (renderer) placeLabels();
+}
+$('#btnPanel').addEventListener('click', () => setPanel(v3main.classList.contains('v3-nopanel')));
 $('#btnFull').addEventListener('click', () => {
   const on = !v3main.classList.contains('v3-full');
   if (on) {
