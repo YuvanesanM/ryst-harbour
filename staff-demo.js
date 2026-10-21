@@ -87,6 +87,9 @@
     '/whatsapp/status': { configured:true, connected:true, botUsername:'demo_bot', recipientCount:1, alertTypes:[] },
     '/whatsapp/webhook-info': { url:'(hidden in demo mode)', recent:[] },
     '/telegram/chat-id': { chats:[] },
+    '/weather': (function(){ var d = new Date(), iso = function(n){ var x = new Date(d); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); };
+      return { ok:true, at: now, source:'Open-Meteo', now:{ temp:31.4, feels:36.2, humidity:71, rain:0, code:2, wind:14, day:true },
+        days:[[2,33,26,20,0,9,18],[61,31,25,70,6.4,7,24],[80,30,25,55,3.1,8,21],[1,32,26,10,0,10,16],[0,33,26,5,0,10,15]].map(function(v,i){ return { date: iso(i), code:v[0], max:v[1], min:v[2], rainChance:v[3], rain:v[4], uv:v[5], wind:v[6], sunrise:'06:04', sunset:'17:51' }; }) }; })(),
     '/metrics': { ok:true, revenue:296723, received:144600, due:152123, expenses:1730, nights:11, days:31, occupancy:35 },
     '/agents': (function(){
       var A = [['reservations','Reservations Concierge','chat',4,'Answers the WhatsApp and Instagram messages the auto-reply could not, and follows up quotes that went quiet.'],

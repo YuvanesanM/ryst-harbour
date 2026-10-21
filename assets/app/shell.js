@@ -203,6 +203,7 @@
     bar.innerHTML = '<a class="htb__brand" href="login.html">RYST HARBOUR</a>'
       + '<span class="htb__prop" title="Signed in to this property">' + svg('villa') + '<span data-hsb-villa2>' + esc(p.name || '') + '</span></span>'
       + '<span class="htb__date" data-no-i18n>' + esc(date) + '</span>'
+      + '<div class="htb__wrap htb__wxw" hidden><button type="button" class="htb__wx" aria-haspopup="true" aria-expanded="false" aria-controls="htbWx"></button><div class="htb__menu htb__wxm" id="htbWx" hidden></div></div>'
       + '<div class="htb__act">'
       + (news.length ? '<div class="htb__wrap"><button type="button" class="htb__new" aria-haspopup="true" aria-expanded="false" aria-controls="htbNew" aria-label="' + esc(t('New')) + '">' + svg('plus') + '<span>' + esc(t('New')) + '</span></button>'
         + '<div class="htb__menu" id="htbNew" hidden><div class="htb__list">' + news.map(function (n) { return '<a class="htb__item" href="' + n[0] + '">' + svg(n[1]) + '<span>' + esc(t(n[2])) + '</span></a>'; }).join('') + '</div></div></div>' : '')
@@ -324,7 +325,7 @@
     mounted = true;
     doc.documentElement.classList.add('has-hsb');
     if (!manual) { doc.documentElement.classList.add('has-htb'); doc.documentElement.classList.add('has-hbn'); }
-    var go = function () { build(); buildTopbar(); buildBottomNav(); fitDemoBar(); fillPlaceholders(); syncMe(); };
+    var go = function () { build(); buildTopbar(); buildBottomNav(); fitDemoBar(); fillPlaceholders(); syncMe(); loadWeather(); };
     if (doc.body) go(); else doc.addEventListener('DOMContentLoaded', go);
   }
   function unmount() {
@@ -379,6 +380,70 @@
   window.rystMoreTop = function () { return moreTop(); };
 
   var PROXY = 'https://data.ryst.in';
+
+  // ── The villa's weather in the header: now, and the next days on a tap (Open-Meteo via the server) ──
+  var WX_ICON = {
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+    partly: '<path d="M12 2v2M4.9 4.9l1.4 1.4M2 12h2M19.1 4.9l-1.4 1.4"/><path d="M15.9 13A4 4 0 0 0 8.2 10"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6z"/>',
+    cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9z"/>',
+    fog: '<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 17H7M17 21H9"/>',
+    rain: '<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6M8 14v6M12 16v6"/>',
+    storm: '<path d="M6 16.3A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 .5 9"/><path d="m13 12-3 5h4l-3 5"/>',
+  };
+  // WMO weather codes → an icon and a few words
+  function wxOf(code, day) {
+    var c = +code;
+    if (c === 0) return [day === false ? 'moon' : 'sun', 'Clear'];
+    if (c === 1) return [day === false ? 'moon' : 'sun', 'Mostly clear'];
+    if (c === 2) return ['partly', 'Partly cloudy'];
+    if (c === 3) return ['cloud', 'Cloudy'];
+    if (c === 45 || c === 48) return ['fog', 'Fog'];
+    if (c >= 51 && c <= 57) return ['rain', 'Drizzle'];
+    if ((c >= 61 && c <= 67) || (c >= 80 && c <= 82)) return ['rain', c >= 80 ? 'Showers' : c >= 65 ? 'Heavy rain' : 'Rain'];
+    if (c >= 95) return ['storm', 'Thunderstorm'];
+    return ['cloud', 'Cloudy'];
+  }
+  function wxSvg(k, cls) { return '<svg class="htb__i ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + WX_ICON[k] + '</svg>'; }
+  function renderWeather(w) {
+    var wrap = doc.querySelector('.htb__wxw'); if (!wrap || !w || !w.ok || !w.now) return;
+    var n = w.now, cur = wxOf(n.code, n.day), r = function (x) { return Math.round(x); };
+    var btn = wrap.querySelector('.htb__wx'), menu = wrap.querySelector('.htb__wxm');
+    if (!btn.closest('.htb') && !btn.hasAttribute('data-wx-wired')) { // outside the shared header: open and close it here
+      btn.setAttribute('data-wx-wired', '');
+      var shut = function () { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+      btn.addEventListener('click', function (e) { e.stopPropagation(); var o = menu.hidden; shut(); if (o) { menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); } });
+      doc.addEventListener('click', function (e) { if (!menu.hidden && !menu.contains(e.target)) shut(); });
+      doc.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { shut(); btn.focus(); } });
+    }
+    btn.innerHTML = wxSvg(cur[0]) + '<b>' + r(n.temp) + '°</b><span>' + esc(t(cur[1])) + '</span>';
+    btn.setAttribute('aria-label', t('Weather at the villa') + ': ' + r(n.temp) + '°C, ' + t(cur[1]));
+    btn.title = t('Weather at the villa');
+    var today = (w.days || [])[0] || {}, hints = [];
+    (w.days || []).slice(0, 2).forEach(function (d, i) { if (d.rainChance >= 60) hints.push((i ? t('Rain likely tomorrow') : t('Rain likely today')) + ' (' + d.rainChance + '%) — ' + t('cover the deck cushions and loungers')); });
+    if (today.uv >= 8) hints.push(t('Very high UV today') + ' (' + r(today.uv) + ') — ' + t('pool towels and shade ready'));
+    if ((w.days || []).slice(0, 2).some(function (d) { return d.wind >= 40; })) hints.push(t('Strong wind expected') + ' — ' + t('secure the umbrellas and cushions'));
+    var dayName = function (iso, i) { return i === 0 ? t('Today') : i === 1 ? t('Tomorrow') : new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short' }); };
+    menu.innerHTML = '<div class="wx__now">' + wxSvg(cur[0], 'wx__big') + '<div><b>' + r(n.temp) + '°C</b> <span>' + esc(t(cur[1])) + '</span>'
+      + '<small>' + t('Feels like') + ' ' + r(n.feels) + '° · ' + t('Humidity') + ' ' + r(n.humidity) + '% · ' + t('Wind') + ' ' + r(n.wind) + ' km/h</small>'
+      + (today.sunrise ? '<small>' + t('Sunrise') + ' ' + esc(today.sunrise) + ' · ' + t('Sunset') + ' ' + esc(today.sunset) + (today.uv != null ? ' · UV ' + r(today.uv) : '') + '</small>' : '') + '</div></div>'
+      + (hints.length ? '<ul class="wx__hints">' + hints.map(function (h) { return '<li>' + esc(h) + '</li>'; }).join('') + '</ul>' : '')
+      + '<div class="wx__days">' + (w.days || []).map(function (d, i) { var k = wxOf(d.code); return '<div class="wx__day"><span>' + esc(dayName(d.date, i)) + '</span>' + wxSvg(k[0]) + '<span class="wx__rain">' + (d.rainChance != null ? d.rainChance + '%' : '') + '</span><span><b>' + r(d.max) + '°</b> ' + r(d.min) + '°</span></div>'; }).join('') + '</div>'
+      + '<div class="wx__src">' + t('Weather at the villa') + ' · <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></div>';
+    wrap.hidden = false;
+  }
+  function loadWeather() {
+    if (!ls('ryst_proxy_token')) return;
+    var cached = null; try { cached = JSON.parse(sessionStorage.getItem('ryst_wx') || 'null'); } catch (e) {}
+    if (cached && Date.now() - cached.at < 15 * 60e3) return renderWeather(cached.w);
+    fetch(PROXY + '/weather', { headers: { 'X-Token': ls('ryst_proxy_token') || '' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (w) {
+      if (!w || !w.ok) return;
+      try { sessionStorage.setItem('ryst_wx', JSON.stringify({ at: Date.now(), w: w })); } catch (e) {}
+      renderWeather(w);
+    }).catch(function () {});
+  }
+  window.rystLoadWeather = loadWeather; // the dashboard (its own header) calls this once it shows
+
   // Name and photo saved on another device show up here too (once a visit).
   function syncMe() {
     if (ls('ryst_demo') === '1' || !ls('ryst_proxy_token')) return;

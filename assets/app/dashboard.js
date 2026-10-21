@@ -842,6 +842,7 @@
     setHTML('dGreet', '<span>' + esc(t(greet)) + '</span>' + (first ? '<span data-no-i18n>, ' + esc(first) + '</span>' : ''));
     var date = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
     var dd = $('#dDate'); if (dd) { dd.textContent = date; dd.setAttribute('data-no-i18n', ''); }
+    if (window.rystLoadWeather) window.rystLoadWeather(); // the villa's weather beside the date
     var email = ls('ryst_user_email') || '';
     if (window.rystAvatarInner) $$('[data-rh-av]').forEach(function (el) { el.innerHTML = window.rystAvatarInner(); });
     else $('#dInitial').textContent = (name || email || 'R').trim().charAt(0).toUpperCase();
