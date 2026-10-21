@@ -127,6 +127,46 @@
   #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90vw}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   #toast.err{background:var(--danger)}
+
+  /* 14-day trend: drafts per day by verdict. Verdict colours validated (dataviz validate_palette.js):
+     light #008300 / #2a78d6 / #e34948 on #fff, dark #008300 / #3987e5 / #e66767 on #1a211e — all checks pass.
+     "Not judged" is a neutral, not a series; every colour ships with its icon and label. */
+  .trendc{--v-agree:#008300;--v-edit:#2a78d6;--v-reject:#e34948;--v-open:#dcd9d1;--grid:#eceee9;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px 12px;margin-bottom:22px;position:relative}
+  @media (prefers-color-scheme: dark){ :root:where(:not([data-theme="light"])) .trendc{--v-agree:#008300;--v-edit:#3987e5;--v-reject:#e66767;--v-open:#3b4440;--grid:#2c3531} }
+  :root[data-theme="dark"] .trendc{--v-agree:#008300;--v-edit:#3987e5;--v-reject:#e66767;--v-open:#3b4440;--grid:#2c3531}
+  .tr-head{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-bottom:10px}
+  .tr-head h2{margin:0}
+  .tr-head .spacer{flex:1}
+  .legend{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .sw-agree{background:var(--v-agree)}.sw-edit{background:var(--v-edit)}.sw-reject{background:var(--v-reject)}.sw-open{background:var(--v-open)}
+  .tr-plot{position:relative;height:150px;margin-left:26px}
+  .tr-grid{position:absolute;inset:0;pointer-events:none}
+  .tr-grid div{position:absolute;left:0;right:0;border-top:1px solid var(--grid)}
+  .tr-grid span{position:absolute;left:-26px;top:-7px;width:22px;text-align:right;font-size:10.5px;color:var(--muted2);font-variant-numeric:tabular-nums}
+  .tr-bars{position:absolute;inset:0;display:grid;grid-template-columns:repeat(14,1fr);gap:6px;align-items:end}
+  .tr-col{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:default;border-radius:6px;outline:none;position:relative}
+  .tr-col:hover,.tr-col:focus-visible{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+  .tr-col:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+  .tr-stack{width:min(100%,26px);display:flex;flex-direction:column-reverse;gap:2px;border-radius:4px 4px 0 0;overflow:hidden}
+  .tr-stack i{display:block;min-height:2px}
+  .tr-tot{font-size:10.5px;font-weight:600;color:var(--muted);margin-bottom:3px;font-variant-numeric:tabular-nums}
+  .tr-x{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;margin:6px 0 0 26px;font-size:10.5px;color:var(--muted2);text-align:center;font-variant-numeric:tabular-nums}
+  .tr-x .wk{color:var(--ink);font-weight:600}
+  .tr-tip{position:absolute;z-index:4;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.5;min-width:150px;box-shadow:0 8px 22px rgba(0,0,0,.18)}
+  .tr-tip b{display:block;font-size:12.5px;margin-bottom:2px}
+  .tr-tip span{display:flex;align-items:center;gap:6px}
+  .tr-tip i{width:9px;height:9px;border-radius:2px;display:inline-block}
+  .tr-tip em{font-style:normal;margin-left:auto;padding-left:12px;font-variant-numeric:tabular-nums}
+  .tr-empty{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;color:var(--muted)}
+  .tr-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  .tr-table th,.tr-table td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+  .tr-table th:first-child,.tr-table td:first-child{text-align:left}
+  .tr-table th{font-size:11px;color:var(--muted2);font-weight:700}
+  @media(max-width:640px){ .tr-bars,.tr-x{gap:3px} .tr-x span:nth-child(even):not(.wk){visibility:hidden} .tr-tot{display:none} }
+  @media (forced-colors: active){ .tr-stack i{border:1px solid CanvasText} }
   @media(max-width:1000px){ .kpis{grid-template-columns:repeat(3,minmax(0,1fr))} .agents{grid-template-columns:repeat(2,minmax(0,1fr))} }
   @media(max-width:640px){
     .wrap{padding:12px 12px 90px}
@@ -162,6 +202,13 @@
     <span class="ai" id="lastRun"></span>
   </div>
   <div class="kpis" id="kpis"><div class="kpi sk" style="height:78px"></div><div class="kpi sk" style="height:78px"></div><div class="kpi sk" style="height:78px"></div></div>
+  <section class="trendc" id="trend" aria-labelledby="trTitle" hidden>
+    <div class="tr-head"><h2 class="sec" id="trTitle">Last 14 days</h2>
+      <div class="legend" id="trLegend"></div><span class="spacer"></span><button class="lnk" type="button" id="trToggle" aria-pressed="false">View as table</button></div>
+    <div id="trChart"><div class="tr-plot"><div class="tr-grid" id="trGrid"></div><div class="tr-bars" id="trBars"></div></div><div class="tr-x" id="trX"></div></div>
+    <div id="trTableWrap" hidden></div>
+    <div class="tr-tip" id="trTip" role="status" hidden></div>
+  </section>
   <h2 class="sec">The team</h2>
   <div class="agents" id="agents"><div class="sk" style="height:220px"></div><div class="sk" style="height:220px"></div><div class="sk" style="height:220px"></div></div>
   <div class="bar2">
@@ -222,6 +269,7 @@ function render(){
     kpi('Time it would save', hrs >= 1 ? hrs.toFixed(1) + ' h' : Math.round(T.minutesSaved || 0) + ' min', t('on drafts you agreed with')),
     kpi('Handled before them', T.resolvedByTeam || 0, t('cleared by your team first')),
   ].join('');
+  renderTrend();
   $('#aiState').className = 'ai ' + (ai.configured ? 'on' : 'off');
   $('#aiState').textContent = ai.configured ? `${t('Written replies: Claude')} · ${ai.calls || 0}/${ai.cap} ${t('this month')}` : t('Written replies: templates (AI key not set)');
   $('#lastRun').textContent = S.lastRun ? t('Last run') + ' ' + when(S.lastRun) : t('Not run yet');
@@ -300,6 +348,45 @@ async function runNow(agent, btn){
   }catch(e){ toast(e.message, true); }
   finally{ b.disabled = false; b.textContent = was; }
 }
+
+// ── 14-day trend: what became of each day's drafts ───────────────────────────
+const VERDICT = [['agree', '✓', 'Right call'], ['edit', '✎', 'Better as'], ['reject', '✗', 'Wrong'], ['open', '○', 'Not judged yet']];
+let TABLE = false;
+const dayLbl = iso => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', timeZone:'UTC' });
+function renderTrend(){
+  const tr = S.trend || [], box = $('#trend');
+  box.hidden = !tr.length; if(!tr.length) return;
+  $('#trLegend').innerHTML = VERDICT.map(([k, ic, l]) => `<span><i class="sw-${k}" aria-hidden="true"></i>${ic} ${esc(t(l))}</span>`).join('');
+  const tot = d => d.agree + d.edit + d.reject + d.open, max = Math.max(...tr.map(tot));
+  const top = max <= 4 ? 4 : max <= 10 ? 10 : Math.ceil(max / 10) * 10;
+  $('#trGrid').innerHTML = [top, top / 2, 0].map(v => `<div style="top:${(1 - v / top) * 100}%"><span>${v % 1 ? '' : v}</span></div>`).join('');
+  $('#trBars').innerHTML = !max ? `<div class="tr-empty" style="grid-column:1/-1">${esc(t('No drafts in the last 14 days yet'))}</div>`
+    : tr.map((d, i) => { const n = tot(d);
+      return `<div class="tr-col" tabindex="0" data-i="${i}" aria-label="${esc(dayLbl(d.day))}: ${n} ${esc(t('drafts'))}, ${d.agree} ${esc(t('right'))}, ${d.edit} ${esc(t('better as'))}, ${d.reject} ${esc(t('wrong'))}, ${d.open} ${esc(t('not judged'))}">
+        ${n && i === tr.length - 1 ? `<span class="tr-tot">${n}</span>` : ''}
+        <div class="tr-stack" style="height:${n / top * 100}%">${VERDICT.map(([k]) => d[k] ? `<i class="sw-${k}" style="flex:${d[k]} 1 0"></i>` : '').join('')}</div></div>`; }).join('');
+  const T = new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
+  $('#trX').innerHTML = tr.map(d => `<span class="${d.day === T ? 'wk' : ''}">${d.day === T ? esc(t('Today')) : +d.day.slice(8)}</span>`).join('');
+  $('#trTableWrap').innerHTML = `<table class="tr-table"><thead><tr><th>${esc(t('Day'))}</th>${VERDICT.map(([, ic, l]) => `<th>${ic} ${esc(t(l))}</th>`).join('')}<th>${esc(t('Total'))}</th></tr></thead><tbody>${tr.slice().reverse().map(d => `<tr><td>${esc(dayLbl(d.day))}</td>${VERDICT.map(([k]) => `<td>${d[k]}</td>`).join('')}<td><b>${tot(d)}</b></td></tr>`).join('')}</tbody></table>`;
+  $('#trChart').hidden = TABLE; $('#trTableWrap').hidden = !TABLE;
+  $('#trToggle').textContent = t(TABLE ? 'View as chart' : 'View as table'); $('#trToggle').setAttribute('aria-pressed', String(TABLE));
+}
+function trTip(col){
+  const tip = $('#trTip');
+  if(!col){ tip.hidden = true; return; }
+  const d = S.trend[+col.dataset.i], n = d.agree + d.edit + d.reject + d.open;
+  tip.innerHTML = `<b>${esc(dayLbl(d.day))} · ${n} ${esc(t(n === 1 ? 'draft' : 'drafts'))}</b>` + VERDICT.map(([k, ic, l]) => `<span><i class="sw-${k}" aria-hidden="true"></i>${ic} ${esc(t(l))}<em>${d[k]}</em></span>`).join('');
+  tip.hidden = false;
+  const box = $('#trend').getBoundingClientRect(), c = col.getBoundingClientRect();
+  let x = c.left - box.left + c.width / 2 - tip.offsetWidth / 2;
+  x = Math.max(8, Math.min(box.width - tip.offsetWidth - 8, x));
+  tip.style.left = x + 'px'; tip.style.top = Math.max(8, c.top - box.top - tip.offsetHeight + 34) + 'px';
+}
+$('#trBars').addEventListener('pointerover', e => trTip(e.target.closest('.tr-col')));
+$('#trBars').addEventListener('pointerleave', () => trTip(null));
+$('#trBars').addEventListener('focusin', e => trTip(e.target.closest('.tr-col')));
+$('#trBars').addEventListener('focusout', () => trTip(null));
+$('#trToggle').addEventListener('click', () => { TABLE = !TABLE; renderTrend(); });
 $('#runAll').addEventListener('click', () => runNow('', $('#runAll')));
 load();
 </script>

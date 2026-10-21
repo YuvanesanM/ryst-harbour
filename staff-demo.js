@@ -115,7 +115,8 @@
       return { ok:true, agents:agents, drafts:drafts.concat(done), readyAt:{ reviews:20, rate:0.9 },
         log:[{ at: now - 12*60e3, agent:'operations', made:1, resolved:1 }, { at: now - 12*60e3, agent:'reservations', made:1, resolved:0 }, { at: now - 5*3600e3, agent:'creators', mode:'paused', by:'owner@example.com' }],
         totals:{ today: 13, pending: 13, urgent: 3, valuePending: 244123, reviewed: 72, accuracy: 0.83, minutesSaved: 361, resolvedByTeam: 12 },
-        ai:{ configured:true, model:'claude-opus-5-5', cap:300, calls:41, inTok:38000, outTok:2900, errors:0 }, lastRun: now - 12*60e3 };
+        ai:{ configured:true, model:'claude-opus-5-5', cap:300, calls:41, inTok:38000, outTok:2900, errors:0 }, lastRun: now - 12*60e3,
+        trend: [[4,1,1,0],[5,0,1,1],[3,2,0,0],[6,1,0,1],[4,1,2,0],[2,0,0,0],[5,2,1,1],[6,1,1,0],[4,0,0,1],[7,1,0,0],[5,2,1,1],[6,1,0,0],[3,1,1,2],[1,0,0,12]].map(function(v, i){ return { day: iso(i - 13), agree:v[0], edit:v[1], reject:v[2], open:v[3] }; }) };
     })(),
     '/collabs': { ok:true, requests:[
       { id:'crdemo1', at:now-2*3600e3, status:'new', name:'Sample Creator A', instagram:'sample.creator.a', followers:48200, phone:'+919000000101', email:'creator.a@example.com', city:'Chennai', niche:'Travel', checkin:iso(9), checkout:iso(10), guests:4, deliverables:['reel','stories'], links:['https://www.instagram.com/stay.ryst'], message:'A slow weekday by the sea with friends: one reel and a set of stories.', expectation:'complimentary', openToDiscount:true, datesFree:true },
