@@ -88,6 +88,15 @@ loaded only on this page through an import map.
   places with an open issue pulsing red, jacuzzi bubbles, and the guests' car —
   parked only while a stay is in house — driving in through the gate on its
   check-in day.
+- People: the guests in house appear as figures, as many as the check-in count
+  (else the booking's guest count; also on check-out morning until the check-out
+  checklist is done). What each one is doing follows the IST time of day
+  (swimming, jacuzzi, loungers, table tennis, dinner, asleep in the bedrooms at
+  night…) and is illustrative — the count is the real part, and the hover card
+  says so. The caretaker stands at the place of the next unticked item of an
+  open checklist today, walks the garden on mornings the daily rounds aren't
+  done, else waits by the gate; the owner sees their name (from /team). After
+  sunset the model is lit for the evening.
 
 ## Guest pages are published on two addresses
 

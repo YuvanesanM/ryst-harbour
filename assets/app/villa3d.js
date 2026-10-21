@@ -126,6 +126,7 @@ async function loadAll() {
   if (can('guestRegister')) jobs.push(get('/guest-register', 'reg'));
   if (can('checklist')) { jobs.push(get('/checklist', 'cl')); jobs.push(get('/issues', 'issues')); }
   if (can('inventory')) jobs.push(get('/inventory', 'inv'));
+  if (ROLE === 'owner') jobs.push(get('/team', 'team')); // caretaker names (owner only)
   jobs.push(loadMetrics());
   await Promise.all(jobs);
   DERIVED = derive();
@@ -507,6 +508,291 @@ function buildOutdoors() {
   evenLamps.forEach(l => { l.visible = EVENING; });
 }
 
+// ── People: the guests in house (as many as the booking says) and the caretaker
+// How many guests is real (the check-in count, else the booking's guests);
+// where each one is follows the time of day and is illustrative. The caretaker
+// goes to the place on the checklist they're working through, if one is open.
+const PEOPLE = [];
+const peopleRoot = { out: null, floors: [] };
+const PG = {}; // shared geometries
+const pmats = {};
+const pmat = c => pmats[c] || (pmats[c] = new THREE.MeshStandardMaterial({ color: c, roughness: 0.78, metalness: 0 }));
+const SKIN = [0x8d5524, 0xa0673f, 0xc68642, 0x7a4a2a, 0xb07a4f, 0x6b4226, 0x9a6440];
+const HAIR = [0x16110d, 0x221812, 0x2f2118, 0x0e0c0b];
+const TOPS = [0xf3f1ec, 0x2b3f5c, 0x6d7a4a, 0x7a2e35, 0xd3a13a, 0x8fb8d8, 0x1f1f22, 0xe8b9a0, 0x2f7d7a, 0x8a8f94, 0xc94f4f, 0xece3cf];
+const BOTTOMS = [0x3d5a80, 0xcdbb98, 0x1d1f22, 0xf0ede6, 0x55603d, 0x24324a, 0x6e6259];
+const SWIM = [0x1f4e79, 0xc0392b, 0x16a085, 0x2c3e50, 0xe67e22, 0x8e44ad];
+function rng(seed) { let a = 0; for (const ch of String(seed)) a = (a * 31 + ch.charCodeAt(0)) | 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const pickOf = (r, arr) => arr[Math.floor(r() * arr.length)];
+function personGeos() {
+  if (PG.torso) return;
+  PG.torso = new THREE.CapsuleGeometry(0.15, 0.3, 4, 10); PG.pelvis = new THREE.SphereGeometry(0.15, 10, 8);
+  PG.thigh = new THREE.CapsuleGeometry(0.068, 0.34, 4, 8); PG.shin = new THREE.CapsuleGeometry(0.054, 0.34, 4, 8);
+  PG.upper = new THREE.CapsuleGeometry(0.047, 0.22, 4, 8); PG.fore = new THREE.CapsuleGeometry(0.04, 0.2, 4, 8);
+  PG.hand = new THREE.SphereGeometry(0.043, 8, 6); PG.foot = new THREE.BoxGeometry(0.09, 0.06, 0.22);
+  PG.head = new THREE.SphereGeometry(0.104, 14, 10); PG.neck = new THREE.CylinderGeometry(0.045, 0.05, 0.1, 8);
+  PG.hair = new THREE.SphereGeometry(0.112, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.56);
+  PG.long = new THREE.CapsuleGeometry(0.09, 0.2, 4, 8); PG.hit = new THREE.CapsuleGeometry(0.3, 1.2, 2, 6);
+  PG.hitMat = new THREE.MeshBasicMaterial({ visible: false });
+}
+// one person: hips → (torso → neck, head, arms) and (thighs → knees → shins, feet)
+function makePerson(look) {
+  personGeos();
+  const root = new THREE.Group(), hips = new THREE.Group(); root.add(hips); hips.position.y = 0.92;
+  const part = (geo, mat, x, y, z, parent) => { const m = new THREE.Mesh(geo, pmat(mat)); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; };
+  const torso = new THREE.Group(); hips.add(torso);
+  part(PG.pelvis, look.bottom, 0, 0.02, 0, torso).scale.set(1.05, 0.7, 0.75);
+  part(PG.torso, look.top, 0, 0.3, 0, torso).scale.set(1, 1, 0.66);
+  part(PG.neck, look.skin, 0, 0.6, 0, torso);
+  const head = new THREE.Group(); head.position.y = 0.73; torso.add(head);
+  part(PG.head, look.skin, 0, 0, 0.005, head).scale.set(0.95, 1.12, 1);
+  const hair = part(PG.hair, look.hair, 0, 0.012, -0.012, head); hair.rotation.x = -0.25;
+  if (look.longHair) part(PG.long, look.hair, 0, -0.1, -0.07, head).scale.set(1.1, 1, 0.55);
+  const arm = side => {
+    const sh = new THREE.Group(); sh.position.set(side * 0.2, 0.5, 0); torso.add(sh);
+    part(PG.upper, look.sleeve, 0, -0.14, 0, sh);
+    const el = new THREE.Group(); el.position.y = -0.29; sh.add(el);
+    part(PG.fore, look.skin, 0, -0.13, 0, el); part(PG.hand, look.skin, 0, -0.28, 0.01, el);
+    return { sh, el };
+  };
+  const leg = side => {
+    const hp = new THREE.Group(); hp.position.set(side * 0.09, 0, 0); hips.add(hp);
+    part(PG.thigh, look.bottom, 0, -0.22, 0, hp);
+    const kn = new THREE.Group(); kn.position.y = -0.45; hp.add(kn);
+    part(PG.shin, look.shin, 0, -0.21, 0, kn); part(PG.foot, look.feet, 0, -0.44, 0.05, kn);
+    return { hp, kn };
+  };
+  const P = { root, hips, torso, head, aL: arm(-1), aR: arm(1), lL: leg(-1), lR: leg(1) };
+  root.scale.setScalar(look.h / 1.76);
+  const hit = new THREE.Mesh(PG.hit, PG.hitMat); hit.position.y = 0.9; root.add(hit); P.hit = hit;
+  return P;
+}
+function lookFor(r, kind, swim) {
+  const skin = pickOf(r, SKIN), female = r() < 0.45;
+  if (kind === 'caretaker') return { skin, hair: HAIR[0], top: 0x2c4a6e, sleeve: 0x2c4a6e, bottom: 0xf1ede2, shin: 0xf1ede2, feet: 0x3a2a20, h: 1.68, longHair: false };
+  const h = female ? 1.52 + r() * 0.16 : 1.64 + r() * 0.18;
+  if (swim) { const sw = pickOf(r, SWIM); return { skin, hair: pickOf(r, HAIR), top: female ? sw : skin, sleeve: skin, bottom: sw, shin: skin, feet: skin, h, longHair: female }; }
+  const top = pickOf(r, TOPS), shorts = r() < 0.5;
+  return { skin, hair: pickOf(r, HAIR), top, sleeve: r() < 0.7 ? top : skin, bottom: pickOf(r, BOTTOMS), shin: shorts ? skin : null, feet: r() < 0.6 ? 0x4a3a2c : skin, h, longHair: female && r() < 0.8 };
+}
+
+// Places people can be, from the same plans as the rooms.
+function spotsByAct() {
+  const L0 = lvl(0), L1 = lvl(1), L2 = lvl(2), S = {};
+  const add = (act, o) => (S[act] = S[act] || []).push(Object.assign({ act, floor: null, open: false }, o));
+  const R = ZONE.rec, rcx = R.x + R.w / 2, rcz = R.z + R.d / 2;
+  const C = ZONE.chess, ccx = C.x + C.w / 2, ccz = C.z + C.d / 2;
+  const Dn = ZONE.dining, dcx = Dn.x + Dn.w / 2, dcz = Dn.z + Dn.d / 2;
+  const Lv = ZONE.living, lcx = Lv.x + Lv.w / 2, lcz = Lv.z + Lv.d / 2;
+  const K = ZONE.kitchen, kcx = K.x + K.w / 2, kcz = K.z + K.d / 2;
+  const Dk = ZONE.deck, Lg = ZONE.lounge, T = ZONE.terrace;
+  [-12.75, -11.85, -10.95, -10.4].forEach((x, i) => add('swim', { zone: 'pool', x, y: 0.2, z: -0.6 + i * 0.4, lane: [-0.9 + (i % 2) * 0.3, 3.3 - (i % 2) * 0.2] }));
+  [[-12.95, -2.4, 0.8], [-12.1, -1.55, -2.4], [-12.95, -1.6, 2.2]].forEach(([x, z, f]) => add('soak', { zone: 'jacuzzi', x, y: 0.4, z, face: f }));
+  [0, 1, 2].forEach(i => add('deck', { zone: 'deck', x: Dk.x + Dk.w / 2, y: 0.72, z: Dk.z + 1.5 + i * 2.2, face: Math.PI }));
+  [0, 1, 2].forEach(i => add('lounge', { zone: 'lounge', floor: 0, open: true, x: Lg.x + 1.2, y: L0 + 0.4, z: Lg.z + 3 + i * 3.2, face: -Math.PI / 2 }));
+  add('chat', { zone: 'lounge', floor: 0, open: true, x: Lg.x + 2.1, y: L0, z: Lg.z + 11.6, face: Math.PI });
+  add('chat', { zone: 'lounge', floor: 0, open: true, x: Lg.x + 2.2, y: L0, z: Lg.z + 10.8, face: 0 });
+  add('counter', { zone: 'counter', x: -9.75, y: 0, z: -4.45, face: Math.PI }); add('counter', { zone: 'counter', x: -10.55, y: 0, z: -4.4, face: Math.PI * 0.9 });
+  const loop = [[-12.8, 5.3], [-7.2, 5.2], [-6.6, 8.9], [-12.4, 9.3]];
+  [0, 2, 1].forEach(k => add('walk', { zone: 'garden', x: loop[k][0], y: 0, z: loop[k][1], path: loop, at: k }));
+  [-1, -0.35, 0.35, 1].forEach(dz => { add('dine', { zone: 'dining', floor: 0, x: dcx - 0.85, y: L0 + 0.5, z: dcz + dz, face: Math.PI / 2 }); add('dine', { zone: 'dining', floor: 0, x: dcx + 0.85, y: L0 + 0.5, z: dcz + dz, face: -Math.PI / 2 }); });
+  [-1, 0, 1].forEach(dz => add('living', { zone: 'living', floor: 0, x: lcx - 0.6, y: L0 + 0.55, z: lcz + dz, face: Math.PI / 2 }));
+  add('kitchen', { zone: 'kitchen', floor: 0, x: kcx - 0.4, y: L0, z: kcz + 1.3, face: Math.PI });
+  add('tt', { zone: 'rec', floor: 1, x: rcx - 1.2 - 1.8, y: L1, z: rcz + 1, face: Math.PI / 2 }); add('tt', { zone: 'rec', floor: 1, x: rcx - 1.2 + 1.8, y: L1, z: rcz + 1, face: -Math.PI / 2 });
+  add('foos', { zone: 'rec', floor: 1, x: rcx + 1.8, y: L1, z: rcz - 2 - 0.62, face: 0 }); add('foos', { zone: 'rec', floor: 1, x: rcx + 1.8, y: L1, z: rcz - 2 + 0.62, face: Math.PI });
+  [-1, 0, 1].forEach(dx => add('recsofa', { zone: 'rec', floor: 1, x: rcx + dx, y: L1 + 0.5, z: R.z + R.d - 0.8, face: Math.PI }));
+  add('darts', { zone: 'rec', floor: 1, x: R.x + R.w - 2.5, y: L1, z: rcz + 2.5, face: Math.PI / 2 });
+  add('chess', { zone: 'chess', floor: 1, open: true, x: ccx - 1.5 - 0.7, y: L1, z: ccz + 1, face: Math.PI / 2 }); add('chess', { zone: 'chess', floor: 1, open: true, x: ccx - 1.5 + 0.7, y: L1, z: ccz + 1, face: -Math.PI / 2 });
+  [-0.7, 0.7].forEach(dx => add('chesssofa', { zone: 'chess', floor: 1, open: true, x: ccx + 1.2 + dx, y: L1 + 0.5, z: ccz + 2.2, face: Math.PI }));
+  [-2.2, 0.8, 3.6].forEach(z => add('balcony', { zone: 'balcony', floor: 1, open: true, x: -7.95, y: L1, z, face: -Math.PI / 2 }));
+  [0, 1, 2].forEach(i => add('terrace', { zone: 'terrace', floor: 2, open: true, x: T.x + 1 + i * 1.2, y: L2 + 0.38, z: T.z + T.d - 3, face: Math.PI }));
+  add('terrace', { zone: 'terrace', floor: 2, open: true, x: T.x + 0.4, y: L2, z: T.z + 3, face: -Math.PI / 2, pose: 'lean' });
+  // two to a bed, heads to the headboard on the west wall
+  LAYOUT.filter(z => z.bath).forEach(z => { const cx = z.x + z.w / 2, by = z.z + z.d / 2 + z.bath[3] / 2; [-0.45, 0.45].forEach(dz => add('sleep', { zone: z.id, floor: z.floor, x: cx + 0.3, y: lvl(z.floor) + 0.52, z: by + dz, face: Math.PI / 2 })); });
+  return S;
+}
+const POSE_OF = { swim: 'swim', soak: 'soak', deck: 'lie', terrace: 'lie', sleep: 'lie', lounge: 'sit', dine: 'sit', living: 'sit', recsofa: 'sit', chesssofa: 'sit', chat: 'chat', counter: 'stand', walk: 'walk', kitchen: 'stand', tt: 'tt', foos: 'foos', darts: 'darts', chess: 'think', balcony: 'lean' };
+const ACT_TEXT = { swim: 'Swimming', soak: 'In the jacuzzi', deck: 'On a pool lounger', terrace: 'On the roof terrace', sleep: 'Asleep', lounge: 'In the poolside lounge', dine: 'At the dining table', living: 'In the living room', recsofa: 'In the recreation room', chesssofa: 'On the chess terrace', chat: 'Chatting by the pool', counter: 'At the food counter', walk: 'Walking in the garden', kitchen: 'In the kitchen', tt: 'Playing table tennis', foos: 'Playing foosball', darts: 'Playing darts', chess: 'Playing chess', balcony: 'On the balcony' };
+// What a group tends to be doing at each hour (most likely first)
+function plan(hour) {
+  const r = (a, n) => Array(n).fill(a);
+  if (hour >= 23 || hour < 6) return [...r('sleep', 8), ...r('recsofa', 3), ...r('living', 3), ...r('chesssofa', 2)];
+  if (hour < 9) return ['walk', 'walk', 'swim', 'kitchen', ...r('dine', 4), 'balcony', 'deck', 'chat', 'chat', ...r('sleep', 8), ...r('living', 3)];
+  if (hour >= 13 && hour < 14 || hour >= 19 && hour < 21) return [...r('dine', 8), 'counter', 'counter', 'chat', 'chat', ...r('lounge', 3), ...r('living', 3), ...r('deck', 3), ...r('chesssofa', 2), 'balcony', 'balcony'];
+  if (hour >= 21) return ['soak', 'soak', ...r('lounge', 3), 'chess', 'chess', ...r('deck', 3), ...r('living', 3), ...r('recsofa', 3), 'balcony', 'balcony', ...r('chesssofa', 2), ...r('sleep', 8)];
+  if (hour >= 17) return ['swim', 'swim', 'soak', 'soak', 'soak', ...r('deck', 3), ...r('lounge', 2), 'chess', 'chess', 'walk', 'walk', 'balcony', 'counter', 'counter', 'tt', 'tt', 'chat', 'chat', ...r('terrace', 3), ...r('living', 3), ...r('recsofa', 3), 'kitchen'];
+  return ['swim', 'swim', 'swim', 'soak', 'soak', ...r('deck', 3), 'tt', 'tt', 'foos', 'foos', ...r('lounge', 2), 'chat', 'chat', 'chess', 'chess', ...r('recsofa', 3), 'darts', 'walk', ...r('living', 3), 'balcony', 'balcony', 'counter', ...r('terrace', 3), ...r('chesssofa', 2), ...r('dine', 8), 'kitchen'];
+}
+const istHour = () => new Date(Date.now() + 5.5 * 3600e3).getUTCHours();
+function guestsHere() {
+  const d = DERIVED; if (!d) return null;
+  // check-out morning: the group is still here until the check-out checklist is done
+  const s = d.inHouse || (d.leavingToday && istHour() < 11 && !(d.coRun && d.coRun.status === 'completed') ? d.leavingToday : null);
+  if (!s) return null;
+  const n = Math.max(0, Math.min(24, parseInt(s.checkinGuestsCount, 10) || parseInt(s.guests, 10) || 0));
+  return { s, n, counted: !!parseInt(s.checkinGuestsCount, 10) };
+}
+// the caretaker: where the open checklist is, else on rounds or by the gate
+function caretakerPlan() {
+  const team = D.team && D.team.members ? D.team.members.filter(m => m.role === 'caretaker') : [];
+  const today = runs().filter(r => r.date === todayISO());
+  const open = today.filter(r => r.status !== 'completed').sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0))[0] || null;
+  const mine = ROLE === 'caretaker';
+  if (!team.length && !today.length && !mine) return null;
+  const email = open ? open.startedBy : team[0] ? team[0].email : '';
+  const tm = team.find(m => m.email === email) || team[0];
+  const name = mine ? 'You' : (tm && tm.name) || (email ? who(email) : '');
+  if (open) {
+    const items = open.items || [], next = items.find(i => !i.checked), done = items.filter(i => i.checked).length;
+    const zid = next ? zonesOfItem(next.text)[0] : null;
+    const z = zid && zid !== 'systems' ? placeOf(zid) : null;
+    const what = `${{ checkin: 'Check-in checklist', checkout: 'Check-out checklist', daily: 'Daily rounds' }[open.type] || 'Checklist'} · ${done}/${items.length}${next ? ' · next: ' + next.text : ''}`;
+    if (z) return { name, what, zone: zid, floor: z.floor != null ? z.floor : null, x: z.x + z.w / 2 + (z.bath ? -1.3 : 0.6), y: z.floor != null ? lvl(z.floor) : 0, z: z.z + z.d / 2 + 0.6, pose: 'check', open: !!z.open };
+    return { name, what, zone: 'foyer', floor: 0, x: 3.6, y: lvl(0), z: -0.2, pose: 'check' };
+  }
+  const h = istHour();
+  if (h >= 6 && h < 9 && !today.some(r => r.type === 'daily' && r.status === 'completed')) return { name, what: 'Morning rounds (daily rounds not done yet)', zone: 'garden', x: -12.4, y: 0, z: 9.3, pose: 'walk', path: [[-12.4, 9.3], [-6.8, 9.0], [-6.9, 5.4], [-12.6, 5.6]] };
+  return { name, what: 'By the gate', zone: 'parking', x: 5.6, y: 0, z: 8.7, face: Math.PI, pose: 'stand' };
+}
+function clearPeople() {
+  PEOPLE.forEach(p => { p.P.root.parent && p.P.root.parent.remove(p.P.root); const i = pickables.indexOf(p.P.hit); if (i >= 0) pickables.splice(i, 1); });
+  PEOPLE.length = 0;
+}
+function buildPeople() {
+  if (!renderer) return;
+  clearPeople();
+  const hour = EVENING && istHour() >= 6 && istHour() < 18 ? 20 : istHour(); // Evening switched on in the day: as at 8 pm
+  const g = guestsHere(), S = spotsByAct(), used = {};
+  if (g && g.n) {
+    const r = rng(g.s.no || g.s.guest || 'stay'), want = plan(hour);
+    let k = 0; // through the plan in order: two swimmers means two, then the next thing
+    for (let i = 0; i < g.n; i++) {
+      while (k < want.length && (used[want[k]] || 0) >= (S[want[k]] || []).length) k++;
+      let act = want[k++];
+      if (!act) act = ['living', 'recsofa', 'chesssofa', 'lounge', 'dine'].find(a => (used[a] || 0) < S[a].length) || 'walk';
+      const spot = S[act][(used[act] = (used[act] || 0) + 1) - 1] || S.walk[0];
+      const P = makePerson(lookFor(r, 'guest', act === 'swim' || act === 'soak' || (act === 'deck' && r() < 0.6)));
+      addPerson({ P, kind: 'guest', spot, act, label: ACT_TEXT[act], stay: g.s, n: g.n, counted: g.counted, ph: r() * 6 });
+    }
+  }
+  const c = caretakerPlan();
+  if (c) addPerson({ P: makePerson(lookFor(rng('caretaker'), 'caretaker')), kind: 'caretaker', spot: Object.assign({ act: c.pose }, c), act: c.pose, label: c.what, name: c.name, ph: 1 });
+  syncPeopleVisibility(); posePeople(0, 0);
+}
+function addPerson(p) {
+  const s = p.spot, parent = groups.out; // shown or hidden per view by syncPeopleVisibility
+  p.pose = s.pose || POSE_OF[p.act] || p.act;
+  p.P.root.position.set(s.x, s.y, s.z); p.P.root.rotation.y = s.face || 0;
+  p.base = { x: s.x, y: s.y, z: s.z, face: s.face || 0 };
+  if (s.path) { p.path = s.path; p.at = s.at || 0; p.wait = 0; p.speed = 0.75 + (p.ph % 1) * 0.35; }
+  if (s.lane) { p.lane = s.lane; p.dir = 1; }
+  p.P.hit.userData.zone = s.zone; p.P.hit.userData.person = p;
+  pickables.push(p.P.hit); parent.add(p.P.root); PEOPLE.push(p);
+}
+// Outside you see who's outdoors or on the open terraces; inside, the floors shown.
+function syncPeopleVisibility() {
+  const ext = isExt();
+  PEOPLE.forEach(p => { const f = p.spot.floor; p.P.root.visible = f == null || (ext ? !!p.spot.open : VIEW === 'plan' ? f === FLOOR : f <= FLOOR); });
+}
+const sin = Math.sin;
+function posePeople(T, dt) {
+  PEOPLE.forEach(p => {
+    const P = p.P, t = T + p.ph;
+    // reset
+    P.hips.rotation.set(0, 0, 0); P.hips.position.set(0, 0.92, 0); P.torso.rotation.set(0, 0, 0); P.head.rotation.set(0, 0, 0);
+    [P.aL, P.aR].forEach((a, i) => { a.sh.rotation.set(0.05, 0, (i ? -1 : 1) * 0.07); a.el.rotation.set(-0.12, 0, 0); });
+    [P.lL, P.lR].forEach(l => { l.hp.rotation.set(0, 0, 0); l.kn.rotation.set(0, 0, 0); });
+    const breathe = sin(t * 1.6) * 0.012;
+    switch (p.pose) {
+      case 'walk': {
+        if (p.path && dt) {
+          if (p.wait > 0) p.wait -= dt;
+          else {
+            const [tx, tz] = p.path[(p.at + 1) % p.path.length], R0 = P.root.position, dx = tx - R0.x, dz = tz - R0.z, dist = Math.hypot(dx, dz);
+            if (dist < 0.1) { p.at = (p.at + 1) % p.path.length; if ((p.ph * 7 + p.at) % 3 < 1) p.wait = 1.5 + (p.ph % 2); }
+            else {
+              const st = Math.min(dist, p.speed * dt); R0.x += dx / dist * st; R0.z += dz / dist * st;
+              const want = Math.atan2(dx, dz); let d = want - P.root.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); P.root.rotation.y += d * Math.min(1, dt * 5);
+            }
+          }
+        }
+        const moving = !(p.wait > 0) && dt, ph = t * (p.speed || 1) * 5.6, a = moving ? 1 : 0;
+        P.lL.hp.rotation.x = -sin(ph) * 0.42 * a; P.lR.hp.rotation.x = sin(ph) * 0.42 * a;
+        P.lL.kn.rotation.x = Math.max(0, sin(ph - 1.4)) * 0.75 * a + 0.04; P.lR.kn.rotation.x = Math.max(0, -sin(ph - 1.4)) * 0.75 * a + 0.04;
+        P.aL.sh.rotation.x = sin(ph) * 0.38 * a; P.aR.sh.rotation.x = -sin(ph) * 0.38 * a;
+        P.aL.el.rotation.x = P.aR.el.rotation.x = -0.25;
+        P.hips.position.y = 0.92 + Math.abs(Math.cos(ph)) * 0.025 * a; P.torso.rotation.x = 0.04;
+        if (!moving) P.head.rotation.y = sin(t * 0.5) * 0.4;
+        break;
+      }
+      case 'sit':
+        P.hips.position.y = 0; // the spot is the seat
+        P.lL.hp.rotation.x = P.lR.hp.rotation.x = -Math.PI / 2 + 0.08; P.lL.kn.rotation.x = P.lR.kn.rotation.x = Math.PI / 2 - 0.05;
+        P.lL.hp.rotation.z = 0.06; P.lR.hp.rotation.z = -0.06;
+        P.aL.sh.rotation.x = P.aR.sh.rotation.x = -0.35; P.aL.el.rotation.x = P.aR.el.rotation.x = -0.9;
+        P.torso.rotation.x = -0.08 + breathe; P.head.rotation.y = sin(t * 0.35) * 0.5; P.head.rotation.x = sin(t * 0.21) * 0.08;
+        if (p.act === 'dine') { P.aR.sh.rotation.x = -0.7 + sin(t * 1.3) * 0.25; P.aR.el.rotation.x = -1.1 + sin(t * 1.3) * 0.35; P.torso.rotation.x = 0.12; }
+        break;
+      case 'lie':
+        P.hips.rotation.x = -Math.PI / 2; P.hips.position.y = 0.08;
+        P.aL.sh.rotation.z = 0.18; P.aR.sh.rotation.z = -0.18; P.aL.el.rotation.x = P.aR.el.rotation.x = 0;
+        if (p.act === 'sleep') { P.aR.sh.rotation.x = -0.6; P.aR.el.rotation.x = -0.9; P.head.rotation.y = 0.5; } else { P.aL.sh.rotation.x = 0.2; P.aR.sh.rotation.x = -2.6; P.aR.el.rotation.x = -1.2; P.lR.hp.rotation.x = -0.35; P.lR.kn.rotation.x = 0.7; }
+        P.torso.rotation.x = breathe;
+        break;
+      case 'swim': {
+        if (p.lane && dt) {
+          const R0 = P.root.position; R0.z += p.dir * 0.55 * dt;
+          if (R0.z > p.lane[1]) { p.dir = -1; } else if (R0.z < p.lane[0]) { p.dir = 1; }
+          const want = p.dir > 0 ? 0 : Math.PI; let d = want - P.root.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); P.root.rotation.y += d * Math.min(1, dt * 3);
+        }
+        P.hips.rotation.x = Math.PI / 2 - 0.12; P.hips.position.y = 0.06 + sin(t * 2.2) * 0.02;
+        const st = t * 2.4;
+        P.aL.sh.rotation.x = -((st % (Math.PI * 2))); P.aR.sh.rotation.x = -(((st + Math.PI) % (Math.PI * 2)));
+        P.aL.el.rotation.x = P.aR.el.rotation.x = -0.2;
+        P.lL.hp.rotation.x = sin(t * 9) * 0.22; P.lR.hp.rotation.x = -sin(t * 9) * 0.22; P.torso.rotation.y = sin(st) * 0.18;
+        break;
+      }
+      case 'soak':
+        P.hips.position.y = 0;
+        P.lL.hp.rotation.x = P.lR.hp.rotation.x = -1.2; P.lL.kn.rotation.x = P.lR.kn.rotation.x = 1.0;
+        P.aL.sh.rotation.z = 1.25; P.aR.sh.rotation.z = -1.25; P.aL.el.rotation.x = P.aR.el.rotation.x = 0; P.aL.el.rotation.z = -0.3; P.aR.el.rotation.z = 0.3;
+        P.torso.rotation.x = -0.18 + breathe; P.head.rotation.y = sin(t * 0.3) * 0.6;
+        break;
+      case 'lean':
+        P.torso.rotation.x = 0.22; P.aL.sh.rotation.x = P.aR.sh.rotation.x = -1.15; P.aL.el.rotation.x = P.aR.el.rotation.x = -0.5;
+        P.head.rotation.y = sin(t * 0.25) * 0.5; P.lR.hp.rotation.x = -0.1; P.lR.kn.rotation.x = 0.2;
+        break;
+      case 'tt': {
+        const sx = sin(t * 2.1) * 0.35; P.root.position.x = p.base.x + Math.cos(p.base.face) * sx; P.root.position.z = p.base.z - Math.sin(p.base.face) * sx;
+        P.hips.position.y = 0.86; P.lL.hp.rotation.x = P.lR.hp.rotation.x = -0.25; P.lL.kn.rotation.x = P.lR.kn.rotation.x = 0.45; P.lL.hp.rotation.z = 0.15; P.lR.hp.rotation.z = -0.15;
+        P.torso.rotation.x = 0.25; P.aR.sh.rotation.x = -0.9 + sin(t * 6.3) * 0.5; P.aR.sh.rotation.z = -0.4 + sin(t * 6.3) * 0.3; P.aR.el.rotation.x = -0.6; P.aL.sh.rotation.x = -0.4;
+        break;
+      }
+      case 'foos':
+        P.torso.rotation.x = 0.3; P.aL.sh.rotation.x = P.aR.sh.rotation.x = -1.0; P.aL.el.rotation.x = -0.4 + sin(t * 9) * 0.25; P.aR.el.rotation.x = -0.4 - sin(t * 11) * 0.25;
+        P.lL.kn.rotation.x = P.lR.kn.rotation.x = 0.15; P.hips.position.y = 0.9;
+        break;
+      case 'darts': {
+        const k = (t % 4) / 4; P.aR.sh.rotation.x = -1.6 + (k > 0.8 ? (k - 0.8) * 5 : 0) * 0.8; P.aR.el.rotation.x = k > 0.8 ? -0.2 : -1.6; P.torso.rotation.y = -0.15;
+        break;
+      }
+      case 'think':
+        P.torso.rotation.x = 0.28; P.aL.sh.rotation.x = -0.5; P.aL.el.rotation.x = -1.9; P.aR.sh.rotation.x = -0.3 + (sin(t * 0.6) > 0.95 ? -0.6 : 0); P.head.rotation.x = 0.35;
+        break;
+      case 'chat':
+        P.aR.sh.rotation.x = -0.5 + sin(t * 2.3) * 0.25; P.aR.el.rotation.x = -1.0 + sin(t * 3.1) * 0.3; P.aR.sh.rotation.z = -0.25;
+        P.head.rotation.y = sin(t * 0.7) * 0.25; P.head.rotation.x = sin(t * 1.9) * 0.05; P.torso.rotation.z = sin(t * 0.8) * 0.03;
+        break;
+      case 'check': // on the phone checklist
+        P.aL.sh.rotation.x = -0.75; P.aL.el.rotation.x = -1.3; P.aR.sh.rotation.x = -0.6; P.aR.el.rotation.x = -1.2 + sin(t * 2.5) * 0.12;
+        P.head.rotation.x = 0.4 + sin(t * 0.5) * 0.05; P.head.rotation.y = sin(t * 0.3) * 0.3; P.torso.rotation.x = 0.06;
+        break;
+      default: // stand
+        P.torso.rotation.z = sin(t * 0.6) * 0.02; P.head.rotation.y = sin(t * 0.4) * 0.45; P.lR.kn.rotation.x = 0.12; P.lR.hp.rotation.x = -0.06;
+    }
+  });
+}
+
 // ── Views ────────────────────────────────────────────────────────────────────
 const VIEWS = {
   // from the south-west: the road façade and the pool side, the sea beyond to the east
@@ -529,7 +815,7 @@ function setView(v, instant) {
   controls.enableRotate = v !== 'plan';
   const tgt = selected && v === 'cutaway' ? focusOf(selected) : null;
   flyTo(tgt ? tgt.pos : VIEWS[v].pos, tgt ? tgt.target : VIEWS[v].target, instant || v === 'plan'); // the plan is always north-up
-  updateTiles(); needRender = true; kick();
+  syncPeopleVisibility(); updateTiles(); needRender = true; kick();
 }
 function setFloor(f) {
   FLOOR = f;
@@ -564,12 +850,14 @@ const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 let downAt = null;
 function onDown(e) { downAt = { x: e.clientX, y: e.clientY }; }
 // what's under the pointer: a place, the house (outside), or nothing
+let pickedPerson = null;
 function pickAt(cx, cy) {
   const r = renderer.domElement.getBoundingClientRect();
   ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   const vis = pickables.filter(m => { let o = m; while (o) { if (!o.visible) return false; o = o.parent; } return true; });
   const hit = ray.intersectObjects(vis, false)[0];
+  pickedPerson = hit && hit.object.userData.person || null;
   if (hit && hit.object.userData.zone) return hit.object.userData.zone;
   if (isExt() && ray.intersectObject(groups.exterior, true)[0]) return 'house';
   return null;
@@ -583,7 +871,11 @@ function onUp(e) {
 }
 // Hover (mouse only): the place lights up, its pin opens, and a card says what's there.
 const tip = document.createElement('div'); tip.className = 'v3-tip'; tip.hidden = true; tip.setAttribute('role', 'status'); stage.appendChild(tip);
-let hoverReq = 0, hoverAt = null;
+let hoverReq = 0, hoverAt = null, hoverPerson = null;
+function personTip(p) {
+  if (p.kind === 'caretaker') return `<b>${esc(t('Caretaker'))}${p.name ? ' · ' + esc(p.name) : ''}</b><span>${esc(p.label)}</span><em>${esc(t('From today\'s checklists'))}</em>`;
+  return `<b>${esc(t('Guest'))} · ${esc(p.stay.guest || '')}</b><span>${esc(t(p.label))}</span><span>${p.n} ${esc(t(p.counted ? 'guests checked in' : 'guests booked'))}</span><em>${esc(t('The count is real; where each one is, is illustrative'))}</em>`;
+}
 function onMove(e) {
   if (e.pointerType !== 'mouse' || (downAt && e.buttons)) { if (!tip.hidden) setHover(null); return; }
   hoverAt = { x: e.clientX, y: e.clientY };
@@ -592,7 +884,8 @@ function onMove(e) {
 function setHover(id, at) {
   const zid = id === 'house' ? 'overview' : id;
   renderer.domElement.style.cursor = id ? 'pointer' : '';
-  if (zid !== HOVER) { HOVER = zid; updateTiles(); tip.innerHTML = zid ? tipHtml(zid, id === 'house') : ''; }
+  const per = id ? pickedPerson : null;
+  if (zid !== HOVER || per !== hoverPerson) { HOVER = zid; hoverPerson = per; updateTiles(); tip.innerHTML = per ? personTip(per) : zid ? tipHtml(zid, id === 'house') : ''; }
   tip.hidden = !zid;
   if (zid && at) {
     const r = stage.getBoundingClientRect(), x = at.x - r.left, y = at.y - r.top, tw = tip.offsetWidth, th = tip.offsetHeight;
@@ -637,6 +930,7 @@ function frame(now) {
       }
     });
     // the chosen place glows softly; a place with an issue breathes red
+    posePeople(T, dt);
     PULSE.forEach(p => { const v = 0.5 + 0.5 * Math.sin(T * (p.kind === 'sel' ? 3 : 2.2)); p.mats.forEach(m => { m.emissiveIntensity = p.kind === 'sel' ? 0.22 + 0.2 * v : 0.08 + 0.22 * v; }); });
   }
   if (drive) {
@@ -878,6 +1172,8 @@ function renderPanel() {
       if (d.leavingToday && d.leavingToday !== d.inHouse) parts.push('<h3>Leaving today</h3>' + stayCard(d.leavingToday, 'Check-out today'));
       if (d.next) parts.push('<h3>Next check-in</h3>' + stayCard(d.next, 'Arriving'));
       if (!d.inHouse && !d.next) parts.push('<p class="v3-muted">No current or upcoming stays.</p>');
+      const gh = guestsHere(), ct = renderer ? PEOPLE.find(p => p.kind === 'caretaker') : null;
+      if (renderer && (gh || ct)) parts.push(`<p class="v3-muted small">On the model: ${gh ? `${gh.n} guest${gh.n === 1 ? '' : 's'} (${gh.counted ? 'checked-in count' : 'from the booking'}; where each one is follows the time of day)` : 'no guests'}${ct ? ` · caretaker${ct.name ? ' ' + esc(ct.name) : ''}: ${esc(ct.label)}` : ''}.</p>`);
       parts.push(nightsStrip());
     }
     if (can('checklist') && d.prepFor) {
@@ -948,7 +1244,7 @@ function renderDrawer() {
   $('#mtList').innerHTML = !can('checklist') ? '<p class="v3-muted">Your access doesn\'t include Checklists.</p>'
     : ERR.issues ? `<p class="v3-err">${esc(ERR.issues)}</p>` : openIssues().length ? openIssues().slice(0, 12).map(issueRow).join('') : '<p class="v3-muted">No open issues.</p>';
 }
-function renderAll() { renderKpis(); renderLegend(); renderDrawer(); renderPanel(); if (renderer) { updateTiles(); buildLabels(); syncCar(); } else renderPlanSvg(); }
+function renderAll() { if (renderer) buildPeople(); renderKpis(); renderLegend(); renderDrawer(); renderPanel(); if (renderer) { updateTiles(); buildLabels(); syncCar(); } else renderPlanSvg(); }
 
 // ── Without WebGL: the same places as a clickable plan ──────────────────────
 function renderPlanSvg() {
@@ -970,7 +1266,7 @@ $('#fallback').addEventListener('keydown', e => { const g = e.target.closest('[d
 document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { if (renderer) { setView(b.dataset.view); buildLabels(); } }));
 document.querySelectorAll('[data-floor]').forEach(b => b.addEventListener('click', () => { if (renderer) { setFloor(+b.dataset.floor); buildLabels(); } }));
 $('#btnReset').addEventListener('click', () => { selected = null; if (renderer) setView('overview'); renderAll(); });
-$('#btnEvening').addEventListener('click', e => { EVENING = !EVENING; e.currentTarget.setAttribute('aria-pressed', String(EVENING)); if (renderer) applyLighting(); kick(); });
+$('#btnEvening').addEventListener('click', e => { EVENING = !EVENING; e.currentTarget.setAttribute('aria-pressed', String(EVENING)); if (renderer) { applyLighting(); buildPeople(); } kick(); });
 $('#btnMotion').addEventListener('click', e => { const still = document.documentElement.classList.toggle('v3-still'); e.currentTarget.setAttribute('aria-pressed', String(still)); try { localStorage.setItem('ryst_v3_still', still ? '1' : ''); } catch (x) {} needRender = true; kick(); });
 if (ls('ryst_v3_still')) { document.documentElement.classList.add('v3-still'); $('#btnMotion').setAttribute('aria-pressed', 'true'); }
 document.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', async () => {
@@ -999,6 +1295,8 @@ addEventListener('pagehide', () => {
 });
 addEventListener('pageshow', e => { if (e.persisted && !renderer) location.reload(); });
 
+// after sunset the model is lit for the evening (the button still switches it)
+{ const m = new Date(Date.now() + 5.5 * 3600e3), hm = m.getUTCHours() * 60 + m.getUTCMinutes(); if (hm >= 18 * 60 + 30 || hm < 6 * 60) { EVENING = true; $('#btnEvening').setAttribute('aria-pressed', 'true'); } }
 // ── Start ────────────────────────────────────────────────────────────────────
 renderLegend();
 if (webglOK() && !/[?&]lite=1/.test(location.search)) {
@@ -1009,3 +1307,5 @@ loadAll();
 // the same refresh as the dashboard: when the app comes back to the front
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - (window.__v3loaded || 0) > 60e3) { window.__v3loaded = Date.now(); loadAll(); } });
 window.__v3loaded = Date.now();
+let lastHour = istHour();
+setInterval(() => { if (istHour() !== lastHour) { lastHour = istHour(); buildPeople(); renderPanel(); } }, 10 * 60e3);
