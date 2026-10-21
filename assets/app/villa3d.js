@@ -1413,6 +1413,29 @@ document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click'
 document.querySelectorAll('[data-floor]').forEach(b => b.addEventListener('click', () => { if (renderer) { setFloor(+b.dataset.floor); buildLabels(); } }));
 $('#btnReset').addEventListener('click', () => { selected = null; if (renderer) setView('overview'); renderAll(); });
 $('#btnEvening').addEventListener('click', e => { EVENING = !EVENING; e.currentTarget.setAttribute('aria-pressed', String(EVENING)); if (renderer) { applyLighting(); buildPeople(); } kick(); });
+// Full screen: the real thing where the browser allows it (the model and its panel together);
+// otherwise (iPhone Safari) the same layout filling the window. Esc leaves either way.
+const v3main = $('#v3main');
+const nativeFs = () => document.fullscreenElement || document.webkitFullscreenElement;
+function setFull(on) {
+  v3main.classList.toggle('v3-full', on); $('#btnFull').setAttribute('aria-pressed', String(on));
+  $('#btnFull').title = on ? 'Leave full screen (Esc)' : 'Full screen (Esc to leave)'; $('#btnFull').setAttribute('aria-label', on ? 'Leave full screen' : 'Full screen');
+  document.documentElement.style.overflow = on ? 'hidden' : '';
+  if (renderer) { resize(); placeLabels(); }
+}
+$('#btnFull').addEventListener('click', () => {
+  const on = !v3main.classList.contains('v3-full');
+  if (on) {
+    const req = v3main.requestFullscreen || v3main.webkitRequestFullscreen;
+    if (req) { try { const r = req.call(v3main, { navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
+    setFull(true);
+  } else {
+    if (nativeFs()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    setFull(false);
+  }
+});
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (!nativeFs() && v3main.classList.contains('v3-full')) setFull(false); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && v3main.classList.contains('v3-full') && !nativeFs()) setFull(false); });
 $('#btnMotion').addEventListener('click', e => { const still = document.documentElement.classList.toggle('v3-still'); e.currentTarget.setAttribute('aria-pressed', String(still)); try { localStorage.setItem('ryst_v3_still', still ? '1' : ''); } catch (x) {} needRender = true; kick(); });
 if (ls('ryst_v3_still')) { document.documentElement.classList.add('v3-still'); $('#btnMotion').setAttribute('aria-pressed', 'true'); }
 document.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', async () => {

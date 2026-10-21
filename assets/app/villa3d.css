@@ -167,3 +167,17 @@ html[data-theme="dark"] .v3-pay{background:#2c3531}
 html[data-theme="dark"] body{background:#111715;color:#e9e6df}
 html[data-theme="dark"] .v3-kpi,html[data-theme="dark"] .v3-panel,html[data-theme="dark"] .v3-drawer section,html[data-theme="dark"] .v3-seg,html[data-theme="dark"] .tbtn,html[data-theme="dark"] .v3-row{background:#1a211e;border-color:#2c3531;color:#e9e6df}
 html[data-theme="dark"] .v3-row__m small,html[data-theme="dark"] .v3-muted,html[data-theme="dark"] .v3-kpi small{color:#a9b0aa}
+
+/* full screen: the model fills the screen, the details panel floats beside it (a sheet on phones) */
+#btnFull{display:inline-flex;align-items:center;justify-content:center;min-width:38px}
+#btnFull .v3-fs-out{display:none}
+.v3-main.v3-full #btnFull .v3-fs-in{display:none}
+.v3-main.v3-full #btnFull .v3-fs-out{display:inline}
+.v3-main.v3-full{position:fixed;inset:0;z-index:2147480000;display:block;background:#e9e2d4;padding:0;margin:0}
+.v3-main.v3-full .v3-stage{height:100%;min-height:0;border-radius:0;border:0;box-shadow:none}
+.v3-main.v3-full .v3-panel{position:absolute;top:64px;right:12px;bottom:12px;width:360px;max-height:none;z-index:5;box-shadow:0 14px 40px rgba(20,25,30,.22)}
+.v3-main.v3-full .v3-panel:empty{display:none}
+@media (max-width:760px){
+  .v3-main.v3-full .v3-panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:38vh;border-radius:16px}
+}
+html[data-theme="dark"] .v3-main.v3-full{background:#121916}
