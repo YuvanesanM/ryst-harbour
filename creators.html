@@ -203,7 +203,7 @@
         <label class="field"><span>Follower code discount (%)</span><input id="apCodePct" type="number" min="0" max="50" value="10" inputmode="numeric"></label>
         <label class="field"><span>Follower code</span><input id="apCode" maxlength="20" autocapitalize="characters" autocomplete="off"></label>
       </div>
-      <p class="hint">Their followers get this discount when they book on stay.ryst.in. Set 0 for no code.</p>
+      <p class="hint">Their followers get this discount on weekday stays (Mon–Thu nights, not holidays or 20 Dec – 5 Jan) booked on stay.ryst.in, for 3 months from approval. Set 0 for no code.</p>
       <label class="field"><span>Terms to share (optional)</span><textarea id="apTerms" maxlength="500" placeholder="e.g. 1 reel + 3 stories within 2 weeks, collab invite to @stay.ryst. Food charged as per menu."></textarea></label>
       <p class="hint">Their dates are not booked by approving. Once they confirm, make the quote in Quotes &amp; Invoices.</p>
       <div class="merr" id="apErr"></div>
@@ -229,6 +229,7 @@ const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<'
 const t = s => (window.rystT ? window.rystT(s) : s);
 const inr = n => '₹' + Math.round(n||0).toLocaleString('en-IN');
 const fmtDay = iso => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', timeZone:'UTC' });
+const fmtD = iso => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', timeZone:'UTC' });
 const nightsOf = r => Math.round((Date.parse(r.checkout) - Date.parse(r.checkin)) / 864e5);
 const followers = n => n >= 1e6 ? (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M' : n >= 1e3 ? (n/1e3).toFixed(n >= 1e4 ? 0 : 1).replace(/\.0$/,'') + 'K' : String(n||0);
 const ago = ms => { const d = Math.floor((Date.now() - ms) / 864e5); return d <= 0 ? t('today') : d === 1 ? t('yesterday') : d + ' ' + t('days ago'); };
@@ -270,7 +271,7 @@ function approvalText(r){
     + `Dates: ${fmtDay(r.checkin)} to ${fmtDay(r.checkout)} (${nightsOf(r)} night${nightsOf(r) > 1 ? 's' : ''}), ${r.guests} guest${r.guests > 1 ? 's' : ''}\n`
     + `Your stay: ${stay}\n`
     + (r.terms ? `What we've agreed: ${r.terms}\n` : '')
-    + (r.code && !r.codeOff ? `Your follower code: ${r.code} gives your audience ${r.codePercent}% off when they book at ${SITE.replace('https://','')}\n` : '')
+    + (r.code && !r.codeOff ? `Your follower code: ${r.code} gives your audience ${r.codePercent}% off weekday stays (Mon–Thu nights) when they book at ${SITE.replace('https://','')}${r.codeExpires ? ' — valid till ' + fmtD(r.codeExpires) : ' — valid for 3 months'}\n` : '')
     + `\nPlease tag @stay.ryst and invite us as a collaborator on your reel. Reply here to confirm, and we'll book your dates and share the check-in details.`;
 }
 function card(r){
@@ -311,7 +312,7 @@ function card(r){
     </div>
     ${r.message ? `<div class="msg" data-no-i18n>${esc(r.message)}</div>` : ''}
     ${r.note ? `<div class="msg" style="background:#fbf3e6" data-no-i18n>📝 ${esc(r.note)}</div>` : ''}
-    ${r.code ? `<div class="code-box"><span class="code${r.codeOff ? ' off' : ''}" data-no-i18n>${esc(r.code)}</span><span class="cs">${r.codePercent}% · ${cs.bookings||0} booking${cs.bookings === 1 ? '' : 's'} · ${inr(cs.revenue)}</span><span style="flex:1"></span><button class="abtn" data-a="${r.codeOff ? 'code-on' : 'code-off'}">${r.codeOff ? 'Turn on' : 'Turn off'}</button></div>` : ''}
+    ${r.code ? `<div class="code-box"><span class="code${r.codeOff ? ' off' : ''}" data-no-i18n>${esc(r.code)}</span><span class="cs">${r.codePercent}% · ${t('weekdays only')}${r.codeExpires ? ' · ' + (r.codeExpires < new Date(Date.now()+5.5*3600e3).toISOString().slice(0,10) ? t('expired') + ' ' + fmtD(r.codeExpires) : t('till') + ' ' + fmtD(r.codeExpires)) : ''} · ${cs.bookings||0} booking${cs.bookings === 1 ? '' : 's'} · ${inr(cs.revenue)}</span><span style="flex:1"></span><button class="abtn" data-a="${r.codeOff ? 'code-on' : 'code-off'}">${r.codeOff ? 'Turn on' : 'Turn off'}</button></div>` : ''}
     <div class="p-foot">${acts.join('')}</div>
   </article>`;
 }

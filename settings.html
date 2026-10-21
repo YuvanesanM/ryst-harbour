@@ -2019,7 +2019,7 @@ function renderStayCoupons(){
   stayCouponDraft.forEach((c,i)=>{
     const row=document.createElement("tr");
     row.innerHTML=`
-      <td><input data-i="${i}" data-k="code" placeholder="e.g. WELCOME10" value="${esc(c.code)}" style="text-transform:uppercase">${c.collab?`<small style="display:block;color:var(--muted);margin-top:3px">Creator code · ${esc(c.label||'')} — manage it in <a href="creators.html">Creators</a></small>`:''}</td>
+      <td><input data-i="${i}" data-k="code" placeholder="e.g. WELCOME10" value="${esc(c.code)}" style="text-transform:uppercase">${c.collab?`<small style="display:block;color:var(--muted);margin-top:3px">Creator code · ${esc(c.label||'')}${c.offPeak?' · weekdays only':''}${c.expires?' · till '+esc(c.expires):''} — manage it in <a href="creators.html">Creators</a></small>`:''}</td>
       <td><input class="r" data-i="${i}" data-k="discountPercent" type="number" min="0" max="100" step="1" placeholder="0" value="${esc(c.discountPercent)}"></td>
       <td><button class="rc-del" data-del="${i}" title="Remove">×</button></td>`;
     body.appendChild(row);
@@ -2082,7 +2082,7 @@ async function saveStay(){
   stay.coupons = stayCouponDraft
     .filter(c=>(c.code||"").trim()!=="")
     .map(c=>({code:c.code.trim().toUpperCase(), discountPercent:(c.discountPercent===""||c.discountPercent==null)?0:Math.min(100,Math.max(0,parseFloat(c.discountPercent)||0)),
-      ...(c.collab?{collab:c.collab, label:c.label||""}:{})})); // a creator's follower code (Creators page) keeps its link
+      ...(c.collab?{collab:c.collab, label:c.label||"", ...(c.offPeak?{offPeak:true}:{}), ...(c.expires?{expires:c.expires}:{})}:{})})); // a creator's follower code (Creators page) keeps its link and its rules
   stay.bank=document.getElementById("stayBank").value;
   stay.wifiNetwork=document.getElementById("stayWifiNetwork").value.trim();
   stay.wifiVoucher=document.getElementById("stayWifiVoucher").value.trim();
