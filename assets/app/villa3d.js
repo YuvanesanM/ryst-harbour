@@ -77,7 +77,7 @@ const OUTDOOR = [
   { id: 'screen', name: 'Outdoor LED screen', x: -14.41, z: -1.23, w: 0.4, d: 3.4, note: '150-inch, on the west wall of the pool area', match: ['\\bled\\b', 'screen', 'projector'] },
   { id: 'counter', name: 'Food counter', x: -12.65, z: -7.67, w: 3.57, d: 2.77, note: 'Outdoor food counter', match: ['food counter', '\\bbbq\\b', 'barbe', 'grill'] },
   { id: 'obath', name: 'Outdoor bathroom', x: -14.26, z: -7.7, w: 1.55, d: 2.4, note: 'North-west corner of the plot', match: ['outdoor (bath|toilet|shower|wash)', 'outside (toilet|bathroom|shower)', 'pool ?side (toilet|shower|bathroom)'] },
-  { id: 'parking', name: 'Parking', x: 1.48, z: 1.29, w: 7.67, d: 8.5, note: 'Cement finish, fits 2 cars; partly under the chess terrace; 5 ft and 14 ft gates', match: ['parking', '\\bcar\\b', '\\bgates?\\b', 'vehicle'] },
+  { id: 'parking', name: 'Parking', x: 1.48, z: 1.29, w: 7.67, d: 8.5, note: 'Cement finish, fits 2 cars; partly under the chess terrace. Main gate: one tall brown double gate opening out to the road, with a walk-in door in its left end', match: ['parking', '\\bcar\\b', '\\bgates?\\b', 'vehicle'] },
   { id: 'generator', name: 'Diesel generator', x: 7.76, z: 7.11, w: 1.39, d: 2.59, note: '35 kVA, south-east corner inside the gate', match: ['generator', '\\bd\\.?g\\b', 'diesel', 'genset'] },
   { id: 'garden', name: 'Garden & lawn', x: -14.13, z: 4.53, w: 8.87, d: 5.63, match: ['lawn', 'garden', 'grass', '\\btrees?\\b', 'plants?\\b', 'leaves', 'pebble', 'cactus'] },
 ];
@@ -393,11 +393,14 @@ function buildSite() {
   const seaGeo = new THREE.PlaneGeometry(70, 110, 24, 30); seaGeo.rotateX(-Math.PI / 2);
   const sea = new THREE.Mesh(seaGeo, MAT.sea); sea.position.set(72, -0.3, cz); sea.receiveShadow = true; g.add(sea);
   animated.push({ kind: 'waves', mesh: sea, base: seaGeo.attributes.position.array.slice(), amp: 0.12, speed: 0.6 });
-  // compound walls: the perforated screen along the road, the black gates (5 ft and 14 ft)
+  // compound walls: the perforated screen along the road, and the main gate
   box(16.3, 1.3, 0.3, MAT.wall, -6.25, 0.65, 10.1, g);
   const scr = box(16.3, 1.0, 0.1, M(0xf3f0ea, { transparent: true, opacity: 0.8 }), -6.25, 1.8, 10.1, g); scr.castShadow = false;
-  box(1.48, 2.2, 0.15, MAT.gate, 2.77, 1.1, 10.2, g); gate14 = box(4.25, 2.2, 0.15, MAT.gate, 6.55, 1.1, 10.2, g); // the 14 ft gate slides open along the road when the guests drive in
-  box(0.3, 2.3, 0.3, MAT.wall, 1.85, 1.15, 10.1, g); box(0.3, 2.3, 0.3, MAT.wall, 3.65, 1.15, 10.1, g); box(0.3, 2.3, 0.3, MAT.wall, 9.8, 1.15, 10.1, g);
+  // the main gate: the small and the large gate as one tall brown double gate, split in the middle,
+  // both leaves opening outward toward the road; a narrow walk-in door in the left (west) end
+  gateLeaves = mainGate(g);
+  box(0.3, 2.6, 0.3, MAT.wall, GATE.x0 - 0.15, 1.3, 10.1, g); box(0.3, 2.6, 0.3, MAT.wall, GATE.x1 + 0.15, 1.3, 10.1, g); box(0.3, 2.3, 0.3, MAT.wall, 9.8, 1.15, 10.1, g);
+  box(9.65 - GATE.x1 - 0.3, 1.3, 0.3, MAT.wall, (GATE.x1 + 0.3 + 9.65) / 2, 0.65, 10.1, g); // wall beside the gate
   box(0.3, 1.6, PLOT.d, MAT.wall, PLOT.x, 0.8, cz, g); box(0.3, 1.6, PLOT.d, MAT.wall, PLOT.x + PLOT.w, 0.8, cz, g); box(PLOT.w, 1.6, 0.3, MAT.wall, cx, 0.8, PLOT.z, g);
   // the name sign and wall lights (evening)
   box(2.2, 0.45, 0.06, MAT.dark, -1.3, 0.9, 10.27, g).castShadow = false;
@@ -671,18 +674,73 @@ function deckSeating(parent) {
 const palms = [];
 // the two sun loungers at the north end of the wood deck: [x, z, towel colour]
 const LOUNGERS = [[-7.75, -5.55, 0x2f7d7a], [-7.75, -4.45, 0xe8b9a0]];
-function makeCar(color, parent) {
-  const c = new THREE.Group(); parent.add(c);
-  const paint = M(color, { roughness: 0.25, metalness: 0.55 }), glass = M(0x1f2a33, { roughness: 0.08, metalness: 0.6 });
-  box(1.85, 0.62, 4.3, paint, 0, 0.58, 0, c);                // body
-  box(1.62, 0.5, 2.3, glass, 0, 1.12, -0.15, c);             // cabin glass
-  box(1.58, 0.06, 2.0, paint, 0, 1.39, -0.15, c);            // roof
-  [[-0.93, -1.35], [0.93, -1.35], [-0.93, 1.35], [0.93, 1.35]].forEach(([x, z]) => { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.22, 16), MAT.dark); w.rotation.z = Math.PI / 2; w.position.set(x, 0.32, z); w.castShadow = true; c.add(w); });
-  [-0.6, 0.6].forEach(x => { box(0.32, 0.12, 0.04, M(0xfff6dd, { emissive: 0x333322 }), x, 0.7, 2.16, c); box(0.32, 0.1, 0.04, M(0xb3241e), x, 0.72, -2.16, c); }); // lights
-  c.visible = false;
-  return c;
+// The guests' cars, modelled loosely on a Porsche 911 and a Land Rover Defender (front toward -z).
+const wheelGeo = {}, rimMat = () => M(0xc9ccd0, { metalness: 0.85, roughness: 0.3 });
+function wheel(r, w, x, z, parent) {
+  const k = r + ':' + w, G = wheelGeo[k] || (wheelGeo[k] = { t: new THREE.CylinderGeometry(r, r, w, 22), h: new THREE.CylinderGeometry(r * 0.62, r * 0.62, w + 0.02, 16) });
+  const t = new THREE.Mesh(G.t, M(0x161718, { roughness: 0.9 })); t.rotation.z = Math.PI / 2; t.position.set(x, r, z); t.castShadow = true; parent.add(t);
+  const h = new THREE.Mesh(G.h, rimMat()); h.rotation.z = Math.PI / 2; h.position.set(x, r, z); parent.add(h);
 }
-let car = null, car2 = null, gate14 = null; const CAR2_X = 3.3; const CAR_PARK = 3.6, CAR_ROAD = 22, CAR_X = 6.4, GATE_X = 6.55; // room for a second car on the west side
+// a side profile (u along the car, front at +u; v up) extruded across its width
+function profileBody(pts, width, mat, parent, inset) {
+  const sh = new THREE.Shape(); pts.forEach(([u, v], i) => i ? sh.lineTo(u, v) : sh.moveTo(u, v)); sh.closePath();
+  const b = 0.05, geo = new THREE.ExtrudeGeometry(sh, { depth: width - 2 * b, bevelEnabled: true, bevelThickness: b, bevelSize: b, bevelSegments: 3, curveSegments: 6 });
+  geo.rotateY(Math.PI / 2); geo.translate(-(width - 2 * b) / 2, 0, 0); // across x; front ends up at -z
+  const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+}
+function makePorsche(color, parent) {
+  const c = new THREE.Group(); parent.add(c);
+  const paint = M(color, { roughness: 0.22, metalness: 0.6 }), glass = M(0x1b232a, { roughness: 0.05, metalness: 0.7 }), W = 1.82;
+  // the 911 line: short nose, high round front wings, a long sloping roof falling to the engine lid
+  profileBody([[-2.2, 0.3], [-2.25, 0.62], [-2.05, 0.8], [-1.5, 0.98], [-0.75, 1.27], [0.1, 1.3], [0.75, 1.0], [1.55, 0.83], [2.2, 0.72], [2.3, 0.45], [2.22, 0.3]], W, paint, c);
+  profileBody([[-1.42, 0.99], [-0.74, 1.24], [0.08, 1.26], [0.68, 1.0]], W - 0.18, glass, c);              // glasshouse
+  box(W - 0.1, 0.05, 0.08, M(0xb3241e, { emissive: 0x330a08 }), 0, 0.82, 2.24, c);                            // full-width rear light bar
+  [-0.62, 0.62].forEach(x => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.06, 18), M(0xf6f3e8, { emissive: 0x444433 })); l.rotation.x = Math.PI / 2 - 0.35; l.position.set(x, 0.84, -1.62); c.add(l); }); // round headlamps
+  box(0.9, 0.05, 0.3, MAT.dark, 0, 0.98, 2.0, c);                                                            // ducktail
+  [[-0.84, -1.28], [0.84, -1.28], [-0.84, 1.18], [0.84, 1.18]].forEach(([x, z]) => wheel(0.33, 0.26, x, z, c));
+  c.visible = false; return c;
+}
+function makeDefender(color, roof, parent) {
+  const c = new THREE.Group(); parent.add(c);
+  const paint = M(color, { roughness: 0.35, metalness: 0.4 }), black = M(0x1d1f21, { roughness: 0.6 }), glass = M(0x1b232a, { roughness: 0.05, metalness: 0.7 }), W = 2.0, L = 4.75;
+  box(W, 0.82, L, paint, 0, 0.88, 0, c);                                               // body: upright, square-edged
+  box(W - 0.12, 0.62, L - 1.25, glass, 0, 1.6, 0.3, c);                                 // glasshouse
+  box(W - 0.1, 0.62, 0.12, paint, 0, 1.6, -0.3, c); box(W - 0.1, 0.62, 0.12, paint, 0, 1.6, 1.3, c); // pillars
+  box(W - 0.04, 0.09, L - 1.15, M(roof, { roughness: 0.4 }), 0, 1.95, 0.28, c);          // contrast roof
+  [0.55, 1.1].forEach(z => box(0.5, 0.03, 0.35, glass, 0, 2.0, z, c));                  // alpine roof windows
+  box(W + 0.06, 0.18, L + 0.04, black, 0, 0.5, 0, c);                                   // cladding and bumpers
+  [[-1, -1.5], [1, -1.5], [-1, 1.5], [1, 1.5]].forEach(([sx, z]) => box(0.08, 0.5, 1.05, black, sx * (W / 2 + 0.02), 0.62, z, c)); // square wheel arches
+  [-0.72, 0.72].forEach(x => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 18), M(0xf6f3e8, { emissive: 0x444433 })); l.rotation.x = Math.PI / 2; l.position.set(x, 1.05, -L / 2 - 0.02); c.add(l); });
+  box(1.0, 0.18, 0.04, black, 0, 0.98, -L / 2 - 0.02, c);                               // grille
+  [-0.85, 0.85].forEach(x => box(0.1, 0.4, 0.04, M(0xb3241e, { emissive: 0x330a08 }), x, 1.05, L / 2 + 0.02, c)); // tall tail lamps
+  const spare = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.24, 22), black); spare.rotation.x = Math.PI / 2; spare.position.set(0.15, 1.1, L / 2 + 0.14); spare.castShadow = true; c.add(spare); // spare wheel on the side-hinged tailgate
+  [[-0.93, -1.5], [0.93, -1.5], [-0.93, 1.5], [0.93, 1.5]].forEach(([x, z]) => wheel(0.4, 0.3, x, z, c));
+  c.visible = false; return c;
+}
+const GATE = { x0: 2.0, x1: 7.9, h: 2.45, z: 10.2 };
+let gateLeaves = [];
+function mainGate(parent) {
+  const leafW = (GATE.x1 - GATE.x0) / 2, wood = photo(M(0x6e4a30), 'planks', leafW, GATE.h, 1.1, { tint: 0xb07448, normal: 0.6, roughness: 0.6 });
+  const frame = M(0x4a3020, { roughness: 0.5 }), steel = M(0x2a2c2e, { metalness: 0.7, roughness: 0.35 }), seam = M(0x1a120c, { roughness: 0.7 });
+  return [[GATE.x0, 1], [GATE.x1, -1]].map(([hx, dir]) => {
+    const pivot = new THREE.Group(); pivot.position.set(hx, 0, GATE.z); parent.add(pivot);
+    const cx = dir * leafW / 2;
+    box(leafW - 0.04, GATE.h, 0.1, wood, cx, 0.05 + GATE.h / 2, 0, pivot);
+    [0.08, GATE.h - 0.02].forEach(y => box(leafW, 0.08, 0.13, frame, cx, y, 0, pivot));           // top and bottom rails
+    [dir * 0.04, dir * (leafW - 0.04)].forEach(x => box(0.08, GATE.h, 0.13, frame, x, 0.05 + GATE.h / 2, 0, pivot)); // stiles
+    box(0.05, 0.22, 0.05, steel, dir * (leafW - 0.18), 1.1, 0.1, pivot);                            // pull handle at the meeting edge
+    if (dir > 0) { // the walk-in door at the left end of the left leaf: its outline, hinges and handle
+      const dw = 0.8, dh = 1.95, dx = 0.12 + dw / 2;
+      [[dx, 0.12 + dh, dw + 0.05, 0.05], [0.12, 0.12 + dh / 2, 0.05, dh], [0.12 + dw, 0.12 + dh / 2, 0.05, dh]].forEach(([x, y, w, h]) => [-1, 1].forEach(sd => box(w, h, 0.012, seam, x, y, sd * 0.057, pivot)));
+      box(0.035, 0.14, 0.04, steel, 0.12 + dw - 0.1, 1.05, 0.08, pivot);
+      [0.5, 1.6].forEach(y => box(0.04, 0.12, 0.03, steel, 0.14, y, 0.07, pivot));
+    }
+    [0.35, GATE.h - 0.3].forEach(y => { const h = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.16, 10), steel); h.position.set(0, y, 0); pivot.add(h); }); // gate hinges
+    return { pivot, dir };
+  });
+}
+function setGateOpen(open) { gateLeaves.forEach(L => { L.pivot.rotation.y = -L.dir * open * 1.65; }); } // swings out toward the road
+let car = null, car2 = null; const CAR2_X = 3.3; const CAR_PARK = 3.6, CAR_ROAD = 22, CAR_X = 6.4, GATE_X = 6.55; // room for a second car on the west side
 // a small shade tree (frangipani-like): short trunk, a few leafy clumps
 function smallTree(x, z, parent) {
   const g = new THREE.Group(); g.position.set(x, 0, z); parent.add(g); palms.push(g);
@@ -746,8 +804,8 @@ function buildOutdoors() {
   const Pk = ZONE.parking; pick(box(Pk.w, 0.04, Pk.d, photo(M(0xd8cfbf), 'cement', Pk.w, Pk.d, 2.5, { normal: 0.5, tint: 0xd9e2ea, roughness: 0.9 }), Pk.x + Pk.w / 2, 0.07, Pk.z + Pk.d / 2, g), 'parking');
   // the guests' car: parked only while a stay is in house (it drives in on check-in day)
   // the guests' two cars (the car park fits two): parked while a stay is in house; the first drives in on check-in day
-  car = makeCar(0x5c6870, g); car.position.set(CAR_X, 0, CAR_PARK);
-  car2 = makeCar(0xe9e7e2, g); car2.position.set(CAR2_X, 0, CAR_PARK + 0.3);
+  car = makeDefender(0x5b6a4c, 0xf1efe8, g); car.position.set(CAR_X, 0, CAR_PARK);   // Defender in green with a white roof
+  car2 = makePorsche(0xc5c8cc, g); car2.position.set(CAR2_X, 0, CAR_PARK + 0.3);      // 911 in silver
   // jacuzzi bubbles
   const BN = 26, bub = new THREE.InstancedMesh(new THREE.SphereGeometry(0.045, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 }), BN);
   bub.castShadow = false; g.add(bub);
@@ -1205,7 +1263,7 @@ function frame(now) {
     car.position.z = CAR_ROAD + (CAR_PARK - CAR_ROAD) * k;
     car.position.x = GATE_X + (CAR_X - GATE_X) * Math.max(0, (k - 0.55) / 0.45); // in through the big gate, then over to its spot
     const open = drive.t < 0.3 ? drive.t / 0.3 : drive.t < 0.75 ? 1 : Math.max(0, 1 - (drive.t - 0.75) / 0.25);
-    gate14.position.set(GATE_X + 4.1 * open, 1.1, 10.2 + 0.25 * Math.min(1, open * 4)); moving = true;
+    setGateOpen(open); moving = true;
     if (drive.t >= 1) drive = null;
   }
   if (moving || anim || needRender) { renderer.render(scene, camera); placeLabels(); needRender = false; }
