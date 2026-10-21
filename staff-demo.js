@@ -90,6 +90,17 @@
     '/weather': (function(){ var d = new Date(), iso = function(n){ var x = new Date(d); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); };
       return { ok:true, at: now, source:'Open-Meteo', now:{ temp:31.4, feels:36.2, humidity:71, rain:0, code:2, wind:14, day:true },
         days:[[2,33,26,20,0,9,18],[61,31,25,70,6.4,7,24],[80,30,25,55,3.1,8,21],[1,32,26,10,0,10,16],[0,33,26,5,0,10,15]].map(function(v,i){ return { date: iso(i), code:v[0], max:v[1], min:v[2], rainChance:v[3], rain:v[4], uv:v[5], wind:v[6], sunrise:'06:04', sunset:'17:51' }; }) }; })(),
+    '/web-insights': (function(){ var d = function(n){ var x = new Date(); x.setDate(x.getDate()-n); return x.toISOString().slice(0,10); }, days = []; for (var i = 28; i >= 1; i--) days.push(d(i));
+      return { configured:true, at: now, range:{ from: d(28), to: d(1) }, serviceAccount:'harbour-sync@demo-project.iam.gserviceaccount.com',
+        search:{ ok:true, site:'https://stay.example.com/', totals:{ clicks:412, impressions:18950, ctr:0.0217, position:14.6 }, prev:{ clicks:351, impressions:16120, ctr:0.0218, position:16.1 },
+          daily: days.map(function(x,i){ return { date:x, clicks: 8 + (i*7 % 11) + (i > 20 ? 6 : 0), impressions: 520 + (i*37 % 160) }; }),
+          queries:[['villa with private pool ecr',58,1430,3.2],['beach villa near chennai',41,2210,7.8],['sample villa',39,120,1.1],['private pool villa mahabalipuram',27,1650,9.4],['ecr villa for party',19,980,11.2],['pet friendly villa ecr',12,640,8.9]].map(function(q){ return { q:q[0], clicks:q[1], impressions:q[2], ctr:q[1]/q[2], position:q[3] }; }),
+          pages:[['https://stay.example.com/',214,6100,9.1],['https://stay.example.com/ecr-villa-for-celebrations.html',88,5200,12.4],['https://stay.example.com/faq.html',51,2900,10.2],['https://stay.example.com/nearby.html',34,3100,18.8]].map(function(p){ return { page:p[0], clicks:p[1], impressions:p[2], position:p[3] }; }) },
+        analytics:{ ok:true, property:'properties/000000', totals:{ sessions:1320, users:1045, engagementRate:0.61, avgDuration:142, keyEvents:38 }, prev:{ sessions:1180, users:960, engagementRate:0.58, avgDuration:131, keyEvents:29 },
+          daily: days.map(function(x,i){ return { date:x, sessions: 35 + (i*13 % 29) + (i > 20 ? 12 : 0), users: 28 + (i*11 % 21) }; }),
+          channels:[['Organic Search',486],['Direct',402],['Organic Social',251],['Referral',118],['Paid Search',63]].map(function(c){ return { name:c[0], sessions:c[1] }; }),
+          pages:[['/',1890],['/ecr-villa-for-celebrations.html',520],['/faq.html',344],['/nearby.html',260],['/collab.html',118]].map(function(p){ return { path:p[0], views:p[1], sessions:Math.round(p[1]*0.7) }; }),
+          cities:[['Chennai',702],['Bengaluru',188],['Hyderabad',96],['Coimbatore',54],['Puducherry',41]].map(function(c){ return { city:c[0], sessions:c[1] }; }) } }; })(),
     '/metrics': { ok:true, revenue:296723, received:144600, due:152123, expenses:1730, nights:11, days:31, occupancy:35 },
     '/agents': (function(){
       var A = [['reservations','Reservations Concierge','chat',4,'Answers the WhatsApp and Instagram messages the auto-reply could not, and follows up quotes that went quiet.'],

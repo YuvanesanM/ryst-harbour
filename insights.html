@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://data.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
+<script src="/assets/app/shell.js?v=22c97b23"></script>
+<script src="/i18n.js"></script>
+<title data-title="Website & Search · {name}">Website &amp; Search · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#F5F3EE" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
+<style>
+:root{--bg:#f5f3ee;--panel:#fff;--panel2:#f8f7f3;--line:#e6e2d9;--line2:#efece5;--ink:#1c2321;--ink2:#3a4440;--muted:#68716c;--muted2:#9aa09a;
+  --teal:#2f7d6d;--teal-soft:#e6f2ee;--blue:#3c6e8f;--blue-soft:#e8f0f5;--up:#2f7d6d;--down:#b9483b;--r:14px;--shadow:0 1px 2px rgba(28,35,33,.04),0 6px 18px rgba(28,35,33,.04)}
+html[data-theme="dark"]{--bg:#111715;--panel:#1a211e;--panel2:#202925;--line:#2c3531;--line2:#252d29;--ink:#e9e6df;--ink2:#cfd3cd;--muted:#a9b0aa;--muted2:#7f8781;--teal:#5fb3a1;--teal-soft:#1d2e29;--blue:#7fb0d1;--blue-soft:#1c2a33;--up:#6cc2ad;--down:#e58a7d}
+*{box-sizing:border-box;margin:0;padding:0}[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}button{font-family:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 18px 90px}
+.head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.head h1{font-size:24px;font-weight:700;letter-spacing:-.2px}
+.head p{color:var(--muted);font-size:13.5px;margin-top:2px}
+.head .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 13px;font-size:13px;font-weight:600}
+.btn:hover{border-color:var(--teal)}
+.sec{font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted2);margin:20px 2px 10px;display:flex;align-items:center;gap:8px}
+.sec .src{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted2)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;box-shadow:var(--shadow)}
+.kpi span{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.kpi b{display:block;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi small{font-size:12px;color:var(--muted)}
+.kpi .d{font-weight:700}.kpi .d.up{color:var(--up)}.kpi .d.down{color:var(--down)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px}
+.card h2{font-size:14px;font-weight:650;margin-bottom:2px}
+.card .sub{font-size:12px;color:var(--muted);margin-bottom:10px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.chart{position:relative;height:170px}
+.chart svg{display:block;width:100%;height:100%;overflow:visible}
+.chart .grid{stroke:var(--line2);stroke-width:1}
+.chart .axis{font-size:10.5px;fill:var(--muted2)}
+.chart .line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .hair{stroke:var(--muted2);stroke-width:1;stroke-dasharray:3 3}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;border-radius:8px;padding:6px 9px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .1s}
+.tip b{font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);font-weight:700;text-align:right;padding:6px 6px}
+th:first-child,td:first-child{text-align:left}
+td{padding:7px 6px;border-top:1px solid var(--line2);text-align:right;font-variant-numeric:tabular-nums}
+td:first-child{max-width:0;width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars{display:grid;gap:7px}
+.bar{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,2fr) 48px;gap:10px;align-items:center;font-size:13px}
+.bar .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .t{height:8px;border-radius:0 4px 4px 0;background:var(--line2)}
+.bar .t i{display:block;height:100%;border-radius:0 4px 4px 0}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.setup{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-top:10px;font-size:13.5px;line-height:1.55}
+.setup h3{font-size:15px;margin-bottom:6px}
+.setup ol{padding-left:20px;margin-top:6px}.setup li{margin:4px 0}
+.setup code{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12.5px;word-break:break-all}
+.err{color:var(--down);font-size:12.5px;margin-top:6px}
+.empty{color:var(--muted);font-size:13px;padding:10px 0}
+.foot{margin-top:18px;font-size:12px;color:var(--muted2)}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}
+@media (max-width:520px){.wrap{padding:12px 12px 96px}.kpi b{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div><h1>Website &amp; Search</h1><p><span data-no-i18n id="siteName">stay.ryst.in</span> · <span id="rangeTxt">last 28 days</span></p></div>
+    <span class="sp"></span>
+    <button class="btn" type="button" id="refresh">↻ <span>Refresh</span></button>
+  </div>
+  <div id="out"><div class="empty">Loading…</div></div>
+  <p class="foot">Google Search Console and Google Analytics, read with Harbour's Google service account. Search data runs 2–3 days behind; changes compare with the 28 days before.</p>
+</div>
+<script>
+(function () {
+  const PROXY = 'https://data.ryst.in', TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+  if (!TOKEN) { location.href = 'login.html'; return; }
+  if ((localStorage.getItem('ryst_user_role') || 'owner') !== 'owner') { location.href = 'login.html'; return; }
+  const $ = s => document.querySelector(s), t = s => (window.rystT ? window.rystT(s) : s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const n0 = v => Math.round(v || 0).toLocaleString('en-IN'), pct = v => (Math.round((v || 0) * 1000) / 10) + '%';
+  const dur = s => { s = Math.round(s || 0); return Math.floor(s / 60) + 'm ' + String(s % 60).padStart(2, '0') + 's'; };
+  const dm = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  // change vs the 28 days before; for average position, lower is better
+  function delta(now, prev, lowerBetter) {
+    if (prev == null || !isFinite(prev) || prev === 0) return '';
+    const ch = (now - prev) / prev, good = lowerBetter ? ch < 0 : ch > 0;
+    if (Math.abs(ch) < 0.005) return `<span class="d">±0%</span>`;
+    return `<span class="d ${good ? 'up' : 'down'}">${ch > 0 ? '▲' : '▼'} ${Math.abs(Math.round(ch * 100))}%</span>`;
+  }
+  const kpi = (label, val, d, note) => `<div class="kpi"><span>${t(label)}</span><b>${val}</b><small>${d}${d && note ? ' · ' : ''}${note || ''}</small></div>`;
+
+  // one series per chart (the two sources never share an axis), with a crosshair and tooltip
+  function lineChart(el, rows, key, color, label) {
+    if (!rows.length) { el.innerHTML = `<div class="empty">${t('No data yet')}</div>`; return; }
+    const W = 600, H = 170, L = 34, R = 8, T = 10, B = 22, max = Math.max(1, ...rows.map(r => r[key]));
+    const nice = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / nice) * nice;
+    const x = i => L + (rows.length === 1 ? 0 : i * (W - L - R) / (rows.length - 1)), y = v => T + (H - T - B) * (1 - v / top);
+    const pts = rows.map((r, i) => `${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join(' ');
+    const ticks = [0, top / 2, top].map(v => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${n0(v)}</text>`).join('');
+    const xl = [0, Math.floor((rows.length - 1) / 2), rows.length - 1].map(i => `<text class="axis" x="${x(i)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === rows.length - 1 ? 'end' : 'middle'}">${esc(dm(rows[i].date))}</text>`).join('');
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(t(label))}">${ticks}${xl}
+      <polygon points="${L},${y(0)} ${pts} ${x(rows.length - 1)},${y(0)}" fill="${color}" opacity=".10"/><polyline class="line" points="${pts}" stroke="${color}"/>
+      <line class="hair" id="h" y1="${T}" y2="${H - B}" x1="0" x2="0" visibility="hidden"/><circle id="c" r="4" fill="${color}" stroke="var(--panel)" stroke-width="2" cx="0" cy="0" visibility="hidden"/></svg><div class="tip"></div>`;
+    const svg = el.querySelector('svg'), tip = el.querySelector('.tip'), h = svg.querySelector('#h'), c = svg.querySelector('#c');
+    const move = ev => { const b = svg.getBoundingClientRect(), px = (ev.clientX - b.left) / b.width * W;
+      const i = Math.max(0, Math.min(rows.length - 1, Math.round((px - L) / ((W - L - R) / Math.max(1, rows.length - 1)))));
+      h.setAttribute('visibility', 'visible'); c.setAttribute('visibility', 'visible'); h.setAttribute('x1', x(i)); h.setAttribute('x2', x(i)); c.setAttribute('cx', x(i)); c.setAttribute('cy', y(rows[i][key]));
+      tip.innerHTML = `${esc(dm(rows[i].date))} · <b>${n0(rows[i][key])}</b> ${esc(t(label))}`; tip.style.left = (x(i) / W * b.width) + 'px'; tip.style.top = (y(rows[i][key]) / H * b.height) + 'px'; tip.style.opacity = 1; };
+    svg.addEventListener('pointermove', move); svg.addEventListener('pointerleave', () => { tip.style.opacity = 0; h.setAttribute('visibility', 'hidden'); c.setAttribute('visibility', 'hidden'); });
+  }
+  const bars = (rows, name, val, color) => { const max = Math.max(1, ...rows.map(val)); return `<div class="bars">${rows.map(r => `<div class="bar"><span class="n" data-no-i18n title="${esc(name(r))}">${esc(name(r))}</span><span class="t"><i style="width:${(val(r) / max * 100).toFixed(1)}%;background:${color}"></i></span><span class="v">${n0(val(r))}</span></div>`).join('')}</div>`; };
+  const path = u => { try { const p = new URL(u).pathname; return p === '/' ? '/ (home)' : p; } catch (e) { return u; } };
+
+  function setup(d) {
+    const sa = esc(d.serviceAccount || 'the service account');
+    const s = d.search || {}, a = d.analytics || {};
+    return `<div class="setup"><h3>${t('Connect Search Console and Google Analytics')}</h3>
+      <p>${t('Give Harbour\'s Google service account read access — the same one that keeps the calendar in sync:')} <code>${sa}</code></p>
+      <ol>
+        <li>${t('In Google Cloud (the calendar\'s project), enable')} <b>Google Search Console API</b>, <b>Google Analytics Data API</b> ${t('and')} <b>Google Analytics Admin API</b>.</li>
+        <li>${s.ok ? '✅ ' : ''}<b>Search Console</b> → ${t('your stay.ryst.in property')} → Settings → Users and permissions → Add user → ${t('paste the address')} → ${t('permission')} <b>Restricted</b>.${s.ok ? '' : s.error ? `<div class="err">${esc(s.error)}</div>` : ''}</li>
+        <li>${a.ok ? '✅ ' : ''}<b>Google Analytics</b> → Admin → ${t('Property access management')} → + → ${t('paste the address')} → ${t('role')} <b>Viewer</b>.${a.ok ? '' : a.error ? `<div class="err">${esc(a.error)}</div>` : ''}</li>
+        <li>${t('Then press Refresh.')}</li>
+      </ol></div>`;
+  }
+
+  function render(d) {
+    if (d.configured === false) { $('#out').innerHTML = `<div class="setup">${t('Harbour\'s Google service account isn\'t set up on the server, so this can\'t be connected yet.')}</div>`; return; }
+    const s = d.search || {}, a = d.analytics || {};
+    if (d.range) $('#rangeTxt').textContent = dm(d.range.from) + ' – ' + dm(d.range.to);
+    if (s.site) $('#siteName').textContent = s.site.replace(/^sc-domain:|^https?:\/\/|\/$/g, '');
+    let h = '';
+    if (s.ok) {
+      const T = s.totals, P = s.prev || {};
+      h += `<div class="sec">${t('Google Search')} <span class="src">Search Console</span></div><div class="kpis">
+        ${kpi('Clicks from Google', n0(T.clicks), delta(T.clicks, P.clicks))}${kpi('Seen in search (impressions)', n0(T.impressions), delta(T.impressions, P.impressions))}
+        ${kpi('Click rate', pct(T.ctr), delta(T.ctr, P.ctr))}${kpi('Average position', (Math.round(T.position * 10) / 10 || '—'), delta(T.position, P.position, true), t('lower is better'))}</div>
+        <div class="grid2"><div class="card"><h2>${t('Clicks from Google, per day')}</h2><div class="sub">${t('Searchers who clicked through to the site')}</div><div class="chart" id="chS"></div></div>
+        <div class="card"><h2>${t('What people searched')}</h2><div class="sub">${t('Top searches that showed the site')}</div>${s.queries.length ? `<table><thead><tr><th>${t('Search')}</th><th>${t('Clicks')}</th><th>${t('Seen')}</th><th>${t('Position')}</th></tr></thead><tbody>${s.queries.map(q => `<tr><td data-no-i18n title="${esc(q.q)}">${esc(q.q)}</td><td>${n0(q.clicks)}</td><td>${n0(q.impressions)}</td><td>${(Math.round(q.position * 10) / 10)}</td></tr>`).join('')}</tbody></table>` : `<div class="empty">${t('No searches yet')}</div>`}</div></div>
+        <div class="card" style="margin-top:12px"><h2>${t('Pages people land on from Google')}</h2><div class="sub">${t('Clicks per page')}</div>${s.pages.length ? bars(s.pages, p => path(p.page), p => p.clicks, 'var(--blue)') : `<div class="empty">${t('No data yet')}</div>`}</div>`;
+    }
+    if (a.ok) {
+      const T = a.totals, P = a.prev || {};
+      h += `<div class="sec">${t('Visitors')} <span class="src">Google Analytics</span></div><div class="kpis">
+        ${kpi('Visits (sessions)', n0(T.sessions), delta(T.sessions, P.sessions))}${kpi('Visitors', n0(T.users), delta(T.users, P.users))}
+        ${kpi('Engaged visits', pct(T.engagementRate), delta(T.engagementRate, P.engagementRate))}${kpi(T.keyEvents ? 'Key events' : 'Avg. visit length', T.keyEvents ? n0(T.keyEvents) : dur(T.avgDuration), T.keyEvents ? delta(T.keyEvents, P.keyEvents) : delta(T.avgDuration, P.avgDuration), T.keyEvents ? t('enquiries, bookings…') : '')}</div>
+        <div class="grid2"><div class="card"><h2>${t('Visits per day')}</h2><div class="sub">${t('All visits to the site')}</div><div class="chart" id="chA"></div></div>
+        <div class="card"><h2>${t('Where visitors come from')}</h2><div class="sub">${t('Visits by channel')}</div>${a.channels.length ? bars(a.channels, c => c.name, c => c.sessions, 'var(--teal)') : `<div class="empty">${t('No data yet')}</div>`}</div></div>
+        <div class="grid2"><div class="card"><h2>${t('Most viewed pages')}</h2><div class="sub">${t('Page views')}</div>${a.pages.length ? bars(a.pages, p => p.path === '/' ? '/ (home)' : p.path, p => p.views, 'var(--teal)') : `<div class="empty">${t('No data yet')}</div>`}</div>
+        <div class="card"><h2>${t('Visitors\' cities')}</h2><div class="sub">${t('Visits by city')}</div>${a.cities.length ? bars(a.cities, c => c.city, c => c.sessions, 'var(--teal)') : `<div class="empty">${t('No data yet')}</div>`}</div></div>`;
+    }
+    if (!s.ok || !a.ok) h += setup(d);
+    $('#out').innerHTML = h;
+    if (s.ok) lineChart($('#chS'), s.daily, 'clicks', 'var(--blue)', 'clicks');
+    if (a.ok) lineChart($('#chA'), a.daily, 'sessions', 'var(--teal)', 'visits');
+  }
+  async function load(refresh) {
+    const b = $('#refresh'); b.disabled = true;
+    try {
+      const r = await fetch(PROXY + '/web-insights' + (refresh ? '?refresh=1' : ''), { headers: { 'X-Token': TOKEN }, cache: 'no-store' });
+      if (r.status === 401) { localStorage.removeItem('ryst_proxy_token'); location.href = 'login.html'; return; }
+      const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not load');
+      render(d);
+    } catch (e) { $('#out').innerHTML = `<div class="setup err">${esc(e.message)}</div>`; }
+    finally { b.disabled = false; }
+  }
+  $('#refresh').addEventListener('click', () => load(true));
+  load(false);
+})();
+</script>
+</body>
+</html>
