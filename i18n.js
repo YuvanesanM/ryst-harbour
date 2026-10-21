@@ -277,6 +277,8 @@
     'Get alerts on this phone': 'இந்த போனில் அறிவிப்புகள் பெறுங்கள்', 'Get your jobs on this phone': 'உங்கள் வேலைகளை இந்த போனில் பெறுங்கள்',
     'Today\'s jobs, arrivals and repairs pop up here — even when the app is closed.': 'இன்றைய வேலைகள், வருகைகள், பழுதுகள் இங்கே தோன்றும் — ஆப் மூடியிருந்தாலும்.',
     'Arrivals, checklists and repairs pop up here — even when the app is closed. Telegram keeps working too.': 'வருகைகள், சரிபார்ப்புப் பட்டியல்கள், பழுதுகள் இங்கே தோன்றும் — ஆப் மூடியிருந்தாலும். டெலிகிராமும் தொடர்ந்து வேலை செய்யும்.',
+    'Add a photo': 'புகைப்படம் சேர்க்கவும்', 'Take photo': 'புகைப்படம் எடு', 'Choose from gallery': 'கேலரியில் இருந்து தேர்வு', 'Please choose a photo (an image file).': 'ஒரு புகைப்படத்தைத் தேர்ந்தெடுக்கவும்.',
+    'Could not read this photo. Try again, or choose it from the gallery.': 'இந்த புகைப்படத்தைப் படிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும், அல்லது கேலரியில் இருந்து தேர்வு செய்யவும்.',
     'Turn on': 'இயக்கு', 'Later': 'பிறகு', 'Notifications are on ✓': 'அறிவிப்புகள் இயக்கப்பட்டன ✓',
     'A test is on its way. You can turn them off any time from your profile → Notifications.': 'ஒரு சோதனை அறிவிப்பு வருகிறது. எப்போது வேண்டுமானாலும் சுயவிவரம் → அறிவிப்புகள் மூலம் நிறுத்தலாம்.',
     'Notifications are blocked for RYST Harbour. Open phone Settings → Apps → RYST Harbour → Notifications and allow them.': 'RYST Harbour-க்கு அறிவிப்புகள் தடுக்கப்பட்டுள்ளன. போன் Settings → Apps → RYST Harbour → Notifications சென்று அனுமதிக்கவும்.',

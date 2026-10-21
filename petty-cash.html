@@ -7,6 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=2f2cdf72">
+<script src="/assets/app/photo.js?v=975ab013"></script>
 <script src="/assets/app/shell.js?v=40f3545f"></script>
 <script src="/i18n.js"></script>
 <title data-title="Petty Cash · {name}">Petty Cash · RYST 109A</title>
@@ -351,7 +352,6 @@
       <div class="field">
         <label>Receipt <span style="color:var(--danger)">*</span></label>
         <div class="rcpt-drop" id="rcptDrop">📷 Tap to add a photo of the bill</div>
-        <input type="file" id="rcptInput" accept="image/*" capture="environment" hidden />
         <div class="rcpt-prev" id="rcptPrev" style="display:none">
           <img id="rcptImg" alt="receipt" />
           <button class="rm" id="rcptRm" type="button">Remove</button>
@@ -476,6 +476,7 @@ async function load(){
     DOC = normalize(await api('GET'));
     render();
     hideLoader();
+    restoreDraft();
   }catch(e){
     // Unlike command(), this is the very first load — there's no prior
     // ledger to fall back to, so leave the loader up with a retry option
@@ -698,21 +699,7 @@ function renderSelbar(){
 }
 
 // ── Receipt compression ──
-function compressImage(file){
-  return new Promise((resolve,reject)=>{
-    if(!file) return resolve(null);
-    if(!file.type || !file.type.startsWith('image/')) return reject(new Error('Please choose an image file'));
-    const reader=new FileReader();
-    reader.onload=()=>{ const img=new Image();
-      img.onload=()=>{ const maxDim=1400; let w=img.width,h=img.height;
-        if(w>maxDim||h>maxDim){ if(w>=h){ h=Math.round(h*maxDim/w); w=maxDim; } else { w=Math.round(w*maxDim/h); h=maxDim; } }
-        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
-        cv.getContext('2d').drawImage(img,0,0,w,h);
-        resolve(cv.toDataURL('image/jpeg',0.6)); };
-      img.onerror=()=>reject(new Error('Could not read image')); img.src=reader.result; };
-    reader.onerror=()=>reject(new Error('Could not read file')); reader.readAsDataURL(file);
-  });
-}
+function compressImage(file){ return window.rystPhoto.compress(file, { max:1400, quality:0.6 }); }
 
 // ── Expense modal ──
 const CAT_EMOJI = {
@@ -755,12 +742,28 @@ function renderReceiptPrev(){
   if(pendingReceipt){ $('#rcptImg').src=pendingReceipt; $('#rcptPrev').style.display='block'; $('#rcptDrop').style.display='none'; }
   else { $('#rcptPrev').style.display='none'; $('#rcptDrop').style.display='block'; }
 }
-$('#rcptDrop').onclick=()=>$('#rcptInput').click();
-$('#rcptInput').onchange=async e=>{
-  const f=e.target.files[0]; if(!f) return;
-  try{ $('#rcptDrop').textContent='Compressing…'; pendingReceipt=await compressImage(f); receiptTouched=true; renderReceiptPrev(); }
+// Take a photo or choose one from the gallery. Android can restart the app while the camera is
+// open (low memory) — so what was typed is kept, and the form comes back after a restart.
+const tr = s => (window.rystT ? window.rystT(s) : s);
+const DRAFT_KEY = 'ryst_pc_draft';
+function saveDraft(){ try{ sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ at:Date.now(), editingId, date:$('#eDate').value, amount:$('#eAmount').value, cat:selectedCat, note:$('#eNote').value, noReimb:$('#eNoReimb').checked })); }catch(x){} }
+function clearDraft(){ try{ sessionStorage.removeItem(DRAFT_KEY); }catch(x){} }
+function restoreDraft(){
+  let d = null; try{ d = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null'); }catch(x){}
+  clearDraft();
+  if(!d || Date.now() - d.at > 20*60e3) return;
+  openExpense(d.editingId ? (DOC.entries.find(x=>x.id===d.editingId) || null) : null);
+  $('#eDate').value = d.date || todayISO(); $('#eAmount').value = d.amount || ''; if(d.cat) renderCatGrid(d.cat); $('#eNote').value = d.note || ''; $('#eNoReimb').checked = !!d.noReimb;
+  $('#expErr').textContent = tr('The app restarted while the camera was open, so the photo didn\'t come through. Tap the receipt box and choose "Choose from gallery" — the photo you just took is there.');
+}
+$('#rcptDrop').onclick=async()=>{
+  saveDraft();
+  const f = await window.rystPhoto.pick();
+  clearDraft();
+  if(!f) return;
+  try{ $('#rcptDrop').textContent=tr('Compressing…'); pendingReceipt=await compressImage(f); receiptTouched=true; $('#expErr').textContent=''; renderReceiptPrev(); }
   catch(err){ toast(err.message,true); }
-  finally{ $('#rcptDrop').textContent='📷 Tap to add a photo of the bill'; $('#rcptInput').value=''; }
+  finally{ $('#rcptDrop').textContent=tr('📷 Tap to add a photo of the bill'); }
 };
 $('#rcptRm').onclick=()=>{ pendingReceipt=null; receiptTouched=true; renderReceiptPrev(); };
 $('#expCancel').onclick=()=>$('#expOverlay').className='overlay';

@@ -7,6 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=2f2cdf72">
+<script src="/assets/app/photo.js?v=975ab013"></script>
 <script src="/assets/app/shell.js?v=40f3545f"></script>
 <script src="/i18n.js"></script>
 <title data-title="Issues · {name}">Issues · RYST 109A</title>
@@ -281,25 +282,19 @@ $('#list').addEventListener('click', async e=>{
 $('#lb').addEventListener('click', ()=>$('#lb').classList.remove('show'));
 
 /* ---- photo picker (shared by both forms) ---- */
-function compressImage(file){
-  return new Promise((resolve,reject)=>{
-    if(!file || !file.type || !file.type.startsWith('image/')) return reject(new Error('Please choose an image file'));
-    const r=new FileReader();
-    r.onload=()=>{ const img=new Image(); img.onload=()=>{ const max=1400, k=Math.min(1,max/Math.max(img.width,img.height)); const c=document.createElement('canvas'); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k); c.getContext('2d').drawImage(img,0,0,c.width,c.height); resolve(c.toDataURL('image/jpeg',0.7)); }; img.onerror=()=>reject(new Error('Could not read image')); img.src=r.result; };
-    r.onerror=()=>reject(new Error('Could not read file')); r.readAsDataURL(file);
-  });
-}
+function compressImage(file){ return window.rystPhoto.compress(file, { max:1400, quality:0.7 }); }
 function photoPicker(box){
   const st = { data:null };
-  const input = document.createElement('input'); input.type='file'; input.accept='image/*'; input.capture='environment'; input.hidden=true;
   const draw = () => {
     box.innerHTML = st.data
       ? `<div class="photo-prev"><img src="${st.data}" alt=""><button type="button">Remove</button></div>`
       : `<button type="button" class="photo-btn" style="width:100%">📷 Add a photo</button>`;
-    box.appendChild(input);
-    box.querySelector('button').onclick = () => { if(st.data){ st.data=null; draw(); } else { input.value=''; input.click(); } };
+    box.querySelector('button').onclick = async () => {
+      if(st.data){ st.data=null; return draw(); }
+      const f = await window.rystPhoto.pick(); if(!f) return;   // take a photo, or choose from the gallery
+      try{ st.data = await compressImage(f); draw(); }catch(e){ toast(e.message,true); }
+    };
   };
-  input.addEventListener('change', async ()=>{ try{ st.data = await compressImage(input.files[0]); draw(); }catch(e){ toast(e.message,true); } });
   st.reset = () => { st.data=null; draw(); };
   draw();
   return st;

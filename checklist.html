@@ -7,6 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=2f2cdf72">
+<script src="/assets/app/photo.js?v=975ab013"></script>
 <script src="/assets/app/shell.js?v=40f3545f"></script>
 <script src="/i18n.js"></script>
 <title data-title="Villa Checklists · {name}">Villa Checklists · RYST 109A</title>
@@ -746,12 +747,10 @@ function updateNote(idx, value){
 }
 
 let pendingPhotoIdx = null;
-const photoInput = document.createElement('input');
-photoInput.type = 'file'; photoInput.accept = 'image/*'; photoInput.capture = 'environment'; photoInput.hidden = true;
-document.body.appendChild(photoInput);
-function triggerPhoto(idx){ pendingPhotoIdx = idx; photoInput.value = ''; photoInput.click(); }
-photoInput.addEventListener('change', async () => {
-  const file = photoInput.files[0];
+// take a photo, or choose one from the gallery (the Android app can't rely on a camera-only picker)
+async function triggerPhoto(idx){
+  pendingPhotoIdx = idx;
+  const file = await window.rystPhoto.pick();
   if(!file || pendingPhotoIdx===null) return;
   try{
     const dataUrl = await compressImage(file);
@@ -765,7 +764,7 @@ photoInput.addEventListener('change', async () => {
     renderRunItems(run);
     scheduleAutosave();
   }catch(e){ showToast(e.message, true); }
-});
+}
 function removePhoto(idx){
   const run = DOC.runs.find(r=>r.id===currentRunId);
   if(!run) return;
@@ -774,21 +773,7 @@ function removePhoto(idx){
   scheduleAutosave();
 }
 
-function compressImage(file){
-  return new Promise((resolve,reject)=>{
-    if(!file) return resolve(null);
-    if(!file.type || !file.type.startsWith('image/')) return reject(new Error('Please choose an image file'));
-    const reader=new FileReader();
-    reader.onload=()=>{ const img=new Image();
-      img.onload=()=>{ const maxDim=1400; let w=img.width,h=img.height;
-        if(w>maxDim||h>maxDim){ if(w>=h){ h=Math.round(h*maxDim/w); w=maxDim; } else { w=Math.round(w*maxDim/h); h=maxDim; } }
-        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
-        cv.getContext('2d').drawImage(img,0,0,w,h);
-        resolve(cv.toDataURL('image/jpeg',0.6)); };
-      img.onerror=()=>reject(new Error('Could not read image')); img.src=reader.result; };
-    reader.onerror=()=>reject(new Error('Could not read file')); reader.readAsDataURL(file);
-  });
-}
+function compressImage(file){ return window.rystPhoto.compress(file, { max:1400, quality:0.6 }); }
 
 async function saveRun(status){
   const run = DOC.runs.find(r=>r.id===currentRunId);
