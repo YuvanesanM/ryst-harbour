@@ -473,7 +473,7 @@
     if (D.ag && D.ag.totals && D.ag.totals.pending) {
       // the AI agents' drafts (shadow mode) waiting for the owner's verdict
       var agT = D.ag.totals;
-      items.push({ lvl: agT.urgent ? 'warn' : '', icon: 'agents', title: agT.pending + ' AI agent draft' + (agT.pending === 1 ? '' : 's') + ' to review', meta: (agT.urgent ? agT.urgent + ' urgent · ' : '') + (agT.valuePending ? inr(agT.valuePending) + ' at stake · ' : '') + 'shadow mode, nothing sent', href: 'agents.html' });
+      items.push({ lvl: agT.urgent ? 'warn' : '', icon: 'agents', title: (D.ag.chief ? D.ag.chief.name + ': ' : '') + agT.pending + ' thing' + (agT.pending === 1 ? '' : 's') + ' for you from your AI team', meta: (agT.urgent ? agT.urgent + ' urgent · ' : '') + (agT.valuePending ? inr(agT.valuePending) + ' at stake · ' : '') + 'shadow mode, nothing sent', href: 'agents.html' });
     }
     if (D.pc && Array.isArray(D.pc.entries)) {
       var pend = D.pc.entries.filter(function (e) { return e.type === 'expense' && e.status === 'pending'; });
