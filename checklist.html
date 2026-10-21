@@ -67,6 +67,7 @@
   .type-badge.checkin{background:var(--accent-soft);color:var(--accent-d)}
   .type-badge.checkout{background:var(--qt-soft);color:var(--qt)}
   .type-badge.daily{background:#e8eef8;color:#3f5f93}
+  .type-badge.upkeep{background:#f1ebe0;color:#7a5a2c}
   .tpl-help{font-size:12px;color:var(--muted);margin-top:-4px}
   .field textarea.tpl{min-height:150px;font-size:13px;line-height:1.5}
   .due-action{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600}
@@ -240,6 +241,7 @@
       <option value="checkin">Check-in</option>
       <option value="checkout">Check-out</option>
       <option value="daily">Daily</option>
+      <option value="upkeep">Upkeep</option>
     </select>
     <select id="fStatus">
       <option value="all">All statuses</option>
@@ -261,6 +263,7 @@
           <option value="checkin">Check-in</option>
           <option value="checkout">Check-out</option>
           <option value="daily">Daily rounds</option>
+          <option value="upkeep">Weekly &amp; monthly upkeep</option>
         </select>
       </div>
       <div class="two" id="stGuestRow">
@@ -312,6 +315,8 @@
       <div class="field"><label>Check-in</label><textarea class="tpl" id="tplCheckin" data-no-i18n></textarea></div>
       <div class="field"><label>Check-out</label><textarea class="tpl" id="tplCheckout" data-no-i18n></textarea></div>
       <div class="field"><label>Daily rounds</label><textarea class="tpl" id="tplDaily" data-no-i18n></textarea></div>
+      <div class="field"><label>Weekly &amp; monthly upkeep</label><textarea class="tpl" id="tplUpkeep" data-no-i18n></textarea>
+        <p class="tpl-help">End each line with how often: "— weekly", "— monthly" or "— every 3 months". Only what has come due is put on the list, and the operations agent reminds the caretaker when it's due.</p></div>
       <p class="tpl-help">Tip: caretakers who use Tamil see the built-in items in Tamil. Items you add yourself show exactly as you type them — you can write them in Tamil.</p>
       <div class="merr" id="tplErr"></div>
     </div>
@@ -356,15 +361,17 @@ const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':
 // after local midnight. Read the local calendar fields directly instead.
 const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const fmtDate = iso => { if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; };
-const TYPE_LABEL = { checkin:'Check-in', checkout:'Check-out', daily:'Daily' };
-const runName = r => r.type==='daily' ? 'Daily rounds' : (r.guest||r.stayNo||'Untitled');
+const TYPE_LABEL = { checkin:'Check-in', checkout:'Check-out', daily:'Daily', upkeep:'Upkeep' };
+// daily rounds and upkeep belong to the villa, not to a booking
+const noStay = t => t==='daily' || t==='upkeep';
+const runName = r => r.type==='daily' ? 'Daily rounds' : r.type==='upkeep' ? 'Weekly & monthly upkeep' : (r.guest||r.stayNo||'Untitled');
 
 $('#roleBadge').textContent = isOwner ? 'Owner' : 'Caretaker';
 $('#roleBadge').className = 'badge ' + (isOwner ? 'owner' : 'caretaker');
 $('#whoami').textContent = localStorage.getItem('ryst_user_email') || '';
 document.body.classList.toggle('caretaker-mode', !isOwner);
 
-let DOC = { templates: { checkin: [], checkout: [], daily: [] }, runs: [] };
+let DOC = { templates: { checkin: [], checkout: [], daily: [], upkeep: [] }, runs: [], upkeepDue: [] };
 let STAYS = []; // best-effort; caretaker-role tokens may not have access
 let FILTERS = { q:'', type:'all', status:'all' };
 
@@ -391,7 +398,7 @@ async function load(){
     if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
     if(!res.ok) throw new Error('Server error ('+res.status+')');
     const data = await res.json().catch(()=>({}));
-    DOC = { templates: Object.assign({checkin:[],checkout:[],daily:[]}, data.templates||{}), runs: Array.isArray(data.runs)?data.runs:[] };
+    DOC = { templates: Object.assign({checkin:[],checkout:[],daily:[],upkeep:[]}, data.templates||{}), runs: Array.isArray(data.runs)?data.runs:[], upkeepDue: Array.isArray(data.upkeepDue)?data.upkeepDue:[] };
 
     // Today's check-ins/outs for the "due today" panel, so each checklist is
     // tied to its booking. /stays needs the bookings (or reports) module; a
@@ -442,6 +449,8 @@ function confirmedStays(all){
 function findRun(stayNo, type){
   // A daily round belongs to a day, not a booking.
   if(type === 'daily') return DOC.runs.find(r => r.type === 'daily' && r.date === todayISO());
+  // upkeep: the one still open (a finished one is history; the next is started fresh with what's due)
+  if(type === 'upkeep') return DOC.runs.find(r => r.type === 'upkeep' && r.status !== 'completed');
   return DOC.runs.find(r => r.stayNo === stayNo && r.type === type);
 }
 
@@ -454,6 +463,8 @@ function renderDue(){
     if(s.checkout===today) rows.push({ stayNo:s.no, guest:s.guest, type:'checkout' });
   });
   if((DOC.templates.daily||[]).length) rows.push({ stayNo:'', guest:'', type:'daily' });
+  const upDue = (DOC.upkeepDue||[]).filter(x=>x.due);
+  if(upDue.length || findRun('', 'upkeep')) rows.push({ stayNo:'', guest:'', type:'upkeep', due: upDue });
 
   $('#cDue').textContent = rows.length;
   $('#duePanel').style.display = rows.length ? '' : 'none';
@@ -470,8 +481,8 @@ function renderDue(){
     let btnLabel = 'Start', btnClass = '';
     if(run){ btnLabel = run.status==='completed' ? 'View' : 'Continue'; btnClass = run.status==='completed' ? 'view' : 'continue'; }
     return `<div class="due-item">
-      <div class="due-main"><span class="due-guest" ${r.type==='daily'?'':'data-no-i18n'}>${r.type==='daily' ? 'Daily rounds' : esc(r.guest||'—')}</span><span class="type-badge ${r.type}">${label}</span>
-        <div class="due-sub" ${r.type==='daily'?'':'data-no-i18n'}>${r.type==='daily' ? (run ? '' : 'Not done yet today') : esc(r.stayNo)}</div></div>
+      <div class="due-main"><span class="due-guest" ${noStay(r.type)?'':'data-no-i18n'}>${noStay(r.type) ? runName(r) : esc(r.guest||'—')}</span><span class="type-badge ${r.type}">${label}</span>
+        <div class="due-sub" ${noStay(r.type)?'':'data-no-i18n'}>${r.type==='daily' ? (run ? '' : 'Not done yet today') : r.type==='upkeep' ? (r.due.length ? `<span data-no-i18n>${r.due.length}</span> <span>${r.due.length===1?'item due':'items due'}</span>: ${r.due.slice(0,3).map(x=>`<span>${esc(x.text)}</span>`).join(' · ')}${r.due.length>3?' …':''}` : '') : esc(r.stayNo)}</div></div>
       <button class="due-action ${btnClass}" data-stayno="${esc(r.stayNo)}" data-type="${esc(r.type)}" data-guest="${esc(r.guest||'')}">${btnLabel}</button>
     </div>`;
   }).join('');
@@ -487,7 +498,7 @@ async function startOrOpen(stayNo, type, guest){
   try{
     const data = await sendCommand({ action:'start-run', type, stayNo, guest, date: todayISO() });
     if(data===null) return;
-    DOC.runs = data.runs;
+    DOC.runs = data.runs; if(data.upkeepDue) DOC.upkeepDue = data.upkeepDue;
     const run = findRun(stayNo, type);
     render();
     if(run) openRun(run.id);
@@ -528,8 +539,8 @@ function render(){
     const label = TYPE_LABEL[r.type] || r.type;
     return `<div class="run-row" onclick="openRun('${esc(r.id)}')">
       <div class="run-main">
-        <div class="run-title"><span ${r.type==='daily'?'':'data-no-i18n'}>${esc(runName(r))}</span> <span class="type-badge ${r.type}">${label}</span></div>
-        <div class="run-sub">${r.type==='daily' ? '' : `<span data-no-i18n>${esc(r.stayNo||'—')}</span> · `}${fmtDate(r.date)}</div>
+        <div class="run-title"><span ${noStay(r.type)?'':'data-no-i18n'}>${esc(runName(r))}</span> <span class="type-badge ${r.type}">${label}</span></div>
+        <div class="run-sub">${noStay(r.type) ? '' : `<span data-no-i18n>${esc(r.stayNo||'—')}</span> · `}${fmtDate(r.date)}</div>
       </div>
       ${noted ? `<span class="run-flag" title="${noted} item(s) have a note">⚠ ${noted} note${noted===1?'':'s'}</span>` : ''}
       <div class="run-progress">${checked}/${r.items.length} done</div>
@@ -547,21 +558,21 @@ function openStartModal(){
   $('#startOverlay').classList.add('show');
 }
 function closeStartModal(){ $('#startOverlay').classList.remove('show'); }
-$('#stType').addEventListener('change', ()=>{ $('#stGuestRow').style.display = $('#stType').value==='daily' ? 'none' : ''; });
+$('#stType').addEventListener('change', ()=>{ $('#stGuestRow').style.display = noStay($('#stType').value) ? 'none' : ''; });
 $('#btnStart').addEventListener('click', openStartModal);
 $('#stCancel').addEventListener('click', closeStartModal);
 $('#startOverlay').addEventListener('click', e=>{ if(e.target===$('#startOverlay')) closeStartModal(); });
 $('#stSave').addEventListener('click', async () => {
   const type = $('#stType').value;
-  const stayNo = type==='daily' ? '' : $('#stStayNo').value.trim();
-  const guest = type==='daily' ? '' : $('#stGuest').value.trim();
+  const stayNo = noStay(type) ? '' : $('#stStayNo').value.trim();
+  const guest = noStay(type) ? '' : $('#stGuest').value.trim();
   const date = $('#stDate').value || todayISO();
   const btn = $('#stSave');
   btn.disabled = true; btn.textContent = 'Starting…';
   try{
     const data = await sendCommand({ action:'start-run', type, stayNo, guest, date });
     if(data===null) return;
-    DOC.runs = data.runs;
+    DOC.runs = data.runs; if(data.upkeepDue) DOC.upkeepDue = data.upkeepDue;
     render();
     closeStartModal();
     const created = data.runs[data.runs.length-1];
@@ -678,7 +689,7 @@ async function doAutosave(){
   try{
     const data = await sendCommand({ action:'update-run', id: currentRunId, items, overallNote });
     if(data===null) return; // sendCommand already redirected to login
-    DOC.runs = data.runs;
+    DOC.runs = data.runs; if(data.upkeepDue) DOC.upkeepDue = data.upkeepDue;
     setSaveStatus('saved');
   }catch(e){
     setSaveStatus('error', e.message);
@@ -704,8 +715,8 @@ function openRun(id){
   currentRunId = id;
   clearTimeout(autosaveTimer); autosaveTimer = null; autosavePending = false;
   const label = TYPE_LABEL[run.type] || run.type;
-  $('#runTitle').textContent = run.type==='daily' ? `${label} checklist — ${fmtDate(run.date)}` : `${label} checklist${run.guest?' — '+run.guest:''}`;
-  $('#runSub').textContent = run.type==='daily' ? '' : `${run.stayNo||'No booking reference'} · ${fmtDate(run.date)}`;
+  $('#runTitle').textContent = noStay(run.type) ? `${label} checklist — ${fmtDate(run.date)}` : `${label} checklist${run.guest?' — '+run.guest:''}`;
+  $('#runSub').textContent = noStay(run.type) ? '' : `${run.stayNo||'No booking reference'} · ${fmtDate(run.date)}`;
   $('#runOverallNote').value = run.overallNote || '';
   $('#runErr').textContent = '';
   setSaveStatus('');
@@ -789,7 +800,7 @@ async function saveRun(status){
   try{
     const data = await sendCommand({ action:'update-run', id: currentRunId, items, overallNote, status });
     if(data===null) return;
-    DOC.runs = data.runs;
+    DOC.runs = data.runs; if(data.upkeepDue) DOC.upkeepDue = data.upkeepDue;
     render();
     showToast(status==='completed' ? 'Checklist marked complete' : 'Progress saved');
     closeRunModal();
@@ -805,7 +816,7 @@ $('#runDelete').addEventListener('click', async () => {
   try{
     const data = await sendCommand({ action:'delete-run', id: currentRunId });
     if(data===null) return;
-    DOC.runs = data.runs;
+    DOC.runs = data.runs; if(data.upkeepDue) DOC.upkeepDue = data.upkeepDue;
     render();
     closeRunModal();
     showToast('Checklist deleted');
@@ -817,6 +828,7 @@ function openTemplates(){
   $('#tplCheckin').value = (DOC.templates.checkin||[]).join('\n');
   $('#tplCheckout').value = (DOC.templates.checkout||[]).join('\n');
   $('#tplDaily').value = (DOC.templates.daily||[]).join('\n');
+  $('#tplUpkeep').value = (DOC.templates.upkeep||[]).join('\n');
   $('#tplErr').textContent = '';
   $('#tplOverlay').classList.add('show');
 }
@@ -825,14 +837,14 @@ $('#btnTemplates').addEventListener('click', openTemplates);
 $('#tplCancel').addEventListener('click', ()=>$('#tplOverlay').classList.remove('show'));
 $('#tplOverlay').addEventListener('click', e=>{ if(e.target===$('#tplOverlay')) $('#tplOverlay').classList.remove('show'); });
 $('#tplSave').addEventListener('click', async ()=>{
-  const checkin = tplLines('#tplCheckin'), checkout = tplLines('#tplCheckout'), daily = tplLines('#tplDaily');
+  const checkin = tplLines('#tplCheckin'), checkout = tplLines('#tplCheckout'), daily = tplLines('#tplDaily'), upkeep = tplLines('#tplUpkeep');
   if(!checkin.length || !checkout.length){ $('#tplErr').textContent = 'Check-in and check-out each need at least one item.'; return; }
-  if([checkin,checkout,daily].some(l=>l.length>60)){ $('#tplErr').textContent = 'At most 60 items per checklist.'; return; }
+  if([checkin,checkout,daily,upkeep].some(l=>l.length>60)){ $('#tplErr').textContent = 'At most 60 items per checklist.'; return; }
   const b = $('#tplSave'); b.disabled = true;
   try{
-    const data = await sendCommand({ action:'set-templates', checkin, checkout, daily });
+    const data = await sendCommand({ action:'set-templates', checkin, checkout, daily, upkeep });
     if(data===null) return;
-    DOC.templates = Object.assign({checkin:[],checkout:[],daily:[]}, data.templates||{}); DOC.runs = data.runs || DOC.runs;
+    DOC.templates = Object.assign({checkin:[],checkout:[],daily:[],upkeep:[]}, data.templates||{}); if(data.upkeepDue) DOC.upkeepDue = data.upkeepDue; DOC.runs = data.runs || DOC.runs;
     render(); $('#tplOverlay').classList.remove('show'); showToast('Checklists saved');
   }catch(e){ $('#tplErr').textContent = e.message; }
   finally{ b.disabled = false; }
@@ -844,13 +856,13 @@ $('#fStatus').addEventListener('change', e=>{ FILTERS.status=e.target.value; ren
 
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeStartModal(); closeRunModal(); $('#tplOverlay').classList.remove('show'); } });
 
-// Dashboard deep link: ?start=checkin|checkout|daily&stay=<no>&guest=<name>
+// Dashboard deep link: ?start=checkin|checkout|daily|upkeep&stay=<no>&guest=<name>
 // starts (or reopens) that checklist once the page has loaded.
 load().then(()=>{
   const q = new URLSearchParams(location.search), type = q.get('start');
   if(!type || !TYPE_LABEL[type]) return;
   history.replaceState(null, '', location.pathname);
-  startOrOpen(type === 'daily' ? '' : (q.get('stay') || ''), type, type === 'daily' ? '' : (q.get('guest') || ''));
+  startOrOpen(noStay(type) ? '' : (q.get('stay') || ''), type, noStay(type) ? '' : (q.get('guest') || ''));
 });
 </script>
 </body>
