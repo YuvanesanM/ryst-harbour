@@ -148,7 +148,7 @@
     'Pest control done — monthly': 'பூச்சிக் கட்டுப்பாடு செய்யப்பட்டது — மாதாந்திரம்',
     'Fire extinguisher pressure gauge checked — monthly': 'தீயணைப்பான் அழுத்தமானி சரிபார்ப்பு — மாதாந்திரம்',
     'Lift serviced and logged (AMC) — monthly': 'லிஃப்ட் சர்வீஸ் செய்து பதிவு (AMC) — மாதாந்திரம்',
-    'Water tank cleaned — every 3 months': 'தண்ணீர்த் தொட்டி சுத்தம் — 3 மாதத்திற்கு ஒருமுறை',
+    'Sintex water tanks (roof, next to the AC units) — backwash and clean — every 3 months': 'சின்டெக்ஸ் தண்ணீர்த் தொட்டிகள் (மாடி, AC யூனிட்களுக்கு அருகில்) — பேக்வாஷ் & சுத்தம் — 3 மாதத்திற்கு ஒருமுறை',
     'Upkeep': 'பராமரிப்பு',
     'Weekly & monthly upkeep': 'வாராந்திர & மாதாந்திர பராமரிப்பு',
     'item due': 'வேலை நிலுவையில்',

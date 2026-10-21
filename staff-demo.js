@@ -151,7 +151,7 @@
   };
   // weekly / monthly upkeep in the demo: one item due, the rest scheduled
   (function(){ var c = FIX['/checklist']; if (!c) return; var t = new Date(), d = function(n){ var x = new Date(t); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
-    c.templates.upkeep = ['Generator test-run 10–15 min under load — weekly', 'AC filters cleaned — monthly', 'Pest control done — monthly', 'Fire extinguisher pressure gauge checked — monthly', 'Lift serviced and logged (AMC) — monthly', 'Water tank cleaned — every 3 months'];
+    c.templates.upkeep = ['Generator test-run 10–15 min under load — weekly', 'AC filters cleaned — monthly', 'Pest control done — monthly', 'Fire extinguisher pressure gauge checked — monthly', 'Lift serviced and logged (AMC) — monthly', 'Sintex water tanks (roof, next to the AC units) — backwash and clean — every 3 months'];
     c.upkeepDue = c.templates.upkeep.map(function(text, i){ return { text: text, every: [7, 30, 30, 30, 30, 90][i], last: i ? d(-9 - i) : d(-8), next: i ? d(21 - i) : d(-1), due: !i }; });
   })();
   var MSG = 'Demo mode — sample data only, changes are not saved. Sign in with your staff account to make changes.';

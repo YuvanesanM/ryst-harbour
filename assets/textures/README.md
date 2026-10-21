@@ -15,3 +15,5 @@ OpenGL-style normal maps.
 | sand | coast_sand_01 |
 | gravel | sandy_gravel |
 | plaster_n | plaster_grey_04 (normal map only) |
+| hexpave | hexagonal_concrete_paving (the paver-block roads) |
+| cement | brushed_concrete_03 (car park) |
