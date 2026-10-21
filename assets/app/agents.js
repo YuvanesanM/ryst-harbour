@@ -408,6 +408,10 @@
 
   // ── agents view ──────────────────────────────────────────────────────────
   function renderAgents() {
+    // Claude drafting: whether it's on, this month's use, and the last error if the latest attempt failed
+    { const ai = S.ai || {}, err = ai.lastError && (!ai.lastOk || ai.lastError.at > ai.lastOk) ? ai.lastError : null;
+      $('#aiLine').innerHTML = !ai.configured ? `${svgI('bot')}<span>${t('Claude drafting is off — the agents use their own templates.')}</span>`
+        : `${svgI('bot')}<span><b>${t('Claude drafting on')}</b> · ${ai.calls || 0}/${ai.cap || 0} ${t('drafts this month')}${ai.errors ? ` · ${ai.errors} ${t('failed')}` : ''}</span>${err ? `<span class="bad">· ${t('Last attempt failed')} ${esc(ago(err.at))}: <span data-no-i18n>${esc(err.message)}</span></span>` : ''}`; }
     $('#headCards').innerHTML = (S.heads || []).map(h => { const st = h.stats || {};
       return `<div class="card acard" data-headinsp="${h.id}" tabindex="0" role="button"><div class="top"><span class="av">${svgI(HEAD_ICON[h.id])}</span><span><h3>${esc(h.name)}</h3><div class="role">${esc(t(h.title))}</div></span></div>
         <div class="meta"><span class="sp ${st.pending ? 'awaiting' : 'idle'}">${st.pending ? st.pending + ' ' + t('waiting') : t('Nothing waiting')}</span>${st.value ? `<span>${inr(st.value)} ${t('at stake')}</span>` : ''}${st.accuracy != null ? `<span>${Math.round(st.accuracy * 100)}% ${t('right')}</span>` : ''}</div>
