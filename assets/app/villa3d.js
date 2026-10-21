@@ -13,6 +13,7 @@
 // Nothing is changed from here: every action opens the existing page for it.
 import * as THREE from 'three';
 import { OrbitControls } from '../vendor/three/OrbitControls.js';
+import { RoomEnvironment } from '../vendor/three/RoomEnvironment.js';
 
 const PROXY = 'https://data.ryst.in';
 const ls = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
@@ -253,6 +254,26 @@ function makeTextures() {
     g.strokeStyle = 'rgba(176,168,154,.7)'; g.lineWidth = 2; for (let i = 0; i <= 2; i++) { g.beginPath(); g.moveTo(0, i * n / 2); g.lineTo(n, i * n / 2); g.moveTo(i * n / 2, 0); g.lineTo(i * n / 2, n); g.stroke(); } });
   TEX.chess = canvasTex(512, (g, n) => { const q = n / 8; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.fillStyle = (i + j) % 2 ? '#1f2124' : '#f4f1ea'; g.fillRect(i * q, j * q, q, q); } });
 }
+// Photo-scanned surfaces (Poly Haven, CC0 — see /assets/textures/README.md). Each one loads in
+// the background and replaces the procedural stand-in when it arrives; if it can't load, the
+// stand-in simply stays. Repeats are in metres so a tile is the same size on every surface.
+const PHOTO = {}, photoLoader = new THREE.TextureLoader();
+function photoImg(name) {
+  return PHOTO[name] || (PHOTO[name] = new Promise(res => photoLoader.load('/assets/textures/' + name + '.jpg', t => res(t), undefined, () => res(null))));
+}
+function photo(mat, name, w, d, per, o) {
+  o = o || {};
+  const use = (base, slot, srgb) => base && (() => {
+    const t = base.clone(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(w / per, d / per);
+    t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.anisotropy = MAX_ANISO; t.needsUpdate = true;
+    mat[slot] = t; mat.needsUpdate = true; needRender = true; if (typeof kick === 'function') kick();
+  })();
+  if (o.map !== false) photoImg(name).then(t => { if (t) { use(t, 'map', true); mat.color.set(o.tint || 0xffffff); } });
+  if (o.normal) photoImg(name + '_n').then(t => { use(t, 'normalMap', false); if (t) mat.normalScale.set(o.normal, o.normal); });
+  if (o.roughness != null) mat.roughness = o.roughness;
+  return mat;
+}
+let MAX_ANISO = 4;
 function box(w, h, d, mat, x, y, z, parent) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
   m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
@@ -264,6 +285,7 @@ function initScene() {
   const small = Math.min(innerWidth, innerHeight) < 700;
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, small ? 1.5 : 1.75));
   renderer.shadowMap.enabled = !small;
+  MAX_ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
@@ -277,7 +299,10 @@ function initScene() {
   controls.target.set(0, 1.5, -3);
   controls.addEventListener('change', () => { needRender = true; kick(); });
   clock = new THREE.Clock();
-  lights(); makeTextures();
+  // soft studio reflections for water, glass, chrome and the polished chess pieces
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; pmrem.dispose();
+  lights(); makeTextures(); materialQuality(small);
   buildSite(); buildHouse(); buildOutdoors();
   setView('overview', true);
   // arrive from high over the sea, swinging round to the road side
@@ -302,11 +327,26 @@ function lights() {
   fill = new THREE.DirectionalLight(0xdfe9ef, 0.5); fill.position.set(20, 15, -20); scene.add(fill);
   applyLighting();
 }
+// Finishes: plaster walls with a little relief, reflective glass and water, polished stone.
+function materialQuality(small) {
+  if (!small) sun.shadow.mapSize.set(2048, 2048);
+  photo(MAT.wall, 'plaster', 2, 2, 1, { map: false, normal: 0.35, roughness: 0.92 });
+  photo(MAT.wallIn, 'plaster', 2, 2, 1, { map: false, normal: 0.25 });
+  Object.assign(MAT.win, { roughness: 0.06, metalness: 0.6 }); MAT.win.envMapIntensity = 1.4;
+  Object.assign(MAT.glass, { roughness: 0.04, metalness: 0.3 });
+  Object.assign(MAT.water, { roughness: 0.03, metalness: 0.1, opacity: 0.8 }); MAT.water.envMapIntensity = 1.6;
+  Object.assign(MAT.sea, { roughness: 0.12, metalness: 0.15 });
+  MAT.slab.roughness = 0.8; MAT.trim.roughness = 0.55;
+  photo(MAT.road, 'asphalt', 90, 7, 4, { tint: 0xd8d8d8, roughness: 0.95 });
+  photo(MAT.sand, 'sand', 14, 80, 4, { tint: 0xfff3dd, roughness: 1 });
+  photo(MAT.ground, 'gravel', 70, 56, 4, { roughness: 1 });
+}
 const evenLamps = [];
 function applyLighting() {
   scene.background = new THREE.Color(EVENING ? 0x16233a : 0xe9e2d4);
   scene.fog = new THREE.Fog(scene.background, 90, 200);
-  hemi.intensity = EVENING ? 0.55 : 1.6; hemi.color.set(EVENING ? 0x8ea3c8 : 0xfdf6ea);
+  scene.environmentIntensity = EVENING ? 0.12 : 0.45; // reflections, kept below the sun so colours stay true
+  hemi.intensity = EVENING ? 0.5 : 1.35; hemi.color.set(EVENING ? 0x8ea3c8 : 0xfdf6ea);
   sun.intensity = EVENING ? 0.35 : 2.4; sun.color.set(EVENING ? 0x9fb3d9 : 0xfff1dc);
   fill.intensity = EVENING ? 0.25 : 0.5;
   MAT.win.emissive.set(EVENING ? 0xffc977 : 0x000000); MAT.win.emissiveIntensity = EVENING ? 0.9 : 0;
@@ -322,14 +362,14 @@ function buildSite() {
   const cx = PLOT.x + PLOT.w / 2, cz = PLOT.z + PLOT.d / 2;
   // each layer at its own height (the plot used to sit at the lawns' height, and the two flickered)
   const flat = (w, d, mat, x, z, y) => { const m = box(w, 0.06, d, mat, x, y == null ? 0.03 : y, z, g); m.castShadow = false; return m; };
-  const lawn = (w, d, x, z) => flat(w, d, texMat('grass', w, d, 2.5), x, z, 0.04);
+  const lawn = (w, d, x, z) => flat(w, d, photo(texMat('grass', w, d, 2.5), 'grass', w, d, 2.2, { tint: 0xa6dd84, normal: 0.6, roughness: 1 }), x, z, 0.04);
   box(70, 0.4, 56, MAT.ground, cx + 8, -0.21, cz, g).castShadow = false;
-  flat(PLOT.w, PLOT.d, M(0xe9e1d0), cx, cz, 0.0);
+  flat(PLOT.w, PLOT.d, photo(M(0xe9e1d0), 'gravel', PLOT.w, PLOT.d, 3, { tint: 0xf4ece0, roughness: 1 }), cx, cz, 0.0);
   // lawns and the pebble bed, as on the ground-floor sheet
   lawn(8.87, 5.63, -9.7, 7.35); lawn(5.9, 1.2, -11.2, -4.3); lawn(3.8, 1.5, -6.4, -7.1); flat(0.7, 6.65, M(0xc9c0ae), -13.95, 0.47, 0.035);
   // stepping stones across the south-west lawn to the front path
   for (let i = 0; i < 7; i++) { const st = box(0.55, 0.04, 0.4, MAT.path, -12.6 + i * 1.1, 0.08, 6.3 + Math.sin(i * 0.9) * 0.5, g); st.castShadow = false; }
-  flat(7.67, 8.5, MAT.path, 5.32, 5.54, 0.02); // paved drive
+  flat(7.67, 8.5, photo(M(0xd8cfbf), 'pavers', 7.67, 8.5, 2, { normal: 0.8, roughness: 0.9 }), 5.32, 5.54, 0.02); // paved drive
   flat(1.66, 2.03, MAT.path, 0.09, 8.78, 0.02); // front steps path
   // road to the south, the coast to the east (Pearl Beach)
   box(90, 0.1, 7, MAT.road, cx + 8, 0.0, 14.4, g).castShadow = false;
@@ -497,7 +537,7 @@ function chessSet(parent, y) {
   const C = ZONE.chess, G = chessGeos(), q = CHESS.sq, bx = C.x + C.w / 2 - 0.6 - 4 * q, bz = C.z + C.d / 2 - 4 * q;
   const board = new THREE.Mesh(new THREE.BoxGeometry(8 * q, 0.02, 8 * q), M(0xffffff, { map: TEX.chess, roughness: 0.45 }));
   board.position.set(bx + 4 * q, y, bz + 4 * q); board.receiveShadow = true; parent.add(board);
-  const white = M(0xf2ede2, { roughness: 0.35 }), black = M(0x1b1d20, { roughness: 0.3 });
+  const white = M(0xf2ede2, { roughness: 0.22 }), black = M(0x1b1d20, { roughness: 0.18 });
   const at = (geo, mat, c, rRow, extra) => { const m = new THREE.Mesh(geo, mat); m.position.set(bx + (c + 0.5) * q, y + 0.01, bz + (rRow + 0.5) * q); m.castShadow = true; parent.add(m); if (extra) extra(m); return m; };
   const back = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
   [[black, 0, 1, 1], [white, 7, 6, -1]].forEach(([mat, br, pr, dir]) => {
@@ -529,7 +569,7 @@ function smallTree(x, z, parent) {
   const crown = new THREE.Group(); crown.position.y = 1.5; g.add(crown);
   const leaf = M(0x5f8a52), bloom = M(0xf6eedc);
   [[0, 0.35, 0, 0.75], [0.5, 0.15, 0.2, 0.55], [-0.45, 0.2, -0.15, 0.55], [0.1, 0.2, -0.5, 0.5], [-0.1, 0.1, 0.5, 0.5]].forEach(([a, b, c, r]) => {
-    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), leaf); m.position.set(a, b, c); m.castShadow = true; crown.add(m); });
+    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 2), leaf); m.position.set(a, b, c); m.castShadow = true; crown.add(m); });
   for (let i = 0; i < 9; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.06, 5, 4), bloom); const t = i * 2.4; f.position.set(Math.cos(t) * 0.6, 0.45 + (i % 3) * 0.12, Math.sin(t) * 0.55); crown.add(f); }
   animated.push({ kind: 'sway', obj: crown, phase: 1.3, amp: 0.025 });
 }
@@ -539,19 +579,20 @@ function buildOutdoors() {
   // pool (22 ft, shallow ledge to the north-east) with the jacuzzi in its north-west corner
   const P = ZONE.pool, J = ZONE.jacuzzi;
   box(P.w + 0.9, 0.35, P.d + 0.9, MAT.trim, P.x + P.w / 2, 0.17, P.z + P.d / 2, g);
-  box(P.w, 0.3, P.d, MAT.poolTile, P.x + P.w / 2, 0.2, P.z + P.d / 2, g).castShadow = false;
+  box(P.w, 0.3, P.d, photo(M(0x9cc9cf), 'pooltile', P.w, P.d, 0.9, { tint: 0x9fd8e2, normal: 0.6, roughness: 0.35 }), P.x + P.w / 2, 0.2, P.z + P.d / 2, g).castShadow = false;
   const wGeo = new THREE.PlaneGeometry(P.w, P.d, 12, 24); wGeo.rotateX(-Math.PI / 2);
   const water = pick(new THREE.Mesh(wGeo, MAT.water), 'pool'); water.position.set(P.x + P.w / 2, 0.37, P.z + P.d / 2); g.add(water);
   animated.push({ kind: 'waves', mesh: water, base: wGeo.attributes.position.array.slice(), amp: 0.025, speed: 1.4 });
   box(J.w + 0.1, 0.5, 0.15, MAT.trim, J.x + J.w / 2, 0.42, J.z + J.d, g); box(0.15, 0.5, J.d + 0.1, MAT.trim, J.x + J.w, 0.42, J.z + J.d / 2, g);
   const jw = pick(box(J.w - 0.1, 0.05, J.d - 0.1, MAT.water, J.x + J.w / 2, 0.55, J.z + J.d / 2, g), 'jacuzzi'); jw.castShadow = false;
   // pool deck: white stone
-  const Dk = ZONE.deck; pick(box(Dk.w, 0.08, Dk.d, texMat('stone', Dk.w, Dk.d, 1.2, { roughness: 0.7 }), Dk.x + Dk.w / 2, 0.36, Dk.z + Dk.d / 2, g), 'deck');
+  const Dk = ZONE.deck; pick(box(Dk.w, 0.08, Dk.d, photo(texMat('stone', Dk.w, Dk.d, 1.2, { roughness: 0.7 }), 'whitetile', Dk.w, Dk.d, 1.4, { normal: 0.5, roughness: 0.5 }), Dk.x + Dk.w / 2, 0.36, Dk.z + Dk.d / 2, g), 'deck');
   // the wood deck: out of the west doors, under the balcony to the pool deck, a little wider at its
   // north end where two sun loungers face the pool (outside view; the cutaway shows the lounge floor)
   const Lg = ZONE.lounge;
-  groups.wood = [box(Lg.w + 0.15, 0.4, Lg.d, texMat('planks', 1, Lg.d, 2.2), Lg.x + Lg.w / 2 + 0.07, 0.2, Lg.z + Lg.d / 2, g),
-    box(0.95, 0.4, 2.55, texMat('planks', 1, 2.55, 2.2), Lg.x - 0.47, 0.2, Lg.z + 1.28, g)];
+  const plank = (w, d) => photo(texMat('planks', w, d, 2.2), 'planks', w, d, 1.6, { tint: 0xf2c08c, normal: 0.9, roughness: 0.7 });
+  groups.wood = [box(Lg.w + 0.15, 0.4, Lg.d, plank(Lg.w + 0.15, Lg.d), Lg.x + Lg.w / 2 + 0.07, 0.2, Lg.z + Lg.d / 2, g),
+    box(0.95, 0.4, 2.55, plank(0.95, 2.55), Lg.x - 0.47, 0.2, Lg.z + 1.28, g)];
   groups.wood.forEach(m => { m.castShadow = false; pick(m, 'lounge'); });
   LOUNGERS.forEach(([x, z, towel]) => lounger(x, 0.4, z, -Math.PI / 2 + 0.25, g, towel));
   box(0.45, 0.4, 0.45, M(0x6e5a46), Lg.x + 1.75, 0.6, Lg.z + 1.28, g); // side table at their heads
@@ -566,7 +607,7 @@ function buildOutdoors() {
   box(0.45, 0.12, 0.35, M(0xf4f4f2), Ob.x + 1.1, 0.85, Ob.z + 0.35, g); box(0.1, 0.8, 0.1, MAT.trim, Ob.x + 1.1, 0.4, Ob.z + 0.35, g); // basin
   box(0.05, 2.1, 0.05, M(0xc9ced2, { metalness: 0.7, roughness: 0.3 }), Ob.x + 0.25, 1.05, Ob.z + Ob.d - 0.5, g); box(0.25, 0.03, 0.25, M(0xc9ced2, { metalness: 0.7, roughness: 0.3 }), Ob.x + 0.38, 2.1, Ob.z + Ob.d - 0.5, g); // rain shower
   // potted plants by the front door and along the wood deck
-  [[2.2, 1.6], [3.6, 1.6], [Lg.x + 0.3, Lg.z + 4.3], [Lg.x + 0.3, Lg.z + 9.8]].forEach(([x, z]) => { box(0.4, 0.45, 0.4, M(0xb06a48), x, 0.45, z, g); const pl = new THREE.Mesh(new THREE.IcosahedronGeometry(0.33, 1), M(0x5c8550)); pl.position.set(x, 0.95, z); pl.castShadow = true; g.add(pl); });
+  [[2.2, 1.6], [3.6, 1.6], [Lg.x + 0.3, Lg.z + 4.3], [Lg.x + 0.3, Lg.z + 9.8]].forEach(([x, z]) => { box(0.4, 0.45, 0.4, M(0xb06a48), x, 0.45, z, g); const pl = new THREE.Mesh(new THREE.IcosahedronGeometry(0.33, 2), M(0x5c8550, { roughness: 0.95 })); pl.position.set(x, 0.95, z); pl.castShadow = true; g.add(pl); });
   // garden bollard lights (evening)
   [[-12.8, 5.0], [-7.4, 5.0], [-7.0, 9.4], [-13.2, 9.4]].forEach(([x, z]) => { box(0.12, 0.55, 0.12, MAT.dark, x, 0.3, z, g); const l = box(0.14, 0.08, 0.14, MAT.lamp, x, 0.6, z, g); l.castShadow = false; evenLamps.push(l); });
   // the 150-inch screen between the jacuzzi and the food counter, facing the pool
@@ -580,7 +621,7 @@ function buildOutdoors() {
   pick(box(Fc.w * 0.5, 0.95, 0.7, MAT.trim, Fc.x + Fc.w * 0.75, 0.48, Fc.z + Fc.d - 0.5, g), 'counter');
   box(Fc.w * 0.55, 0.12, Fc.d + 0.3, MAT.slab, Fc.x + Fc.w * 0.72, 2.7, Fc.z + Fc.d / 2, g);
   // parking: drive, a car under the terrace
-  const Pk = ZONE.parking; pick(box(Pk.w, 0.04, Pk.d, MAT.path, Pk.x + Pk.w / 2, 0.07, Pk.z + Pk.d / 2, g), 'parking');
+  const Pk = ZONE.parking; pick(box(Pk.w, 0.04, Pk.d, photo(M(0xd8cfbf), 'pavers', Pk.w, Pk.d, 2, { normal: 0.8, roughness: 0.9 }), Pk.x + Pk.w / 2, 0.07, Pk.z + Pk.d / 2, g), 'parking');
   // the guests' car: parked only while a stay is in house (it drives in on check-in day)
   car = new THREE.Group(); g.add(car); car.position.set(CAR_X, 0, CAR_PARK);
   box(1.9, 0.7, 4.2, M(0x5c6870, { roughness: 0.4 }), 0, 0.55, 0, car); box(1.7, 0.55, 2.2, M(0x2a3238, { roughness: 0.3 }), 0, 1.15, -0.2, car);
@@ -603,7 +644,7 @@ function buildOutdoors() {
   for (let z = 1.6; z < 9.8; z += 0.75) pts.push([9.55, z]);
   for (let x = -4.8; x < -0.6; x += 0.62) pts.push([x, 7.25]);
   [[-11, -4.4], [-12.4, -4.4], [-7.6, -7.2]].forEach(p => pts.push(p));
-  const shrubs = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.42, 0), M(0x6f8f5c), pts.length), m4 = new THREE.Matrix4();
+  const shrubs = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.42, 2), M(0x5f8f4e, { roughness: 0.95 }), pts.length), m4 = new THREE.Matrix4();
   pts.forEach(([x, z], i) => { const s = 0.85 + ((i * 37) % 10) / 40; m4.compose(new THREE.Vector3(x, 0.35 * s, z), new THREE.Quaternion(), new THREE.Vector3(s, s, s)); shrubs.setMatrixAt(i, m4); });
   shrubs.castShadow = true; g.add(shrubs);
   // pool lights (evening)
