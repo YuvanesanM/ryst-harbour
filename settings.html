@@ -607,6 +607,23 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
     <p class="wa-hint">The template's body must use a single placeholder 1: the link to the guest's quote-review page.</p>
     <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button type="button" class="rc-add" data-reset="quoteReady">Reset to default</button></div>
 
+    <div class="wa-fu">
+      <label class="f"><span>Enquiry follow-up — after WhatsApp's 24-hour window, the AI agents can follow up an unanswered enquiry with this approved template (you approve each one first)</span></label>
+      <p class="wa-hint">Submit this wording in Interakt (category Utility or Marketing), with placeholders 1 = guest's first name, 2 = villa name:</p>
+      <pre class="wa-tpl" id="tplEnquiryFollowup">Hi {{1}}, thanks for your message to {{2}}! Sorry we couldn't reply sooner. Are you still planning a stay? Reply with your dates and number of guests and we'll check availability and the price for you right away.</pre>
+      <button type="button" class="rc-add" data-copy="tplEnquiryFollowup">Copy wording</button>
+      <label class="f" style="margin:10px 0 8px"><span>Interakt template name, once Meta approves it</span>
+        <input class="t" id="waInteraktEnquiryFollowup" placeholder="e.g. enquiry_followup_v1" pattern="[a-z0-9_]*" maxlength="120"></label>
+    </div>
+    <div class="wa-fu" style="margin-bottom:22px">
+      <label class="f"><span>Quote follow-up — for a quote that went quiet (2–14 days, dates still open), sent from an approved agent draft</span></label>
+      <p class="wa-hint">Placeholders 1 = first name, 2 = villa name, 3 = dates, 4 = total:</p>
+      <pre class="wa-tpl" id="tplQuoteFollowup">Hi {{1}}, your dates at {{2}} ({{3}}) are still open — {{4}} for your group. Reply BOOK and we'll send the payment link to confirm with an advance, or ask us anything about the stay.</pre>
+      <button type="button" class="rc-add" data-copy="tplQuoteFollowup">Copy wording</button>
+      <label class="f" style="margin:10px 0 8px"><span>Interakt template name, once Meta approves it</span>
+        <input class="t" id="waInteraktQuoteFollowup" placeholder="e.g. quote_followup_v1" pattern="[a-z0-9_]*" maxlength="120"></label>
+    </div>
+
     <label class="f"><span>Booking confirmed — sent automatically the instant a balance payment clears online (a direct booking's own payment, the quote-review link's pay-to-confirm, or a later remaining-balance payment), no schedule needed</span></label>
     <p class="wa-hint">{{guest}} {{checkin}} {{checkout}} {{guests}} {{walletLink}}</p>
     <textarea class="t" id="waBookingConfirmed" rows="12" style="margin-bottom:8px"></textarea>
@@ -1682,7 +1699,7 @@ let waTemplatesDraft = Object.assign({}, WA_DEFAULTS);
 // Per-scenario Interakt-approved template name — mirrors
 // INTERAKT_TEMPLATES_DEFAULT in the proxy's server.js. Empty string means
 // "not set up yet", same fallback-to-Telegram-nudge meaning as there.
-const INTERAKT_TEMPLATES_DEFAULT = { checkinRequest: '', reminder: '', feedbackRequest: '', quoteReady: '', bookingConfirmed: '' };
+const INTERAKT_TEMPLATES_DEFAULT = { checkinRequest: '', reminder: '', feedbackRequest: '', quoteReady: '', bookingConfirmed: '', enquiryFollowup: '', quoteFollowup: '' };
 let interaktTemplatesDraft = Object.assign({}, INTERAKT_TEMPLATES_DEFAULT);
 // Mirrors WA_AUTOMATION_DEFAULT/mergeWaAutomation in the proxy's server.js —
 // per-scenario day count (before check-in, or after check-out) + a specific
@@ -1722,6 +1739,8 @@ function renderWaTemplates(){
   document.getElementById('waInteraktQuoteReady').value = interaktTemplatesDraft.quoteReady || '';
   document.getElementById('waBookingConfirmed').value = waTemplatesDraft.bookingConfirmed || '';
   document.getElementById('waInteraktBookingConfirmed').value = interaktTemplatesDraft.bookingConfirmed || '';
+  document.getElementById('waInteraktEnquiryFollowup').value = interaktTemplatesDraft.enquiryFollowup || '';
+  document.getElementById('waInteraktQuoteFollowup').value = interaktTemplatesDraft.quoteFollowup || '';
   document.getElementById('waCheckinRequestDays').value = waAutomationDraft.checkinRequest.daysBefore;
   document.getElementById('waCheckinRequestTime').value = waAutomationDraft.checkinRequest.sendTime;
   document.getElementById('waReminderDays').value = waAutomationDraft.reminder.daysBefore;
@@ -1758,6 +1777,8 @@ document.getElementById('waSave').addEventListener('click', async ()=>{
     feedbackRequest: document.getElementById('waInteraktFeedbackRequest').value.trim().toLowerCase(),
     quoteReady: document.getElementById('waInteraktQuoteReady').value.trim().toLowerCase(),
     bookingConfirmed: document.getElementById('waInteraktBookingConfirmed').value.trim().toLowerCase(),
+    enquiryFollowup: document.getElementById('waInteraktEnquiryFollowup').value.trim().toLowerCase(),
+    quoteFollowup: document.getElementById('waInteraktQuoteFollowup').value.trim().toLowerCase(),
   };
   btn.disabled = true; btn.textContent = 'Saving…';
   try{
@@ -2484,5 +2505,11 @@ function toast(msg){
   setTimeout(()=>t.classList.remove("show"),2400);
 }
 </script>
+<script>
+document.addEventListener('click', function (e) { var b = e.target.closest('[data-copy]'); if (!b) return;
+  var el = document.getElementById(b.getAttribute('data-copy')); if (!el || !navigator.clipboard) return;
+  navigator.clipboard.writeText(el.textContent).then(function () { var t = b.textContent; b.textContent = 'Copied'; setTimeout(function () { b.textContent = t; }, 1500); }); });
+</script>
+<style>.wa-tpl{white-space:pre-wrap;font:13px/1.5 inherit;font-family:inherit;background:var(--panel2,#f7f8f5);border:1px solid var(--line,#e3e5e0);border-radius:9px;padding:10px 12px;margin:0 0 8px}</style>
 </body>
 </html>
