@@ -199,6 +199,11 @@
     transition:background .15s,border-color .15s,color .15s,box-shadow .15s;
   }
   .meal-chip.active{background:var(--sea-mid);border-color:var(--sea-mid);color:#fff;box-shadow:0 6px 14px rgba(26,106,122,.3)}
+  .cat-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -2px 14px;padding:2px}
+  .cat-tabs::-webkit-scrollbar{display:none}
+  .cat-tab{flex:0 0 auto;background:var(--white);border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-family:var(--sans);font-size:13.5px;font-weight:700;color:var(--muted-text);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+  .cat-tab.active{background:var(--sea-mid);border-color:var(--sea-mid);color:#fff}
+  .cat-tab:focus-visible,.meal-chip:focus-visible{outline:2px solid var(--sea-mid);outline-offset:2px}
   .f-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px;font-weight:600}
   .date-input{
     width:100%;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;
@@ -769,7 +774,7 @@
     <section class="screen" id="screen-menu">
       <button type="button" class="back-btn" data-back>&larr; Back</button>
       <h1 style="text-align:left" id="menuTitle">Food Menu</h1>
-      <p class="sub" style="text-align:left;margin-bottom:10px" id="menuSub">Order ahead for any day of your stay — pick a meal and a date, then tap ADD.</p>
+      <p class="sub" style="text-align:left;margin-bottom:10px" id="menuSub">Order ahead for any day of your stay: add dishes from any section, then choose the day and the meal it's for.</p>
       <div class="menu-search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.4" y2="16.4"/></svg>
         <input type="search" id="menuSearch" placeholder="Search dishes…" autocomplete="off" aria-label="Search the menu">
@@ -779,12 +784,14 @@
         <button type="button" class="filter-chip" id="chipSpecial"><span aria-hidden="true">⭐</span> Chef's Special</button>
       </div>
       <div class="meal-picker">
-        <div class="meal-chips" id="mealChips"></div>
+        <span class="f-label">Order for</span>
+        <div class="meal-chips" id="mealChips" role="group" aria-label="Which meal the order is for"></div>
         <div class="date-time-row">
           <label><span class="f-label">Date</span><input type="date" id="orderDate" class="date-input"></label>
           <label><span class="f-label">Time <span class="f-optional">(optional)</span></span><input type="time" id="orderTime" class="date-input"></label>
         </div>
       </div>
+      <div class="cat-tabs" id="catTabs" role="tablist" aria-label="Menu sections"></div>
       <div id="menuList"></div>
       <div class="cart-bar" id="cartBar">
         <span class="cart-count"><strong id="cartCountText">0 items</strong><span id="cartTotalSub">Total ₹0</span></span>
@@ -1363,13 +1370,14 @@ async function payLink(kind, btn, msgEl){
 }
 
 // ── Menu & order ─────────────────────────────────────────────────────────
-// Which categories each meal tab shows, worked out from the category names
-// themselves (Settings → Restaurant), so a renamed or new category shows up
-// without a code change:
-// - a name that mentions a meal ("Breakfast", "Lunch & Dinner") goes under it;
-// - 'Meals' (the lunch thalis) under Lunch;
-// - drinks (Beverages, Juices…) under every meal;
-// - anything else (BBQ, Snacks, Desserts…) under Lunch and Dinner.
+// The menu's tabs are the owner's own categories (Settings → Restaurant), in
+// their order. The meal an order is for (Breakfast / Lunch / Dinner) is picked
+// separately; opening a tab with an empty cart moves it to a meal that tab
+// suits, worked out from the category's name so new categories need no code:
+// - a name that mentions a meal ("Breakfast", "Lunch & Dinner") suits that meal;
+// - 'Meals' (the lunch thalis) suits Lunch;
+// - drinks (Beverages, Juices…) suit every meal;
+// - anything else (BBQ, Snacks, Desserts…) suits Lunch and Dinner.
 function mealsFor(cat){
   const c = String(cat || '').trim().toLowerCase();
   const named = MEAL_PERIODS.filter(m => c.includes(m.toLowerCase()));
@@ -1380,7 +1388,34 @@ function mealsFor(cat){
 }
 const MEAL_PERIODS = ['Breakfast', 'Lunch', 'Dinner'];
 let selectedMeal = ''; // set by defaultMeal() on first render, preserved across chip taps/back-navigation after that
+let selectedCat = '';
 let searchQuery = ''; let vegOnly = false; let specialOnly = false;
+const isDrinks = c => /beverage|drink|juice|coffee|\btea\b|shake|mocktail/i.test(String(c || ''));
+// The tabs: the owner's order, drinks last, then any category only the dishes name
+function menuCats(){
+  const have = [...new Set((me.menu || []).map(m => m.category || 'Miscellaneous'))];
+  const own = (me.menuCategories || []).filter(c => have.includes(c));
+  const all = own.concat(have.filter(c => !own.includes(c)));
+  return all.filter(c => !isDrinks(c)).concat(all.filter(isDrinks));
+}
+// a meal that suits the category, keeping the current one when it already fits
+function mealForCat(cat){
+  const ok = mealsFor(cat);
+  if (ok.includes(selectedMeal)) return selectedMeal;
+  return ok.includes(defaultMeal()) ? defaultMeal() : ok[0];
+}
+function renderCatTabs(){
+  const cats = menuCats();
+  if (!cats.includes(selectedCat)) selectedCat = cats.find(c => !isDrinks(c) && mealsFor(c).includes(selectedMeal)) || cats[0] || '';
+  $('#catTabs').innerHTML = cats.map(c => `<button type="button" role="tab" class="cat-tab${c===selectedCat?' active':''}" data-cat="${esc(c)}" aria-selected="${c===selectedCat}">${esc(c)}</button>`).join('');
+  $('#catTabs').querySelectorAll('.cat-tab').forEach(btn => btn.addEventListener('click', () => {
+    if (btn.dataset.cat === selectedCat) return;
+    selectedCat = btn.dataset.cat;
+    if (!Object.keys(cart).length) { selectedMeal = mealForCat(selectedCat); renderMealChips(); }
+    renderCatTabs(); renderMenuList();
+    btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }));
+}
 
 // A reasonable starting meal for whenever the guest happens to open the
 // menu — before 11am defaults to Breakfast, before 4pm to Lunch, else
@@ -1402,7 +1437,7 @@ function renderMealChips(){
   $('#mealChips').querySelectorAll('.meal-chip').forEach(btn => btn.addEventListener('click', () => {
     if(btn.dataset.meal === selectedMeal) return;
     selectedMeal = btn.dataset.meal;
-    renderMenu();
+    renderMealChips();
   }));
 }
 // The per-item control shown in an item-row's action slot: an ADD button
@@ -1419,10 +1454,9 @@ function itemActionHTML(id){
   </div>`;
 }
 // Full (re)entry into the menu screen — resets the cart and any active
-// search/filters, since switching meals starts a fresh order (an order is
-// for one meal period; see `meal: selectedMeal` on the place-order call
-// below) and a stale search across the old meal's dishes wouldn't make
-// sense against the new one either.
+// search/filters. Switching tabs or the meal keeps the cart: one order can
+// take dishes from several sections, all for the one meal it's for (see
+// `meal: selectedMeal` on the place-order call below).
 function renderMenu(){
   cart = {};
   selectedMeal = selectedMeal || defaultMeal();
@@ -1445,6 +1479,7 @@ function renderMenu(){
   }
 
   renderMealChips();
+  renderCatTabs();
   renderMenuList();
 }
 // Just the item list, driven by the current meal/search/filter state —
@@ -1458,7 +1493,7 @@ function renderMenuList(){
   // useful than making the guest guess which meal tab a dish lives under.
   let menu = q
     ? (me.menu || []).filter(m => m.name.toLowerCase().includes(q))
-    : (me.menu || []).filter(m => mealsFor(m.category).includes(selectedMeal));
+    : (me.menu || []).filter(m => (m.category || 'Miscellaneous') === selectedCat);
   if(vegOnly) menu = menu.filter(m => m.veg);
   if(specialOnly) menu = menu.filter(m => m.chefSpecial);
 
@@ -1466,7 +1501,7 @@ function renderMenuList(){
     const filtered = q || vegOnly || specialOnly;
     list.innerHTML = `<p class="empty-note">${filtered
       ? 'Nothing matches your search/filters — try clearing them.'
-      : `Nothing available for ${esc(selectedMeal)} right now — please WhatsApp us to order.`}</p>`;
+      : `Nothing in ${esc(selectedCat || 'the menu')} right now — please WhatsApp us to order.`}</p>`;
   } else {
     const cats = [...new Set(menu.map(m=>m.category||'Miscellaneous'))];
     // Same arrangement as the public food-menu.html page, for parity
