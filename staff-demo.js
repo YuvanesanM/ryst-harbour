@@ -91,6 +91,11 @@
     '/weather': (function(){ var d = new Date(), iso = function(n){ var x = new Date(d); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); };
       return { ok:true, at: now, source:'Open-Meteo', now:{ temp:31.4, feels:36.2, humidity:71, rain:0, code:2, wind:14, day:true },
         days:[[2,33,26,20,0,9,18],[61,31,25,70,6.4,7,24],[80,30,25,55,3.1,8,21],[1,32,26,10,0,10,16],[0,33,26,5,0,10,15]].map(function(v,i){ return { date: iso(i), code:v[0], max:v[1], min:v[2], rainChance:v[3], rain:v[4], uv:v[5], wind:v[6], sunrise:'06:04', sunset:'17:51' }; }) }; })(),
+    '/energy': (function(){ var iso = function(n){ var x = new Date(); x.setDate(x.getDate()-n); return x.toISOString().slice(0,10); };
+      var days = []; for (var i = 30; i >= 0; i--) { var g = [3,4,10,11,12,17,18,24,25].indexOf(i) >= 0; days.push({ date: iso(i), kwh: i === 0 ? null : (g ? 62 + (i * 7) % 19 : 21 + (i * 5) % 6), guests: g }); }
+      return { configured: true, rate: 8.5, latest: { at: Date.now() - 600000, kwh: 18234.6, kw: 2.4 }, today: 9.8, days: days,
+        summary: { thisMonth: 1104.5, lastMonth: 1290.2, guestDay: 70.1, emptyDay: 23.4 },
+        stays: [{ no: 'DEMO/INV/002', checkin: iso(4), checkout: iso(2), nights: 2, guests: 8, kwh: 141.3, perNight: 70.7, perGuestNight: 8.8 }, { no: 'DEMO/INV/001', checkin: iso(12), checkout: iso(9), nights: 3, guests: 12, kwh: 216.9, perNight: 72.3, perGuestNight: 6 }] }; })(),
     '/web-insights': (function(){ var d = function(n){ var x = new Date(); x.setDate(x.getDate()-n); return x.toISOString().slice(0,10); }, days = []; for (var i = 28; i >= 1; i--) days.push(d(i));
       return { configured:true, at: now, range:{ from: d(28), to: d(1) }, serviceAccount:'harbour-sync@demo-project.iam.gserviceaccount.com',
         search:{ ok:true, site:'https://stay.example.com/', totals:{ clicks:412, impressions:18950, ctr:0.0217, position:14.6 }, prev:{ clicks:351, impressions:16120, ctr:0.0218, position:16.1 },

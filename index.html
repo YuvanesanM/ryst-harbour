@@ -76,6 +76,7 @@
   <symbol id="i-food" viewBox="0 0 24 24"><path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 0-3 2-3 6s1 5 3 5v9"/></symbol>
   <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7z"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
   <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol>
   <symbol id="i-tool" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></symbol>
@@ -623,6 +624,7 @@
         <button class="explorer__tab" type="button" role="tab" id="ft-guests" aria-controls="fp-guests" aria-selected="false" tabindex="-1"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><b>Guests</b><span>Looked after before they even ask.</span></button>
         <button class="explorer__tab" type="button" role="tab" id="ft-ops" aria-controls="fp-ops" aria-selected="false" tabindex="-1"><svg class="icon" aria-hidden="true"><use href="#i-clipboard"/></svg><b>Operations</b><span>Housekeeping, maintenance and stock, on record.</span></button>
         <button class="explorer__tab" type="button" role="tab" id="ft-money" aria-controls="fp-money" aria-selected="false" tabindex="-1"><svg class="icon" aria-hidden="true"><use href="#i-rupee"/></svg><b>Money</b><span>Payments, GST invoices and reports, done.</span></button>
+        <button class="explorer__tab" type="button" role="tab" id="ft-insights" aria-controls="fp-insights" aria-selected="false" tabindex="-1"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg><b>Insights</b><span>An AI team, power use and Google search, watched for you.</span></button>
       </div>
 
       <div>
@@ -657,7 +659,7 @@
           <ul class="explorer__list">
             <li><b>Channel sync</b><span>Airbnb, Booking.com, Agoda and MakeMyTrip in one calendar.</span></li>
             <li><b>Availability</b><span>Booked dates close everywhere, so the villa can't be sold twice.</span></li>
-            <li><b>Direct booking website</b><span>Live availability, instant prices, UPI and Razorpay.</span></li>
+            <li><b>Direct booking website</b><span>Live availability, prices by group size, UPI and Razorpay.</span></li>
             <li><b>Quotes &amp; follow-ups</b><span>Send a quote, and get nudged before it goes cold.</span></li>
           </ul>
         </div>
@@ -687,7 +689,7 @@
             </div>
           </div>
           <ul class="explorer__list">
-            <li><b>WhatsApp automation</b><span>Confirmations, check-in guides, reminders and review requests.</span></li>
+            <li><b>WhatsApp &amp; Instagram</b><span>Confirmations, guides and reminders, plus instant answers to common questions.</span></li>
             <li><b>Online check-in</b><span>ID photos and signatures, in English or Tamil.</span></li>
             <li><b>Guest portal</b><span>Wi-Fi, house rules, directions, food ordering and the bill.</span></li>
             <li><b>Reviews</b><span>Guest feedback collected in one place after every stay.</span></li>
@@ -724,7 +726,7 @@
           </div>
           <ul class="explorer__list">
             <li><b>Caretaker app</b><span>Tamil or English, on the phone they already have.</span></li>
-            <li><b>Housekeeping</b><span>Check-in, check-out and daily checklists with photos.</span></li>
+            <li><b>Housekeeping &amp; upkeep</b><span>Daily, check-in and check-out checklists, plus weekly and monthly upkeep.</span></li>
             <li><b>Issues &amp; maintenance</b><span>Reported with a photo, tracked until fixed.</span></li>
             <li><b>Inventory &amp; petty cash</b><span>Stock levels and every spend, with receipts.</span></li>
           </ul>
@@ -763,6 +765,42 @@
             <li><b>Owner reports</b><span>A weekly and monthly summary on your phone.</span></li>
           </ul>
         </div>
+
+        <!-- Insights -->
+        <div class="tabpanel explorer__panel" role="tabpanel" id="fp-insights" aria-labelledby="ft-insights" tabindex="0" hidden>
+          <div class="explorer__stage">
+            <div class="ops">
+              <div class="mock">
+                <span class="label">AI team · for your OK</span>
+                <div class="ops__row"><span>Follow up Priya's quote</span><span class="pill pill--warn">Approve?</span></div>
+                <div class="ops__row"><span>Rain Saturday: cover the deck</span><span class="pill pill--warn">Approve?</span></div>
+                <span class="fine">Nothing goes out until you say yes</span>
+              </div>
+              <div class="mock">
+                <span class="label">Power · last 31 days</span>
+                <div class="ops__row"><span>Empty day</span><b class="num">23 kWh</b></div>
+                <div class="ops__row"><span>Guest day</span><b class="num">70 kWh</b></div>
+                <div class="ops__row"><span>This month</span><b class="num">₹9,388</b></div>
+              </div>
+              <div class="mock">
+                <span class="label">Website &amp; Search</span>
+                <div class="ops__row"><span>Clicks from Google</span><span class="pill pill--good">▲ 42%</span></div>
+                <div class="ops__row"><span>"beach villa ecr" · position 9</span><span class="pill">Page 1 tip</span></div>
+              </div>
+              <div class="mock">
+                <span class="label">Weather · Saturday</span>
+                <div class="ops__row"><span>Rain likely</span><span class="pill pill--warn">80%</span></div>
+                <div class="ops__row"><span>Caretaker reminded</span><span class="pill pill--good"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Sent</span></div>
+              </div>
+            </div>
+          </div>
+          <ul class="explorer__list">
+            <li><b>AI team</b><span>Drafts follow-ups, reminders and fixes from your own data. You approve each one.</span></li>
+            <li><b>Power</b><span>Reads your Wi-Fi energy meter: units a day, empty days against guest days, use per stay.</span></li>
+            <li><b>Website &amp; Search</b><span>Google Search Console and Analytics in plain words, with what to change next.</span></li>
+            <li><b>Weather</b><span>The villa's forecast, with rain and wind warnings for your caretaker.</span></li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -772,6 +810,10 @@
       <span class="pill">Telegram alerts</span>
       <span class="pill">Per-person team access</span>
       <span class="pill">Guest check-in in Tamil</span>
+      <span class="pill">Villa 3D view</span>
+      <span class="pill">Android app &amp; widgets</span>
+      <span class="pill">Push notifications</span>
+      <span class="pill">Creator collaborations</span>
     </div>
     <p class="fine explorer__note">Illustrative sample data.</p>
   </div>

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://data.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
+<script src="/assets/app/shell.js?v=649b8976"></script>
+<script src="/i18n.js"></script>
+<title data-title="Power · {name}">Power · RYST 109A</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="/staff.webmanifest">
+<link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/staff-sw.js').catch(()=>{}));</script>
+<meta name="theme-color" content="#F5F3EE" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111715" media="(prefers-color-scheme: dark)">
+<style>
+:root{--bg:#f5f3ee;--panel:#fff;--panel2:#f8f7f3;--line:#e6e2d9;--line2:#efece5;--ink:#1c2321;--ink2:#3a4440;--muted:#68716c;--muted2:#9aa09a;
+  --teal:#2f7d6d;--teal-soft:#e6f2ee;--blue:#3c6e8f;--blue-soft:#e8f0f5;--up:#2f7d6d;--down:#b9483b;--empty:#b9b2a3;--r:14px;--shadow:0 1px 2px rgba(28,35,33,.04),0 6px 18px rgba(28,35,33,.04)}
+html[data-theme="dark"]{--bg:#111715;--panel:#1a211e;--panel2:#202925;--line:#2c3531;--line2:#252d29;--ink:#e9e6df;--ink2:#cfd3cd;--muted:#a9b0aa;--muted2:#7f8781;--teal:#5fb3a1;--teal-soft:#1d2e29;--blue:#7fb0d1;--blue-soft:#1c2a33;--up:#6cc2ad;--down:#e58a7d;--empty:#5d655f}
+*{box-sizing:border-box;margin:0;padding:0}[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}button{font-family:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 18px 90px}
+.head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.head h1{font-size:24px;font-weight:700;letter-spacing:-.2px}
+.head p{color:var(--muted);font-size:13.5px;margin-top:2px}
+.head .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 13px;font-size:13px;font-weight:600}
+.btn:hover{border-color:var(--teal)}
+.sec{font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted2);margin:20px 2px 10px;display:flex;align-items:center;gap:8px}
+.sec .src{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted2)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;box-shadow:var(--shadow)}
+.kpi span{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.kpi b{display:block;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi small{font-size:12px;color:var(--muted)}
+.kpi .d{font-weight:700}.kpi .d.up{color:var(--up)}.kpi .d.down{color:var(--down)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px}
+.card h2{font-size:14px;font-weight:650;margin-bottom:2px}
+.card .sub{font-size:12px;color:var(--muted);margin-bottom:10px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.chart{position:relative;height:170px}
+.chart svg{display:block;width:100%;height:100%;overflow:visible}
+.chart .grid{stroke:var(--line2);stroke-width:1}
+.chart .axis{font-size:10.5px;fill:var(--muted2)}
+.chart .line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .hair{stroke:var(--muted2);stroke-width:1;stroke-dasharray:3 3}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;border-radius:8px;padding:6px 9px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .1s}
+.tip b{font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);font-weight:700;text-align:right;padding:6px 6px}
+th:first-child,td:first-child{text-align:left}
+td{padding:7px 6px;border-top:1px solid var(--line2);text-align:right;font-variant-numeric:tabular-nums}
+td:first-child{max-width:0;width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars{display:grid;gap:7px}
+.bar{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,2fr) 48px;gap:10px;align-items:center;font-size:13px}
+.bar .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .t{height:8px;border-radius:0 4px 4px 0;background:var(--line2)}
+.bar .t i{display:block;height:100%;border-radius:0 4px 4px 0}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.setup{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-top:10px;font-size:13.5px;line-height:1.55}
+.setup h3{font-size:15px;margin-bottom:6px}
+.setup ol{padding-left:20px;margin-top:6px}.setup li{margin:4px 0}
+.setup code{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12.5px;word-break:break-all}
+.err{color:var(--down);font-size:12.5px;margin-top:6px}
+.empty{color:var(--muted);font-size:13px;padding:10px 0}
+.foot{margin-top:18px;font-size:12px;color:var(--muted2)}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}
+@media (max-width:520px){.wrap{padding:12px 12px 96px}.kpi b{font-size:20px}}
+
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:-4px 0 8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.chart .bar-g{fill:var(--teal)}.chart .bar-e{fill:var(--empty)}
+.chart rect.hit{fill:transparent}
+.rate{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.rate input{width:88px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:7px 9px;font:inherit;font-variant-numeric:tabular-nums}
+.rate input:focus-visible,.btn:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.note{font-size:13px;color:var(--ink2);line-height:1.55}
+.note b{font-variant-numeric:tabular-nums}
+td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
+.foot{color:var(--muted)}
+.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--teal);margin-right:6px;vertical-align:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div><h1>Power</h1><p>Electricity use from the villa's energy meter · for your own monitoring, never billed to guests</p></div>
+    <span class="sp"></span>
+    <label class="rate" for="rate">₹ per unit <input id="rate" type="number" inputmode="decimal" min="0" max="100" step="0.01" placeholder="e.g. 8.50"><button class="btn" type="button" id="saveRate">Save</button></label>
+  </div>
+  <div id="out"><div class="empty">Loading…</div></div>
+  <p class="foot">Read from the meter every 30 minutes. A day runs from its first reading to the next day's first. Costs are estimates at the rate you enter, without slabs, fixed charges or taxes.</p>
+</div>
+<script>
+(function () {
+  const PROXY = 'https://data.ryst.in', TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+  if (!TOKEN) { location.href = 'login.html'; return; }
+  if ((localStorage.getItem('ryst_user_role') || 'owner') !== 'owner') { location.href = 'login.html'; return; }
+  const $ = s => document.querySelector(s), t = s => (window.rystT ? window.rystT(s) : s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const n1 = v => v == null ? '—' : (Math.round(v * 10) / 10).toLocaleString('en-IN');
+  const rs = v => '₹' + Math.round(v).toLocaleString('en-IN');
+  const dm = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  let rate = null;
+  const cost = kwh => rate && kwh != null ? rs(kwh * rate) : '';
+  function delta(now, prev) { // more electricity is worse
+    if (now == null || !prev) return '';
+    const ch = (now - prev) / prev;
+    if (Math.abs(ch) < 0.005) return '<span class="d">±0%</span>';
+    return `<span class="d ${ch < 0 ? 'up' : 'down'}">${ch > 0 ? '▲' : '▼'} ${Math.abs(Math.round(ch * 100))}%</span>`;
+  }
+  const kpi = (label, val, small) => `<div class="kpi"><span>${t(label)}</span><b>${val}</b><small>${small || '&nbsp;'}</small></div>`;
+
+  // daily use as bars: guest days and empty days in two colours, one axis, a tooltip per bar
+  function barChart(el, rows) {
+    const vals = rows.filter(r => r.kwh != null);
+    if (!vals.length) { el.innerHTML = `<div class="empty">${t('No full days yet — the first day shows after a day of readings')}</div>`; return; }
+    const W = 600, H = 190, L = 34, R = 4, T = 10, B = 22, max = Math.max(1, ...vals.map(r => r.kwh));
+    const nice = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / nice) * nice;
+    const step = (W - L - R) / rows.length, bw = Math.max(2, step - 2), y = v => T + (H - T - B) * (1 - v / top);
+    const ticks = [0, top / 2, top].map(v => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${n1(v)}</text>`).join('');
+    const xl = [0, Math.floor((rows.length - 1) / 2), rows.length - 1].map(i => `<text class="axis" x="${L + i * step + bw / 2}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === rows.length - 1 ? 'end' : 'middle'}">${esc(dm(rows[i].date))}</text>`).join('');
+    const r4 = Math.min(4, bw / 2);
+    const bar = (r, i) => { if (r.kwh == null) return ''; const x = L + i * step, yy = y(r.kwh), h = y(0) - yy; if (h <= 0) return '';
+      return `<path class="${r.guests ? 'bar-g' : 'bar-e'}" d="M${x},${y(0)} V${yy + Math.min(r4, h)} q0,-${Math.min(r4, h)} ${r4},-${Math.min(r4, h)} H${x + bw - r4} q${r4},0 ${r4},${Math.min(r4, h)} V${y(0)} Z"/>`; };
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(t('Units used per day'))}">${ticks}${xl}${rows.map(bar).join('')}
+      ${rows.map((r, i) => `<rect class="hit" data-i="${i}" x="${L + i * step}" y="${T}" width="${step}" height="${H - T - B}"/>`).join('')}</svg><div class="tip"></div>`;
+    const svg = el.querySelector('svg'), tip = el.querySelector('.tip');
+    svg.addEventListener('pointermove', ev => { const h = ev.target.closest('rect.hit'); if (!h) return; const r = rows[+h.dataset.i], b = svg.getBoundingClientRect();
+      tip.innerHTML = `${esc(dm(r.date))} · <b>${r.kwh == null ? '—' : n1(r.kwh) + ' kWh'}</b>${r.kwh != null && rate ? ' · ' + cost(r.kwh) : ''} · ${t(r.guests ? 'guests in' : 'empty')}`;
+      tip.style.left = ((L + (+h.dataset.i) * step + bw / 2) / W * b.width) + 'px'; tip.style.top = (y(r.kwh || 0) / H * b.height) + 'px'; tip.style.opacity = 1; });
+    svg.addEventListener('pointerleave', () => { tip.style.opacity = 0; });
+  }
+
+  function setup(d) {
+    return `<div class="setup"><h3>${t('Connect the energy meter')}</h3>
+      <p>${t('Harbour reads a Wi-Fi energy meter that you already watch in the Smart Life (Tuya) app.')}</p>
+      <ol>
+        <li>${t('At iot.tuya.com, create a Cloud project (data centre: India) and link your Smart Life app account to it.')}</li>
+        <li>${t('Copy the project\'s Access ID and Access Secret, and the meter\'s Device ID.')}</li>
+        <li>${t('Add them on the server as')} <code>TUYA_ACCESS_ID</code>, <code>TUYA_ACCESS_SECRET</code> ${t('and')} <code>TUYA_DEVICE_ID</code>. ${t('Readings start within 30 minutes.')}</li>
+      </ol></div>`;
+  }
+
+  function render(d) {
+    if (!d.configured) { $('#out').innerHTML = setup(d); return; }
+    rate = d.rate || null; if (rate) $('#rate').value = rate;
+    const S = d.summary || {}, L0 = d.latest;
+    let h = `<div class="kpis">
+      ${kpi('Power now', L0 && L0.kw != null ? n1(L0.kw) + ' kW' : '—', L0 ? `<i class="live"></i>${t('read')} ${new Date(L0.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}` : '')}
+      ${kpi('Today so far', d.today != null ? n1(d.today) + ' kWh' : '—', cost(d.today))}
+      ${kpi('This month', S.thisMonth != null ? n1(S.thisMonth) + ' kWh' : '—', [cost(S.thisMonth), S.lastMonth ? t('last month') + ' ' + n1(S.lastMonth) : ''].filter(Boolean).join(' · '))}
+      ${kpi('Guest day vs empty day', S.guestDay != null || S.emptyDay != null ? n1(S.guestDay) + ' / ' + n1(S.emptyDay) : '—', t('kWh a day, on average'))}</div>`;
+    if (d.lastError) h += `<div class="setup err">${t('Last reading failed:')} ${esc(d.lastError.message)} · ${new Date(d.lastError.at).toLocaleString('en-IN')}</div>`;
+    h += `<div class="grid2"><div class="card"><h2>${t('Units used per day')}</h2><div class="sub">${t('Last 31 days')}</div>
+        <div class="legend"><span><i style="background:var(--teal)"></i>${t('Guests in')}</span><span><i style="background:var(--empty)"></i>${t('Empty')}</span></div><div class="chart" id="chD"></div></div>
+      <div class="card"><h2>${t('Where savings are')}</h2><div class="sub">${t('From the last 31 days')}</div><div class="note">${notes(S)}</div></div></div>`;
+    const st = (d.stays || []);
+    h += `<div class="card" style="margin-top:12px"><h2>${t('Each stay')}</h2><div class="sub">${t('Check-in day to check-out day · last 60 days')}</div>${st.length ? `<div style="overflow-x:auto"><table><thead><tr><th>${t('Stay')}</th><th>${t('Nights')}</th><th>${t('Guests')}</th><th>kWh</th><th>${t('Per night')}</th><th>${t('Per guest a night')}</th>${rate ? `<th>${t('Cost')}</th>` : ''}</tr></thead><tbody>${st.map(s => `<tr><td class="l">${esc(dm(s.checkin))} – ${esc(dm(s.checkout))}${s.ongoing ? ' · ' + t('now') : ''}</td><td>${s.nights}</td><td>${s.guests || '—'}</td><td>${n1(s.kwh)}</td><td>${n1(s.perNight)}</td><td>${n1(s.perGuestNight)}</td>${rate ? `<td>${cost(s.kwh) || '—'}</td>` : ''}</tr>`).join('')}</tbody></table></div>` : `<div class="empty">${t('No stays with readings yet')}</div>`}</div>`;
+    $('#out').innerHTML = h;
+    barChart($('#chD'), d.days || []);
+  }
+  function notes(S) {
+    const out = [];
+    if (S.emptyDay != null) out.push(`${t('With nobody staying, the villa still uses')} <b>${n1(S.emptyDay)} kWh</b> ${t('a day')}${rate ? ` (<b>${rs(S.emptyDay * rate)}</b>, ${t('about')} <b>${rs(S.emptyDay * rate * 30)}</b> ${t('a month if empty')})` : ''} — ${t('pumps, fridges, lights and anything left on. Lowering this is the easiest saving.')}`);
+    if (S.guestDay != null && S.emptyDay != null && S.emptyDay > 0) out.push(`${t('A guest day uses')} <b>${n1(S.guestDay / S.emptyDay)}×</b> ${t('an empty day.')}`);
+    if (!out.length) out.push(t('Notes appear once there are a few days of readings, with and without guests.'));
+    if (!rate) out.push(t('Enter your rate per unit above to see costs.'));
+    return out.map(x => `<p style="margin-bottom:8px">${x}</p>`).join('');
+  }
+  let last = null;
+  async function load() {
+    try {
+      const r = await fetch(PROXY + '/energy', { headers: { 'X-Token': TOKEN }, cache: 'no-store' });
+      if (r.status === 401) { localStorage.removeItem('ryst_proxy_token'); location.href = 'login.html'; return; }
+      const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not load');
+      last = d; render(d);
+    } catch (e) { $('#out').innerHTML = `<div class="setup err">${esc(e.message)}</div>`; }
+  }
+  $('#saveRate').addEventListener('click', async () => {
+    const b = $('#saveRate'), v = $('#rate').value.trim(); b.disabled = true;
+    try {
+      const r = await fetch(PROXY + '/energy/rate', { method: 'PUT', headers: { 'X-Token': TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ rate: v === '' ? null : Number(v) }) });
+      const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not save');
+      if (last) { last.rate = d.rate; render(last); }
+      b.textContent = t('Saved'); setTimeout(() => { b.textContent = t('Save'); }, 1500);
+    } catch (e) { alert(e.message); }
+    finally { b.disabled = false; }
+  });
+  load();
+})();
+</script>
+</body>
+</html>

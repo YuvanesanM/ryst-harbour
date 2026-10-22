@@ -106,6 +106,7 @@
     doc: '<path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
     rupee: '<path d="M7 4h10M7 8.5h10M14 20l-7-7h2.5a4.5 4.5 0 0 0 0-9"/>',
     chart: '<path d="M3 3v18h18"/><path d="M8 17v-4M13 17V8M18 17v-7"/>',
+    bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
     food: '<path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 0-3 2-3 6s1 5 3 5v9"/>',
     team: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 11.5l2 2 4-4"/>',
     villa3d: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
@@ -125,7 +126,7 @@
       ['caretakers.html', 'team', 'Caretakers', 'owner']] },
     { label: 'Finance', items: [['stay.html', 'doc', 'Quotes & Invoices', 'bookings'], ['guest-register.html?f=unpaid', 'rupee', 'Payments', 'guestRegister'],
       ['reports.html', 'chart', 'Profit & Loss', 'reports']] },
-    { label: 'Property', items: [['villa-3d.html', 'villa3d', 'Villa 3D'], ['restaurant.html', 'food', '{restaurantName}', 'restaurant'], ['reviews.html', 'star', 'Guest Feedback', 'feedback'], ['creators.html', 'camera', 'Creators', 'bookings'], ['insights.html', 'chart', 'Website & Search', 'owner']] },
+    { label: 'Property', items: [['villa-3d.html', 'villa3d', 'Villa 3D'], ['restaurant.html', 'food', '{restaurantName}', 'restaurant'], ['reviews.html', 'star', 'Guest Feedback', 'feedback'], ['creators.html', 'camera', 'Creators', 'bookings'], ['insights.html', 'chart', 'Website & Search', 'owner'], ['energy.html', 'bolt', 'Power', 'owner']] },
     { label: 'System', items: [['agents.html', 'agents', 'AI Agents', 'owner'], ['settings.html', 'gear', 'Settings', 'settings']] }
   ];
 
