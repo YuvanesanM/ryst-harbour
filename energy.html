@@ -92,6 +92,7 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
   <div class="head">
     <div><h1>Power</h1><p>Electricity use from the villa's energy meter · for your own monitoring, never billed to guests</p></div>
     <span class="sp"></span>
+    <button class="btn" type="button" id="readNow" hidden>↻ <span>Read now</span></button>
     <label class="rate" for="rate">₹ per unit <input id="rate" type="number" inputmode="decimal" min="0" max="100" step="0.01" placeholder="e.g. 8.50"><button class="btn" type="button" id="saveRate">Save</button></label>
   </div>
   <div id="out"><div class="empty">Loading…</div></div>
@@ -150,6 +151,7 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
 
   function render(d) {
     if (!d.configured) { $('#out').innerHTML = setup(d); return; }
+    $('#readNow').hidden = false;
     rate = d.rate || null; if (rate) $('#rate').value = rate;
     const S = d.summary || {}, L0 = d.latest;
     let h = `<div class="kpis">
@@ -190,6 +192,15 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
       const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not save');
       if (last) { last.rate = d.rate; render(last); }
       b.textContent = t('Saved'); setTimeout(() => { b.textContent = t('Save'); }, 1500);
+    } catch (e) { alert(e.message); }
+    finally { b.disabled = false; }
+  });
+  $('#readNow').addEventListener('click', async () => {
+    const b = $('#readNow'); b.disabled = true;
+    try {
+      const r = await fetch(PROXY + '/energy/read', { method: 'POST', headers: { 'X-Token': TOKEN } });
+      const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not read the meter');
+      await load();
     } catch (e) { alert(e.message); }
     finally { b.disabled = false; }
   });
