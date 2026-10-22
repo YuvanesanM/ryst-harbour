@@ -257,6 +257,8 @@
   /* Only shown when a category actually mixes veg and non-veg — matches
      food-menu.html's same restraint (no label when there's nothing to
      contrast against). */
+  .course-label{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--sea);margin:18px 0 2px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+  .cat-head + .course-label{margin-top:4px}
   .veg-group-label{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;margin:14px 0 6px}
   .veg-group-label:first-child{margin-top:0}
   .veg-group-label.veg{color:#2e7d32}
@@ -1559,7 +1561,17 @@ function renderMenuList(){
       const vegItems = catItems.filter(m=>m.veg && !m.noDiet).sort(bySpecialFirst);
       const nonVegItems = catItems.filter(m=>!m.veg && !m.noDiet).sort(bySpecialFirst);
       const otherItems = catItems.filter(m=>m.noDiet).sort(bySpecialFirst);
-      const itemsHtml = (vegItems.length && nonVegItems.length)
+      // a long category (Lunch & Dinner) reads in courses — starters, breads,
+      // curries, biryani & rice, sides — veg before non-veg inside each
+      const courseOrder = me.menuCourses || [];
+      const courses = [...new Set(catItems.filter(m=>!m.noDiet).map(m=>m.course||''))];
+      const courseRank = c => { const i = courseOrder.indexOf(c); return !c ? 999 : i < 0 ? 500 : i; };
+      const itemsHtml = courses.some(Boolean) && courses.length > 1
+        ? courses.sort((a,b)=>courseRank(a)-courseRank(b)).map(c => {
+            const inC = catItems.filter(m=>!m.noDiet && (m.course||'')===c);
+            return `<p class="course-label">${esc(c || 'More dishes')}</p>${inC.filter(m=>m.veg).sort(bySpecialFirst).concat(inC.filter(m=>!m.veg).sort(bySpecialFirst)).map(renderItem).join('')}`;
+          }).join('') + (otherItems.length ? `<p class="course-label">Also available</p>${otherItems.map(renderItem).join('')}` : '')
+        : (vegItems.length && nonVegItems.length)
         ? `
           <p class="veg-group-label veg"><span class="veg-dot veg" aria-hidden="true"></span> Vegetarian</p>
           ${vegItems.map(renderItem).join('')}
