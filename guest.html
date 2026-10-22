@@ -199,6 +199,7 @@
     transition:background .15s,border-color .15s,color .15s,box-shadow .15s;
   }
   .meal-chip.active{background:var(--sea-mid);border-color:var(--sea-mid);color:#fff;box-shadow:0 6px 14px rgba(26,106,122,.3)}
+  .late-note{margin-top:10px;font-size:13px;line-height:1.5;color:#7a4b12;background:#fdf3e1;border:1px solid #f0d9ae;border-radius:var(--r-sm);padding:9px 12px}
   .cat-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -2px 14px;padding:2px}
   .cat-tabs::-webkit-scrollbar{display:none}
   .cat-tab{flex:0 0 auto;background:var(--white);border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-family:var(--sans);font-size:13.5px;font-weight:700;color:var(--muted-text);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
@@ -790,6 +791,7 @@
           <label><span class="f-label">Date</span><input type="date" id="orderDate" class="date-input"></label>
           <label><span class="f-label">Time <span class="f-optional">(optional)</span></span><input type="time" id="orderTime" class="date-input"></label>
         </div>
+        <p class="late-note" id="lateNote" role="status" hidden></p>
       </div>
       <div class="cat-tabs" id="catTabs" role="tablist" aria-label="Menu sections"></div>
       <div id="menuList"></div>
@@ -1430,7 +1432,22 @@ function defaultMeal(){
 function cartTotal(){
   return (me.menu||[]).reduce((s,m)=> s + (cart[m.id]||0) * m.price, 0);
 }
+// After the meal's order cut-off (Settings → WhatsApp) the order can still be
+// placed; this just says so kindly, so nobody is surprised if it can't be done.
+function renderLateNote(){
+  const el = $('#lateNote'), c = (me.foodCutoffs || {})[selectedMeal], date = $('#orderDate').value;
+  if(!el) return;
+  if(!c || !date){ el.hidden = true; return; }
+  const evening = selectedMeal === 'Breakfast' && Number(c.split(':')[0]) >= 12;
+  const day = new Date(date + 'T00:00:00Z'); if(evening) day.setUTCDate(day.getUTCDate() - 1);
+  const cut = Date.parse(day.toISOString().slice(0, 10) + 'T' + c + ':00+05:30');
+  if(!(Date.now() > cut)){ el.hidden = true; return; }
+  const [h, m] = c.split(':').map(Number), label = `${h % 12 || 12}${m ? ':' + String(m).padStart(2, '0') : ''} ${h < 12 ? 'AM' : 'PM'}`;
+  el.textContent = `${selectedMeal} orders for this day closed at ${label}${evening ? ' the evening before' : ''}. You can still place it and we'll do our best, or message us on WhatsApp to check first.`;
+  el.hidden = false;
+}
 function renderMealChips(){
+  renderLateNote();
   $('#mealChips').innerHTML = MEAL_PERIODS.map(m =>
     `<button type="button" class="meal-chip${m===selectedMeal?' active':''}" data-meal="${m}" aria-pressed="${m===selectedMeal}">${m}</button>`
   ).join('');
@@ -1567,6 +1584,7 @@ function renderCartBar(){
   $('#cartTotalSub').textContent = 'Total ' + money(cartTotal());
 }
 $('#menuSearch').addEventListener('input', e => { searchQuery = e.target.value; renderMenuList(); });
+$('#orderDate').addEventListener('change', renderLateNote);
 $('#chipVeg').addEventListener('click', () => {
   vegOnly = !vegOnly; $('#chipVeg').classList.toggle('active', vegOnly); renderMenuList();
 });

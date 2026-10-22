@@ -1447,7 +1447,7 @@ function renderOrders(){
     <tr>
       <td>${esc(o.no)}</td>
       <td>${fmtDate(o.date)}${o.time?'<br><span style="color:var(--muted2);font-size:11px">'+fmtTime(o.time)+'</span>':''}</td>
-      <td>${esc(o.guest||'—')}</td>
+      <td>${esc(o.guest||'—')}${o.late?` <span title="Placed after the ${esc(String(o.meal||'').toLowerCase())} cut-off (${esc(o.late.cutoff)})" style="display:inline-block;font-size:10.5px;font-weight:700;color:#8a4b0f;background:#fdf0dc;border-radius:20px;padding:1px 7px;margin-left:4px">LATE</span>`:''}</td>
       <td>${o.items.map(it=>esc(it.name)+' ×'+it.qty).join(', ')}</td>
       <td class="amt">${money(o.total)}</td>
       <td>${esc(o.paymentMode||'—')}</td>
