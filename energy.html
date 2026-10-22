@@ -171,6 +171,9 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
       <div class="card"><h2>${t('Where savings are')}</h2><div class="sub">${t('From the last 31 days')}</div><div class="note">${notes(S)}</div></div></div>`;
     const months = (d.months || []).filter(m => m.kwh != null);
     if (months.length > 1) h += `<div class="card" style="margin-top:12px"><h2>${t('Units per month')}</h2><div class="sub">${d.imported && d.imported.source ? t('Including past data from the meter') : t('From the meter readings')}</div><div class="chart" id="chM"></div></div>`;
+    const I = d.imported;
+    if (I && I.probe) h += `<div class="card" style="margin-top:12px"><h2>${t('Past data from Tuya')}</h2><div class="sub">${I.from ? `${t('Goes back to')} ${esc(dm(I.from))}` : t('Nothing older than the live readings')} · ${t('asked')} ${new Date(I.at).toLocaleDateString('en-IN')}</div>
+      <div style="overflow-x:auto"><table><tbody>${Object.entries(I.probe).map(([k, v]) => `<tr><td class="l">${esc(k)}</td><td class="l">${/^ok/.test(v) ? '✓ ' : '✕ '}${esc(v)}</td></tr>`).join('')}</tbody></table></div></div>`;
     const st = (d.stays || []);
     h += `<div class="card" style="margin-top:12px"><h2>${t('Each stay')}</h2><div class="sub">${t('Check-in day to check-out day · last 60 days')}</div>${st.length ? `<div style="overflow-x:auto"><table><thead><tr><th>${t('Stay')}</th><th>${t('Nights')}</th><th>${t('Guests')}</th><th>kWh</th><th>${t('Per night')}</th><th>${t('Per guest a night')}</th>${rate ? `<th>${t('Cost')}</th>` : ''}</tr></thead><tbody>${st.map(s => `<tr><td class="l">${esc(dm(s.checkin))} – ${esc(dm(s.checkout))}${s.ongoing ? ' · ' + t('now') : ''}</td><td>${s.nights}</td><td>${s.guests || '—'}</td><td>${n1(s.kwh)}</td><td>${n1(s.perNight)}</td><td>${n1(s.perGuestNight)}</td>${rate ? `<td>${cost(s.kwh) || '—'}</td>` : ''}</tr>`).join('')}</tbody></table></div>` : `<div class="empty">${t('No stays with readings yet')}</div>`}</div>`;
     $('#out').innerHTML = h;
@@ -224,7 +227,7 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
     try {
       const r = await fetch(PROXY + '/energy/import', { method: 'POST', headers: { 'X-Token': TOKEN } });
       const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not import');
-      alert(d.ok ? `${t('Imported')}: ${d.days ? d.days + ' ' + t('days of daily use') : ''}${d.days && d.readings ? ', ' : ''}${d.readings ? d.readings + ' ' + t('readings from the last week') : ''}.` : `${t('The meter returned no past data')}: ${d.error || ''}`);
+      alert(d.ok ? `${t('Imported')}: ${[d.days ? d.days + ' ' + t('days of daily use') : '', d.months ? d.months + ' ' + t('monthly totals') : '', d.readings ? d.readings + ' ' + t('readings') : ''].filter(Boolean).join(', ')}${d.from ? ` (${t('from')} ${dm(d.from)})` : ''}.` : `${t('The meter returned no past data')}: ${d.error || ''}`);
       await load();
     } catch (e) { alert(e.message); }
     finally { b.disabled = false; }
