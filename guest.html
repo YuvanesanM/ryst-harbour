@@ -1494,7 +1494,7 @@ function renderMenuList(){
   let menu = q
     ? (me.menu || []).filter(m => m.name.toLowerCase().includes(q))
     : (me.menu || []).filter(m => (m.category || 'Miscellaneous') === selectedCat);
-  if(vegOnly) menu = menu.filter(m => m.veg);
+  if(vegOnly) menu = menu.filter(m => m.veg || m.noDiet); // a stove rental isn't non-veg
   if(specialOnly) menu = menu.filter(m => m.chefSpecial);
 
   if(!menu.length){
@@ -1514,7 +1514,7 @@ function renderMenuList(){
     const renderItem = m => `
       <div class="item-row" data-id="${esc(m.id)}">
         <div class="item-info">
-          <div class="item-name"><span class="veg-dot ${m.veg?'veg':'nonveg'}" role="img" aria-label="${m.veg?'Vegetarian':'Non-vegetarian'}"></span>${esc(m.name)}${m.chefSpecial?` ${chefStarSvg}`:''}</div>
+          <div class="item-name">${m.noDiet ? '' : `<span class="veg-dot ${m.veg?'veg':'nonveg'}" role="img" aria-label="${m.veg?'Vegetarian':'Non-vegetarian'}"></span>`}${esc(m.name)}${m.chefSpecial?` ${chefStarSvg}`:''}</div>
           <div class="item-price">${money(m.price)}</div>
           ${(m.description || m.kcal!=null) ? `<div class="item-desc">${esc(m.description)}${m.description && m.kcal!=null ? ' · ' : ''}${m.kcal!=null ? '~'+esc(m.kcal)+' kcal' : ''}</div>` : ''}
         </div>
@@ -1522,16 +1522,19 @@ function renderMenuList(){
       </div>`;
     list.innerHTML = cats.map(cat => {
       const catItems = menu.filter(m=>(m.category||'Miscellaneous')===cat);
-      const vegItems = catItems.filter(m=>m.veg).sort(bySpecialFirst);
-      const nonVegItems = catItems.filter(m=>!m.veg).sort(bySpecialFirst);
+      // "not food" items (a BBQ stove rental…) carry no veg mark and come last
+      const vegItems = catItems.filter(m=>m.veg && !m.noDiet).sort(bySpecialFirst);
+      const nonVegItems = catItems.filter(m=>!m.veg && !m.noDiet).sort(bySpecialFirst);
+      const otherItems = catItems.filter(m=>m.noDiet).sort(bySpecialFirst);
       const itemsHtml = (vegItems.length && nonVegItems.length)
         ? `
           <p class="veg-group-label veg"><span class="veg-dot veg" aria-hidden="true"></span> Vegetarian</p>
           ${vegItems.map(renderItem).join('')}
           <p class="veg-group-label nonveg"><span class="veg-dot nonveg" aria-hidden="true"></span> Non-Vegetarian</p>
           ${nonVegItems.map(renderItem).join('')}
+          ${otherItems.length ? `<p class="veg-group-label">Also available</p>${otherItems.map(renderItem).join('')}` : ''}
         `
-        : catItems.slice().sort(bySpecialFirst).map(renderItem).join('');
+        : vegItems.concat(nonVegItems).sort(bySpecialFirst).concat(otherItems).map(renderItem).join('');
       return `
       <div class="cat-head">${esc(cat)}${catItems.some(m=>m.chefSpecial) ? ` ${chefStarSvg}` : ''} <span class="cat-count">(${catItems.length})</span></div>
       ${itemsHtml}`;

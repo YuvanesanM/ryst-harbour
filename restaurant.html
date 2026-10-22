@@ -534,7 +534,7 @@
       </div>
       <div class="two">
         <div class="field"><label>Cost price (₹) — what you pay per portion</label><input id="dCost" type="number" min="0" step="1"></div>
-        <div class="field"><label>Type</label><select id="dVeg"><option value="true">Vegetarian</option><option value="false">Non-vegetarian</option></select></div>
+        <div class="field"><label>Type</label><select id="dVeg"><option value="true">Vegetarian</option><option value="false">Non-vegetarian</option><option value="none">Not food (no veg / non-veg mark)</option></select></div>
       </div>
       <div class="two">
         <div class="field"><label>Sourcing</label><input id="dSourcing" list="dSourcingOpts" placeholder="e.g. Partner Kitchen, Kitchen">
@@ -829,7 +829,7 @@ function renderMenu(){
       ${byCat[c].map(m=>`
         <div class="dish-row">
           <div class="dish-main">
-            <div class="dish-name"><span class="veg-dot ${m.veg?'veg':'nonveg'}"></span>${esc(m.name)}${m.chefSpecial?' ⭐':''}</div>
+            <div class="dish-name">${m.noDiet?'':`<span class="veg-dot ${m.veg?'veg':'nonveg'}"></span>`}${esc(m.name)}${m.chefSpecial?' ⭐':''}</div>
             <div class="dish-sub">${esc(m.description||'')}${m.kcal?' · ~'+m.kcal+' kcal':''}</div>
           </div>
           <div class="dish-price">${money(m.price)}${isOwner ? `<div class="dish-cost">cost ${money(m.cost||0)}${m.price>0?' &middot; '+Math.round((1-((Number(m.cost)||0)/m.price))*100)+'% margin':''}</div>` : ''}</div>
@@ -862,7 +862,7 @@ function openDishModal(id){
   $('#dCategory').value = m ? m.category : (DOC.categories[0]||'');
   $('#dPrice').value = m ? m.price : '';
   $('#dCost').value = m && m.cost!=null ? m.cost : '';
-  $('#dVeg').value = m ? String(!!m.veg) : 'true';
+  $('#dVeg').value = m ? (m.noDiet ? 'none' : String(!!m.veg)) : 'true';
   $('#dSourcing').value = m ? (m.sourcing||'') : '';
   $('#dMoq').value = m && m.moq!=null ? m.moq : 1;
   $('#dKcal').value = m && m.kcal!=null ? m.kcal : '';
@@ -879,7 +879,7 @@ $('#dSave').addEventListener('click', async ()=>{
   if(!name){ $('#dErr').textContent = 'Dish name is required'; return; }
   const payload = {
     name, category: $('#dCategory').value, price: $('#dPrice').value, cost: $('#dCost').value,
-    veg: $('#dVeg').value === 'true', sourcing: $('#dSourcing').value, moq: $('#dMoq').value || 1,
+    veg: $('#dVeg').value === 'true', noDiet: $('#dVeg').value === 'none', sourcing: $('#dSourcing').value, moq: $('#dMoq').value || 1,
     chefSpecial: $('#dChefSpecial').checked, kcal: $('#dKcal').value,
     description: $('#dDesc').value, notes: $('#dNotes').value,
   };
@@ -1268,7 +1268,7 @@ function renderMenuPicker(){
     <div class="cat-head">${emojiFor(c)} ${esc(c)}</div>
     ${byCat[c].map(m=>`
       <div class="mp-item${cart.find(x=>x.menuItemId===m.id)?' selected':''}" data-mp-row="${esc(m.id)}">
-        <div class="mp-name"><span class="veg-dot ${m.veg?'veg':'nonveg'}"></span>${esc(m.name)} <span style="color:var(--muted2);font-weight:500">${money(m.price)}</span></div>
+        <div class="mp-name">${m.noDiet?'':`<span class="veg-dot ${m.veg?'veg':'nonveg'}"></span>`}${esc(m.name)} <span style="color:var(--muted2);font-weight:500">${money(m.price)}</span></div>
         <div class="mp-actions" data-mp-actions="${esc(m.id)}">${mpActionsHtml(m)}</div>
       </div>
     `).join('')}
