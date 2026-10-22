@@ -94,7 +94,7 @@
         days:[[2,33,26,20,0,9,18],[61,31,25,70,6.4,7,24],[80,30,25,55,3.1,8,21],[1,32,26,10,0,10,16],[0,33,26,5,0,10,15]].map(function(v,i){ return { date: iso(i), code:v[0], max:v[1], min:v[2], rainChance:v[3], rain:v[4], uv:v[5], wind:v[6], sunrise:'06:04', sunset:'17:51' }; }) }; })(),
     '/energy': (function(){ var iso = function(n){ var x = new Date(); x.setDate(x.getDate()-n); return x.toISOString().slice(0,10); };
       var days = []; for (var i = 30; i >= 0; i--) { var g = [3,4,10,11,12,17,18,24,25].indexOf(i) >= 0; days.push({ date: iso(i), kwh: i === 0 ? null : (g ? 62 + (i * 7) % 19 : 21 + (i * 5) % 6), guests: g }); }
-      return { configured: true, rate: 8.5, latest: { at: Date.now() - 600000, kwh: 18234.6, kw: 2.4 }, today: 9.8, days: days,
+      return { configured: true, rate: 8.5, latest: { at: Date.now() - 600000, kwh: 18234.6, kw: 0, avgKw: 3.1, avgMin: 30 }, imported: { at: Date.now() - 864e5, source: 'statistics', days: 300 }, months: ['2026-05','2026-06','2026-07','2026-08','2026-09','2026-10'].map(function(m, i){ return { month: m, kwh: [980, 1120, 1310, 1205, 1290, 1104][i], days: 30 }; }), today: 9.8, days: days,
         summary: { thisMonth: 1104.5, lastMonth: 1290.2, guestDay: 70.1, emptyDay: 23.4 },
         stays: [{ no: 'DEMO/INV/002', checkin: iso(4), checkout: iso(2), nights: 2, guests: 8, kwh: 141.3, perNight: 70.7, perGuestNight: 8.8 }, { no: 'DEMO/INV/001', checkin: iso(12), checkout: iso(9), nights: 3, guests: 12, kwh: 216.9, perNight: 72.3, perGuestNight: 6 }] }; })(),
     '/web-insights': (function(){ var d = function(n){ var x = new Date(); x.setDate(x.getDate()-n); return x.toISOString().slice(0,10); }, days = []; for (var i = 28; i >= 1; i--) days.push(d(i));

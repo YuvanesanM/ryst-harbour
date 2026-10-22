@@ -92,6 +92,7 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
   <div class="head">
     <div><h1>Power</h1><p>Electricity use from the villa's energy meter · for your own monitoring, never billed to guests</p></div>
     <span class="sp"></span>
+    <button class="btn" type="button" id="importPast" hidden>⤓ <span>Import past data</span></button>
     <button class="btn" type="button" id="readNow" hidden>↻ <span>Read now</span></button>
     <label class="rate" for="rate">₹ per unit <input id="rate" type="number" inputmode="decimal" min="0" max="100" step="0.01" placeholder="e.g. 8.50"><button class="btn" type="button" id="saveRate">Save</button></label>
   </div>
@@ -122,7 +123,7 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
   function barChart(el, rows) {
     const vals = rows.filter(r => r.kwh != null);
     if (!vals.length) { el.innerHTML = `<div class="empty">${t('No full days yet — the first day shows after a day of readings')}</div>`; return; }
-    const W = 600, H = 190, L = 34, R = 4, T = 10, B = 22, max = Math.max(1, ...vals.map(r => r.kwh));
+    const W = Math.max(280, el.clientWidth || 600), H = 190, L = 34, R = 4, T = 10, B = 22, max = Math.max(1, ...vals.map(r => r.kwh));
     const nice = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / nice) * nice;
     const step = (W - L - R) / rows.length, bw = Math.max(2, step - 2), y = v => T + (H - T - B) * (1 - v / top);
     const ticks = [0, top / 2, top].map(v => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${n1(v)}</text>`).join('');
@@ -151,11 +152,16 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
 
   function render(d) {
     if (!d.configured) { $('#out').innerHTML = setup(d); return; }
-    $('#readNow').hidden = false;
+    $('#readNow').hidden = false; $('#importPast').hidden = false;
+    $('#importPast').title = d.imported ? `${t('Last imported')} ${new Date(d.imported.at).toLocaleString('en-IN')}: ${d.imported.source ? d.imported.days + ' ' + t('days') + (d.imported.readings ? ', ' + d.imported.readings + ' ' + t('readings') : '') : d.imported.error || ''}` : '';
     rate = d.rate || null; if (rate) $('#rate').value = rate;
     const S = d.summary || {}, L0 = d.latest;
     let h = `<div class="kpis">
-      ${kpi('Power now', L0 && L0.kw != null ? n1(L0.kw) + ' kW' : '—', L0 ? `<i class="live"></i>${t('read')} ${new Date(L0.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}` : '')}
+      ${(() => { // this meter often reports live power as 0 (only while its app is open): then the average since the last reading
+        const live = L0 && L0.kw > 0, avg = L0 && L0.avgKw != null;
+        const read = L0 ? `${t('read')} ${new Date(L0.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}` : '';
+        return kpi('Power now', live ? n1(L0.kw) + ' kW' : avg ? n1(L0.avgKw) + ' kW' : L0 && L0.kw != null ? n1(L0.kw) + ' kW' : '—',
+          L0 ? `<i class="live"></i>${live || !avg ? read : `${t('average over the last')} ${L0.avgMin} ${t('min')}`}` : ''); })()}
       ${kpi('Today so far', d.today != null ? n1(d.today) + ' kWh' : '—', cost(d.today))}
       ${kpi('This month', S.thisMonth != null ? n1(S.thisMonth) + ' kWh' : '—', [cost(S.thisMonth), S.lastMonth ? t('last month') + ' ' + n1(S.lastMonth) : ''].filter(Boolean).join(' · '))}
       ${kpi('Guest day vs empty day', S.guestDay != null || S.emptyDay != null ? n1(S.guestDay) + ' / ' + n1(S.emptyDay) : '—', t('kWh a day, on average'))}</div>`;
@@ -163,10 +169,28 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
     h += `<div class="grid2"><div class="card"><h2>${t('Units used per day')}</h2><div class="sub">${t('Last 31 days')}</div>
         <div class="legend"><span><i style="background:var(--teal)"></i>${t('Guests in')}</span><span><i style="background:var(--empty)"></i>${t('Empty')}</span></div><div class="chart" id="chD"></div></div>
       <div class="card"><h2>${t('Where savings are')}</h2><div class="sub">${t('From the last 31 days')}</div><div class="note">${notes(S)}</div></div></div>`;
+    const months = (d.months || []).filter(m => m.kwh != null);
+    if (months.length > 1) h += `<div class="card" style="margin-top:12px"><h2>${t('Units per month')}</h2><div class="sub">${d.imported && d.imported.source ? t('Including past data from the meter') : t('From the meter readings')}</div><div class="chart" id="chM"></div></div>`;
     const st = (d.stays || []);
     h += `<div class="card" style="margin-top:12px"><h2>${t('Each stay')}</h2><div class="sub">${t('Check-in day to check-out day · last 60 days')}</div>${st.length ? `<div style="overflow-x:auto"><table><thead><tr><th>${t('Stay')}</th><th>${t('Nights')}</th><th>${t('Guests')}</th><th>kWh</th><th>${t('Per night')}</th><th>${t('Per guest a night')}</th>${rate ? `<th>${t('Cost')}</th>` : ''}</tr></thead><tbody>${st.map(s => `<tr><td class="l">${esc(dm(s.checkin))} – ${esc(dm(s.checkout))}${s.ongoing ? ' · ' + t('now') : ''}</td><td>${s.nights}</td><td>${s.guests || '—'}</td><td>${n1(s.kwh)}</td><td>${n1(s.perNight)}</td><td>${n1(s.perGuestNight)}</td>${rate ? `<td>${cost(s.kwh) || '—'}</td>` : ''}</tr>`).join('')}</tbody></table></div>` : `<div class="empty">${t('No stays with readings yet')}</div>`}</div>`;
     $('#out').innerHTML = h;
     barChart($('#chD'), d.days || []);
+    if (months.length > 1) monthChart($('#chM'), months);
+  }
+  // units per month: one series, one axis, a tooltip per bar
+  function monthChart(el, rows) {
+    const W = Math.max(280, el.clientWidth || 600), H = 190, L = 40, R = 4, T = 10, B = 22, max = Math.max(1, ...rows.map(r => r.kwh));
+    const nice = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / nice) * nice;
+    const step = (W - L - R) / rows.length, bw = Math.max(4, step - 6), y = v => T + (H - T - B) * (1 - v / top), r4 = Math.min(4, bw / 2);
+    const lab = m => new Date(m + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'short' });
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(t('Units per month'))}">
+      ${[0, top / 2, top].map(v => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${n1(v)}</text>`).join('')}
+      ${rows.map((r, i) => { const x = L + i * step + (step - bw) / 2, yy = y(r.kwh), hh = y(0) - yy; return `${hh > 0 ? `<path class="bar-g" d="M${x},${y(0)} V${yy + Math.min(r4, hh)} q0,-${Math.min(r4, hh)} ${r4},-${Math.min(r4, hh)} H${x + bw - r4} q${r4},0 ${r4},${Math.min(r4, hh)} V${y(0)} Z"/>` : ''}<text class="axis" x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${esc(lab(r.month))}</text><rect class="hit" data-i="${i}" x="${L + i * step}" y="${T}" width="${step}" height="${H - T - B}"/>`; }).join('')}</svg><div class="tip"></div>`;
+    const svg = el.querySelector('svg'), tip = el.querySelector('.tip');
+    svg.addEventListener('pointermove', ev => { const hEl = ev.target.closest('rect.hit'); if (!hEl) return; const r = rows[+hEl.dataset.i], b = svg.getBoundingClientRect();
+      tip.innerHTML = `${esc(new Date(r.month + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }))} · <b>${n1(r.kwh)} kWh</b>${rate ? ' · ' + cost(r.kwh) : ''}${r.days < 28 ? ` · ${r.days} ${t('days of data')}` : ''}`;
+      tip.style.left = ((L + (+hEl.dataset.i + .5) * step) / W * b.width) + 'px'; tip.style.top = (y(r.kwh) / H * b.height) + 'px'; tip.style.opacity = 1; });
+    svg.addEventListener('pointerleave', () => { tip.style.opacity = 0; });
   }
   function notes(S) {
     const out = [];
@@ -192,6 +216,16 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
       const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not save');
       if (last) { last.rate = d.rate; render(last); }
       b.textContent = t('Saved'); setTimeout(() => { b.textContent = t('Save'); }, 1500);
+    } catch (e) { alert(e.message); }
+    finally { b.disabled = false; }
+  });
+  $('#importPast').addEventListener('click', async () => {
+    const b = $('#importPast'); b.disabled = true;
+    try {
+      const r = await fetch(PROXY + '/energy/import', { method: 'POST', headers: { 'X-Token': TOKEN } });
+      const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not import');
+      alert(d.ok ? `${t('Imported')}: ${d.days ? d.days + ' ' + t('days of daily use') : ''}${d.days && d.readings ? ', ' : ''}${d.readings ? d.readings + ' ' + t('readings from the last week') : ''}.` : `${t('The meter returned no past data')}: ${d.error || ''}`);
+      await load();
     } catch (e) { alert(e.message); }
     finally { b.disabled = false; }
   });

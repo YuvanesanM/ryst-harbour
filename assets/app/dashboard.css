@@ -308,3 +308,4 @@ html.theme-dark .tb{background:rgba(17,23,21,.92)}
 html.theme-dark .dot{background:#D9694C}
 html.theme-dark .avatar{background:#3E615D;color:#ECEFEC}
 
+.trow__due{display:block;width:100%;font-size:11.5px;color:var(--muted);margin-top:2px}

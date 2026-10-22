@@ -61,7 +61,7 @@
     'Collect': 'வசூலி', 'Checklist ✓': 'சரிபார்ப்பு ✓', 'Checking in': 'செக்-இன்', 'Checking out': 'செக்-அவுட்',
     'No check-ins or check-outs today.': 'இன்று செக்-இன் அல்லது செக்-அவுட் இல்லை.', 'Next arrival': 'அடுத்த வருகை',
     'Nothing booked after today yet.': 'இன்றைக்குப் பிறகு இன்னும் முன்பதிவு இல்லை.', 'Blocked today': 'இன்று மூடப்பட்டுள்ளது',
-    'In house': 'தங்கியிருப்பவர்', 'leaves': 'புறப்படுவது', 'until': 'வரை', 'From calendar sync': 'நாட்காட்டி ஒத்திசைவிலிருந்து',
+    'In house': 'தங்கியிருப்பவர்', 'Staying now': 'தற்போது தங்கியிருப்பவர்கள்', 'nights left': 'இரவுகள் மீதம்', 'leaves tomorrow': 'நாளை புறப்படுகிறார்', 'leaves': 'புறப்படுவது', 'until': 'வரை', 'From calendar sync': 'நாட்காட்டி ஒத்திசைவிலிருந்து',
     'New booking': 'புதிய முன்பதிவு', 'New quote': 'புதிய விலைப்புள்ளி', 'Record payment': 'கட்டணத்தைப் பதிவு செய்',
     'Open a booking to add the payment received': 'பெற்ற கட்டணத்தைச் சேர்க்க ஒரு முன்பதிவைத் திறக்கவும்',
     'Daily rounds not done yet': 'தினசரிச் சுற்று இன்னும் செய்யவில்லை', 'Daily rounds in progress': 'தினசரிச் சுற்று நடந்துகொண்டிருக்கிறது',

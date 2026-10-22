@@ -362,6 +362,17 @@
       + '<a class="btn btn--sm' + (s.block && can('bookings') ? ' btn--primary' : '') + '" href="' + esc(stayHref(s)) + '">' + esc(t(s.block && can('bookings') ? 'Add guest details' : s.due > 0 && can('bookings') ? 'Collect' : 'Open')) + '</a>'
       + '</div></div>';
   }
+  // A guest staying through today: dates, nights left, party, channel and what's still due (stay and food).
+  function stayingRow(s) {
+    var left = nightsBetween(TODAY, s.checkout), dueSplit = s.due > 0 && !s.block && s.food > 0 ? '<small class="trow__due">' + esc(t('Stay')) + ' ' + inr(s.stayDue) + ' · ' + esc(t('food')) + ' ' + inr(s.food) + '</small>' : '';
+    return '<div class="trow">'
+      + '<div class="trow__g"><b>' + esc(s.guest) + '</b><small>' + esc(fmtDay(s.checkin)) + ' → ' + esc(fmtDay(s.checkout)) + ' · ' + esc(left === 1 ? t('leaves tomorrow') : left + ' ' + t('nights left')) + ' · ' + esc(s.block ? t('From calendar sync') : s.no) + '</small></div>'
+      + '<div class="trow__n">' + guestsTxt(s) + '</div>'
+      + '<div class="trow__c">' + chPill(s) + '</div>'
+      + '<div class="trow__p">' + payPill(s) + dueSplit + '</div>'
+      + '<div class="trow__act"><a class="btn btn--sm' + (s.due > 0 && !s.block && can('bookings') ? ' btn--primary' : '') + '" href="' + esc(stayHref(s)) + '">' + esc(t(s.due > 0 && !s.block && can('bookings') ? 'Collect' : 'Open')) + '</a></div>'
+      + '</div>';
+  }
   function renderToday(list) {
     if (!list) { setHTML('todayBody', loading('stays') || loading('reg') ? '<div class="sk sk--row"></div><div class="sk sk--row"></div>' : errBox(ERR.stays ? 'stays' : 'reg')); return; }
     var arr = list.filter(function (s) { return s.checkin === TODAY; }), dep = list.filter(function (s) { return s.checkout === TODAY; });
@@ -369,13 +380,13 @@
     var html = '';
     if (arr.length) html += '<div class="day-group"><p class="day-group__t">' + ICON('in') + esc(t('Checking in')) + ' · ' + arr.length + '</p>' + arr.map(function (s) { return todayRow(s, 'checkin'); }).join('') + '</div>';
     if (dep.length) html += '<div class="day-group"><p class="day-group__t">' + ICON('out') + esc(t('Checking out')) + ' · ' + dep.length + '</p>' + dep.map(function (s) { return todayRow(s, 'checkout'); }).join('') + '</div>';
-    if (!html) {
+    if (!html && !inHouse.length) {
       var next = list.filter(function (s) { return s.checkin > TODAY; }).sort(function (a, b) { return a.checkin.localeCompare(b.checkin); })[0];
       html = '<div class="empty">' + ICON('ok') + '<span>' + esc(t('No check-ins or check-outs today.')) + (next ? ' ' + esc(t('Next arrival')) + ': <b>' + esc(next.guest) + '</b>, ' + esc(fmtDay(next.checkin)) + '.' : '') + '</span></div>';
     }
     var held = manualBlocksToday();
     if (held.length) html += '<p class="note">' + esc(t('Blocked today')) + ': ' + held.map(function (s) { var last = addDays(s.checkout, -1); return esc(s.guest || 'Blocked') + (last > TODAY ? ' (' + esc(t('until')) + ' ' + esc(fmtDay(last)) + ')' : ''); }).join(', ') + '</p>';
-    if (inHouse.length) html += '<p class="note">' + esc(t('In house')) + ': ' + inHouse.map(function (s) { return esc(s.guest) + ' (' + esc(t('leaves')) + ' ' + esc(fmtDay(s.checkout)) + ')'; }).join(', ') + '</p>';
+    if (inHouse.length) html += '<div class="day-group"><p class="day-group__t">' + ICON('ok') + esc(t('Staying now')) + ' · ' + inHouse.length + '</p>' + inHouse.map(stayingRow).join('') + '</div>';
     setHTML('todayBody', html);
   }
 
