@@ -84,6 +84,7 @@
     '/guests': { version:1, notes:{ '9000000001':{ text:'Celebrated an anniversary last time — likes the poolside dinner setup.', at:new Date(now-40*864e5).toISOString(), by:'reviewer@example.com' } }, lost:{} },
     '/users': { version:1, users:[{ email:'reviewer@example.com', role:'owner', admin:true, modules:[], telegramChatId:'' }] },
     '/whatsapp-templates': { templates:{}, interaktTemplates:{}, automation:{} },
+    '/food-calls': { settings: { enabled: true, leadMin: 60, cutoffs: { Breakfast: '20:00', Lunch: '08:00', Dinner: '13:00' } }, log: [] },
     '/whatsapp/template-approval': { configured: true, items: { enquiryFollowup: { status: 'APPROVED', name: 'ryst_enquiry_followup' }, quoteFollowup: { status: 'PENDING', name: 'ryst_quote_followup' } } },
     '/whatsapp/status': { configured:true, connected:true, botUsername:'demo_bot', recipientCount:1, alertTypes:[] },
     '/whatsapp/webhook-info': { url:'(hidden in demo mode)', recent:[] },

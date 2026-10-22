@@ -613,6 +613,19 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <div id="waReviewRows"></div>
       <div class="rc-foot" style="margin-top:6px"><button type="button" class="rc-add" id="waReviewSend">Send for review</button></div>
     </div>
+    <div class="wa-fu" id="foodCalls" hidden>
+      <label class="f"><span>Meal order reminders</span></label>
+      <p class="wa-hint">Food is made to order, so guests staying at the villa who haven't ordered the next meal get one polite WhatsApp with their guest portal link before its cut-off. Lunch's also suggests ordering a non-veg dinner then.</p>
+      <label style="display:flex;align-items:center;gap:8px;margin:8px 0 12px;font-size:14px"><input type="checkbox" id="fcOn"> Send meal order reminders</label>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+        <label class="f"><span>Breakfast cut-off (evening before)</span><input class="t" type="time" id="fcB"></label>
+        <label class="f"><span>Lunch cut-off</span><input class="t" type="time" id="fcL"></label>
+        <label class="f"><span>Dinner cut-off</span><input class="t" type="time" id="fcD"></label>
+        <label class="f"><span>Send this many minutes before</span><input class="t" type="number" id="fcLead" min="15" max="240" step="15"></label>
+      </div>
+      <div class="rc-foot" style="margin-top:8px"><button type="button" class="rc-add" id="fcSave">Save reminders</button></div>
+      <div id="fcLog" class="wa-hint" style="margin-top:6px"></div>
+    </div>
     <div class="wa-fu">
       <label class="f"><span>Enquiry follow-up — after WhatsApp's 24-hour window, the AI agents can follow up an unanswered enquiry with this approved template (you approve each one first)</span></label>
       <p class="wa-hint">The wording sent for review, with placeholders 1 = guest's first name, 2 = villa name:</p>
@@ -1777,7 +1790,7 @@ document.getElementById('waSave').addEventListener('click', async ()=>{
     reminder: { daysBefore: parseInt(document.getElementById('waReminderDays').value, 10) || 0, sendTime: document.getElementById('waReminderTime').value || WA_AUTOMATION_DEFAULT.reminder.sendTime },
     feedbackRequest: { daysAfter: parseInt(document.getElementById('waFeedbackRequestDays').value, 10) || 0, sendTime: document.getElementById('waFeedbackRequestTime').value || WA_AUTOMATION_DEFAULT.feedbackRequest.sendTime },
   };
-  interaktTemplatesDraft = {
+  interaktTemplatesDraft = Object.assign({}, interaktTemplatesDraft, { // keeps slots Harbour fills itself (meal final calls)
     checkinRequest: document.getElementById('waInteraktCheckinRequest').value.trim().toLowerCase(),
     reminder: document.getElementById('waInteraktReminder').value.trim().toLowerCase(),
     feedbackRequest: document.getElementById('waInteraktFeedbackRequest').value.trim().toLowerCase(),
@@ -1785,7 +1798,7 @@ document.getElementById('waSave').addEventListener('click', async ()=>{
     bookingConfirmed: document.getElementById('waInteraktBookingConfirmed').value.trim().toLowerCase(),
     enquiryFollowup: document.getElementById('waInteraktEnquiryFollowup').value.trim().toLowerCase(),
     quoteFollowup: document.getElementById('waInteraktQuoteFollowup').value.trim().toLowerCase(),
-  };
+  });
   btn.disabled = true; btn.textContent = 'Saving…';
   try{
     const res = await fetch(PROXY_URL+'/whatsapp-templates', {
@@ -2521,7 +2534,7 @@ document.addEventListener('click', function (e) { var b = e.target.closest('[dat
 // The follow-up templates' review at Meta (owner only): status per template, and send any not yet sent.
 (function(){
   const box = document.getElementById('waReview'); if (!box || localStorage.getItem('ryst_user_role') !== 'owner') return;
-  const NAMES = { enquiryFollowup: 'Enquiry follow-up', quoteFollowup: 'Quote follow-up' };
+  const NAMES = { enquiryFollowup: 'Enquiry follow-up', quoteFollowup: 'Quote follow-up', reminderFood: 'Stay reminder (pre-book meals)', foodBreakfast: 'Breakfast final call', foodLunch: 'Lunch final call', foodDinner: 'Dinner final call' };
   const say = it => !it ? 'Not sent for review yet'
     : it.error && !it.status ? 'Not sent — ' + it.error
     : it.status === 'APPROVED' ? 'Approved by Meta — in use as ' + it.name
@@ -2543,6 +2556,30 @@ document.addEventListener('click', function (e) { var b = e.target.closest('[dat
     b.disabled = false; b.textContent = 'Send for review';
   });
   load();
+})();
+</script>
+<script>
+// Meal order reminders (owner only): the cut-offs, on/off, and the last ones sent.
+(function(){
+  const box = document.getElementById('foodCalls'); if (!box || localStorage.getItem('ryst_user_role') !== 'owner') return;
+  const $f = id => document.getElementById(id); let lastLog = [];
+  const fill = d => {
+    const st = d.settings || {}; box.hidden = false;
+    $f('fcOn').checked = st.enabled !== false; $f('fcB').value = st.cutoffs.Breakfast; $f('fcL').value = st.cutoffs.Lunch; $f('fcD').value = st.cutoffs.Dinner; $f('fcLead').value = st.leadMin;
+    const log = d.log || lastLog; lastLog = log;
+    $f('fcLog').textContent = log.length ? 'Last sent: ' + log.slice(0, 5).map(x => `${x.meal} for ${x.guest || x.no} (${new Date(x.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })})`).join(' · ') : 'None sent yet.';
+  };
+  fetch(PROXY_URL + '/food-calls', { headers: { 'X-Token': proxyToken }, cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => d && fill(d)).catch(() => {});
+  $f('fcSave').addEventListener('click', async e => {
+    const b = e.currentTarget; b.disabled = true;
+    try {
+      const r = await fetch(PROXY_URL + '/food-calls', { method: 'PUT', headers: { 'X-Token': proxyToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: $f('fcOn').checked, leadMin: Number($f('fcLead').value) || 60, cutoffs: { Breakfast: $f('fcB').value, Lunch: $f('fcL').value, Dinner: $f('fcD').value } }) });
+      const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not save');
+      toast('Meal reminders saved'); fill({ settings: d.settings });
+    } catch (err) { toast(err.message); }
+    b.disabled = false;
+  });
 })();
 </script>
 </body>
