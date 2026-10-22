@@ -238,6 +238,8 @@
   .cat-count{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--muted-text)}
   .item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
   .item-info{flex:1;min-width:0}
+  .item-img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex:none;background:var(--line);align-self:flex-start}
+  .photo-note{font-size:11.5px;color:var(--muted-text);margin:14px 0 0;line-height:1.5}
   .item-name{font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px}
   /* FSSAI-style marks — a filled circle (veg) vs. a filled triangle
      (non-veg) inside a coloured square, the same convention used on Indian
@@ -1530,6 +1532,7 @@ function renderMenuList(){
     const bySpecialFirst = (a,b) => (b.chefSpecial?1:0) - (a.chefSpecial?1:0);
     const renderItem = m => `
       <div class="item-row" data-id="${esc(m.id)}">
+        ${m.image ? `<img class="item-img" src="${esc(m.image)}" alt="" width="56" height="56" loading="lazy" decoding="async" onerror="this.remove()">` : ''}
         <div class="item-info">
           <div class="item-name">${m.noDiet ? '' : `<span class="veg-dot ${m.veg?'veg':'nonveg'}" role="img" aria-label="${m.veg?'Vegetarian':'Non-vegetarian'}"></span>`}${esc(m.name)}${m.chefSpecial?` ${chefStarSvg}`:''}</div>
           <div class="item-price">${money(m.price)}</div>
@@ -1555,7 +1558,7 @@ function renderMenuList(){
       return `
       <div class="cat-head">${esc(cat)}${catItems.some(m=>m.chefSpecial) ? ` ${chefStarSvg}` : ''} <span class="cat-count">(${catItems.length})</span></div>
       ${itemsHtml}`;
-    }).join('');
+    }).join('') + (menu.some(m=>m.image) ? `<p class="photo-note">Photos are for illustration (Unsplash); your food is cooked to order and may look different.</p>` : '');
   }
   // Delegated per-row: the ADD↔stepper swap replaces this slot's innerHTML
   // on every tap, so listeners are (re)bound to the slot itself rather than

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://stay.ryst.in https://www.googletagmanager.com https://www.google.com https://raw.githubusercontent.com https://*.google-analytics.com https://api.qrserver.com https://data.ryst.in; connect-src 'self' https://data.ryst.in wss://data.ryst.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://accounts.google.com https://api.open-meteo.com; frame-src https://accounts.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
@@ -110,6 +110,7 @@
 
   .dish-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 13px;margin-bottom:7px;flex-wrap:wrap}
   .dish-main{flex:1;min-width:160px}
+  .dish-img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex:none;background:var(--line)}
   .dish-name{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:7px}
   .veg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
   .veg-dot.veg{background:var(--accent)}
@@ -547,6 +548,9 @@
         <div class="field" style="justify-content:center"><label class="chk-toggle" style="margin-top:18px"><input type="checkbox" id="dChefSpecial"> Chef's Special</label></div>
       </div>
       <div class="field"><label>Description (optional, guest-facing)</label><input id="dDesc"></div>
+      <div class="field"><label>Photo link (optional, square works best — https://…)</label>
+        <div style="display:flex;gap:10px;align-items:center"><img id="dImgPrev" alt="" width="48" height="48" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex:none;background:var(--line)" hidden><input id="dImage" type="url" inputmode="url" placeholder="https://stay.ryst.in/assets/menu/…" style="flex:1;min-width:0"></div></div>
+      <div class="field"><label>Photo credit (optional, e.g. photographer, Unsplash)</label><input id="dImageCredit" maxlength="100"></div>
       <div class="field"><label>Notes (optional, internal — costing basis, availability window, etc.)</label><input id="dNotes"></div>
       <div class="merr" id="dErr"></div>
     </div>
@@ -828,6 +832,7 @@ function renderMenu(){
       <div class="cat-head">${emojiFor(c)} ${esc(c)} <span class="cnt">(${byCat[c].length})</span></div>
       ${byCat[c].map(m=>`
         <div class="dish-row">
+          ${m.image ? `<img class="dish-img" src="${esc(m.image)}" alt="" width="40" height="40" loading="lazy" onerror="this.remove()">` : ''}
           <div class="dish-main">
             <div class="dish-name">${m.noDiet?'':`<span class="veg-dot ${m.veg?'veg':'nonveg'}"></span>`}${esc(m.name)}${m.chefSpecial?' ⭐':''}</div>
             <div class="dish-sub">${esc(m.description||'')}${m.kcal?' · ~'+m.kcal+' kcal':''}</div>
@@ -869,9 +874,19 @@ function openDishModal(id){
   $('#dChefSpecial').checked = m ? !!m.chefSpecial : false;
   $('#dDesc').value = m ? (m.description||'') : '';
   $('#dNotes').value = m ? (m.notes||'') : '';
+  $('#dImage').value = m ? (m.image||'') : '';
+  $('#dImageCredit').value = m ? (m.imageCredit||'') : '';
+  showDishImgPrev();
   $('#dErr').textContent = '';
   $('#dishOverlay').classList.add('show');
 }
+function showDishImgPrev(){
+  const u = $('#dImage').value.trim(), im = $('#dImgPrev');
+  im.hidden = !/^https:\/\//i.test(u);
+  if(!im.hidden) im.src = u; else im.removeAttribute('src');
+}
+$('#dImage').addEventListener('input', showDishImgPrev);
+$('#dImgPrev').addEventListener('error', ()=>{ $('#dImgPrev').hidden = true; });
 $('#btnAddDish').addEventListener('click', ()=>openDishModal(null));
 $('#dCancel').addEventListener('click', ()=>$('#dishOverlay').classList.remove('show'));
 $('#dSave').addEventListener('click', async ()=>{
@@ -882,6 +897,7 @@ $('#dSave').addEventListener('click', async ()=>{
     veg: $('#dVeg').value === 'true', noDiet: $('#dVeg').value === 'none', sourcing: $('#dSourcing').value, moq: $('#dMoq').value || 1,
     chefSpecial: $('#dChefSpecial').checked, kcal: $('#dKcal').value,
     description: $('#dDesc').value, notes: $('#dNotes').value,
+    image: $('#dImage').value.trim(), imageCredit: $('#dImageCredit').value,
   };
   const cmd = editingDishId ? Object.assign({ action:'update-menu-item', id: editingDishId }, payload) : Object.assign({ action:'add-menu-item' }, payload);
   const data = await runCommand(cmd, editingDishId ? 'Dish updated' : 'Dish added');
