@@ -142,12 +142,12 @@ td.l{text-align:left;width:auto;max-width:none;white-space:nowrap}
 
   function setup(d) {
     return `<div class="setup"><h3>${t('Connect the energy meter')}</h3>
-      <p>${t('Harbour reads a Wi-Fi energy meter that you already watch in the Smart Life (Tuya) app.')}</p>
+      <p>${t('Harbour reads a Wi-Fi energy meter that you already watch in the Smart Life (Tuya) app — for monitoring only (expense, savings, guests\' usage pattern), never billed to guests.')}</p>
       <ol>
-        <li>${t('At iot.tuya.com, create a Cloud project (data centre: India) and link your Smart Life app account to it.')}</li>
+        <li>${t('At iot.tuya.com, create a Cloud project (pick your data centre) and link your Smart Life app account to it.')}</li>
         <li>${t('Copy the project\'s Access ID and Access Secret, and the meter\'s Device ID.')}</li>
-        <li>${t('Add them on the server as')} <code>TUYA_ACCESS_ID</code>, <code>TUYA_ACCESS_SECRET</code> ${t('and')} <code>TUYA_DEVICE_ID</code>. ${t('Readings start within 30 minutes.')}</li>
-      </ol></div>`;
+        <li>${t('Enter them under')} <a href="settings.html">${t('Settings → Connections')}</a>. ${t('Readings start within 30 minutes, and the meter\'s last week comes in straight away.')}</li>
+      </ol><p style="color:var(--muted2);font-size:12.5px">${t('Power monitoring is part of the Pro plan.')}</p></div>`;
   }
 
   function render(d) {

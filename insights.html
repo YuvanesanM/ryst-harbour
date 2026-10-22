@@ -139,7 +139,7 @@ td:first-child{max-width:0;width:55%;overflow:hidden;text-overflow:ellipsis;whit
   }
 
   function render(d) {
-    if (d.configured === false) { $('#out').innerHTML = `<div class="setup">${t('Harbour\'s Google service account isn\'t set up on the server, so this can\'t be connected yet.')}</div>`; return; }
+    if (d.configured === false) { $('#out').innerHTML = `<div class="setup">${d.serviceAccount ? t('Not connected yet. Add your Search Console property and Google Analytics property under') + ' <a href="settings.html">' + t('Settings → Connections') + '</a> — ' + t('after giving this Google account access:') + ' <code>' + esc(d.serviceAccount) + '</code>' : t('Website & Search is part of the Pro plan — an admin can upgrade in Settings → Subscription.')}</div>`; return; }
     const s = d.search || {}, a = d.analytics || {};
     if (d.range) $('#rangeTxt').textContent = dm(d.range.from) + ' – ' + dm(d.range.to);
     if (s.site) $('#siteName').textContent = s.site.replace(/^sc-domain:|^https?:\/\/|\/$/g, '');

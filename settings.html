@@ -736,6 +736,33 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       </div>
     </div>
     <div id="connHooks" style="margin-bottom:22px"></div>
+    <div id="connMore" hidden>
+      <p class="gh-mini" style="margin-top:6px">Energy meter (Power page)</p>
+      <p class="sd" style="margin-bottom:10px">A Wi-Fi energy meter you watch in the Smart Life / Tuya app. At <b>iot.tuya.com</b>, create a Cloud project, link your Smart Life account to it, and copy its Access ID and Secret and the meter's Device ID. Readings start within 30 minutes, and the meter's last week comes in straight away.</p>
+      <div class="sync-results" id="connEnergyState" style="margin-bottom:8px"></div>
+      <label class="f" style="margin-bottom:8px"><span>Data centre</span><select class="t" id="connTuyaHost"></select></label>
+      <label class="f" style="margin-bottom:8px"><span>Access ID</span><input class="t" id="connTuyaId" autocomplete="off" spellcheck="false" autocapitalize="none"></label>
+      <label class="f" style="margin-bottom:8px"><span>Access Secret</span><input class="t" id="connTuyaSecret" type="password" autocomplete="off" spellcheck="false"></label>
+      <label class="f" style="margin-bottom:8px"><span>Meter's Device ID</span><input class="t" id="connTuyaDevice" autocomplete="off" spellcheck="false" autocapitalize="none"></label>
+      <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button class="btn primary" id="connTuyaSave">Connect meter</button><button class="btn" id="connTuyaDrop">Disconnect</button></div>
+
+      <p class="gh-mini">Guest Wi-Fi codes (Omada)</p>
+      <p class="sd" style="margin-bottom:10px">Each stay gets its own Wi-Fi code in the guest portal, valid from check-in to check-out. Needs a TP-Link Omada network on the <b>Omada cloud</b>: in the Omada cloud portal → Settings → Platform Integration, add an Open API app (client mode) and copy its Client ID, Client Secret and Omada ID. Add a voucher portal on your guest network first.</p>
+      <div class="sync-results" id="connWifiState" style="margin-bottom:8px"></div>
+      <label class="f" style="margin-bottom:8px"><span>Omada cloud address</span><input class="t" id="connOmadaUrl" autocomplete="off" spellcheck="false" autocapitalize="none" placeholder="https://aps1-omada-northbound.tplinkcloud.com"></label>
+      <label class="f" style="margin-bottom:8px"><span>Omada ID</span><input class="t" id="connOmadaId" autocomplete="off" spellcheck="false" autocapitalize="none"></label>
+      <label class="f" style="margin-bottom:8px"><span>Client ID</span><input class="t" id="connOmadaClient" autocomplete="off" spellcheck="false" autocapitalize="none"></label>
+      <label class="f" style="margin-bottom:8px"><span>Client Secret</span><input class="t" id="connOmadaSecret" type="password" autocomplete="off" spellcheck="false"></label>
+      <label class="f" style="margin-bottom:8px"><span>Site name (as in Omada)</span><input class="t" id="connOmadaSite" autocomplete="off" maxlength="80"></label>
+      <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button class="btn primary" id="connOmadaSave">Connect Wi-Fi</button><button class="btn" id="connOmadaDrop">Disconnect</button></div>
+
+      <p class="gh-mini">Website &amp; Search (Insights)</p>
+      <p class="sd" style="margin-bottom:10px">Google search clicks and website visitors for your own site. Add <b id="connSaEmail">our Google account</b> as a user in <b>Search Console</b> (Settings → Users and permissions → Restricted) and as a <b>Viewer</b> in <b>Google Analytics</b> (Admin → Property access management), then enter them below.</p>
+      <div class="sync-results" id="connWebState" style="margin-bottom:8px"></div>
+      <label class="f" style="margin-bottom:8px"><span>Search Console property</span><input class="t" id="connGsc" autocomplete="off" spellcheck="false" autocapitalize="none" placeholder="sc-domain:yourvilla.com  or  https://www.yourvilla.com/"></label>
+      <label class="f" style="margin-bottom:8px"><span>Google Analytics (GA4) property ID</span><input class="t" id="connGa4" inputmode="numeric" autocomplete="off" placeholder="e.g. 412345678"></label>
+      <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button class="btn primary" id="connWebSave">Connect Google</button><button class="btn" id="connWebDrop">Disconnect</button></div>
+    </div>
 
   </div>
 
@@ -1469,8 +1496,29 @@ function connRender(d){
     try{ await navigator.clipboard.writeText(v); toast('Copied'); }catch(e){ document.getElementById(b.dataset.copy).select(); toast('Select and copy it'); }
   }));
 }
+// Meter, Wi-Fi and Google: what's connected, and the forms for a villa's own
+function connRenderMore(d){
+  if(!d.energy || !d.wifi || !d.web) return;
+  const row=(label,ok,text)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(label)}</span><span>${esc(text)}</span></div>`;
+  const plan=x=>x.onPlan ? '' : ' — part of the Pro plan (Settings → Subscription)';
+  document.getElementById('connStatus').insertAdjacentHTML('beforeend',
+    row('Energy meter', d.energy.connected, (d.energy.connected ? 'Connected ✓'+(d.energy.deviceId?' (meter '+d.energy.deviceId+')':'') : 'Not connected')+plan(d.energy))
+    + row('Guest Wi-Fi codes', d.wifi.connected, (d.wifi.connected ? 'Connected ✓'+(d.wifi.site?' ('+d.wifi.site+')':'') : 'Not connected')+plan(d.wifi))
+    + row('Website & Search', d.web.connected, (d.web.connected ? 'Connected ✓'+(d.web.gscSite?' ('+d.web.gscSite+')':'') : 'Not connected')+plan(d.web)));
+  const more=document.getElementById('connMore'); more.hidden = !!d.managedByServer; if(d.managedByServer) return;
+  const sel=document.getElementById('connTuyaHost');
+  sel.innerHTML=(d.energy.hosts||[]).map(h=>`<option value="${esc(h)}">${esc({'openapi.tuyain.com':'India','openapi.tuyaus.com':'Western America','openapi-ueaz.tuyaus.com':'Eastern America','openapi.tuyaeu.com':'Central Europe','openapi-weaz.tuyaeu.com':'Western Europe','openapi.tuyacn.com':'China'}[h]||h)}</option>`).join('');
+  sel.value=d.energy.host||'openapi.tuyain.com';
+  document.getElementById('connTuyaDevice').value=d.energy.deviceId||'';
+  document.getElementById('connEnergyState').innerHTML=d.energy.connected?row('Access ID',true,d.energy.accessIdHint||'saved'):'';
+  document.getElementById('connOmadaUrl').value=d.wifi.url||''; document.getElementById('connOmadaSite').value=d.wifi.site||'';
+  document.getElementById('connWifiState').innerHTML=d.wifi.connected?row('Client ID',true,d.wifi.clientIdHint||'saved'):'';
+  document.getElementById('connGsc').value=d.web.gscSite||''; document.getElementById('connGa4').value=d.web.ga4PropertyId||'';
+  if(d.web.serviceAccount) document.getElementById('connSaEmail').textContent=d.web.serviceAccount;
+  document.getElementById('connWebState').innerHTML='';
+}
 async function connLoad(){
-  try{ connRender(await storCall('GET','/villa/connections')); }
+  try{ const d=await storCall('GET','/villa/connections'); connRender(d); connRenderMore(d); }
   catch(e){ document.getElementById('connStatus').innerHTML=`<div class="sync-result err"><span>Connections</span><span>${esc(e.message)}</span></div>`; }
 }
 async function connPut(body, btn, busy){
@@ -1481,7 +1529,7 @@ async function connPut(body, btn, busy){
     const d=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(d.error||('Error '+res.status));
     ['connInterakt','connRzpId','connRzpSecret','connRzpWh'].forEach(id=>document.getElementById(id).value='');
-    connRender(d); toast('Saved');
+    connRender(d); connRenderMore(d); toast('Saved');
   }catch(e){ toast(e.message); }
   finally{ btn.disabled=false; btn.textContent=orig; }
 }
@@ -1491,6 +1539,30 @@ document.getElementById('connSave').addEventListener('click', e=>{
   if(!Object.keys(body).length){ toast('Paste at least one key first'); return; }
   connPut(body, e.currentTarget, 'Saving…');
 });
+const connVal=id=>document.getElementById(id).value.trim();
+document.getElementById('connTuyaSave').addEventListener('click', e=>{
+  const body={ tuyaHost:connVal('connTuyaHost'), tuyaDeviceId:connVal('connTuyaDevice') };
+  if(connVal('connTuyaId')) body.tuyaAccessId=connVal('connTuyaId');
+  if(connVal('connTuyaSecret')) body.tuyaAccessSecret=connVal('connTuyaSecret');
+  if(!body.tuyaDeviceId){ toast('Enter the meter\'s Device ID'); return; }
+  connPut(body, e.currentTarget, 'Connecting…'); ['connTuyaId','connTuyaSecret'].forEach(id=>document.getElementById(id).value='');
+});
+document.getElementById('connTuyaDrop').addEventListener('click', e=>{ if(confirm('Disconnect the energy meter? Past readings are kept.')) connPut({ tuyaAccessId:'', tuyaAccessSecret:'', tuyaDeviceId:'' }, e.currentTarget, 'Disconnecting…'); });
+document.getElementById('connOmadaSave').addEventListener('click', e=>{
+  const body={ omadaUrl:connVal('connOmadaUrl'), omadaSite:connVal('connOmadaSite') };
+  if(connVal('connOmadaId')) body.omadaId=connVal('connOmadaId');
+  if(connVal('connOmadaClient')) body.omadaClientId=connVal('connOmadaClient');
+  if(connVal('connOmadaSecret')) body.omadaClientSecret=connVal('connOmadaSecret');
+  if(!body.omadaUrl){ toast('Enter your Omada cloud address'); return; }
+  connPut(body, e.currentTarget, 'Connecting…'); ['connOmadaId','connOmadaClient','connOmadaSecret'].forEach(id=>document.getElementById(id).value='');
+});
+document.getElementById('connOmadaDrop').addEventListener('click', e=>{ if(confirm('Disconnect guest Wi-Fi codes? Codes already given keep working until they expire.')) connPut({ omadaUrl:'', omadaId:'', omadaClientId:'', omadaClientSecret:'' }, e.currentTarget, 'Disconnecting…'); });
+document.getElementById('connWebSave').addEventListener('click', e=>{
+  const body={ gscSite:connVal('connGsc'), ga4PropertyId:connVal('connGa4').replace(/\D/g,'') };
+  if(!body.gscSite && !body.ga4PropertyId){ toast('Enter your Search Console property or GA4 property ID'); return; }
+  connPut(body, e.currentTarget, 'Connecting…');
+});
+document.getElementById('connWebDrop').addEventListener('click', e=>{ if(confirm('Disconnect Website & Search?')) connPut({ gscSite:'', ga4PropertyId:'' }, e.currentTarget, 'Disconnecting…'); });
 document.getElementById('connDropInterakt').addEventListener('click', e=>{
   if(!confirm('Disconnect WhatsApp (Interakt)? Guest messages will go back to Telegram nudges for staff to send.')) return;
   connPut({ interaktApiKey:'' }, e.currentTarget, 'Disconnecting…');
