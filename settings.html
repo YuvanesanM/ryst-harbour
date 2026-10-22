@@ -766,38 +766,8 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
     </div>
     <div class="sync-results" id="photoResults" style="margin-bottom:22px"></div>
 
-    <p class="gh-mini" style="margin-top:28px">Billing settings</p>
-    <p class="sd" style="margin-bottom:12px">What villas pay for RYST Harbour, per villa. Payments and invoices are in the name of the business below, through the Studio RYST Razorpay account (STUDIO_RAZORPAY_* on Render) — or a separate one if HARBOUR_RAZORPAY_* are set. A new price makes a new Razorpay plan for new subscribers; existing subscribers keep theirs.</p>
-    <div class="sync-results" id="billCfgStatus" style="margin-bottom:10px"></div>
-    <div id="billTiers"></div>
-    <label class="f" style="margin-bottom:8px"><span>Prices</span><select class="t" id="billGstMode"><option value="excl">Exclude GST (GST added at checkout)</option><option value="incl">Include GST</option></select></label>
-    <label class="f" style="margin-bottom:8px"><span>GST (%)</span><input class="t" id="billGstPct" type="number" min="0" max="28" step="1" inputmode="numeric"></label>
-    <label class="f" style="margin-bottom:8px"><span>Annual price = monthly × (months)</span><input class="t" id="billAnnualMonths" type="number" min="1" max="12" step="1" inputmode="numeric"></label>
-    <label class="f" style="margin-bottom:8px"><span>Minimum term (months)</span><input class="t" id="billMinTerm" type="number" min="0" max="36" step="1" inputmode="numeric"></label>
-    <label class="f" style="margin-bottom:8px"><span>Notice to cancel (days)</span><input class="t" id="billNotice" type="number" min="0" max="180" step="1" inputmode="numeric"></label>
-    <label class="f" style="margin-bottom:8px"><span>Free trial (days)</span><input class="t" id="billTrial" type="number" min="1" max="365" step="1" inputmode="numeric"></label>
-    <label class="f" style="margin-bottom:8px"><span>Grace after trial end / missed payment (days)</span><input class="t" id="billGrace" type="number" min="0" max="60" step="1" inputmode="numeric"></label>
-    <label class="f" style="margin-bottom:8px"><span>Business name on invoices</span><input class="t" id="billBiz" maxlength="120"></label>
-    <label class="f" style="margin-bottom:8px"><span>GSTIN</span><input class="t" id="billGstin" maxlength="15" autocapitalize="characters" spellcheck="false" placeholder="33ABCDE1234F1Z5"></label>
-    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button class="btn primary" id="billSave">Save billing settings</button></div>
-
-    <p class="gh-mini" style="margin-top:28px">Villas</p>
-    <p class="sd" style="margin-bottom:12px">Other villas on RYST Harbour. Each villa has its own bookings, cash, inventory, settings, staff, OTA calendars and guest links — its admin signs in with the email below (Google or Telegram) and sees only that villa, and connects its own WhatsApp and Razorpay under Connections. Each row shows the villa's billing state; the buttons under it extend a trial, record a payment you received directly (e.g. bank transfer), or make the villa read-only.</p>
-    <div class="rc-foot" style="margin-top:0;margin-bottom:8px"><button class="btn" id="villaListBtn">Show villas</button></div>
-    <div class="sync-results" id="villaResults" style="margin-bottom:14px"></div>
-    <div>
-      <label class="f" style="margin-bottom:8px"><span>Villa name</span><input class="t" id="villaName" maxlength="120" placeholder="e.g. Sea Breeze Villa" autocomplete="off"></label>
-      <label class="f" style="margin-bottom:8px"><span>Villa ID</span><input class="t" id="villaSlug" maxlength="40" placeholder="e.g. sea-breeze" pattern="[a-z0-9-]{2,40}" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
-      <label class="f" style="margin-bottom:8px"><span>Admin email</span><input class="t" id="villaAdmin" type="email" maxlength="200" placeholder="owner@example.com" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
-    </div>
-    <p class="wa-hint" style="margin:6px 0 10px">The villa ID can't be changed later: lowercase letters, numbers and dashes. The admin email must not already be a user here.</p>
-    <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button class="btn primary" id="villaCreateBtn">Add villa</button></div>
-
-    <p class="sd" style="margin-bottom:10px"><b>Invite a villa owner</b> — they open the link, sign in with Google and set up their own villa (name, ID) themselves. The link works only for the Google account below.</p>
-    <label class="f" style="margin-bottom:8px"><span>Their Google account email</span><input class="t" id="invEmail" type="email" maxlength="200" placeholder="owner@gmail.com" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
-    <label class="f" style="margin-bottom:8px"><span>Link valid for (days)</span><input class="t" id="invDays" type="number" min="1" max="60" value="14" inputmode="numeric"></label>
-    <div class="rc-foot" style="margin-top:0;margin-bottom:8px"><button class="btn primary" id="invCreateBtn">Create invite link</button></div>
-    <div class="sync-results" id="invResult" style="margin-bottom:22px"></div>
+    <p class="gh-mini" style="margin-top:28px">Customers, plans and invites</p>
+    <p class="sd" style="margin-bottom:12px">These moved to the <a href="/console.html">Harbour console</a> — RYST Harbour's own business, with its own sign-in for the Harbour team, kept apart from this villa.</p>
     </div>
   </div>
 </div>
@@ -1536,151 +1506,10 @@ function tokenVilla(){
   catch(e){ return 'ryst-109a'; }
 }
 if(tokenVilla()!=='ryst-109a') document.getElementById('platformOnly').style.display='none';
-// Data storage, Harbour billing and villas: the platform owner (an admin of RYST 109A) only.
+// Data storage tools: an admin of RYST 109A only (customers and plans are in the Harbour console).
 else if(localStorage.getItem('ryst_user_admin')==='true') document.getElementById('tabPlatformBtn').style.display='';
-function villaBillText(b){
-  if(!b) return 'not billed';
-  const d = n => n===1 ? '1 day' : n+' days';
-  const tn = b.trial ? '' : ' · '+(b.tier||'').replace(/^./,c=>c.toUpperCase());
-  const setup = b.setupWaived ? ' · setup waived' : b.setupDue ? '' : ' · setup paid';
-  return (({ trial: `trial${b.daysLeft!=null?', '+d(b.daysLeft)+' left':''}`, active: `active${b.paidUntil?' to '+fmtDay(b.paidUntil):''}`, grace: `payment due, ${d(b.daysLeft||0)} grace`, lapsed: 'read-only' })[b.effective] || b.effective) + tn + setup;
-}
-function villaRows(list){
-  if(!list.length) return '<div class="sync-result"><span>Villas</span><span>None yet</span></div>';
-  return list.map(v=>`<div class="sync-result${v.billing&&v.billing.locked?' err':''}"><span>${esc(v.name)}${v.isDefault?' (this villa)':''}</span><span>${esc(v.slug)} · ${v.bookings} booking${v.bookings===1?'':'s'} · ${v.users} user${v.users===1?'':'s'} · ${esc(villaBillText(v.billing))}${v.billing&&v.billing.note?' · '+esc(v.billing.note):''}</span></div>`
-    + (v.isDefault ? '' : `<div class="villa-ready" data-ready="${esc(v.slug)}" style="font-size:12.5px;color:var(--muted);margin:6px 2px 0;line-height:1.5">Checking setup…</div>
-      <div class="rc-foot" style="margin:4px 0 10px;flex-wrap:wrap;gap:6px">
-        <button type="button" class="rc-add" data-bill="extend-trial" data-slug="${esc(v.slug)}">Extend trial</button>
-        <button type="button" class="rc-add" data-bill="mark-paid" data-slug="${esc(v.slug)}">Mark paid</button>
-        <button type="button" class="rc-add" data-bill="waive-setup" data-slug="${esc(v.slug)}" data-waive="${v.billing&&v.billing.setupWaived?'0':'1'}">${v.billing&&v.billing.setupWaived?'Charge setup fee':'Waive setup fee'}</button>
-        ${v.billing&&v.billing.locked ? `<button type="button" class="rc-add" data-bill="restore" data-slug="${esc(v.slug)}">Unlock</button>` : `<button type="button" class="rc-add" data-bill="read-only" data-slug="${esc(v.slug)}">Make read-only</button>`}
-      </div>`)).join('');
-}
-async function villaBill(slug, action){
-  const body = { slug, action };
-  if(action==='extend-trial'){ const n=prompt('Extend the free trial by how many days?','14'); if(!n) return; body.days=Number(n); }
-  if(action==='mark-paid'){
-    const tier=(prompt('Which plan? Type starter, growth or pro','growth')||'').trim().toLowerCase(); if(!tier) return; body.tier=tier;
-    const n=prompt('Paid for how many months?','1'); if(!n) return; body.months=Number(n);
-    body.setupPaid = confirm('Was the one-time setup fee paid too? (OK = yes, Cancel = no)');
-    const note=prompt('Note (e.g. "Founding villa — paid by bank transfer on 1 Oct")',''); if(note!=null) body.note=note; }
-  if(action==='waive-setup'){ body.waive = (document.querySelector(`[data-bill="waive-setup"][data-slug="${slug}"]`)||{dataset:{}}).dataset.waive !== '0'; }
-  if(action==='read-only' && !confirm(`Make ${slug} read-only now? Its staff can still view everything but can't change anything until you unlock it.`)) return;
-  try{
-    const res=await fetch(PROXY_URL+'/platform/villas/billing',{method:'POST',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const d=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(d.error||('Error '+res.status));
-    toast('Updated'); villaList();
-  }catch(e){ toast(e.message); }
-}
-document.getElementById('villaResults').addEventListener('click', e=>{ const b=e.target.closest('[data-bill]'); if(b) villaBill(b.dataset.slug, b.dataset.bill); });
-async function billCfgLoad(){
-  try{
-    const c=await storCall('GET','/platform/billing');
-    document.getElementById('billTiers').innerHTML = (c.plans||[]).map(p=>`<div class="sync-result"><span><b>${esc(p.name)}</b></span><span>${esc((p.features||[]).map(f=>FEATURE_LABELS[f]||f).join(' · '))}</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px">
-        <label class="f" style="margin:0"><span>Monthly (₹)</span><input class="t" type="number" min="0" step="1" inputmode="numeric" data-tier-monthly="${p.key}" value="${p.monthly}"></label>
-        <label class="f" style="margin:0"><span>One-time setup (₹)</span><input class="t" type="number" min="0" step="1" inputmode="numeric" data-tier-setup="${p.key}" value="${p.setup}"></label>
-      </div>`).join('');
-    document.getElementById('billGstMode').value=c.pricesIncludeGst?'incl':'excl';
-    document.getElementById('billGstPct').value=c.gstPercent; document.getElementById('billAnnualMonths').value=c.annualMonths;
-    document.getElementById('billMinTerm').value=c.minTermMonths; document.getElementById('billNotice').value=c.noticeDays;
-    document.getElementById('billTrial').value=c.trialDays; document.getElementById('billGrace').value=c.graceDays;
-    document.getElementById('billBiz').value=c.businessName||''; document.getElementById('billGstin').value=c.gstin||'';
-    const row=(l,ok,t)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(l)}</span><span>${esc(t)}</span></div>`;
-    document.getElementById('billCfgStatus').innerHTML = row('Razorpay account', c.razorpayConfigured, c.razorpayConfigured ? 'Connected ('+c.razorpayMode+' mode) — keys from '+(c.razorpaySource||'Render') : 'Not set — STUDIO_RAZORPAY_KEY_ID and STUDIO_RAZORPAY_KEY_SECRET on Render')
-      + row('Subscription webhook', c.webhookConfigured, c.webhookConfigured ? 'Secret set. In that Razorpay account → Webhooks → Add: '+c.webhookUrl+', the subscription.* events, and the same secret as STUDIO_RAZORPAY_WEBHOOK_SECRET' : 'Set STUDIO_RAZORPAY_WEBHOOK_SECRET on Render, then add the webhook '+c.webhookUrl+' with subscription events');
-  }catch(e){ document.getElementById('billCfgStatus').innerHTML=`<div class="sync-result err"><span>Billing</span><span>${esc(e.message)}</span></div>`; }
-}
-document.getElementById('billSave').addEventListener('click', async e=>{
-  const b=e.currentTarget, t=b.textContent; b.disabled=true; b.textContent='Saving…';
-  const num = id => Number(document.getElementById(id).value);
-  const tiers={}; document.querySelectorAll('[data-tier-monthly]').forEach(i=>{ tiers[i.dataset.tierMonthly]=Object.assign(tiers[i.dataset.tierMonthly]||{}, {monthly:Number(i.value)||0}); });
-  document.querySelectorAll('[data-tier-setup]').forEach(i=>{ tiers[i.dataset.tierSetup]=Object.assign(tiers[i.dataset.tierSetup]||{}, {setup:Number(i.value)||0}); });
-  const body={ tiers, pricesIncludeGst: document.getElementById('billGstMode').value==='incl', gstPercent:num('billGstPct'), annualMonths:num('billAnnualMonths'),
-    minTermMonths:num('billMinTerm'), noticeDays:num('billNotice'), trialDays:num('billTrial')||14, graceDays:num('billGrace'),
-    businessName:document.getElementById('billBiz').value.trim(), gstin:document.getElementById('billGstin').value.trim().toUpperCase() };
-  try{
-    const res=await fetch(PROXY_URL+'/platform/billing',{method:'PUT',headers:{'X-Token':proxyToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const d=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(d.error||('Error '+res.status));
-    toast('Billing settings saved'); billCfgLoad();
-  }catch(err){ toast(err.message); }
-  finally{ b.disabled=false; b.textContent=t; }
-});
-if(tokenVilla()==='ryst-109a' && localStorage.getItem('ryst_demo')!=='1' && localStorage.getItem('ryst_user_admin')==='true') billCfgLoad();
-// "Find a chat ID" lists everyone who has messaged the shared bot — the platform owner's tool only.
+// Customers, plans, invites: the Harbour console (console.html), not here.
 if(tokenVilla()!=='ryst-109a'){ const r=document.getElementById('tgChatIdRow'); if(r) r.style.display='none'; }
-async function villaList(){
-  const out=document.getElementById('villaResults');
-  try{ const d=await storCall('GET','/platform/villas'); out.innerHTML=villaRows(d.villas||[]); }
-  catch(e){ out.innerHTML=`<div class="sync-result err"><span>Villas</span><span>${esc(e.message)}</span></div>`; return; }
-  // Onboarding progress for each villa ("Live in 7 days").
-  try{
-    const r=await storCall('GET','/platform/villas/readiness');
-    (r.villas||[]).forEach(v=>{
-      const el=out.querySelector(`[data-ready="${CSS.escape(v.slug)}"]`); if(!el) return;
-      const missing=v.steps.filter(s=>!s.done && !s.optional).map(s=>s.label);
-      const extra=v.steps.filter(s=>!s.done && s.optional).map(s=>s.label);
-      const pct=Math.round(v.done/v.total*100);
-      el.innerHTML=`<div style="display:flex;align-items:center;gap:8px"><b style="color:var(--ink)">Setup ${v.done}/${v.total}</b><span style="flex:1;height:6px;border-radius:4px;background:var(--line);overflow:hidden;max-width:180px"><span style="display:block;height:100%;width:${pct}%;background:var(--accent)"></span></span>${missing.length?'':'<span style="color:var(--accent-d);font-weight:600">✓ ready</span>'}</div>`
-        + (missing.length ? `<div>Still to do: ${esc(missing.join(' · '))}</div>` : '')
-        + (extra.length ? `<div style="color:var(--muted2)">Optional: ${esc(extra.join(' · '))}</div>` : '');
-    });
-  }catch(e){ out.querySelectorAll('[data-ready]').forEach(el=>{ el.textContent='Setup progress unavailable — '+e.message; }); }
-}
-document.getElementById('villaListBtn').addEventListener('click', async e=>{
-  const b=e.currentTarget, t=b.textContent; b.disabled=true; b.textContent='Loading…';
-  await villaList(); b.disabled=false; b.textContent=t;
-});
-document.getElementById('villaName').addEventListener('input', e=>{
-  const slug=document.getElementById('villaSlug');
-  if(slug.dataset.edited) return;
-  slug.value=e.target.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);
-});
-document.getElementById('villaSlug').addEventListener('input', e=>{ e.target.dataset.edited='1'; });
-document.getElementById('villaCreateBtn').addEventListener('click', async e=>{
-  const name=document.getElementById('villaName').value.trim();
-  const slug=document.getElementById('villaSlug').value.trim().toLowerCase();
-  const adminEmail=document.getElementById('villaAdmin').value.trim().toLowerCase();
-  if(!name){ toast('Enter the villa name'); return; }
-  if(!/^[a-z0-9-]{2,40}$/.test(slug)){ toast('Villa ID: 2–40 lowercase letters, numbers or dashes'); return; }
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adminEmail)){ toast('Enter a valid admin email'); return; }
-  if(!confirm(`Add "${name}" (${slug})?\n\n${adminEmail} will be its admin and can sign in right away. The villa ID can't be changed later.`)) return;
-  const b=e.currentTarget; b.disabled=true; b.textContent='Adding…';
-  try{
-    const res=await fetch(PROXY_URL+'/platform/villas',{ method:'POST', headers:{'X-Token':proxyToken,'Content-Type':'application/json'}, body:JSON.stringify({slug,name,adminEmail}) });
-    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
-    const d=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(d.error||('Error '+res.status));
-    toast(`${name} added — ${adminEmail} can sign in now`);
-    ['villaName','villaSlug','villaAdmin'].forEach(id=>{ const el=document.getElementById(id); el.value=''; delete el.dataset.edited; });
-    villaList();
-  }catch(err){ toast(err.message); }
-  finally{ b.disabled=false; b.textContent='Add villa'; }
-});
-
-document.getElementById('invCreateBtn').addEventListener('click', async e=>{
-  const email=document.getElementById('invEmail').value.trim().toLowerCase();
-  const days=Number(document.getElementById('invDays').value)||14;
-  const out=document.getElementById('invResult');
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast('Enter their Google account email'); return; }
-  const b=e.currentTarget; b.disabled=true; b.textContent='Creating…';
-  try{
-    const res=await fetch(PROXY_URL+'/platform/invites',{ method:'POST', headers:{'X-Token':proxyToken,'Content-Type':'application/json'}, body:JSON.stringify({email,days}) });
-    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
-    const d=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(d.error||('Error '+res.status));
-    out.innerHTML=`<div class="sync-result"><span>Invite for ${esc(d.email)}</span><span>valid until ${esc(new Date(d.expires).toLocaleDateString())}</span></div>
-      <input class="t" readonly id="invLink" value="${esc(d.link)}" style="margin-top:8px">
-      <div class="rc-foot" style="margin-top:8px"><button type="button" class="btn" id="invCopy">Copy link</button></div>`;
-    document.getElementById('invCopy').addEventListener('click', async ()=>{
-      try{ await navigator.clipboard.writeText(d.link); toast('Invite link copied — send it to them on WhatsApp or email'); }
-      catch(err){ document.getElementById('invLink').select(); toast('Select the link and copy it'); }
-    });
-  }catch(err){ out.innerHTML=`<div class="sync-result err"><span>Invite</span><span>${esc(err.message)}</span></div>`; }
-  finally{ b.disabled=false; b.textContent='Create invite link'; }
-});
 
 document.getElementById('tgChatIdBtn').addEventListener('click', async ()=>{
   const btn = document.getElementById('tgChatIdBtn');

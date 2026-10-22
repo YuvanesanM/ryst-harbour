@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="/frame-guard.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'self' https://data.ryst.in https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Harbour console · RYST Harbour</title>
+<link rel="icon" href="/assets/staff-icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- The Harbour console: RYST Harbour's own business — customers (villas),
+     plans and pricing, invites, and the Harbour team. Its own Google sign-in
+     (/auth/platform), kept apart from any villa's: a villa's admin, RYST
+     109A's included, has no access here. The session is stored separately
+     (harbour_console_token) so it never mixes with a villa session. -->
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#8a9087; --danger:#c0584b; --danger-soft:#fbeeec; --warn:#a8741a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#121512; --panel:#1a1e1a; --panel2:#202520; --line:#2e342e; --accent:#5cbf8a; --accent-d:#7fd3a5; --accent-soft:#1f3328;
+      --ink:#e9ece7; --muted:#a7ada5; --muted2:#7f857d; --danger:#e58a7e; --danger-soft:#3a2522; --warn:#e0b25a; }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  html,body{min-height:100%;background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  button,input,select{font:inherit;color:inherit}
+  .wrap{width:min(980px,100%);margin:0 auto;padding:20px 16px 60px}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  header img{width:38px;height:38px;border-radius:10px}
+  header h1{font-size:19px;font-weight:600}
+  header .sub{font-size:12.5px;color:var(--muted)}
+  header .me{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;gap:10px;align-items:center;overflow-wrap:anywhere}
+  .tabs{display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:18px;scrollbar-width:none}
+  .tab{border:0;background:none;padding:10px 12px;font-size:14px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .panel[hidden]{display:none}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+  .card h2{font-size:15px;font-weight:600;margin-bottom:4px}
+  .hint{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+  .btn{border:1px solid var(--line);background:var(--panel2);border-radius:9px;padding:8px 13px;font-size:13.5px;font-weight:500;cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.danger{color:var(--danger)}
+  .btn:disabled{opacity:.6;cursor:default}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .f{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;min-width:0}
+  .f span{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);font-weight:600}
+  .f input,.f select{border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14.5px;background:var(--panel2);outline:none;width:100%}
+  .f input:focus,.f select:focus{border-color:var(--accent)}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .kpi b{display:block;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+  .kpi span{font-size:12px;color:var(--muted)}
+  .villa{border-top:1px solid var(--line);padding:12px 0}
+  .villa:first-of-type{border-top:0}
+  .villa .top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .villa .name{font-weight:600}
+  .villa .meta{font-size:12.5px;color:var(--muted)}
+  .pill{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-d)}
+  .pill.warn{background:#fbf3e3;color:var(--warn)} .pill.err{background:var(--danger-soft);color:var(--danger)}
+  .ready{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .bar{display:inline-block;vertical-align:middle;width:120px;height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin:0 6px}
+  .bar i{display:block;height:100%;background:var(--accent)}
+  .actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .actions .btn{padding:5px 10px;font-size:12.5px}
+  .msg{font-size:13px;margin-top:8px;min-height:18px;overflow-wrap:anywhere}
+  .msg.err{color:var(--danger)}
+  .member{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding:10px 0;flex-wrap:wrap}
+  .member:first-child{border-top:0}
+  .member .who{flex:1;min-width:180px;overflow-wrap:anywhere}
+  .member small{display:block;color:var(--muted2);font-size:12px}
+  #signin{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+  #signin .card{width:min(420px,100%);padding:28px 24px;display:flex;flex-direction:column;gap:14px;text-align:center}
+  #signin img{width:60px;height:60px;border-radius:14px;margin:0 auto}
+  #gbtn{display:flex;justify-content:center;min-height:44px}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:calc(100% - 32px)}
+  .toast.show{opacity:1}
+  .btn:focus-visible,.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="signin" hidden>
+  <div class="card">
+    <img src="/assets/staff-icon-192.png" alt="">
+    <h1 style="font-size:20px;font-weight:600">Harbour console</h1>
+    <p class="hint" style="margin:0">RYST Harbour's own business: customers, plans, invites and the Harbour team. For the Harbour team only — villa staff sign in at <a href="/login.html">the villa app</a>.</p>
+    <div id="gbtn"></div>
+    <div class="msg err" id="signinErr" role="alert"></div>
+  </div>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <img src="/assets/staff-icon-192.png" alt="">
+    <div><h1>Harbour console</h1><div class="sub">RYST Harbour — customers, plans and team</div></div>
+    <div class="me"><span id="meEmail"></span><button class="btn" id="signOut" type="button">Sign out</button></div>
+  </header>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="customers" aria-selected="true">Customers</button>
+    <button class="tab" role="tab" data-tab="plans" aria-selected="false">Plans &amp; pricing</button>
+    <button class="tab" role="tab" data-tab="invites" aria-selected="false">Add &amp; invite</button>
+    <button class="tab" role="tab" data-tab="team" aria-selected="false">Harbour team</button>
+  </div>
+
+  <section class="panel" data-panel="customers">
+    <div class="kpis" id="kpis"></div>
+    <div class="card"><h2>Villas</h2><p class="hint">Every villa on RYST Harbour, with its plan and setup progress. RYST 109A is a customer here like any other.</p><div id="villas">Loading…</div></div>
+  </section>
+
+  <section class="panel" data-panel="plans" hidden>
+    <div class="card"><h2>Payments</h2><div id="billStatus" class="hint">Loading…</div></div>
+    <div class="card"><h2>Plans</h2><p class="hint">What villas pay, per villa. A new price makes a new Razorpay plan for new subscribers; existing subscribers keep theirs.</p><div id="tiers"></div></div>
+    <div class="card"><h2>Terms</h2>
+      <div class="grid2">
+        <label class="f"><span>Prices</span><select id="bGstMode"><option value="excl">Exclude GST (added at checkout)</option><option value="incl">Include GST</option></select></label>
+        <label class="f"><span>GST (%)</span><input id="bGstPct" type="number" min="0" max="28" step="1" inputmode="numeric"></label>
+        <label class="f"><span>Annual = monthly × months</span><input id="bAnnual" type="number" min="1" max="12" step="1" inputmode="numeric"></label>
+        <label class="f"><span>Minimum term (months)</span><input id="bMinTerm" type="number" min="0" max="36" step="1" inputmode="numeric"></label>
+        <label class="f"><span>Notice to cancel (days)</span><input id="bNotice" type="number" min="0" max="180" step="1" inputmode="numeric"></label>
+        <label class="f"><span>Free trial (days)</span><input id="bTrial" type="number" min="1" max="365" step="1" inputmode="numeric"></label>
+        <label class="f"><span>Grace (days)</span><input id="bGrace" type="number" min="0" max="60" step="1" inputmode="numeric"></label>
+        <label class="f"><span>Business name on invoices</span><input id="bBiz" maxlength="120"></label>
+        <label class="f"><span>GSTIN</span><input id="bGstin" maxlength="15" autocapitalize="characters" spellcheck="false"></label>
+      </div>
+      <button class="btn primary" id="bSave" type="button">Save plans &amp; terms</button>
+    </div>
+  </section>
+
+  <section class="panel" data-panel="invites" hidden>
+    <div class="card"><h2>Invite a villa owner</h2><p class="hint">They open the link, sign in with Google and set up their own villa. The link works only for the Google account below.</p>
+      <div class="grid2">
+        <label class="f"><span>Their Google account email</span><input id="invEmail" type="email" maxlength="200" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+        <label class="f"><span>Link valid for (days)</span><input id="invDays" type="number" min="1" max="60" value="14" inputmode="numeric"></label>
+      </div>
+      <button class="btn primary" id="invBtn" type="button">Create invite link</button>
+      <div class="msg" id="invOut"></div>
+    </div>
+    <div class="card"><h2>Add a villa yourself</h2><p class="hint">For a villa you set up on the owner's behalf. Its admin signs in with the email below. The villa ID can't be changed later.</p>
+      <div class="grid2">
+        <label class="f"><span>Villa name</span><input id="vName" maxlength="120" autocomplete="off"></label>
+        <label class="f"><span>Villa ID</span><input id="vSlug" maxlength="40" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="e.g. sea-breeze"></label>
+        <label class="f"><span>Admin email</span><input id="vAdmin" type="email" maxlength="200" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+      </div>
+      <button class="btn primary" id="vAdd" type="button">Add villa</button>
+      <div class="msg" id="vOut"></div>
+    </div>
+  </section>
+
+  <section class="panel" data-panel="team" hidden>
+    <div class="card"><h2>Harbour team</h2><p class="hint">People who run RYST Harbour and can use this console. This is separate from any villa's staff — being on the team gives no access to a villa's bookings or guests.</p>
+      <div id="team">Loading…</div>
+    </div>
+    <div class="card"><h2>Add someone</h2>
+      <div class="grid2">
+        <label class="f"><span>Google account email</span><input id="tEmail" type="email" maxlength="200" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+        <label class="f"><span>Name (optional)</span><input id="tName" maxlength="80" autocomplete="off"></label>
+      </div>
+      <button class="btn primary" id="tAdd" type="button">Add to the team</button>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const PROXY = 'https://data.ryst.in';
+const GOOGLE_CLIENT_ID = '717827758789-99ugj40a6j2rr4r7db26shn0hivq0vv0.apps.googleusercontent.com';
+const KEY = 'harbour_console_token';
+const $ = id => document.getElementById(id);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtDay = iso => iso ? new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : '';
+const rs = n => '₹' + Number(n||0).toLocaleString('en-IN');
+const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST tax invoices', prioritySupport:'Priority support' };
+let token = ''; try { token = localStorage.getItem(KEY) || ''; } catch(e) {}
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('show'),2600); }
+
+async function api(method, path, body){
+  const r = await fetch(PROXY + path, { method, headers: Object.assign({ 'X-Token': token }, body ? { 'Content-Type': 'application/json' } : {}), body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401 || r.status === 403) { if (path === '/platform/team' || r.status === 401) signOut(d.error); throw new Error(d.error || 'Not allowed'); }
+  if (!r.ok) throw new Error(d.error || ('Error ' + r.status));
+  return d;
+}
+
+// ── sign-in ──
+function showSignin(err){
+  $('app').hidden = true; $('signin').hidden = false; $('signinErr').textContent = err || '';
+  const draw = () => { if (!window.google || !google.accounts || !google.accounts.id) return setTimeout(draw, 200);
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogle, auto_select: false });
+    google.accounts.id.renderButton($('gbtn'), { theme: 'outline', size: 'large', width: Math.min(320, $('gbtn').clientWidth || 300), text: 'signin_with' }); };
+  draw();
+}
+async function onGoogle(resp){
+  $('signinErr').textContent = 'Checking…';
+  try {
+    const r = await fetch(PROXY + '/auth/platform', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ googleIdToken: resp.credential }) });
+    const d = await r.json().catch(() => ({}));
+    if (!d.ok || !d.token) { $('signinErr').textContent = d.error || 'Access denied.'; return; }
+    token = d.token; try { localStorage.setItem(KEY, token); } catch(e) {}
+    $('signinErr').textContent = ''; start();
+  } catch(e) { $('signinErr').textContent = 'Cannot reach the server — check your connection.'; }
+}
+function signOut(err){ token = ''; try { localStorage.removeItem(KEY); } catch(e) {} showSignin(err); }
+$('signOut').addEventListener('click', () => signOut());
+
+function start(){
+  $('signin').hidden = true; $('app').hidden = false;
+  try { const b = token.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); $('meEmail').textContent = JSON.parse(atob(b + '==='.slice((b.length+3)%4))).email || ''; } catch(e) {}
+  loadTeam().then(() => { loadCustomers(); loadPlans(); }).catch(() => {});
+}
+
+// ── tabs ──
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', String(x === t)));
+  document.querySelectorAll('.panel').forEach(p => p.hidden = p.dataset.panel !== t.dataset.tab);
+}));
+
+// ── customers ──
+function billText(b){
+  if (!b) return { t: 'not billed', cls: 'warn' };
+  const d = n => n === 1 ? '1 day' : n + ' days';
+  const tier = (b.tier || '').replace(/^./, c => c.toUpperCase());
+  const map = { trial: [`Trial${b.daysLeft != null ? ', ' + d(b.daysLeft) + ' left' : ''}`, ''], active: [`${tier}${b.paidUntil ? ' · paid to ' + fmtDay(b.paidUntil) : ''}`, ''], grace: [`${tier} · payment due, ${d(b.daysLeft || 0)} grace`, 'warn'], lapsed: ['Read-only', 'err'] };
+  const [t, cls] = map[b.effective] || [b.effective, ''];
+  return { t, cls };
+}
+let villas = [];
+async function loadCustomers(){
+  const out = $('villas');
+  try { villas = (await api('GET', '/platform/villas')).villas || []; }
+  catch(e) { out.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
+  const by = e => villas.filter(v => v.billing && v.billing.effective === e).length;
+  $('kpis').innerHTML = [['Villas', villas.length], ['Paying', villas.filter(v => v.billing && v.billing.effective === 'active' && !/complimentary/i.test(v.billing.note || '')).length], ['On trial', by('trial')], ['Payment due', by('grace') + by('lapsed')]]
+    .map(([l, n]) => `<div class="kpi"><b>${n}</b><span>${l}</span></div>`).join('');
+  out.innerHTML = villas.length ? villas.map(v => { const b = billText(v.billing);
+    return `<div class="villa"><div class="top"><span class="name">${esc(v.name)}</span><span class="meta">${esc(v.slug)} · ${v.bookings} booking${v.bookings===1?'':'s'} · ${v.users} user${v.users===1?'':'s'}</span>
+      <span class="pill ${b.cls}">${esc(b.t)}</span>${v.billing && v.billing.note ? `<span class="meta">${esc(v.billing.note)}</span>` : ''}</div>
+      ${v.isDefault ? '' : `<div class="ready" data-ready="${esc(v.slug)}">Checking setup…</div>
+      <div class="actions">
+        <button type="button" class="btn" data-bill="extend-trial" data-slug="${esc(v.slug)}">Extend trial</button>
+        <button type="button" class="btn" data-bill="mark-paid" data-slug="${esc(v.slug)}">Mark paid</button>
+        <button type="button" class="btn" data-bill="waive-setup" data-slug="${esc(v.slug)}" data-waive="${v.billing && v.billing.setupWaived ? '0' : '1'}">${v.billing && v.billing.setupWaived ? 'Charge setup fee' : 'Waive setup fee'}</button>
+        ${v.billing && v.billing.locked ? `<button type="button" class="btn" data-bill="restore" data-slug="${esc(v.slug)}">Unlock</button>` : `<button type="button" class="btn danger" data-bill="read-only" data-slug="${esc(v.slug)}">Make read-only</button>`}
+      </div>`}</div>`; }).join('') : '<div class="hint">No villas yet.</div>';
+  try {
+    const r = await api('GET', '/platform/villas/readiness');
+    (r.villas || []).forEach(v => { const el = out.querySelector(`[data-ready="${CSS.escape(v.slug)}"]`); if (!el) return;
+      const missing = v.steps.filter(s => !s.done && !s.optional).map(s => s.label);
+      el.innerHTML = `Setup ${v.done}/${v.total}<span class="bar"><i style="width:${Math.round(v.done / v.total * 100)}%"></i></span>${missing.length ? 'Still to do: ' + esc(missing.join(' · ')) : '✓ ready'}`; });
+  } catch(e) { out.querySelectorAll('[data-ready]').forEach(el => el.textContent = 'Setup progress unavailable — ' + e.message); }
+}
+$('villas').addEventListener('click', async e => {
+  const b = e.target.closest('[data-bill]'); if (!b) return;
+  const slug = b.dataset.slug, action = b.dataset.bill, body = { slug, action };
+  if (action === 'extend-trial') { const n = prompt('Extend the free trial by how many days?', '14'); if (!n) return; body.days = Number(n); }
+  if (action === 'mark-paid') {
+    const tier = (prompt('Which plan? Type starter, growth or pro', 'growth') || '').trim().toLowerCase(); if (!tier) return; body.tier = tier;
+    const n = prompt('Paid for how many months?', '1'); if (!n) return; body.months = Number(n);
+    body.setupPaid = confirm('Was the one-time setup fee paid too? (OK = yes, Cancel = no)');
+    const note = prompt('Note (e.g. "Paid by bank transfer on 1 Oct")', ''); if (note != null) body.note = note; }
+  if (action === 'waive-setup') body.waive = b.dataset.waive !== '0';
+  if (action === 'read-only' && !confirm(`Make ${slug} read-only now? Its staff can still view everything but can't change anything until you unlock it.`)) return;
+  b.disabled = true;
+  try { await api('POST', '/platform/villas/billing', body); toast('Updated'); loadCustomers(); } catch(err) { toast(err.message); b.disabled = false; }
+});
+
+// ── plans ──
+async function loadPlans(){
+  let c; try { c = await api('GET', '/platform/billing'); } catch(e) { $('billStatus').textContent = e.message; return; }
+  $('tiers').innerHTML = (c.plans || []).map(p => `<div style="border-top:1px solid var(--line);padding:10px 0"><b>${esc(p.name)}</b> <span class="hint">${esc((p.features || []).map(f => FEATURE_LABELS[f] || f).join(' · '))}</span>
+    <div class="grid2" style="margin-top:6px"><label class="f"><span>Monthly (₹)</span><input type="number" min="0" step="1" inputmode="numeric" data-m="${p.key}" value="${p.monthly}"></label>
+    <label class="f"><span>One-time setup (₹)</span><input type="number" min="0" step="1" inputmode="numeric" data-s="${p.key}" value="${p.setup}"></label></div></div>`).join('');
+  $('bGstMode').value = c.pricesIncludeGst ? 'incl' : 'excl'; $('bGstPct').value = c.gstPercent; $('bAnnual').value = c.annualMonths;
+  $('bMinTerm').value = c.minTermMonths; $('bNotice').value = c.noticeDays; $('bTrial').value = c.trialDays; $('bGrace').value = c.graceDays;
+  $('bBiz').value = c.businessName || ''; $('bGstin').value = c.gstin || '';
+  $('billStatus').innerHTML = `<div>Razorpay: <b>${c.razorpayConfigured ? 'connected (' + esc(c.razorpayMode) + ' mode)' : 'not set — STUDIO_RAZORPAY_KEY_ID and _SECRET on Render'}</b></div>
+    <div>Subscription webhook: <b>${c.webhookConfigured ? 'secret set' : 'not set'}</b> — ${esc(c.webhookUrl)} with the subscription.* events</div>`;
+}
+$('bSave').addEventListener('click', async e => {
+  const b = e.currentTarget, num = id => Number($(id).value), tiers = {};
+  document.querySelectorAll('[data-m]').forEach(i => { tiers[i.dataset.m] = Object.assign(tiers[i.dataset.m] || {}, { monthly: Number(i.value) || 0 }); });
+  document.querySelectorAll('[data-s]').forEach(i => { tiers[i.dataset.s] = Object.assign(tiers[i.dataset.s] || {}, { setup: Number(i.value) || 0 }); });
+  b.disabled = true;
+  try { await api('PUT', '/platform/billing', { tiers, pricesIncludeGst: $('bGstMode').value === 'incl', gstPercent: num('bGstPct'), annualMonths: num('bAnnual'), minTermMonths: num('bMinTerm'), noticeDays: num('bNotice'), trialDays: num('bTrial') || 14, graceDays: num('bGrace'), businessName: $('bBiz').value.trim(), gstin: $('bGstin').value.trim().toUpperCase() });
+    toast('Plans & terms saved'); loadPlans(); } catch(err) { toast(err.message); }
+  b.disabled = false;
+});
+
+// ── invites & add villa ──
+$('invBtn').addEventListener('click', async e => {
+  const email = $('invEmail').value.trim().toLowerCase(), days = Number($('invDays').value) || 14, out = $('invOut');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Enter their Google account email'); return; }
+  e.currentTarget.disabled = true;
+  try { const d = await api('POST', '/platform/invites', { email, days });
+    out.className = 'msg'; out.innerHTML = `Invite for ${esc(d.email)}, valid until ${esc(fmtDay(d.expires))}:<br><input class="f" readonly value="${esc(d.link)}" style="width:100%;margin-top:6px;border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--panel2)"> <button class="btn" type="button" id="invCopy" style="margin-top:6px">Copy link</button>`;
+    $('invCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(d.link); toast('Invite link copied'); } catch(err) { toast('Select the link and copy it'); } });
+  } catch(err) { out.className = 'msg err'; out.textContent = err.message; }
+  e.currentTarget.disabled = false;
+});
+$('vName').addEventListener('input', e => { const s = $('vSlug'); if (s.dataset.edited) return; s.value = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40); });
+$('vSlug').addEventListener('input', e => { e.target.dataset.edited = '1'; });
+$('vAdd').addEventListener('click', async e => {
+  const name = $('vName').value.trim(), slug = $('vSlug').value.trim().toLowerCase(), adminEmail = $('vAdmin').value.trim().toLowerCase(), out = $('vOut');
+  if (!name) { toast('Enter the villa name'); return; }
+  if (!/^[a-z0-9-]{2,40}$/.test(slug)) { toast('Villa ID: 2–40 lowercase letters, numbers or dashes'); return; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adminEmail)) { toast('Enter a valid admin email'); return; }
+  if (!confirm(`Add "${name}" (${slug})?\n\n${adminEmail} will be its admin and can sign in right away. The villa ID can't be changed later.`)) return;
+  e.currentTarget.disabled = true;
+  try { await api('POST', '/platform/villas', { slug, name, adminEmail }); out.className = 'msg'; out.textContent = `${name} added — ${adminEmail} can sign in now.`;
+    ['vName', 'vSlug', 'vAdmin'].forEach(id => { $(id).value = ''; delete $(id).dataset.edited; }); loadCustomers();
+  } catch(err) { out.className = 'msg err'; out.textContent = err.message; }
+  e.currentTarget.disabled = false;
+});
+
+// ── Harbour team ──
+async function loadTeam(){
+  const d = await api('GET', '/platform/team');
+  $('team').innerHTML = (d.team || []).map(m => `<div class="member"><div class="who"><b>${esc(m.name || m.email)}</b>${m.name ? `<small>${esc(m.email)}</small>` : ''}
+    <small>${m.fixed ? 'Set on Render (PLATFORM_ADMINS)' : (m.addedBy ? (/@/.test(m.addedBy) ? 'Added by ' + esc(m.addedBy) : esc(m.addedBy.replace(/^./, c => c.toUpperCase()))) : '') + (m.addedAt ? ' · ' + esc(fmtDay(m.addedAt)) : '')}</small></div>
+    ${m.email === d.me ? '<span class="pill">You</span>' : m.fixed ? '' : `<button class="btn danger" type="button" data-remove="${esc(m.email)}">Remove</button>`}</div>`).join('');
+}
+$('team').addEventListener('click', async e => {
+  const b = e.target.closest('[data-remove]'); if (!b) return;
+  if (!confirm(`Remove ${b.dataset.remove} from the Harbour team? They lose access to this console straight away.`)) return;
+  b.disabled = true;
+  try { await api('DELETE', '/platform/team', { email: b.dataset.remove }); toast('Removed'); loadTeam(); } catch(err) { toast(err.message); b.disabled = false; }
+});
+$('tAdd').addEventListener('click', async e => {
+  const email = $('tEmail').value.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Enter their Google account email'); return; }
+  e.currentTarget.disabled = true;
+  try { await api('POST', '/platform/team', { email, name: $('tName').value.trim() }); $('tEmail').value = ''; $('tName').value = ''; toast('Added — they can sign in here with Google'); loadTeam(); }
+  catch(err) { toast(err.message); }
+  e.currentTarget.disabled = false;
+});
+
+if (token) start(); else showSignin();
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>
