@@ -91,8 +91,8 @@
   const draft = id => drafts().find(d => d.id === id) || null;
   // where a draft's work started (the record behind it) and where it would go
   function srcOf(d) {
-    if (d.agent === 'reservations') return /^msg:/.test(d.key) ? 'msgs' : 'book';
-    if (d.agent === 'revenue') return 'cal';
+    if (d.agent === 'reservations') return /^msgf?:/.test(d.key) ? 'msgs' : 'book';
+    if (d.agent === 'revenue') return /^web:/.test(d.key) ? 'web' : 'cal';
     if (d.agent === 'operations') return 'ops';
     if (d.agent === 'guest') return d.kind === 'review-reply' ? 'rev' : 'book';
     if (d.agent === 'accounts') return 'book';
@@ -100,9 +100,9 @@
     return 'book';
   }
   function destOf(d) { const c = (d.proposal || {}).channel; return c === 'whatsapp' || c === 'instagram' ? 'o-guests' : c === 'telegram' ? 'o-staff' : c === 'google' ? 'o-public' : ''; }
-  const SOURCES = [['msgs', 'Messages', 'WhatsApp · Instagram', 'msg'], ['book', 'Bookings', 'quotes · balances', 'receipt'], ['cal', 'Calendar', 'empty nights · holidays', 'calendar'], ['ops', 'Checklists', 'repairs · stock · rounds', 'wrench'], ['rev', 'Reviews', 'Google · latest 5', 'star'], ['crq', 'Creators', 'collab requests', 'users']];
+  const SOURCES = [['msgs', 'Messages', 'WhatsApp · Instagram', 'msg'], ['book', 'Bookings', 'quotes · balances', 'receipt'], ['cal', 'Calendar', 'empty nights · holidays', 'calendar'], ['ops', 'Checklists', 'repairs · stock · rounds', 'wrench'], ['rev', 'Reviews', 'Google · latest 5', 'star'], ['crq', 'Creators', 'collab requests', 'users'], ['web', 'Website', 'Search · Analytics', 'globe']];
   // the real routing: which records each agent reads (agents.js on the server)
-  const SRC_TO = { msgs: ['reservations'], book: ['reservations', 'operations', 'guest', 'accounts'], cal: ['revenue'], ops: ['operations'], rev: ['guest'], crq: ['creators'] };
+  const SRC_TO = { msgs: ['reservations'], book: ['reservations', 'operations', 'guest', 'accounts'], cal: ['revenue'], ops: ['operations'], rev: ['guest'], crq: ['creators'], web: ['revenue'] };
   const OUTS = [['o-guests', 'Guests', 'WhatsApp · Instagram', 'msg'], ['o-staff', 'Caretaker', 'Telegram · app', 'send'], ['o-public', 'Public', 'Google · Instagram', 'globe']];
   const matchesQ = d => !Q || (d.title + ' ' + (d.detail || '') + ' ' + d.id + ' ' + agent(d.agent).name + ' ' + agent(d.agent).title).toLowerCase().includes(Q);
 
@@ -193,7 +193,7 @@
   function buildModel() {
     const N = {}, E = [], P = pend();
     const cnt = f => P.filter(f).length;
-    SOURCES.forEach(([id, l, sub, ic], i) => N[id] = { id, kind: 'src', col: 0, y: rowY(6, i), name: l, role: sub, ic, n: cnt(d => srcOf(d) === id) });
+    SOURCES.forEach(([id, l, sub, ic], i) => N[id] = { id, kind: 'src', col: 0, y: rowY(SOURCES.length, i), name: l, role: sub, ic, n: cnt(d => srcOf(d) === id) });
     (S.agents || []).forEach((a, i) => { const st = stat(a.id); N[a.id] = { id: a.id, kind: 'agent', col: 1, y: rowY(6, i), name: a.name, role: a.title, ic: AGENT_ICON[a.id], n: st.pending, state: st.state }; });
     (S.heads || []).forEach((h, i) => N[h.id] = { id: h.id, kind: 'head', col: 2, y: rowY(4, i), name: h.name, role: h.title, ic: HEAD_ICON[h.id], n: (h.stats || {}).pending || 0, state: (h.stats || {}).pending ? 'awaiting' : 'idle' });
     N.chief = { id: 'chief', kind: 'chief', col: 3, y: rowY(1, 0), name: (S.chief || {}).name || 'Aadhya', role: t('Chief of Staff'), ic: 'file', n: P.length };
