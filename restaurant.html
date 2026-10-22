@@ -551,7 +551,8 @@
         <datalist id="courseList"><option value="Starters"><option value="Soups"><option value="Breads"><option value="Curries & Gravies"><option value="Biryani & Rice"><option value="Sides"><option value="Desserts"></datalist></div>
       <div class="field"><label>Description (optional, guest-facing)</label><input id="dDesc"></div>
       <div class="field"><label>Photo link (optional, square works best — https://…)</label>
-        <div style="display:flex;gap:10px;align-items:center"><img id="dImgPrev" alt="" width="48" height="48" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex:none;background:var(--line)" hidden><input id="dImage" type="url" inputmode="url" placeholder="https://stay.ryst.in/assets/menu/…" style="flex:1;min-width:0"></div></div>
+        <div style="display:flex;gap:10px;align-items:center"><img id="dImgPrev" alt="" width="48" height="48" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex:none;background:var(--line)" hidden><input id="dImage" type="url" inputmode="url" placeholder="https://stay.ryst.in/assets/menu/…" style="flex:1;min-width:0"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px"><label class="icon-btn owner-only" style="cursor:pointer">📷 Upload your own photo<input type="file" id="dImageFile" accept="image/jpeg,image/png,image/webp" hidden></label><span id="dImageMsg" style="font-size:12px;color:var(--muted2)"></span></div></div>
       <div class="field"><label>Photo credit (optional, e.g. photographer, Unsplash)</label><input id="dImageCredit" maxlength="100"></div>
       <div class="field"><label>Notes (optional, internal — costing basis, availability window, etc.)</label><input id="dNotes"></div>
       <div class="merr" id="dErr"></div>
@@ -879,7 +880,7 @@ function openDishModal(id){
   $('#dNotes').value = m ? (m.notes||'') : '';
   $('#dImage').value = m ? (m.image||'') : '';
   $('#dImageCredit').value = m ? (m.imageCredit||'') : '';
-  showDishImgPrev();
+  showDishImgPrev(); $('#dImageMsg').textContent = '';
   $('#dErr').textContent = '';
   $('#dishOverlay').classList.add('show');
 }
@@ -889,6 +890,24 @@ function showDishImgPrev(){
   if(!im.hidden) im.src = u; else im.removeAttribute('src');
 }
 $('#dImage').addEventListener('input', showDishImgPrev);
+// Your own photo: cropped to a centred square, 800px, then stored by the server
+$('#dImageFile').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  const msg = $('#dImageMsg'); msg.textContent = 'Uploading…';
+  try {
+    const bmp = await createImageBitmap(f);
+    const side = Math.min(bmp.width, bmp.height), out = Math.min(800, side), c = document.createElement('canvas');
+    c.width = c.height = out;
+    c.getContext('2d').drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, out, out);
+    const photo = c.toDataURL('image/jpeg', 0.85);
+    const r = await fetch(PROXY_URL + '/restaurant/dish-photo', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN }, body: JSON.stringify({ photo }) });
+    const d = await r.json().catch(() => ({}));
+    if(!r.ok || !d.url) throw new Error(d.error || 'Could not upload the photo');
+    $('#dImage').value = d.url; $('#dImageCredit').value = ''; showDishImgPrev();
+    msg.textContent = 'Uploaded — press Save to use it';
+  } catch(err) { msg.textContent = err.message || 'Could not upload the photo'; }
+});
 $('#dImgPrev').addEventListener('error', ()=>{ $('#dImgPrev').hidden = true; });
 $('#btnAddDish').addEventListener('click', ()=>openDishModal(null));
 $('#dCancel').addEventListener('click', ()=>$('#dishOverlay').classList.remove('show'));

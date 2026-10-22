@@ -1583,7 +1583,7 @@ function renderMenuList(){
       return `
       <div class="cat-head">${esc(cat)}${catItems.some(m=>m.chefSpecial) ? ` ${chefStarSvg}` : ''} <span class="cat-count">(${catItems.length})</span></div>
       ${itemsHtml}`;
-    }).join('') + (menu.some(m=>m.image) ? `<p class="photo-note">Photos are for illustration (Unsplash); your food is cooked to order and may look different.</p>` : '');
+    }).join('') + (menu.some(m=>m.image && /unsplash|pexels/i.test(m.imageCredit||'')) ? `<p class="photo-note">Stock photos are for illustration (Unsplash, Pexels); your food is cooked to order and may look different.</p>` : '');
   }
   // Delegated per-row: the ADD↔stepper swap replaces this slot's innerHTML
   // on every tap, so listeners are (re)bound to the slot itself rather than
