@@ -1363,15 +1363,21 @@ async function payLink(kind, btn, msgEl){
 }
 
 // ── Menu & order ─────────────────────────────────────────────────────────
-// Which menu category each meal period shows — matches the real Casa de
-// RYST categories (Settings → Restaurant), not a guess: 'Breakfast',
-// 'Meals' (the lunch thalis) and 'Dinner' are the actual category names.
-// (The category was originally seeded as 'Breakfast Combos' and later
-// renamed to 'Breakfast' from the Menu tab's category editor — this must
-// track whatever the category is actually called today, not the seed.)
-// Beverages don't belong to any one meal, so they're always shown alongside
-// whichever meal is selected rather than requiring their own tab.
-const MEAL_CATEGORY = { Breakfast: 'Breakfast', Lunch: 'Meals', Dinner: 'Dinner' };
+// Which categories each meal tab shows, worked out from the category names
+// themselves (Settings → Restaurant), so a renamed or new category shows up
+// without a code change:
+// - a name that mentions a meal ("Breakfast", "Lunch & Dinner") goes under it;
+// - 'Meals' (the lunch thalis) under Lunch;
+// - drinks (Beverages, Juices…) under every meal;
+// - anything else (BBQ, Snacks, Desserts…) under Lunch and Dinner.
+function mealsFor(cat){
+  const c = String(cat || '').trim().toLowerCase();
+  const named = MEAL_PERIODS.filter(m => c.includes(m.toLowerCase()));
+  if (named.length) return named;
+  if (/^meals?$/.test(c)) return ['Lunch'];
+  if (/beverage|drink|juice|coffee|\btea\b|shake|mocktail/.test(c)) return MEAL_PERIODS;
+  return ['Lunch', 'Dinner'];
+}
 const MEAL_PERIODS = ['Breakfast', 'Lunch', 'Dinner'];
 let selectedMeal = ''; // set by defaultMeal() on first render, preserved across chip taps/back-navigation after that
 let searchQuery = ''; let vegOnly = false; let specialOnly = false;
@@ -1452,7 +1458,7 @@ function renderMenuList(){
   // useful than making the guest guess which meal tab a dish lives under.
   let menu = q
     ? (me.menu || []).filter(m => m.name.toLowerCase().includes(q))
-    : (me.menu || []).filter(m => new Set([MEAL_CATEGORY[selectedMeal], 'Beverages']).has(m.category));
+    : (me.menu || []).filter(m => mealsFor(m.category).includes(selectedMeal));
   if(vegOnly) menu = menu.filter(m => m.veg);
   if(specialOnly) menu = menu.filter(m => m.chefSpecial);
 
