@@ -607,9 +607,15 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
     <p class="wa-hint">The template's body must use a single placeholder 1: the link to the guest's quote-review page.</p>
     <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button type="button" class="rc-add" data-reset="quoteReady">Reset to default</button></div>
 
+    <div class="wa-fu" id="waReview" hidden>
+      <label class="f"><span>Follow-up templates at Meta</span></label>
+      <p class="wa-hint">Sent to Meta for review through Interakt. Each template's name fills in below by itself once Meta approves it.</p>
+      <div id="waReviewRows"></div>
+      <div class="rc-foot" style="margin-top:6px"><button type="button" class="rc-add" id="waReviewSend">Send for review</button></div>
+    </div>
     <div class="wa-fu">
       <label class="f"><span>Enquiry follow-up — after WhatsApp's 24-hour window, the AI agents can follow up an unanswered enquiry with this approved template (you approve each one first)</span></label>
-      <p class="wa-hint">Submit this wording in Interakt (category Utility or Marketing), with placeholders 1 = guest's first name, 2 = villa name:</p>
+      <p class="wa-hint">The wording sent for review, with placeholders 1 = guest's first name, 2 = villa name:</p>
       <pre class="wa-tpl" id="tplEnquiryFollowup">Hi {{1}}, thanks for your message to {{2}}! Sorry we couldn't reply sooner. Are you still planning a stay? Reply with your dates and number of guests and we'll check availability and the price for you right away.</pre>
       <button type="button" class="rc-add" data-copy="tplEnquiryFollowup">Copy wording</button>
       <label class="f" style="margin:10px 0 8px"><span>Interakt template name, once Meta approves it</span>
@@ -2511,5 +2517,33 @@ document.addEventListener('click', function (e) { var b = e.target.closest('[dat
   navigator.clipboard.writeText(el.textContent).then(function () { var t = b.textContent; b.textContent = 'Copied'; setTimeout(function () { b.textContent = t; }, 1500); }); });
 </script>
 <style>.wa-tpl{white-space:pre-wrap;font:13px/1.5 inherit;font-family:inherit;background:var(--panel2,#f7f8f5);border:1px solid var(--line,#e3e5e0);border-radius:9px;padding:10px 12px;margin:0 0 8px}</style>
+<script>
+// The follow-up templates' review at Meta (owner only): status per template, and send any not yet sent.
+(function(){
+  const box = document.getElementById('waReview'); if (!box || localStorage.getItem('ryst_user_role') !== 'owner') return;
+  const NAMES = { enquiryFollowup: 'Enquiry follow-up', quoteFollowup: 'Quote follow-up' };
+  const say = it => !it ? 'Not sent for review yet'
+    : it.error && !it.status ? 'Not sent — ' + it.error
+    : it.status === 'APPROVED' ? 'Approved by Meta — in use as ' + it.name
+    : it.status === 'REJECTED' ? 'Rejected by Meta' + (it.reason ? ' — ' + it.reason : '') + '. Send for review again after changing the wording.'
+    : 'In review at Meta (usually minutes to a day)';
+  const show = d => {
+    if (!d || !d.configured) { box.hidden = true; return; }
+    box.hidden = false;
+    const items = d.items || {};
+    document.getElementById('waReviewRows').innerHTML = Object.keys(NAMES).map(k => `<div class="sync-result"><span>${esc(NAMES[k])}</span><span style="text-align:right">${esc(say(items[k]))}</span></div>`).join('');
+    const pending = Object.keys(NAMES).some(k => !items[k] || !items[k].status || items[k].status === 'REJECTED');
+    document.getElementById('waReviewSend').hidden = !pending;
+  };
+  const load = () => fetch(PROXY_URL + '/whatsapp/template-approval', { headers: { 'X-Token': proxyToken }, cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(show).catch(() => {});
+  document.getElementById('waReviewSend').addEventListener('click', async e => {
+    const b = e.currentTarget; b.disabled = true; b.textContent = 'Sending…';
+    try { const r = await fetch(PROXY_URL + '/whatsapp/template-approval', { method: 'POST', headers: { 'X-Token': proxyToken } }); show(r.ok ? await r.json() : null); toast(r.ok ? 'Sent to Meta for review' : 'Could not send — try again'); }
+    catch (err) { toast('Could not send — check the connection'); }
+    b.disabled = false; b.textContent = 'Send for review';
+  });
+  load();
+})();
+</script>
 </body>
 </html>

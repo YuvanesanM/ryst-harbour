@@ -1,0 +1,6 @@
+# GitHub Pages runs Jekyll here only to keep repository tooling (.claude
+# skills, the README) off the public site. No page has front matter, so every
+# other file is published exactly as committed. .well-known holds the app-link
+# and verification files and must stay published.
+include: [.well-known]
+exclude: [.claude, README.md]
