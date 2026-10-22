@@ -578,6 +578,11 @@
   .gp-due-row small{display:block;font-size:11.5px;color:#8a6a5a;font-weight:500}
   .gp-due .pay-btn{margin:0;width:100%;background:linear-gradient(135deg,#d3764a,var(--terra));box-shadow:0 8px 20px rgba(185,87,44,.28)}
   .gp-due .pay-msg{margin:0}
+  .gp-due-pay{display:grid;gap:12px;min-width:0}
+  .gp-due-qr{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid rgba(185,87,44,.18);border-radius:14px;padding:10px}
+  .gp-due-qr img{width:104px;height:104px;flex:none;border-radius:8px}
+  .gp-due-qr b{display:block;font-size:13.5px;color:#4a3328}
+  .gp-due-qr span{display:block;font-size:12px;color:#7a5a4a;line-height:1.45;margin-top:3px}
 
   .gp-nearby{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:14px 0 16px;box-shadow:var(--shadow-sm);min-width:0}
   .gp-nearby-head{display:flex;align-items:center;gap:12px;padding:0 16px;text-decoration:none;color:inherit}
@@ -624,6 +629,8 @@
     .gp-due{grid-template-columns:1fr minmax(220px,260px);align-items:end;column-gap:28px}
     .gp-due-head{grid-column:1/-1}
     .gp-due .pay-btn{align-self:end}
+    .gp-due-pay{align-self:start}
+    .gp-due-rows{align-self:start}
     .gp-due .pay-msg{grid-column:1/-1}
     .gp-more{grid-template-columns:1fr 1fr}
   }
@@ -1205,7 +1212,13 @@ function renderHome(){
           ${stayDue ? row('Stay balance', stayDue, extras.length ? 'includes ' + extras.join(', ') : '') : ''}
           ${foodDue ? row('Food bill', foodDue) : ''}
         </div>
-        <button type="button" class="pay-btn" id="payBalanceBtn">Pay ${money(stayDue + foodDue)} →</button>
+        <div class="gp-due-pay">
+          <button type="button" class="pay-btn" id="payBalanceBtn">Pay ${money(stayDue + foodDue)} →</button>
+          ${window.RYST_VILLA ? '' : `<div class="gp-due-qr">
+            <img src="/assets/stay-payment-qr.png" alt="UPI QR code to pay Casa de RYST" width="104" height="104" loading="lazy">
+            <div><b>Or scan to pay</b><span>With any UPI app — enter ${money(stayDue + foodDue)}.</span><span>Then send us the payment screenshot on WhatsApp so we can update your balance.</span></div>
+          </div>`}
+        </div>
         <p class="pay-msg" id="payBalanceMsg" role="alert" aria-live="polite"></p>
       </div>`;
     $('#payBalanceBtn').addEventListener('click', () => payLink('total', $('#payBalanceBtn'), $('#payBalanceMsg')));
