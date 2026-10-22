@@ -176,7 +176,7 @@ const $ = id => document.getElementById(id);
 const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmtDay = iso => iso ? new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : '';
 const rs = n => '₹' + Number(n||0).toLocaleString('en-IN');
-const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST tax invoices', prioritySupport:'Priority support' };
+const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST tax invoices', prioritySupport:'Priority support', energy:'Power monitoring', insights:'Search & Analytics insights', instagram:'Instagram DMs', wifi:'Guest Wi-Fi codes' };
 let token = ''; try { token = localStorage.getItem(KEY) || ''; } catch(e) {}
 function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('show'),2600); }
 

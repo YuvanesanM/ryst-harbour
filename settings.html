@@ -1397,7 +1397,7 @@ document.getElementById('storCopyBtn').addEventListener('click', e => {
 // ── Subscription (billed villas, admins) ──
 const inr = n => '₹' + Number(n||0).toLocaleString('en-IN');
 const fmtDay = iso => iso ? new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : '';
-const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST tax invoices', prioritySupport:'Priority support' };
+const FEATURE_LABELS = { calendar:'Channel calendar sync', bookingSite:'Direct booking website', dashboard:'Owner dashboard', whatsapp:'WhatsApp automation', caretaker:'Caretaker app', gstInvoices:'GST tax invoices', prioritySupport:'Priority support', energy:'Power monitoring', insights:'Search & Analytics insights', instagram:'Instagram DMs', wifi:'Guest Wi-Fi codes' };
 let subCycle = 'annual';
 async function subLoad(){
   let d; try{ d = await storCall('GET','/billing'); }catch(e){ return; }
@@ -1414,6 +1414,7 @@ async function subLoad(){
     lapsed: 'Read-only — the subscription has lapsed. Choose a plan to unlock.' }[s.effective] || s.effective || '—';
   document.getElementById('subStatus').innerHTML = row('Status', s.effective==='trial'||s.effective==='active', label) + (s.note ? row('Note', true, s.note) : '');
   const box = document.getElementById('subPlans');
+  if(s.complimentary){ box.innerHTML = `<p class="sd" style="margin:0">This villa is on the ${esc(tierName(s.tier))} plan at no charge — every feature in it is included. Nothing to pay.</p>`; return; }
   const hasSub = s.effective==='active' && s.status==='active';
   if(hasSub){ box.innerHTML = `<p class="sd" style="margin:0">Your plan renews automatically. To change plan or for help, call <a href="tel:+918608008608">+91 86080 08608</a>.</p>`; return; }
   const tax = d.pricesIncludeGst ? 'incl. GST' : `+ ${d.gstPercent}% GST`;
