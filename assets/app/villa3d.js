@@ -77,7 +77,7 @@ const OUTDOOR = [
   { id: 'screen', name: 'Outdoor LED screen', x: -14.41, z: -1.23, w: 0.4, d: 3.4, note: '150-inch, on the west wall of the pool area', match: ['\\bled\\b', 'screen', 'projector'] },
   { id: 'counter', name: 'Food counter', x: -12.65, z: -7.67, w: 3.57, d: 2.77, note: 'Outdoor food counter', match: ['food counter', '\\bbbq\\b', 'barbe', 'grill'] },
   { id: 'obath', name: 'Outdoor bathroom', x: -14.26, z: -7.7, w: 1.55, d: 2.4, note: 'North-west corner of the plot', match: ['outdoor (bath|toilet|shower|wash)', 'outside (toilet|bathroom|shower)', 'pool ?side (toilet|shower|bathroom)'] },
-  { id: 'parking', name: 'Parking', x: 1.48, z: 1.29, w: 7.67, d: 8.5, note: 'Cement finish, fits 2 cars; partly under the chess terrace. Main gate: one tall brown double gate opening out to the road, with a walk-in door in its left end', match: ['parking', '\\bcar\\b', '\\bgates?\\b', 'vehicle'] },
+  { id: 'parking', name: 'Parking', x: 1.48, z: 1.29, w: 7.67, d: 8.5, note: 'Cement finish, fits 2 cars (20+ more along the private paver-block road); partly under the chess terrace. Main gate: one tall brown double gate opening out to the road, with a walk-in door in its left end', match: ['parking', '\\bcar\\b', '\\bgates?\\b', 'vehicle'] },
   { id: 'generator', name: 'Diesel generator', x: 7.76, z: 7.11, w: 1.39, d: 2.59, note: '35 kVA, south-east corner inside the gate', match: ['generator', '\\bd\\.?g\\b', 'diesel', 'genset'] },
   { id: 'garden', name: 'Garden & lawn', x: -14.13, z: 4.53, w: 8.87, d: 5.63, match: ['lawn', 'garden', 'grass', '\\btrees?\\b', 'plants?\\b', 'leaves', 'pebble', 'cactus'] },
 ];
