@@ -1263,12 +1263,19 @@ async function refreshGuestPicker(){
     ).join('')}</optgroup>`;
   }
   sel.innerHTML = html;
+  // A new order is for the guest staying now, on their room account (pay
+  // later) — staff can still pick someone else, type a walk-in, or change how it's paid.
+  if(!editingOrderNo && activeNo && !$('#obGuest').value.trim()){
+    const opt = [...sel.options].find(o => o.dataset.no === activeNo);
+    if(opt){ sel.value = opt.value; $('#obGuest').value = opt.value; obStayNo = activeNo; $('#obPaymentMode').value = 'Room Account'; }
+  }
 }
 $('#obDate').addEventListener('change', refreshGuestPicker);
 $('#obGuestPick').addEventListener('change', e=>{
   if(e.target.value){
     $('#obGuest').value = e.target.value;
     obStayNo = e.target.selectedOptions[0]?.dataset.no || '';
+    if(obStayNo && !editingOrderNo) $('#obPaymentMode').value = 'Room Account'; // a guest's order goes on their room account
   } else {
     obStayNo = '';
   }
@@ -1414,7 +1421,10 @@ function resetOrderBuilder(){
   $('#obGuest').value=''; $('#obGuestPick').value=''; $('#obNote').value=''; $('#obDiscount').value='0'; $('#obErr').textContent='';
   obStayNo = '';
   $('#obDate').value = todayISO(); $('#obTime').value = '';
+  $('#obPaymentMode').value = 'Cash';
   $('#btnSaveOrder').textContent = 'Save order';
+  // ready for the next order: the current guest and their room account again
+  if($('#orderBuilder').classList.contains('show')) refreshGuestPicker();
 }
 // Opens the order builder pre-filled with an existing OPEN order's items,
 // date/time, guest, note, discount and stay link so staff can correct a
