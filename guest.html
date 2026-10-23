@@ -562,6 +562,32 @@
   .gp-tile:active{transform:scale(.97)}
   .gp-tile.disabled{opacity:.6}
   .gp-tile-icon{width:46px;height:46px;border-radius:50%;background:var(--sage);color:var(--sage-ink);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:8px}
+  /* the food menu: the one tile guests should notice */
+  .gp-tile.gp-tile--food{background:var(--terra-bg);border-color:rgba(185,87,44,.35)}
+  .gp-tile.gp-tile--food .gp-tile-icon{background:var(--terra);color:#fff;box-shadow:0 0 0 5px rgba(185,87,44,.14)}
+  .gp-tile.gp-tile--food .gp-tile-title{color:var(--terra)}
+  .gp-tile.gp-tile--food::after{border-color:var(--terra)}
+  @keyframes gpFoodPulse{0%{box-shadow:0 0 0 0 rgba(185,87,44,.45)}70%{box-shadow:0 0 0 10px rgba(185,87,44,0)}100%{box-shadow:0 0 0 0 rgba(185,87,44,0)}}
+  .gp-tile.gp-tile--food .gp-tile-icon{animation:gpFoodPulse 2.4s ease-out infinite}
+  @media (prefers-reduced-motion:reduce){.gp-tile.gp-tile--food .gp-tile-icon{animation:none}}
+  /* checkout day: rate your stay, right under the payment */
+  .gp-rate{margin:16px 0 4px;background:linear-gradient(135deg,#fff7ec,#fdeee2);border:1.5px solid rgba(185,87,44,.35);border-radius:18px;padding:18px 18px 16px;text-align:center;box-shadow:var(--shadow-md)}
+  .gp-rate h2{margin:0;font-size:19px;color:var(--terra)}
+  .gp-rate p{margin:4px 0 12px;font-size:13.5px;color:#5b5148}
+  .gp-rate-stars{display:flex;justify-content:center;gap:6px}
+  .gp-rate-stars button{background:none;border:0;padding:4px;cursor:pointer;color:#e0b46a;line-height:0;border-radius:10px}
+  .gp-rate-stars button svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:1.6}
+  .gp-rate-stars button:hover svg,.gp-rate-stars button:focus-visible svg{fill:#f2c26b}
+  .gp-rate-stars button:focus-visible{outline:2px solid var(--terra);outline-offset:2px}
+  .gp-rate small{display:block;margin-top:8px;font-size:12px;color:#8a7d70}
+  /* Instagram */
+  .gp-ig{display:flex;align-items:center;gap:14px;margin:18px 0 6px;padding:16px;border-radius:18px;color:#fff;text-decoration:none;background:linear-gradient(120deg,#833ab4,#c13584 45%,#e1306c 65%,#f77737);box-shadow:var(--shadow-md)}
+  .gp-ig-icon{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.18);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .gp-ig-text{flex:1;min-width:0;line-height:1.35}
+  .gp-ig-text b{display:block;font-size:15.5px}
+  .gp-ig-text span{font-size:13px;opacity:.95}
+  .gp-ig[hidden]{display:none}
+  .gp-ig-cta{font-size:13px;font-weight:700;background:#fff;color:#c13584;border-radius:999px;padding:7px 12px;white-space:nowrap}
   .gp-tile-title{font-family:var(--serif);font-weight:600;font-size:clamp(15px,4vw,20px);line-height:1.1;color:var(--sea);overflow-wrap:normal;word-break:normal;hyphens:manual}
   .gp-tile-desc{font-size:clamp(11.5px,3vw,12.5px);line-height:1.35;color:var(--muted-text);overflow-wrap:anywhere}
   .gp-tile-badge{display:inline-block;margin-top:3px;background:linear-gradient(135deg,#d3764a,var(--terra-2));color:#fff;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;font-variant-numeric:tabular-nums;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -710,7 +736,7 @@
           <span class="gp-tile-title">Directions</span>
           <span class="gp-tile-desc">Open in Google Maps</span>
         </a>
-        <button type="button" class="gp-tile" data-mode="menu">
+        <button type="button" class="gp-tile gp-tile--food" data-mode="menu">
           <span class="gp-tile-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v6a2 2 0 0 0 4 0V2"/><path d="M8 2v20"/><path d="M18 2c-2 2-2 5-2 7s0 3 2 3 2-1 2-3 0-5-2-7Z"/><path d="M18 12v10"/></svg></span>
           <span class="gp-tile-title">Food menu</span>
           <span class="gp-tile-desc">Order from <span data-prop="restaurantName">Casa de RYST</span></span>
@@ -729,6 +755,7 @@
       </nav>
 
       <div id="homeDue"></div>
+      <div id="homeRate"></div>
 
       <section class="gp-nearby" data-ryst-only aria-labelledby="gpNearbyTitle">
         <a class="gp-nearby-head" href="/nearby.html">
@@ -738,6 +765,12 @@
         </a>
         <div class="gp-rail" id="gpNearbyRail" role="list"></div>
       </section>
+
+      <a class="gp-ig" id="gpInstagram" data-prop-if="instagram" data-prop-href="instagramUrl" href="https://www.instagram.com/stay.ryst" target="_blank" rel="noopener">
+        <span class="gp-ig-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></span>
+        <span class="gp-ig-text"><b>Follow us on Instagram</b><span>Tag <span data-prop="instagramHandle">@stay.ryst</span> in your photos and stories from your stay</span></span>
+        <span class="gp-ig-cta">Follow</span>
+      </a>
 
       <section class="gp-more" aria-label="More for your stay">
         <button type="button" class="menu-item" data-mode="toys">
@@ -1250,6 +1283,22 @@ function renderHome(){
   // simple per-booking localStorage flag since there's no server-side
   // "already submitted" linkage to check against.
   const feedbackTile = $('#feedbackTile'), feedbackDesc = $('#feedbackDesc');
+  // Checkout day (and after): ask for a rating right under the payment, where
+  // the guest is already looking — until they've given one.
+  const rateEl = $('#homeRate');
+  if(b && localISO() >= b.checkout && !localStorage.getItem('ryst_feedback_'+b.no)){
+    rateEl.innerHTML = `<section class="gp-rate" aria-labelledby="gpRateTitle">
+        <h2 id="gpRateTitle">${localISO() === b.checkout ? 'Checking out today?' : 'Thanks for staying with us'}</h2>
+        <p>How was your stay, ${esc(String(b.guest||'').trim().replace(/^(mr|mrs|ms|miss|dr)\.?\s*/i,'').split(/\s+/)[0] || 'there')}? Tap a star to rate it.</p>
+        <div class="gp-rate-stars" role="group" aria-label="Rate your stay">${[1,2,3,4,5].map(n => `<button type="button" data-rate="${n}" aria-label="${n} star${n===1?'':'s'}">${ICON_STAR}</button>`).join('')}</div>
+        <small>It takes a minute and helps us a lot.</small>
+      </section>`;
+    rateEl.querySelectorAll('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
+      openFeedbackForm();
+      const r = document.querySelector('#fbStars input[value="'+btn.dataset.rate+'"]');
+      if(r){ r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }
+    }));
+  } else rateEl.innerHTML = '';
   if(!b || localISO() < b.checkout){
     feedbackTile.style.display = 'none';
   } else {
