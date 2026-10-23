@@ -762,6 +762,11 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f" style="margin-bottom:8px"><span>Search Console property</span><input class="t" id="connGsc" autocomplete="off" spellcheck="false" autocapitalize="none" placeholder="sc-domain:yourvilla.com  or  https://www.yourvilla.com/"></label>
       <label class="f" style="margin-bottom:8px"><span>Google Analytics (GA4) property ID</span><input class="t" id="connGa4" inputmode="numeric" autocomplete="off" placeholder="e.g. 412345678"></label>
       <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button class="btn primary" id="connWebSave">Connect Google</button><button class="btn" id="connWebDrop">Disconnect</button></div>
+
+      <p class="gh-mini">Instagram</p>
+      <p class="sd" style="margin-bottom:10px">Your villa's Instagram followers on the dashboard, and answers to Instagram DMs the same way as WhatsApp (turn that on in Settings → WhatsApp). Sign in with your villa's <b>professional</b> Instagram account (business or creator) and allow access. In the Instagram app, also allow <b>Connected tools</b> under Settings → Messages and story replies → Message controls.</p>
+      <div class="sync-results" id="connIgState" style="margin-bottom:8px"></div>
+      <div class="rc-foot" style="margin-top:0;margin-bottom:22px"><button class="btn primary" id="connIgGo">Connect Instagram</button><button class="btn" id="connIgDrop">Disconnect</button></div>
     </div>
 
   </div>
@@ -1504,7 +1509,8 @@ function connRenderMore(d){
   document.getElementById('connStatus').insertAdjacentHTML('beforeend',
     row('Energy meter', d.energy.connected, (d.energy.connected ? 'Connected ✓'+(d.energy.deviceId?' (meter '+d.energy.deviceId+')':'') : 'Not connected')+plan(d.energy))
     + row('Guest Wi-Fi codes', d.wifi.connected, (d.wifi.connected ? 'Connected ✓'+(d.wifi.site?' ('+d.wifi.site+')':'') : 'Not connected')+plan(d.wifi))
-    + row('Website & Search', d.web.connected, (d.web.connected ? 'Connected ✓'+(d.web.gscSite?' ('+d.web.gscSite+')':'') : 'Not connected')+plan(d.web)));
+    + row('Website & Search', d.web.connected, (d.web.connected ? 'Connected ✓'+(d.web.gscSite?' ('+d.web.gscSite+')':'') : 'Not connected')+plan(d.web))
+    + (d.instagram ? row('Instagram', d.instagram.connected, (d.instagram.connected ? 'Connected ✓'+(d.instagram.username?' (@'+d.instagram.username+')':'') : 'Not connected')+plan(d.instagram)) : ''));
   const more=document.getElementById('connMore'); more.hidden = !!d.managedByServer; if(d.managedByServer) return;
   const sel=document.getElementById('connTuyaHost');
   sel.innerHTML=(d.energy.hosts||[]).map(h=>`<option value="${esc(h)}">${esc({'openapi.tuyain.com':'India','openapi.tuyaus.com':'Western America','openapi-ueaz.tuyaus.com':'Eastern America','openapi.tuyaeu.com':'Central Europe','openapi-weaz.tuyaeu.com':'Western Europe','openapi.tuyacn.com':'China'}[h]||h)}</option>`).join('');
@@ -1516,6 +1522,11 @@ function connRenderMore(d){
   document.getElementById('connGsc').value=d.web.gscSite||''; document.getElementById('connGa4').value=d.web.ga4PropertyId||'';
   if(d.web.serviceAccount) document.getElementById('connSaEmail').textContent=d.web.serviceAccount;
   document.getElementById('connWebState').innerHTML='';
+  const ig=d.instagram||{};
+  document.getElementById('connIgState').innerHTML=ig.connected?row('Account',true,'@'+(ig.username||'connected')):(!ig.available?row('Instagram',false,'Instagram sign-in is not switched on for Harbour yet'):'');
+  document.getElementById('connIgGo').textContent=ig.connected?'Connect a different account':'Connect Instagram';
+  document.getElementById('connIgGo').disabled=!ig.available||!ig.onPlan;
+  document.getElementById('connIgDrop').hidden=!ig.connected;
 }
 async function connLoad(){
   try{ const d=await storCall('GET','/villa/connections'); connRender(d); connRenderMore(d); }
@@ -1562,6 +1573,35 @@ document.getElementById('connWebSave').addEventListener('click', e=>{
   if(!body.gscSite && !body.ga4PropertyId){ toast('Enter your Search Console property or GA4 property ID'); return; }
   connPut(body, e.currentTarget, 'Connecting…');
 });
+// Instagram: its own sign-in page, which brings the owner back here (?ig=connected or ?ig_error=…)
+document.getElementById('connIgGo').addEventListener('click', async e=>{
+  const btn=e.currentTarget, orig=btn.textContent; btn.disabled=true; btn.textContent='Opening Instagram…';
+  try{
+    const res=await fetch(PROXY_URL+'/instagram/connect',{ method:'POST', headers:{'X-Token':proxyToken} });
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok||!d.url) throw new Error(d.error||('Error '+res.status));
+    window.location.href=d.url;
+  }catch(err){ toast(err.message); btn.disabled=false; btn.textContent=orig; }
+});
+document.getElementById('connIgDrop').addEventListener('click', async e=>{
+  if(!confirm('Disconnect Instagram? DMs will no longer be answered and the followers card stops updating.')) return;
+  const btn=e.currentTarget; btn.disabled=true;
+  try{
+    const res=await fetch(PROXY_URL+'/instagram/disconnect',{ method:'POST', headers:{'X-Token':proxyToken} });
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(d.error||('Error '+res.status));
+    toast('Instagram disconnected'); connLoad();
+  }catch(err){ toast(err.message); }
+  finally{ btn.disabled=false; }
+});
+(function(){
+  const q=new URLSearchParams(location.search);
+  if(!q.has('ig') && !q.has('ig_error')) return;
+  const msg=q.get('ig')==='connected' ? 'Instagram connected ✓' : 'Instagram not connected: '+(q.get('ig_error')||'try again');
+  history.replaceState(null,'',location.pathname+'#connections');
+  setTimeout(()=>{ toast(msg); const b=document.getElementById('tabConnBtn'); if(b && b.style.display!=='none'){ switchTab('connections'); document.getElementById('cfgTabs').scrollIntoView({block:'start'}); } }, 900);
+})();
+if(location.hash==='#connections'){ setTimeout(()=>{ const b=document.getElementById('tabConnBtn'); if(b && b.style.display!=='none'){ switchTab('connections'); document.getElementById('cfgTabs').scrollIntoView({block:'start'}); } }, 900); }
 document.getElementById('connWebDrop').addEventListener('click', e=>{ if(confirm('Disconnect Website & Search?')) connPut({ gscSite:'', ga4PropertyId:'' }, e.currentTarget, 'Disconnecting…'); });
 document.getElementById('connDropInterakt').addEventListener('click', e=>{
   if(!confirm('Disconnect WhatsApp (Interakt)? Guest messages will go back to Telegram nudges for staff to send.')) return;
@@ -2074,9 +2114,17 @@ document.getElementById("igSetupBtn").addEventListener("click",async()=>{
   out.innerHTML='<div class="sync-result"><span>Loading…</span></div>';
   try{
     const r=await fetch(PROXY_URL+'/instagram/webhook-info',{headers:{'X-Token':proxyToken},cache:'no-store'}); const j=await r.json();
-    if(!r.ok||!j.ok){ out.innerHTML=`<div class="sync-result err"><span>${esc(j.error||(j.available===false?'Instagram DMs are available for RYST 109A only for now':'Could not load'))}</span></div>`; return; }
+    if(!r.ok||!j.ok){ out.innerHTML=`<div class="sync-result err"><span>${esc(j.error||'Could not load')}</span></div>`; return; }
     const row=(k,v,copy)=>`<div class="sync-result"><span>${k}</span><span style="word-break:break-all">${esc(v)}${copy?` <button type="button" class="rc-add" data-copy="${esc(v)}">Copy</button>`:''}</span></div>`;
     const ok=(b,yes,no)=>`<div class="sync-result${b?'':' err'}"><span>${b?'✅':'⚠️'}</span><span>${b?yes:no}</span></div>`;
+    if(j.villa){
+      out.innerHTML=!j.connected ? ok(false,'',(j.onPlan?'Instagram is not connected — Settings → Connections → <b>Connect Instagram</b>':'Instagram is part of the Pro plan (Settings → Subscription)'))
+        : (j.account?row('Instagram account','@'+(j.account.username||j.account.id)):ok(false,'',esc('Instagram did not accept the connection: '+(j.accountError||''))+' — connect it again under Settings → Connections'))
+        +(j.messaging?ok(j.messaging.ok,'Allowed to read and answer DMs',esc('Can\'t use DMs: '+(j.messaging.error||''))+' — connect again and allow messages; in the Instagram app allow Connected tools'):'')
+        +(j.subscribed?ok(j.subscribed.ok,j.subscribed.justEnabled?'DMs were switched on just now — send a test DM again':'DMs are switched on',esc('Could not switch on DMs: '+(j.subscribed.error||''))):'')
+        +((j.recent||[]).length?(j.recent||[]).map(x=>row(new Date(x.at).toLocaleString('en-IN'),x.kind)).join(''):row('Last received','Nothing yet — send your account a DM to test'));
+      return;
+    }
     out.innerHTML=row('Callback URL',j.url,true)+row('Verify token',j.verifyToken,true)
       +ok(j.token,'Instagram token is set','Instagram token missing — INSTAGRAM_ACCESS_TOKEN on Render')
       +(j.account?row('Instagram account','@'+(j.account.username||j.account.id)):j.accountError?ok(false,'',esc('Token not accepted by Instagram: '+j.accountError+' — generate a new token in the Meta app (Instagram → API setup)')):'')
