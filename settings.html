@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=a8b9b9a4"></script>
+<script src="/assets/app/shell.js?v=0ebbd3a4"></script>
 <title data-title="Settings — {name}">Settings — RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -231,12 +231,12 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
     <button type="button" class="tab-btn" data-tab="tariffs">Tariffs</button>
     <button type="button" class="tab-btn" data-tab="invoices">Invoices &amp; GST</button>
     <button type="button" class="tab-btn" data-tab="ota">OTA Sync</button>
-    <button type="button" class="tab-btn" data-tab="whatsapp">WhatsApp &amp; Alerts</button>
+    <button type="button" class="tab-btn" data-tab="whatsapp">Auto-reply</button>
+    <button type="button" class="tab-btn" data-tab="messages">Messages &amp; alerts</button>
     <button type="button" class="tab-btn" id="tabWebBtn" data-tab="website" style="display:none">Website</button>
     <button type="button" class="tab-btn" id="tabUserBtn" data-tab="users" style="display:none">Team</button>
     <button type="button" class="tab-btn" id="tabConnBtn" data-tab="connections" style="display:none">Connections</button>
     <button type="button" class="tab-btn" id="tabSubBtn" data-tab="subscription" style="display:none">Subscription</button>
-    <button type="button" class="tab-btn" id="tabPlatformBtn" data-tab="platform" style="display:none">Platform</button>
   </div>
 
   <div class="tab-panel" data-panel="profile">
@@ -272,11 +272,13 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f"><span>Wi-Fi password</span><input class="t" id="stayWifiVoucher" placeholder="Guest network password" autocomplete="off"></label>
     </div>
     <p class="sd" style="margin:-6px 0 14px">Paid guests see the network name in their guest portal. The password and a scan-to-join QR code appear from check-in day to check-out day only. Use a separate guest network, not the one your staff and cameras use.</p>
+    <div id="walletSettings">
     <p class="gh-mini">Wallet passes</p>
     <p class="sd" style="margin-bottom:10px">Controls the "Add to Apple/Google Wallet" buttons everywhere they appear — the booking site, check-in page, and guest portal. Turning one off hides that button and blocks new passes of that kind from being issued; passes already saved to a guest's phone keep working.</p>
     <div style="display:flex;gap:12px;margin-bottom:14px">
       <label class="chk-toggle"><input type="checkbox" id="stayWalletApple"> Apple Wallet</label>
       <label class="chk-toggle"><input type="checkbox" id="stayWalletGoogle"> Google Wallet</label>
+    </div>
     </div>
   </div>
 
@@ -492,6 +494,9 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       </div>
       <form class="wa-row" id="waTestForm"><input class="t" id="waTestIn" maxlength="600" placeholder='e.g. "Is 14–16 Nov free for 12 people?"' autocomplete="off"><button class="btn primary" type="submit">Send</button><button class="btn" type="button" id="waTestReset" title="Start a new conversation">↺</button></form>
     </div>
+  </div>
+
+  <div class="tab-panel" data-panel="messages" style="display:none">
     <p class="gh-mini">Automated sending</p>
     <p class="sd" style="margin-bottom:12px">When configured, the templates below go out automatically on a schedule (check-in requests, stay reminders, feedback requests, and booking confirmations) instead of needing a manual click from Bookings. A scenario with an Interakt template name set below (once that template is approved by Meta) sends for real, straight to the guest's WhatsApp — no tap needed. Every other scenario still falls back to a Telegram message with a one-tap link that opens WhatsApp pre-filled, so the actual send is you, from your own number.</p>
     <div class="tg-status" id="tgStatusLive">
@@ -539,13 +544,6 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <button class="btn" id="waWebhookBtn">Show webhook URL &amp; recent events</button>
     </div>
     <div class="sync-results" id="waWebhookResults" style="margin-bottom:22px"></div>
-
-    <p class="gh-mini">Telegram notify setup</p>
-    <p class="sd" style="margin-bottom:12px">One-time setup on Render: message <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> on Telegram, send <code>/newbot</code>, and set the token it gives you as <code>TELEGRAM_BOT_TOKEN</code> (a Render environment variable — not set from here). Each person who wants alerts then taps <b>🔔 Get alerts on Telegram</b> on the home screen and presses Start in Telegram — that's all; their chat is saved against their own name. Which alerts each person gets is set in the <b>Team</b> tab.</p>
-    <div class="rc-foot" style="margin-top:0;margin-bottom:10px;display:none" id="tgChatIdRow">
-      <button class="btn" id="tgChatIdBtn">Find a chat ID</button>
-    </div>
-    <div class="sync-results" id="tgChatIdResults" style="margin-bottom:18px"></div>
 
     <p class="gh-mini">WhatsApp templates</p>
     <p class="sd" style="margin-bottom:12px">Wording for the WhatsApp messages the site and dashboard pre-fill. Use <code>{{token}}</code> placeholders — a line containing a token with no value for that message is left out automatically, so a field can be made optional just by giving it its own line.</p>
@@ -781,27 +779,6 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
 
   </div>
 
-  <div class="tab-panel" data-panel="platform" style="display:none">
-    <div id="platformOnly">
-    <p class="gh-mini">Data storage</p>
-    <p class="sd" style="margin-bottom:12px">Where bookings, cash, inventory and settings are kept — moving from GitHub to the Supabase database. <b>Copy to Supabase</b> copies every data file across and checks each one arrived identical; <b>Compare</b> only checks. Neither changes where the app reads and saves — that's the <code>STORAGE_BACKEND</code> setting on Render.</p>
-    <div class="rc-foot" style="margin-top:0;margin-bottom:8px">
-      <button class="btn" id="storStatusBtn">Check status</button>
-      <button class="btn" id="storCompareBtn">Compare</button>
-      <button class="btn primary" id="storCopyBtn">Copy to Supabase</button>
-    </div>
-    <div class="sync-results" id="storResults" style="margin-bottom:14px"></div>
-    <p class="sd" style="margin-bottom:10px"><b>Photos</b> — receipts, guest ID photos, signatures and checklist photos move from the public website repository into Supabase's private storage. Links in the data are updated; pages keep showing them. <b>Preview</b> counts what would move and tests the private storage without changing anything.</p>
-    <div class="rc-foot" style="margin-top:0;margin-bottom:8px">
-      <button class="btn" id="photoPreviewBtn">Preview photo move</button>
-      <button class="btn primary" id="photoMoveBtn">Move photos to private storage</button>
-    </div>
-    <div class="sync-results" id="photoResults" style="margin-bottom:22px"></div>
-
-    <p class="gh-mini" style="margin-top:28px">Customers, plans and invites</p>
-    <p class="sd" style="margin-bottom:12px">These moved to the <a href="/console.html">Harbour console</a> — RYST Harbour's own business, with its own sign-in for the Harbour team, kept apart from this villa.</p>
-    </div>
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1370,16 +1347,6 @@ document.getElementById('waWebhookBtn').addEventListener('click', async ()=>{
   }catch(e){ out.innerHTML = '<div class="sync-result err">Could not reach the server</div>'; }
 });
 
-// ── Data storage (admin) ──
-const STOR_MODE = { github:'GitHub (current)', dual:'GitHub, mirrored to Supabase', supabase:'Supabase' };
-function storStatusRows(d){
-  const m = d.mirror || {};
-  const mode = d.mirroringToSupabase ? 'dual' : d.active;
-  const keysMissing = d.backend !== 'github' && !d.supabaseConfigured;
-  return `<div class="sync-result${keysMissing?' err':''}"><span>Reading &amp; saving</span><span>${esc(STOR_MODE[mode] || mode)}${keysMissing?' — STORAGE_BACKEND='+esc(d.backend)+' is set but the Supabase keys are missing':''}</span></div>`
-    + `<div class="sync-result${d.supabaseConfigured && d.supabaseKeyKind==='secret'?'':' err'}"><span>Supabase keys on Render</span><span>${!d.supabaseConfigured ? 'Not set — add SUPABASE_URL and SUPABASE_SERVICE_KEY' : d.supabaseKeyKind==='publishable' ? 'Wrong key — this is the publishable key; use the secret key (starts sb_secret_)' : d.supabaseKeyKind==='damaged' ? 'Key is damaged — ' + esc(d.supabaseKeyProblem||'') : d.supabaseKeyKind==='secret' ? 'Set (secret key)' : 'Set, but not recognised as a Supabase secret key'}</span></div>`
-    + (d.mirroringToSupabase ? `<div class="sync-result${m.failed?' err':''}"><span>Mirror since last restart</span><span>${m.ok||0} saved · ${m.failed||0} failed${m.lastError?' — '+esc(m.lastError):''}</span></div>` : '');
-}
 async function storCall(method, path){
   const res = await fetch(PROXY_URL+path, { method, headers:{ 'X-Token': proxyToken }, cache:'no-store' });
   if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; throw new Error('Session expired'); }
@@ -1387,45 +1354,6 @@ async function storCall(method, path){
   if(!res.ok) throw new Error(data.error || ('Error '+res.status));
   return data;
 }
-async function storRun(btn, label, fn){
-  const out = document.getElementById('storResults');
-  const all = ['storStatusBtn','storCompareBtn','storCopyBtn'].map(id=>document.getElementById(id));
-  const orig = btn.textContent; all.forEach(b=>b.disabled=true); btn.textContent = label;
-  try { out.innerHTML = await fn(); }
-  catch(e){ out.innerHTML = `<div class="sync-result err"><span>Data storage</span><span>${esc(e.message)}</span></div>`; }
-  finally { all.forEach(b=>b.disabled=false); btn.textContent = orig; }
-}
-function storFileRows(d){
-  const rows = (d.results||[]).map(r=>`<div class="sync-result${r.match?'':' err'}"><span>${esc(r.name)}</span><span>${r.match?'✓ identical':'✗ '+esc(r.error||'differs')}${r.bytes!=null?' · '+(r.bytes/1024).toFixed(1)+' KB':''}</span></div>`).join('');
-  const head = `<div class="sync-result${d.ok?'':' err'}"><span>${d.compareOnly?'Compare':'Copy'}</span><span>${d.ok?'All '+(d.results||[]).length+' files match':'Some files need attention'}</span></div>`;
-  return head + rows;
-}
-async function photoRun(btn, dry){
-  const out=document.getElementById('photoResults');
-  const all=['photoPreviewBtn','photoMoveBtn'].map(id=>document.getElementById(id));
-  const orig=btn.textContent; all.forEach(b=>b.disabled=true); btn.textContent=dry?'Checking…':'Moving…';
-  try{
-    const d=await storCall('POST','/admin/photos/migrate'+(dry?'?dry=1':''));
-    const docs=(d.docs||[]).filter(x=>x.found||x.moved||(x.failed&&x.failed.length));
-    const total=(d.docs||[]).reduce((a,x)=>a+(dry?x.found:x.moved),0);
-    out.innerHTML=`<div class="sync-result${d.selfTestError?' err':''}"><span>Private storage test</span><span>${d.selfTestError?'✗ '+esc(d.selfTestError):'✓ upload, read and delete work'}</span></div>`
-      + `<div class="sync-result${d.ok===false?' err':''}"><span>${dry?'Would move':'Moved'}</span><span>${total} photo${total===1?'':'s'}${!docs.length?' — nothing left in the public repository':''}</span></div>`
-      + docs.map(x=>`<div class="sync-result${x.failed&&x.failed.length?' err':''}"><span>${esc(x.name)}</span><span>${dry?x.found+' to move':x.moved+' of '+x.found+' moved'}${x.failed&&x.failed.length?' — '+esc(x.failed.join('; ')):''}</span></div>`).join('');
-  }catch(e){ out.innerHTML=`<div class="sync-result err"><span>Photos</span><span>${esc(e.message)}</span></div>`; }
-  finally{ all.forEach(b=>b.disabled=false); btn.textContent=orig; }
-}
-document.getElementById('photoPreviewBtn').addEventListener('click', e=>photoRun(e.currentTarget, true));
-document.getElementById('photoMoveBtn').addEventListener('click', e=>{
-  if(!confirm('Move every photo into Supabase private storage and update the links in the data?\n\nRun "Preview photo move" first to check the count.')) return;
-  photoRun(e.currentTarget, false);
-});
-document.getElementById('storStatusBtn').addEventListener('click', e => storRun(e.currentTarget, 'Checking…', async ()=> storStatusRows(await storCall('GET','/admin/storage/status'))));
-document.getElementById('storCompareBtn').addEventListener('click', e => storRun(e.currentTarget, 'Comparing…', async ()=> storFileRows(await storCall('POST','/admin/storage/copy?compare=1'))));
-document.getElementById('storCopyBtn').addEventListener('click', e => {
-  if(!confirm('Copy every data file from GitHub to Supabase?\n\nThis overwrites what is in Supabase with the current GitHub copy. The app keeps reading and saving where it does now.')) return;
-  storRun(e.currentTarget, 'Copying…', async ()=> storFileRows(await storCall('POST','/admin/storage/copy')));
-});
-
 // ── Subscription (billed villas, admins) ──
 const inr = n => '₹' + Number(n||0).toLocaleString('en-IN');
 const fmtDay = iso => iso ? new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : '';
@@ -1618,32 +1546,8 @@ function tokenVilla(){
   try{ const b=proxyToken.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(atob(b+'==='.slice((b.length+3)%4))).tenant||'ryst-109a'; }
   catch(e){ return 'ryst-109a'; }
 }
-if(tokenVilla()!=='ryst-109a') document.getElementById('platformOnly').style.display='none';
-// Data storage tools: an admin of RYST 109A only (customers and plans are in the Harbour console).
-else if(localStorage.getItem('ryst_user_admin')==='true') document.getElementById('tabPlatformBtn').style.display='';
-// Customers, plans, invites: the Harbour console (console.html), not here.
-if(tokenVilla()!=='ryst-109a'){ const r=document.getElementById('tgChatIdRow'); if(r) r.style.display='none'; }
-
-document.getElementById('tgChatIdBtn').addEventListener('click', async ()=>{
-  const btn = document.getElementById('tgChatIdBtn');
-  const out = document.getElementById('tgChatIdResults');
-  if(!proxyToken){ toast('Sign in required'); return; }
-  btn.disabled = true; btn.textContent = 'Checking…';
-  out.innerHTML = '';
-  try{
-    const res = await fetch(PROXY_URL+'/telegram/chat-id', { headers: { 'X-Token': proxyToken }, cache: 'no-store' });
-    if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
-    const data = await res.json().catch(()=>({}));
-    if(!res.ok || data.error){ out.innerHTML = `<div class="sync-result err"><span>Chat ID</span><span>${esc(data.error||'Failed')}</span></div>`; return; }
-    if(!data.chats || !data.chats.length){ out.innerHTML = '<div class="sync-result"><span>Chat ID</span><span>No messages yet — send "hi" to your bot on Telegram, then try again</span></div>'; return; }
-    out.innerHTML = data.chats.map(c=>`<div class="sync-result"><span>${esc(c.name||'Chat')}</span><span>${esc(c.id)} <button type="button" class="rc-add" data-copy-chat-id="${esc(c.id)}" style="margin-left:8px">Copy</button></span></div>`).join('');
-    out.querySelectorAll('[data-copy-chat-id]').forEach(b=>b.addEventListener('click', async ()=>{
-      try{ await navigator.clipboard.writeText(b.dataset.copyChatId); toast('Chat ID copied — paste it into that person\'s row in the Team tab below'); }
-      catch(e){ toast('Could not copy — chat ID is ' + b.dataset.copyChatId); }
-    }));
-  }catch(e){ out.innerHTML = '<div class="sync-result err">Could not reach the server</div>'; }
-  finally{ btn.disabled = false; btn.textContent = 'Find a chat ID'; }
-});
+// Wallet passes are RYST 109A's own (its Apple/Google issuer) — other villas don't have them yet.
+if(tokenVilla()!=='ryst-109a'){ const w=document.getElementById('walletSettings'); if(w) w.hidden=true; }
 
 /* ---------- WHATSAPP TEMPLATES (any owner) ---------- */
 // Mirrors DEFAULT_WA_TEMPLATES in the proxy's server.js — used for "Reset to
