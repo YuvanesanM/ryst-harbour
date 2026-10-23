@@ -8,7 +8,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=649b8976"></script>
+<script src="/assets/app/shell.js?v=a8b9b9a4"></script>
 <title data-title="{name} — Stay Invoice / Quote">RYST 109A — Stay Invoice / Quote</title>
 <meta name="robots" content="noindex, nofollow">
 
@@ -263,6 +263,7 @@
     .doc, .doc *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important }
   }
   select.t.invalid{border-color:var(--danger,#b42318);box-shadow:0 0 0 3px rgba(180,35,24,.12)}
+.pay-tag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;margin-left:4px;vertical-align:1px}.pay-tag.wait{background:#fbf1dc;color:#8a5d0c}.pay-tag.no{background:#f8e7e4;color:#b9483b}html[data-theme="dark"] .pay-tag.wait{background:#2e2717;color:#e0b25c}html[data-theme="dark"] .pay-tag.no{background:#33201d;color:#e58a7d}.pay-list li.rej b{text-decoration:line-through;opacity:.7}
 </style>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -1581,7 +1582,9 @@ function fillReturning(){
 // log of each payment; saves straight away on a saved document.
 function renderPayments(){
   const ul = $("#payList"); if(!ul) return;
-  ul.innerHTML = curPayments.map(p=> `<li><span><b>${money(p.amount)}</b> · ${esc(p.method)}</span><span>${esc(fmtDate(p.date))}${p.by ? " · " + esc(String(p.by).split("@")[0]) : ""}</span></li>`).join("");
+  // staff-recorded cash/UPI waits for an owner's approval before it counts as received
+  const tag = p => p.status === "pending" ? ' <span class="pay-tag wait">awaiting owner approval</span>' : p.status === "rejected" ? ' <span class="pay-tag no">rejected</span>' : "";
+  ul.innerHTML = curPayments.map(p=> `<li${p.status==="rejected"?' class="rej"':''}><span><b>${money(p.amount)}</b> · ${esc(p.method)}${tag(p)}</span><span>${esc(fmtDate(p.date))}${p.by ? " · " + esc(String(p.by).split("@")[0]) : ""}</span></li>`).join("");
 }
 async function recordPayment(){
   const amt = Math.round(parseFloat($("#payAmt").value)||0), method = $("#payMethod").value;
@@ -1609,7 +1612,8 @@ async function recordPayment(){
   if(!modeTouched) $("#mode").value = method;
   $("#payRow").hidden = true; $("#btnPay").hidden = false;
   render();
-  if(editingKey){ if(await saveDoc()) toast("Payment of " + money(amt) + " recorded" + (foodShare > 0 ? " (stay " + money(stayShare) + " + food " + money(amt - stayShare) + ")" : "")); }
+  const approver = (localStorage.getItem("ryst_user_role")||"owner") === "owner" || localStorage.getItem("ryst_user_admin") === "true";
+  if(editingKey){ if(await saveDoc()) toast("Payment of " + money(amt) + (approver ? " recorded" : " sent to the owner for approval") + (foodShare > 0 ? " (stay " + money(stayShare) + " + food " + money(amt - stayShare) + ")" : "")); }
   else toast("Payment added — Save to keep it");
 }
 // One tap from a saved quote to its invoice — the same conversion the server

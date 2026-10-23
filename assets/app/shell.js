@@ -125,6 +125,7 @@
       ['inventory.html', 'box', 'Inventory', 'inventory'], ['petty-cash.html', 'wallet', 'Petty Cash', 'petty-cash'],
       ['caretakers.html', 'team', 'Caretakers', 'owner']] },
     { label: 'Finance', items: [['stay.html', 'doc', 'Quotes & Invoices', 'bookings'], ['guest-register.html?f=unpaid', 'rupee', 'Payments', 'guestRegister'],
+      ['approvals.html', 'check', 'Payment approvals', 'owner'],
       ['reports.html', 'chart', 'Profit & Loss', 'reports']] },
     { label: 'Property', items: [['villa-3d.html', 'villa3d', 'Villa 3D'], ['restaurant.html', 'food', '{restaurantName}', 'restaurant'], ['reviews.html', 'star', 'Guest Feedback', 'feedback'], ['creators.html', 'camera', 'Creators', 'bookings'], ['insights.html', 'chart', 'Website & Search', 'owner'], ['energy.html', 'bolt', 'Power', 'owner']] },
     { label: 'System', items: [['agents.html', 'agents', 'AI Agents', 'owner'], ['settings.html', 'gear', 'Settings', 'settings']] }

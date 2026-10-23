@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=649b8976"></script>
+<script src="/assets/app/shell.js?v=a8b9b9a4"></script>
 <title data-title="{restaurantName} · Restaurant · {name}">Casa de RYST · Restaurant · RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1498,7 +1498,7 @@ function renderOrders(){
       <td>${esc(o.guest||'—')}${o.late?` <span title="Placed after the ${esc(String(o.meal||'').toLowerCase())} cut-off (${esc(o.late.cutoff)})" style="display:inline-block;font-size:10.5px;font-weight:700;color:#8a4b0f;background:#fdf0dc;border-radius:20px;padding:1px 7px;margin-left:4px">LATE</span>`:''}</td>
       <td>${o.items.map(it=>esc(it.name)+' ×'+it.qty).join(', ')}</td>
       <td class="amt">${money(o.total)}</td>
-      <td>${esc(o.paymentMode||'—')}</td>
+      <td>${esc(o.paymentMode||'—')}${o.paymentApproval&&o.paymentApproval.status==='pending'?'<br><span title="Counts as paid once an owner approves it" style="display:inline-block;font-size:10.5px;font-weight:700;color:#8a5d0c;background:#fbf1dc;border-radius:999px;padding:1px 7px;margin-top:2px">awaiting approval</span>':''}${o.paymentApproval&&o.paymentApproval.status==='rejected'?'<br><span style="display:inline-block;font-size:10.5px;font-weight:700;color:#b9483b;background:#f8e7e4;border-radius:999px;padding:1px 7px;margin-top:2px">payment rejected</span>':''}</td>
       <td><span class="status-chip ${o.status}">${o.status}</span></td>
       <td style="white-space:nowrap">
         <button class="icon-btn" data-print-order="${esc(o.no)}">Print</button>
