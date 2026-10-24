@@ -309,3 +309,16 @@ html.theme-dark .dot{background:#D9694C}
 html.theme-dark .avatar{background:#3E615D;color:#ECEFEC}
 
 .trow__due{display:block;width:100%;font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* payments staff recorded by hand, waiting for an owner */
+.card--approve{margin-bottom:14px;border-color:rgba(176,110,20,.45);box-shadow:0 0 0 3px rgba(176,110,20,.08)}
+.card--approve .card__head .count{margin-left:0;background:#fbf1dc;color:#8a5d0c}
+.card--approve .card__link{margin-left:auto}
+.ap-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line-2)}
+.ap-row:last-child{border-bottom:0}
+.ap-amt{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;min-width:90px}
+.ap-what{flex:1;min-width:180px;font-size:13.5px;line-height:1.4}.ap-what small{display:block;color:var(--muted);font-size:12.5px}
+.ap-acts{display:flex;gap:8px}
+.ap-acts .ap-ok{background:#2f7d6d;border-color:#2f7d6d;color:#fff}
+.ap-err{color:var(--bad);font-size:12.5px;padding:0 18px 10px}
+@media (max-width:560px){.ap-acts{width:100%}.ap-acts .btn{flex:1;justify-content:center}}

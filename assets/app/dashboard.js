@@ -144,6 +144,7 @@
     if (can('inventory')) jobs.push(get('/inventory', 'inv'));
     if (can('bookings')) jobs.push(get('/collabs', 'cr'));
     if (ROLE === 'owner') jobs.push(get('/agents', 'ag'));
+    if (canApprove()) jobs.push(get('/payments/approvals', 'pa'));
     if (can('bookings') || can('settings')) jobs.push(get('/ota-status', 'ota'));
     if (can('bookings') || can('reports')) { jobs.push(get('/google-reviews', 'gr')); jobs.push(get('/instagram-stats', 'ig')); }
     render();
@@ -871,6 +872,35 @@
   window.addEventListener('resize', fitDemoBar);
 
   // ── Render everything from whatever has arrived so far ─────────────────
+  // Payments staff recorded by hand (cash, UPI…): approve or reject right here.
+  function canApprove() { return ROLE === 'owner' || ls('ryst_user_admin') === 'true'; }
+  function renderApprovals() {
+    var card = $('#cApprove'); if (!card) return;
+    var p = (D.pa && Array.isArray(D.pa.pending)) ? D.pa.pending : [];
+    show(card, canApprove() && p.length > 0);
+    if (!p.length) return;
+    $('#apCount').textContent = p.length;
+    var who = function (e) { return esc(String(e || 'staff').split('@')[0]); };
+    $('#apBody').innerHTML = p.map(function (x) {
+      var what = x.kind === 'stay' ? '<b>' + esc(x.guest || 'Guest') + '</b> · ' + esc(x.no) : '<b>Food order ' + esc(x.no) + '</b>' + (x.guest ? ' · ' + esc(x.guest) : '');
+      return '<div class="ap-row" data-kind="' + esc(x.kind) + '" data-no="' + esc(x.no) + '" data-id="' + esc(x.id) + '"><div class="ap-amt">' + inr(x.amount) + '</div>'
+        + '<div class="ap-what">' + what + '<small>' + esc(x.method || '') + ' · recorded by ' + who(x.by) + (x.note ? ' · ' + esc(x.note) : '') + '</small></div>'
+        + '<div class="ap-acts"><button type="button" class="btn btn--sm" data-ap="reject">Reject</button><button type="button" class="btn btn--sm ap-ok" data-ap="approve">Approve</button></div></div>';
+    }).join('') + '<p class="ap-err" id="apErr" hidden></p>';
+  }
+  doc.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-ap]'); if (!b) return;
+    var row = b.closest('.ap-row'), decision = b.getAttribute('data-ap'), reason = '';
+    if (decision === 'reject') { reason = window.prompt('Reject this payment? Say why (optional):', ''); if (reason === null) return; }
+    $$('button', row).forEach(function (x) { x.disabled = true; });
+    fetch(PROXY + '/payments/approvals', { method: 'POST', headers: { 'X-Token': ls('ryst_proxy_token') || '', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: row.getAttribute('data-kind'), no: row.getAttribute('data-no'), id: row.getAttribute('data-id'), decision: decision, reason: reason }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || 'Could not save'); }); })
+      .then(function () { return Promise.all([get('/payments/approvals', 'pa'), get('/stays', 'stays')]); }, function (err) {
+        $$('button', row).forEach(function (x) { x.disabled = false; });
+        var m = $('#apErr'); if (m) { m.textContent = err.message; m.hidden = false; }
+      });
+  });
   function render() {
     var caretaker = careView();
     show($('#dashOwner'), !caretaker); show($('#dashCare'), caretaker);
@@ -878,7 +908,7 @@
     if (sw) { sw.hidden = ROLE === 'caretaker' || !(can('guestRegister') || can('bookings')); $$('button', sw).forEach(function (b) { b.setAttribute('aria-pressed', String((b.getAttribute('data-view') === 'care') === caretaker)); }); }
     var list = stayList();
     if (caretaker) { renderCare(list); renderAttention(list); return; }
-    renderKpis(list); renderToday(list); renderAttention(list); renderUpcoming(list); renderChannels();
+    renderApprovals(); renderKpis(list); renderToday(list); renderAttention(list); renderUpcoming(list); renderChannels();
     show($('#cToday'), can('bookings') || can('guestRegister'));
     show($('#cUp'), can('bookings') || can('guestRegister'));
   }

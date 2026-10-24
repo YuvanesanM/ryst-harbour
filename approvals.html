@@ -28,6 +28,10 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .wrap{max-width:900px;margin:0 auto;padding:18px 18px 90px}
 .head{margin-bottom:14px}.head h1{font-size:24px;font-weight:700;letter-spacing:-.2px}.head p{color:var(--muted);font-size:13.5px;margin-top:2px;line-height:1.5}
 .sec{font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted2);margin:20px 2px 10px}
+div.focus{background:var(--teal-soft);border:2px solid var(--teal);border-radius:16px;padding:16px;margin:0 0 14px;text-align:center;display:block}
+.focus .amt{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}.focus .what{font-size:14px;margin:4px 0 12px;line-height:1.45}.focus .what small{display:block;color:var(--muted)}
+.focus .acts{display:flex;gap:10px;justify-content:center}.focus .btn{padding:12px 22px;font-size:15px}.focus .btn.ok{flex:1;max-width:260px}
+div.focus.gone{background:var(--panel2);border-color:var(--line)}
 .item{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:13px 15px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .item .amt{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;min-width:96px}
 .item .what{flex:1;min-width:200px;font-size:13.5px;line-height:1.45}
@@ -48,6 +52,7 @@ a.lnk{color:var(--teal);font-weight:600;text-decoration:none}
 <body>
 <div class="wrap">
   <div class="head"><h1>Payment approvals</h1><p>Cash, UPI and card payments your team recorded. Each one counts as received only after you approve it. Rejecting a food payment puts the order back on the guest's unpaid bill.</p></div>
+  <div id="focus" hidden></div>
   <p class="sec">Waiting for you</p>
   <div id="pending"><div class="empty">Loading…</div></div>
   <p class="sec">Decided in the last 30 days</p>
@@ -68,8 +73,21 @@ a.lnk{color:var(--teal);font-weight:600;text-decoration:none}
   const what = x => x.kind === 'stay'
     ? `<b>${esc(x.guest || 'Guest')}</b> · <a class="lnk" href="stay.html?open=${encodeURIComponent(x.no)}">${esc(x.no)}</a>${x.checkin ? ' · ' + esc(dm(x.checkin)) + '–' + esc(dm(x.checkout)) : ''}`
     : `<b>Food order ${esc(x.no)}</b>${x.guest ? ' · ' + esc(x.guest) : ''}${x.stayNo ? ' · ' + esc(x.stayNo) : ''}`;
+  // Opened from a phone notification or Telegram: that one payment, ready to approve.
+  const want = (() => { const v = new URLSearchParams(location.search).get('pay') || ''; const [kind, no, id] = v.split('~'); return id ? { kind, no, id } : null; })();
   function render(d) {
-    const p = d.pending || [], dec = d.decided || [];
+    let p = d.pending || [];
+    const dec = d.decided || [];
+    const f = $('#focus');
+    if (want) {
+      const x = p.find(y => y.id === want.id && y.no === want.no), done = !x && dec.concat(d.all || []).find(y => y.id === want.id);
+      f.hidden = false;
+      f.innerHTML = x ? `<div class="focus item" data-kind="${esc(x.kind)}" data-no="${esc(x.no)}" data-id="${esc(x.id)}"><div class="amt">${rs(x.amount)} ${esc(x.method || '')}</div>
+          <div class="what">${what(x)}<small>Recorded by ${who(x.by)} · ${esc(when(x.at))}${x.note ? ' · ' + esc(x.note) : ''}</small></div>
+          <div class="acts"><button class="btn no" type="button" data-d="reject">Reject</button><button class="btn ok" type="button" data-d="approve">Approve ${rs(x.amount)}</button></div></div>`
+        : `<div class="focus gone"><div class="what">${done ? `This payment was already <b>${esc(done.status)}</b> by ${who(done.decidedBy)}.` : 'This payment is no longer waiting.'}</div></div>`;
+      if (x) p = p.filter(y => y !== x); // shown above, not twice
+    }
     $('#pending').innerHTML = p.length ? p.map(x => `<div class="item" data-kind="${esc(x.kind)}" data-no="${esc(x.no)}" data-id="${esc(x.id)}">
         <div class="amt">${rs(x.amount)}</div>
         <div class="what">${what(x)}<small>${esc(x.method || '')} · recorded by ${who(x.by)} · ${esc(when(x.at))}${x.note ? ' · ' + esc(x.note) : ''}</small></div>
@@ -88,7 +106,7 @@ a.lnk{color:var(--teal);font-weight:600;text-decoration:none}
       render(d);
     } catch (e) { $('#pending').innerHTML = `<div class="empty">${esc(e.message || 'Could not load')}</div>`; }
   }
-  $('#pending').addEventListener('click', async e => {
+  async function decide(e) {
     const b = e.target.closest('button[data-d]'); if (!b) return;
     const it = b.closest('.item'), decision = b.dataset.d;
     let reason = '';
@@ -101,8 +119,11 @@ a.lnk{color:var(--teal);font-weight:600;text-decoration:none}
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'Error ' + r.status);
     } catch (err) { $('#err').textContent = err.message; $('#err').hidden = false; }
+    if (want && it.closest('#focus')) { try { history.replaceState(null, '', location.pathname); } catch (x) {} }
     load();
-  });
+  }
+  $('#pending').addEventListener('click', decide);
+  $('#focus').addEventListener('click', decide);
   load();
 })();
 </script>

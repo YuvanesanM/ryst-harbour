@@ -86,9 +86,9 @@
   html[data-theme="dark"] .pushcard{border-color:#2b4234}
 </style>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<link rel="stylesheet" href="/assets/app/dashboard.css?v=d2a76c46">
+<link rel="stylesheet" href="/assets/app/dashboard.css?v=2ea7c628">
 <script src="/assets/app/shell.js?v=0ebbd3a4"></script>
-<script src="/assets/app/dashboard.js?v=379fe843" defer></script>
+<script src="/assets/app/dashboard.js?v=abf75ee2" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -227,6 +227,10 @@
 
       <!-- Owner / coordinator -->
       <div id="dashOwner">
+        <section class="card card--approve" aria-labelledby="hApprove" id="cApprove" hidden>
+          <div class="card__head"><h2 id="hApprove">Payments to approve</h2><span class="count" id="apCount"></span><a class="card__link" href="approvals.html">All</a></div>
+          <div class="card__body" id="apBody"></div>
+        </section>
         <section class="kpis" aria-label="Key numbers">
           <a class="kpi" href="reports.html" id="kRevenue" data-module="reports"><span class="kpi__l">Revenue</span><b class="kpi__v sk"></b><span class="kpi__s sk sk--sm"></span></a>
           <a class="kpi" href="guest-register.html?f=unpaid" id="kDue" data-module="bookings"><span class="kpi__l">Outstanding</span><b class="kpi__v sk"></b><span class="kpi__s sk sk--sm"></span></a>
