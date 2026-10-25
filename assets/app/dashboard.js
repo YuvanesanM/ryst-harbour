@@ -145,6 +145,7 @@
     if (can('bookings')) jobs.push(get('/collabs', 'cr'));
     if (ROLE === 'owner') jobs.push(get('/agents', 'ag'));
     if (canApprove()) jobs.push(get('/payments/approvals', 'pa'));
+    if (canApprove() && (can('bookings') || can('reports'))) jobs.push(get('/dashboard/sales', 'sales'));
     if (can('bookings') || can('settings')) jobs.push(get('/ota-status', 'ota'));
     if (can('bookings') || can('reports')) { jobs.push(get('/google-reviews', 'gr')); jobs.push(get('/instagram-stats', 'ig')); }
     render();
@@ -871,6 +872,149 @@
   window.addEventListener('load', function () { fitDemoBar(); setTimeout(fitDemoBar, 300); });
   window.addEventListener('resize', fitDemoBar);
 
+  // ── Sales & growth (owners and admins): are bookings coming in? ────────
+  var OTA_CH = /airbnb|booking\.com|agoda|makemytrip|mmt|vrbo|homeaway|goibibo/i;
+  var FW = 'd7';
+  var ago2 = function (ms) { var h = (Date.now() - ms) / 3600e3; return h < 1 ? Math.max(1, Math.round(h * 60)) + ' min ago' : h < 48 ? Math.round(h) + ' h ago' : Math.round(h / 24) + ' days ago'; };
+  var pct = function (a, b) { return b ? Math.round(a / b * 100) + '%' : '—'; };
+  var shortDay = function (iso) { return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }); };
+  // each day from `start` for n days: 'b' booked, 'o' an OTA hold (booked, details not in), 'c' closed, '' free
+  function dayMap(stays, start, n) {
+    var end = addDays(start, n), m = {};
+    stays.forEach(function (s) {
+      if (!s.checkin || !s.checkout || s.checkout <= start || s.checkin >= end) return;
+      var isBlock = typeOf(s) === 'block', k;
+      if (isBlock) { if (claimedHold(s, stays)) return; k = isOtaBlock(s) ? 'o' : 'c'; }
+      else { if (!committed(s) || isConverted(s, stays)) return; k = 'b'; }
+      for (var d = s.checkin; d < s.checkout; d = addDays(d, 1)) if (d >= start && d < end && m[d] !== 'b') m[d] = (k === 'c' && m[d]) ? m[d] : k;
+    });
+    return m;
+  }
+  var isWeekendNight = function (iso) { var w = new Date(iso + 'T00:00:00Z').getUTCDay(); return w === 5 || w === 6; };
+  function renderFunnel() {
+    if (!D.sales) { setHTML('funnelBody', ERR.sales ? errBox('sales') : '<div class="sk sk--row"></div>'); return; }
+    var f = D.sales[FW] || { enquiries: 0, quoted: 0, paid: 0 }, open = D.sales.open || [];
+    $$('[data-fw]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-fw') === FW)); });
+    var html = '<div class="fun">'
+      + '<div class="fun__s"><b>' + f.enquiries + '</b><span>' + esc(t('asked about dates')) + '</span></div>'
+      + '<div class="fun__s' + (f.enquiries && !f.quoted ? ' fun__s--warn' : '') + '"><b>' + f.quoted + '</b><span>' + esc(t('got a quote or booking')) + '</span><small>' + pct(f.quoted, f.enquiries) + '</small></div>'
+      + '<div class="fun__s"><b>' + f.paid + '</b><span>' + esc(t('paid an advance')) + '</span>' + (f.quoted ? '<small>' + pct(f.paid, f.quoted) + ' ' + esc(t('of quoted')) + '</small>' : '') + '</div></div>';
+    html += open.length ? '<p class="note">' + esc(t('Asked in the last 14 days, no quote yet')) + (D.sales.openTotal > open.length ? ' (' + open.length + ' of ' + D.sales.openTotal + ')' : '') + ':</p>' + open.slice(0, 5).map(function (x) {
+      var dd = String(x.dates || '').split(' → '), q = 'stay.html?new=quote&phone=' + encodeURIComponent(x.phone || '') + (dd[0] && dd[1] ? '&checkin=' + dd[0] + '&checkout=' + dd[1] : '');
+      return '<div class="lead2"><div style="min-width:0"><b data-no-i18n>' + esc(x.name || 'Guest') + '</b><small>' + (dd[0] && dd[1] ? esc(shortDay(dd[0]) + '–' + shortDay(dd[1])) + (x.guests ? ' · ' + x.guests + ' ' + esc(t('guests')) : '') + ' · ' : '') + esc(ago2(x.at)) + ' · ' + esc(t(x.answered ? 'auto-reply answered' : 'not answered')) + '</small></div>'
+        + '<div class="acts"><a class="btn btn--sm" href="settings.html#wa-review">' + esc(t('Chat')) + '</a>' + (can('bookings') ? '<a class="btn btn--sm btn--primary" href="' + esc(q) + '">' + esc(t('Quote')) + '</a>' : '') + '</div></div>';
+    }).join('') : (f.enquiries ? '<div class="empty">' + ICON('ok') + '<span>' + esc(t('Everyone who asked has a quote')) + '</span></div>' : '');
+    if (D.sales.trackedSince) html += '<p class="note">' + esc(t('WhatsApp enquiries, matched to quotes by phone number. Tracked since')) + ' ' + esc(shortDay(D.sales.trackedSince)) + '.</p>';
+    setHTML('funnelBody', html);
+  }
+  function renderPace() {
+    var stays = D.stays && Array.isArray(D.stays.stays) ? D.stays.stays : null;
+    if (!stays) { setHTML('paceBody', ERR.stays ? errBox('stays') : '<div class="sk sk--row"></div>'); return; }
+    var start = addDays(TODAY, 1), m = dayMap(stays, start, 90), booked = function (a, b) { var n = 0; for (var i = a; i < b; i++) { var k = m[addDays(start, i)]; if (k === 'b' || k === 'o') n++; } return n; };
+    var w = [[0, 30], [30, 60], [60, 90]].map(function (r) { return booked(r[0], r[1]); });
+    var past = nightsIn(stays, addDays(TODAY, -30), TODAY).booked;
+    var openWe = []; for (var i = 0; i < 30; i++) { var d = addDays(start, i); if (isWeekendNight(d) && !m[d]) openWe.push(d); }
+    var html = '<div class="pace">' + [['Next 30 days', w[0]], ['Days 31–60', w[1]], ['Days 61–90', w[2]]].map(function (x) {
+      return '<div class="pace__s"><b>' + x[1] + '<span style="display:inline;font-size:13px;font-weight:500"> / 30</span></b><span>' + esc(t(x[0])) + '</span><div class="pace__bar"><i style="width:' + Math.round(x[1] / 30 * 100) + '%"></i></div></div>';
+    }).join('') + '</div>';
+    html += '<div class="strip" role="img" aria-label="' + esc(t('Next 30 nights')) + '">';
+    for (var j = 0; j < 30; j++) { var dj = addDays(start, j), k2 = m[dj] || ''; html += '<span class="' + k2 + (isWeekendNight(dj) ? ' we' : '') + '" title="' + esc(fmtDay(dj) + ' · ' + t(k2 === 'b' ? 'booked' : k2 === 'o' ? 'booked (OTA)' : k2 === 'c' ? 'closed' : 'free')) + '"></span>'; }
+    html += '</div><div class="strip-ax"><span>' + esc(shortDay(start)) + '</span><span>' + esc(shortDay(addDays(start, 29))) + '</span></div>';
+    html += '<div class="legend2"><span><i class="b"></i>' + esc(t('Booked')) + '</span><span><i class="o"></i>' + esc(t('OTA')) + '</span><span><i class="we"></i>' + esc(t('Free weekend night')) + '</span><span><i class="c"></i>' + esc(t('Closed')) + '</span><span><i></i>' + esc(t('Free')) + '</span></div>';
+    html += '<p class="note">' + esc(t('The last 30 nights had')) + ' ' + past + ' ' + esc(t('booked')) + (w[0] < past ? ' — ' + esc(t('the next 30 are behind that so far')) : '') + '.' + (openWe.length ? ' ' + openWe.length + ' ' + esc(t(openWe.length === 1 ? 'weekend night is still free' : 'weekend nights are still free')) + ': ' + esc(openWe.slice(0, 4).map(shortDay).join(', ')) + (openWe.length > 4 ? '…' : '') + '.' : '') + '</p>';
+    setHTML('paceBody', html);
+  }
+  function renderQuotes() {
+    var stays = D.stays && Array.isArray(D.stays.stays) ? D.stays.stays : null;
+    if (!stays) { setHTML('quotesBody', ERR.stays ? errBox('stays') : '<div class="sk sk--row"></div>'); return; }
+    var taken = function (q) { return stays.some(function (s) { return s !== q && s.checkin && s.checkout && q.checkin < s.checkout && q.checkout > s.checkin && (typeOf(s) === 'block' ? !claimedHold(s, stays) : committed(s) && !isConverted(s, stays)); }); };
+    var qs = stays.filter(function (s) { return typeOf(s) === 'quote' && num(s.advance) <= 0 && s.checkin > TODAY && !isConverted(s, stays) && !s.cancelled; })
+      .map(function (s) { return { s: s, gone: taken(s), total: grandTotal(s), age: s.date ? nightsBetween(s.date, TODAY) : null }; })
+      .sort(function (a, b) { return (a.gone - b.gone) || a.s.checkin.localeCompare(b.s.checkin); });
+    var live = qs.filter(function (x) { return !x.gone; }), atStake = live.reduce(function (a, x) { return a + x.total; }, 0);
+    var c = $('#quotesCount'); if (c) { c.textContent = live.length; c.hidden = !live.length; }
+    setHTML('quotesBody', !qs.length ? '<div class="empty">' + ICON('ok') + '<span>' + esc(t('No unpaid quotes for upcoming dates')) + '</span></div>'
+      : '<p class="note">' + inr(atStake) + ' ' + esc(t('waiting on')) + ' ' + live.length + ' ' + esc(t(live.length === 1 ? 'quote' : 'quotes')) + ' ' + esc(t('with the dates still open')) + '.</p>'
+        + qs.slice(0, 6).map(function (x) {
+          return '<a class="lead2" href="' + esc('stay.html?open=' + encodeURIComponent(x.s.no)) + '"><div style="min-width:0"><b data-no-i18n>' + esc(x.s.guest || x.s.no) + '</b><small>' + esc(shortDay(x.s.checkin) + '–' + shortDay(x.s.checkout)) + ' · ' + inr(x.total) + (x.age != null ? ' · ' + esc(t('sent')) + ' ' + (x.age === 0 ? esc(t('today')) : x.age + ' ' + esc(t(x.age === 1 ? 'day ago' : 'days ago'))) : '') + '</small></div>'
+            + (x.gone ? '<span class="pill pill--bad">' + esc(t('Dates taken')) + '</span>' : x.age != null && x.age >= 2 ? '<span class="pill pill--warn">' + esc(t('Follow up')) + '</span>' : '<span class="pill pill--teal">' + esc(t('Open')) + '</span>') + '</a>';
+        }).join(''));
+  }
+  function renderMoney() {
+    var stays = D.stays && Array.isArray(D.stays.stays) ? D.stays.stays : null;
+    if (!stays) { setHTML('moneyBody', ERR.stays ? errBox('stays') : '<div class="sk sk--row"></div>'); return; }
+    var ms = monthStart(TODAY), me = nextMonth(ms), pms = monthStart(TODAY, 1);
+    var villa = function (a, b) { var list = stays.filter(function (s) { return s.checkin >= a && s.checkin < b && (typeOf(s) === 'invoice' || (typeOf(s) === 'quote' && num(s.advance) > 0 && !isConverted(s, stays))); });
+      return { rev: list.reduce(function (x, s) { return x + grandTotal(s); }, 0), nights: list.reduce(function (x, s) { return x + nightsBetween(s.checkin, s.checkout); }, 0), list: list }; };
+    var cur = villa(ms, me), prev = villa(pms, ms);
+    var adr = cur.nights ? cur.rev / cur.nights : null, padr = prev.nights ? prev.rev / prev.nights : null;
+    // last 90 days of stays by channel: booked direct vs through an OTA
+    var from = addDays(TODAY, -90), recent = villa(from, addDays(TODAY, 1)).list, dN = 0, oN = 0, dRev = 0;
+    recent.forEach(function (s) { var n = nightsBetween(s.checkin, s.checkout); if (OTA_CH.test(s.channel || '')) oN += n; else { dN += n; dRev += grandTotal(s); } });
+    stays.forEach(function (s) { if (isOtaBlock(s) && !claimedHold(s, stays) && s.checkin >= from && s.checkin <= TODAY) oN += nightsBetween(s.checkin, s.checkout); });
+    var tot = dN + oN, dPct = tot ? Math.round(dN / tot * 100) : null;
+    var d = prev.rev ? Math.round((cur.rev - prev.rev) / prev.rev * 100) : null;
+    setHTML('moneyBody', '<div class="money">'
+      + '<div><b>' + inr(cur.rev) + '</b><span>' + esc(t('Stays in')) + ' ' + esc(monthName(ms)) + (d === null ? '' : ' · <span class="' + (d >= 0 ? 'up' : 'down') + '">' + (d >= 0 ? '↑ ' : '↓ ') + Math.abs(d) + '%</span> vs ' + esc(monthName(pms, 'short')) + ' (' + inr(prev.rev) + ')') + '</span></div>'
+      + '<div><b>' + (adr ? inr(adr) : '—') + '</b><span>' + esc(t('Average per night')) + (padr ? ' · ' + esc(monthName(pms, 'short')) + ' ' + inr(padr) : '') + '</span></div>'
+      + '<div style="grid-column:1/-1"><b>' + (dPct === null ? '—' : dPct + '% ' + esc(t('direct'))) + '</b><span>' + esc(t('Nights booked direct vs through an OTA, last 90 days')) + (tot ? ' (' + dN + ' / ' + oN + ')' : '') + '</span>'
+      + (tot ? '<div class="share" role="img" aria-label="' + dPct + '% direct"><i class="d" style="width:' + dPct + '%"></i><i class="ota" style="width:' + (100 - dPct) + '%"></i></div>' : '') + '</div>'
+      + '<div style="grid-column:1/-1"><b>' + inr(dRev * 0.15) + '</b><span>' + esc(t('Commission not paid on direct bookings in the last 90 days — an estimate at a typical 15% OTA commission')) + '</span></div>'
+      + '</div>');
+  }
+  function renderDrafts() {
+    var card = $('#cDrafts'); if (!card) return;
+    var ok = ROLE === 'owner' && !!D.ag; show(card, ok); if (!ok) return;
+    var ds = (D.ag.drafts || []), pend = ds.filter(function (x) { return x.status === 'pending'; });
+    var toSend = ds.filter(function (x) { return (x.status === 'agree' || x.status === 'edit') && x.delivery && x.approvalCurrent && !(x.exec && (x.exec.state === 'sent' || x.exec.state === 'sending')); });
+    var c = $('#draftsCount'); if (c) { c.textContent = pend.length; c.hidden = !pend.length; }
+    var row = function (x, sendable) {
+      var txt = x.better || (x.proposal || {}).text || '';
+      return '<div class="draft2" data-draft="' + esc(x.id) + '"><div class="draft2__h"><b data-no-i18n>' + esc(x.title || '') + '</b><small>' + esc(x.detail || '').slice(0, 160) + '</small></div>'
+        + (txt ? '<blockquote data-no-i18n>' + esc(txt) + '</blockquote>' : '')
+        + '<div class="draft2__a">' + (sendable
+          ? '<button type="button" class="btn btn--sm btn--primary" data-dsend="' + esc(x.id) + '">' + esc(t('Send now')) + '</button><span class="note">' + esc(t('Approved · goes by')) + ' ' + esc(x.delivery) + (x.exec && x.exec.state === 'failed' ? ' · <span class="down">' + esc(t('last try failed')) + ': ' + esc(x.exec.result || '') + '</span>' : '') + '</span>'
+          : '<button type="button" class="btn btn--sm btn--primary" data-dv="agree" data-id="' + esc(x.id) + '">' + esc(t('Approve')) + '</button><button type="button" class="btn btn--sm" data-dv="reject" data-id="' + esc(x.id) + '">' + esc(t('Reject')) + '</button><a class="btn btn--sm" href="agents.html">' + esc(t('Edit')) + '</a>'
+            + (x.delivery ? '<span class="note">' + esc(t('Approving doesn\'t send it — you send it next')) + '</span>' : '')) + '</div></div>';
+    };
+    setHTML('draftsBody', (toSend.length || pend.length)
+      ? toSend.slice(0, 2).map(function (x) { return row(x, true); }).join('') + pend.slice(0, 3).map(function (x) { return row(x, false); }).join('') + '<p class="ap-err" id="draftErr" hidden></p>'
+      : '<div class="empty">' + ICON('ok') + '<span>' + esc(t('No drafts waiting for you')) + '</span></div>');
+  }
+  function agentPost(path, body) {
+    return fetch(PROXY + path, { method: 'POST', headers: { 'X-Token': ls('ryst_proxy_token') || '', 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || 'Could not save'); D.ag = j.agents ? j : D.ag; return j; }); });
+  }
+  doc.addEventListener('click', function (e) {
+    var fw = e.target.closest && e.target.closest('[data-fw]'); if (fw) { FW = fw.getAttribute('data-fw'); renderFunnel(); return; }
+    var v = e.target.closest && e.target.closest('[data-dv]'), sd = e.target.closest && e.target.closest('[data-dsend]');
+    if (!v && !sd) return;
+    var id = v ? v.getAttribute('data-id') : sd.getAttribute('data-dsend'), x = ((D.ag && D.ag.drafts) || []).filter(function (d) { return d.id === id; })[0]; if (!x) return;
+    var body, path;
+    if (v) {
+      body = { id: id, verdict: v.getAttribute('data-dv') }; path = '/agents/review';
+      if (body.verdict === 'reject') { var note = window.prompt(t('Reject this draft? Say why (optional) — with a reason the agent writes a better one:'), ''); if (note === null) return; if (note.trim()) body.note = note.trim(); }
+    } else {
+      if (!window.confirm(t('Send this now?') + '\n\n' + x.delivery + '\n\n' + String(x.better || (x.proposal || {}).text || '').slice(0, 400))) return;
+      body = { id: id, hash: x.approvedHash || x.hash }; path = '/agents/execute';
+    }
+    var box = e.target.closest('.draft2'); $$('button', box).forEach(function (b) { b.disabled = true; });
+    agentPost(path, body).then(function () {
+      if (sd) toast2(t('Sent — accepted by the channel'));
+      return get('/agents', 'ag');
+    }, function (err) {
+      $$('button', box).forEach(function (b) { b.disabled = false; });
+      var m = $('#draftErr'); if (m) { m.textContent = err.message; m.hidden = false; }
+      return get('/agents', 'ag');
+    });
+  });
+  function toast2(msg) { var el = doc.createElement('div'); el.className = 'dash-toast'; el.setAttribute('role', 'status'); el.textContent = msg; doc.body.appendChild(el); setTimeout(function () { el.remove(); }, 3200); }
+  function renderSales() {
+    var on = canApprove() && (can('bookings') || can('reports'));
+    show($('#salesGrid'), on); if (!on) return;
+    renderFunnel(); renderPace(); renderQuotes(); renderMoney(); renderDrafts();
+  }
+
   // ── Render everything from whatever has arrived so far ─────────────────
   // Payments staff recorded by hand (cash, UPI…): approve or reject right here.
   function canApprove() { return ROLE === 'owner' || ls('ryst_user_admin') === 'true'; }
@@ -908,7 +1052,7 @@
     if (sw) { sw.hidden = ROLE === 'caretaker' || !(can('guestRegister') || can('bookings')); $$('button', sw).forEach(function (b) { b.setAttribute('aria-pressed', String((b.getAttribute('data-view') === 'care') === caretaker)); }); }
     var list = stayList();
     if (caretaker) { renderCare(list); renderAttention(list); return; }
-    renderApprovals(); renderKpis(list); renderToday(list); renderAttention(list); renderUpcoming(list); renderChannels();
+    renderApprovals(); renderKpis(list); renderToday(list); renderAttention(list); renderUpcoming(list); renderChannels(); renderSales();
     show($('#cToday'), can('bookings') || can('guestRegister'));
     show($('#cUp'), can('bookings') || can('guestRegister'));
   }

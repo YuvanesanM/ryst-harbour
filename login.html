@@ -86,9 +86,9 @@
   html[data-theme="dark"] .pushcard{border-color:#2b4234}
 </style>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<link rel="stylesheet" href="/assets/app/dashboard.css?v=2ea7c628">
+<link rel="stylesheet" href="/assets/app/dashboard.css?v=769564f6">
 <script src="/assets/app/shell.js?v=0ebbd3a4"></script>
-<script src="/assets/app/dashboard.js?v=abf75ee2" defer></script>
+<script src="/assets/app/dashboard.js?v=5425daf8" defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="manifest" href="/staff.webmanifest">
 <link rel="apple-touch-icon" href="/assets/staff-apple-touch-icon.png">
@@ -259,6 +259,29 @@
           <section class="card card--chan" aria-labelledby="hChan" id="cChan" data-module="bookings" hidden>
             <div class="card__head"><h2 id="hChan">Channels</h2><button type="button" class="btn btn--sm" id="chanSync" hidden style="margin-left:auto">Check now</button><a class="card__link" href="settings.html#ota" id="chanManage" style="margin-left:0">Manage calendars</a></div>
             <div class="card__body" id="chanBody"><div class="sk sk--row"></div></div>
+          </section>
+        </div>
+        <!-- Sales & growth (owners and admins): are bookings coming in? -->
+        <div class="grid grid--sales" id="salesGrid" hidden>
+          <section class="card card--half" aria-labelledby="hFunnel" id="cFunnel">
+            <div class="card__head"><h2 id="hFunnel">Enquiries → bookings</h2><span class="seg2" role="group" aria-label="Period"><button type="button" data-fw="d7" aria-pressed="true">7 days</button><button type="button" data-fw="d30" aria-pressed="false">30 days</button></span></div>
+            <div class="card__body" id="funnelBody"><div class="sk sk--row"></div><div class="sk sk--row"></div></div>
+          </section>
+          <section class="card card--half" aria-labelledby="hPace" id="cPace">
+            <div class="card__head"><h2 id="hPace">Booking pace</h2><a class="card__link" href="bookings.html">Calendar</a></div>
+            <div class="card__body" id="paceBody"><div class="sk sk--row"></div><div class="sk sk--row"></div></div>
+          </section>
+          <section class="card card--half" aria-labelledby="hQuotes" id="cQuotes">
+            <div class="card__head"><h2 id="hQuotes">Open quotes</h2><span class="count count--teal" id="quotesCount" hidden></span><a class="card__link" href="stay.html" style="margin-left:0">All quotes</a></div>
+            <div class="card__body" id="quotesBody"><div class="sk sk--row"></div></div>
+          </section>
+          <section class="card card--half" aria-labelledby="hMoney" id="cMoney">
+            <div class="card__head"><h2 id="hMoney">Money</h2><a class="card__link" href="reports.html">Reports</a></div>
+            <div class="card__body" id="moneyBody"><div class="sk sk--row"></div></div>
+          </section>
+          <section class="card card--full" aria-labelledby="hDrafts" id="cDrafts" hidden>
+            <div class="card__head"><h2 id="hDrafts">Agent drafts</h2><span class="count" id="draftsCount" hidden></span><a class="card__link" href="agents.html" style="margin-left:0">All drafts</a></div>
+            <div class="card__body" id="draftsBody"></div>
           </section>
         </div>
       </div>
