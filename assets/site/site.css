@@ -782,6 +782,7 @@ input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px var(--tea
 .demo-form__msg{font-size:15px;color:var(--sand);min-height:1.2em}
 .demo-form__msg.err{color:#f0a89e}
 .demo-form__fine{font-size:12.5px;color:var(--on-dark-2)}
+.demo-form__self{font-size:14.5px;color:var(--on-dark-2)}.demo-form__self a{color:var(--sand);border-bottom:1px solid rgba(216,201,180,.5)}
 .demo-form__fine a{color:var(--ivory)}
 .demo-form.done .demo-form__grid,.demo-form.done .btn{display:none}
 @media (max-width:560px){.demo-form__grid{grid-template-columns:1fr}.demo-form .btn{justify-self:stretch}}

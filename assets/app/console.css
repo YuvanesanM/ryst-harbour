@@ -81,9 +81,10 @@ a{color:var(--accent-d)}
 .btn svg{width:15px;height:15px}
 .f{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;min-width:0}
 .f span{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);font-weight:600}
-.f input,.f select,.f textarea,input.in,select.in{border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14.5px;background:var(--panel2);outline:none;width:100%}
+.f input,.f select,.f textarea,input.in,select.in,textarea.in{border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14.5px;background:var(--panel2);outline:none;width:100%}
 .f textarea{min-height:70px;resize:vertical}
-.f input:focus,.f select:focus,.f textarea:focus,input.in:focus,select.in:focus{border-color:var(--accent)}
+.f input:focus,.f select:focus,.f textarea:focus,input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--accent)}
+textarea.in{resize:vertical;display:block}
 select.in.sm,input.in.sm{padding:6px 9px;font-size:13px;width:auto}
 .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:0 12px}
 .pill{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-d);white-space:nowrap}

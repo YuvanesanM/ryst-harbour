@@ -306,6 +306,14 @@
     var qs = new URLSearchParams(location.search), msg = $('.demo-form__msg', form);
     var utm = { source: qs.get('utm_source') || '', medium: qs.get('utm_medium') || '', campaign: qs.get('utm_campaign') || '', ref: qs.get('ref') || '' };
     if (!utm.source && document.referrer && !/harbour\.ryst\.in/.test(document.referrer)) { try { utm.source = new URL(document.referrer).hostname.replace(/^www\./, ''); } catch (e) {} }
+    // self-serve trials, when Harbour allows them: the link carries this visit's campaign
+    var self = $('.demo-form__self', form);
+    fetch('https://data.ryst.in/harbour/plans').then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.openSignup) return;
+      var q = Object.keys(utm).filter(function (k) { return utm[k]; }).map(function (k) { return (k === 'ref' ? 'ref' : 'utm_' + k) + '=' + encodeURIComponent(utm[k]); }).join('&');
+      $$('[data-trial-link]').forEach(function (a) { a.href = '/start.html' + (q ? '?' + q : ''); });
+      self.hidden = false;
+    }).catch(function () {});
     document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('[data-plan]'); if (a && form.elements.plan.querySelector('option[value="' + a.dataset.plan + '"]')) form.elements.plan.value = a.dataset.plan; });
     form.addEventListener('submit', function (e) {
       e.preventDefault();

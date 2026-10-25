@@ -175,8 +175,13 @@ const SCRIPTS = [
 ];
 const fillScript = (t, l) => t.replace(/\{name\}/g, (l.name || '').split(' ')[0] || 'there').replace(/\{villa\}/g, l.villaName || 'your villa').replace(/\{me\}/g, (ME.name || '').split(' ')[0] || 'the Harbour team')
   .replace(/\{ref\}/g, SITE + '/?ref=' + encodeURIComponent(l.villaSlug || 'customer') + '#demo');
+// What the sales agent can write (the server picks the facts; the rep sends it)
+const AI_PURPOSES = { first: 'First reply to a demo request', followup: 'Follow-up (gone quiet)', afterdemo: 'After the demo', trial: 'Trial check-in (missing setup steps)', winback: 'Win back a lost lead', prep: 'Demo prep notes (for you)' };
+const aiPurposeFor = l => l.stage === 'new' ? 'first' : l.stage === 'demo' ? 'afterdemo' : l.stage === 'trial' ? 'trial' : l.stage === 'lost' ? 'winback' : 'followup';
 const waLink = (l, text) => `https://wa.me/${waNum(l.phone)}${text ? '?text=' + encodeURIComponent(text) : ''}`;
 const scriptFor = l => SCRIPTS.find(s => s.stage.includes(l.stage)) || SCRIPTS[0];
+// The quick WhatsApp button: the AI draft when one is ready, else the stage's script
+const msgFor = l => l.aiDraft && l.aiDraft.purpose !== 'prep' && l.aiDraft.text ? l.aiDraft.text : fillScript(scriptFor(l).text, l);
 
 // ── CEO dashboard ──
 VIEWS.ceo = async () => {
@@ -231,8 +236,8 @@ VIEWS.ceo = async () => {
     (R ? R.renewals : []).forEach(v => items.push({ tag: 'money', t: 'Renewal', v, why: `paid until ${fmtShort(v.paidUntil)} · ${rs(v.mrr)}/mo` }));
     (S ? S.stale : []).forEach(l => items.push({ tag: 'cold', t: 'Cold', l, why: `no contact ${l.lastTouchAt ? ago(l.lastTouchAt) : 'yet'} · ${stageLabel(l.stage)}` }));
     h += `<div class="card inbox"><h2>Today's actions<span class="r meta">${items.length ? plural(items.length, 'item') : ''}</span></h2><p class="hint">New leads first — the first hour decides most deals.</p>`;
-    h += items.length ? items.slice(0, 14).map(it => it.l ? `<div class="row"><span class="tag ${it.tag}">${it.t}</span><div class="grow"><b>${esc(it.l.villaName || it.l.name)}</b><div class="meta">${esc(it.why)}${it.l.city ? ' · ' + esc(it.l.city) : ''}</div></div>
-        <div class="acts">${it.l.phone ? `<a class="btn sm icon" href="tel:${esc(it.l.phone)}" aria-label="Call">${svg('phone')}</a><a class="btn sm icon" href="${esc(waLink(it.l, fillScript(scriptFor(it.l).text, it.l)))}" target="_blank" rel="noopener" aria-label="WhatsApp">${svg('wa')}</a>` : ''}<button class="btn sm" type="button" data-open-lead="${esc(it.l.id)}">Open</button></div></div>`
+    h += items.length ? items.slice(0, 14).map(it => it.l ? `<div class="row"><span class="tag ${it.tag}">${it.t}</span><div class="grow"><b>${esc(it.l.villaName || it.l.name)}</b><div class="meta">${esc(it.why)}${it.l.city ? ' · ' + esc(it.l.city) : ''}${it.l.draftReady ? ' · <b>AI draft ready</b>' : ''}</div></div>
+        <div class="acts">${it.l.phone ? `<a class="btn sm icon" href="tel:${esc(it.l.phone)}" aria-label="Call">${svg('phone')}</a><a class="btn sm icon" href="${esc(waLink(it.l, msgFor(it.l)))}" target="_blank" rel="noopener" aria-label="WhatsApp">${svg('wa')}</a>` : ''}<button class="btn sm" type="button" data-open-lead="${esc(it.l.id)}">Open</button></div></div>`
       : `<div class="row"><span class="tag ${it.tag}">${it.t}</span><div class="grow"><b>${esc(it.v.name)}</b><div class="meta">${esc(it.why)}</div></div>${can('customers') ? '<button class="btn sm" type="button" data-go="customers">Villas</button>' : ''}</div>`).join('')
       : '<div class="empty big"><b>All clear ✓</b>No new, overdue or cold leads, and no trials, renewals or payments needing you.</div>';
     h += '</div>';
@@ -304,6 +309,7 @@ const leadFlags = l => {
   if (l.nextFollowUp && l.nextFollowUp < today()) f.push(['hot', 'Overdue']); else if (l.nextFollowUp === today()) f.push(['due', 'Today']);
   if (l.stage !== 'new' && (lastTouch(l) || l.createdAt) < Date.now() - 14 * 864e5 && !(l.nextFollowUp && l.nextFollowUp > today())) f.push(['cold', 'Cold']);
   if (!l.nextFollowUp) f.push(['cold', 'No follow-up']);
+  if (l.aiDraft && l.aiDraft.purpose !== 'prep' && (l.aiDraft.at || 0) > lastTouch(l)) f.push(['money', 'Draft ready']);
   return f;
 };
 VIEWS.crm = async opts => {
@@ -315,7 +321,7 @@ VIEWS.crm = async opts => {
     const card = l => `<div class="lead" draggable="true" tabindex="0" role="button" data-lead="${esc(l.id)}"><b>${esc(l.villaName || l.name || 'Lead')}</b><small>${esc([l.name && l.villaName ? l.name : '', l.city, sourceLabel(l.source || 'other')].filter(Boolean).join(' · '))}</small>
       ${l.nextFollowUp && isOpen(l) ? `<small class="${l.nextFollowUp <= today() ? 'due' : ''}">Follow up ${esc(fmtShort(l.nextFollowUp))}</small>` : ''}${l.villa ? `<small>Villa: ${esc(l.villa.slug)} · ${esc(l.villa.state)}</small>` : ''}
       ${leadFlags(l).length ? `<div class="flags">${leadFlags(l).map(f => `<span class="tag ${f[0]}">${f[1]}</span>`).join('')}</div>` : ''}
-      ${l.phone && isOpen(l) ? `<div class="qa"><a href="tel:${esc(l.phone)}" data-stop>Call</a><a href="${esc(waLink(l, fillScript(scriptFor(l).text, l)))}" target="_blank" rel="noopener" data-stop>WhatsApp</a><button type="button" data-log="${esc(l.id)}">Log</button></div>` : ''}</div>`;
+      ${l.phone && isOpen(l) ? `<div class="qa"><a href="tel:${esc(l.phone)}" data-stop>Call</a><a href="${esc(waLink(l, msgFor(l)))}" target="_blank" rel="noopener" data-stop>WhatsApp</a><button type="button" data-log="${esc(l.id)}">Log</button></div>` : ''}</div>`;
     const price = l => ((PLAN_PRICES || {})[l.planInterest] || (PLAN_PRICES || {}).growth || 0);
     $('crmBody').innerHTML = crmView === 'board'
       ? `<div class="board">${LEADS.stages.map(st => { const ls = leads.filter(l => l.stage === st); return `<div class="col" data-stage="${st}"><h3><span>${stageLabel(st)}</span><span>${ls.length}</span></h3><div class="worth">${PLAN_PRICES && isOpen({ stage: st }) && ls.length ? rs(ls.reduce((t, l) => t + price(l), 0)) + '/mo if all win' : '&nbsp;'}</div>${ls.map(card).join('') || '<div class="empty" style="padding:4px">—</div>'}</div>`; }).join('')}</div><p class="hint no-print" style="margin-top:6px">Drag a card to another column to move it. Call and WhatsApp open on your phone — nothing is sent from here.</p>`
@@ -454,6 +460,11 @@ function openLead(id, o) {
       ${id && can('invites') && !l.villa ? '<button class="btn" id="lInvite" type="button">Send an invite link</button>' : ''}
       ${id ? '<button class="btn danger" id="lDel" type="button" style="margin-left:auto">Delete</button>' : ''}</div>
     <div class="msg" id="lMsg"></div>
+    ${id ? `<h2 style="font-size:14px;margin-top:18px">AI draft</h2><p class="hint" style="margin-bottom:6px">Written for this lead from Harbour's plans and the notes above. Read it, edit it, then send it yourself — nothing is sent from here.</p>
+      <div class="toolbar" style="margin-bottom:6px"><select class="in sm" id="aiPurpose">${Object.entries(AI_PURPOSES).map(([k, t]) => `<option value="${k}"${k === aiPurposeFor(l) ? ' selected' : ''}>${esc(t)}${k === aiPurposeFor(l) ? ' · suggested' : ''}</option>`).join('')}</select><button class="btn sm" type="button" id="aiGo">${l.aiDraft ? 'Write again' : 'Write it'}</button></div>
+      <textarea class="in" id="aiText" style="min-height:110px;font-size:13.5px;line-height:1.5"${l.aiDraft ? '' : ' hidden'}>${esc(l.aiDraft ? l.aiDraft.text : '')}</textarea>
+      <div class="meta" id="aiMeta" style="margin:4px 0 6px">${l.aiDraft ? `${esc(AI_PURPOSES[l.aiDraft.purpose] || '')} · written ${esc(ago(l.aiDraft.at))}` : ''}</div>
+      <div style="display:flex;gap:8px" id="aiActs"${l.aiDraft && l.aiDraft.purpose !== 'prep' ? '' : ' hidden'}>${l.phone ? `<a class="btn sm primary" id="aiWa" target="_blank" rel="noopener">${svg('wa')}Open in WhatsApp</a>` : ''}<button class="btn sm" id="aiCopy" type="button">Copy</button></div>` : ''}
     ${id && l.phone ? `<h2 style="font-size:14px;margin-top:18px">WhatsApp scripts</h2><p class="hint" style="margin-bottom:6px">Opens WhatsApp on your phone with the message ready to edit — you send it.</p>
       <select class="in" id="lScript">${scripts.map(s => `<option value="${s.key}">${esc(s.label)}${s.stage.includes(l.stage) ? ' · suggested' : ''}</option>`).join('')}</select>
       <div class="script" id="lScriptText"></div><div style="display:flex;gap:8px"><a class="btn sm primary" id="lScriptGo" target="_blank" rel="noopener">${svg('wa')}Open in WhatsApp</a><button class="btn sm" id="lScriptCopy" type="button">Copy</button></div>` : ''}
@@ -471,6 +482,17 @@ function openLead(id, o) {
       e.currentTarget.disabled = true;
       try { await api('PUT', '/platform/crm', { id, touch: { type, outcome: $('lOutcome').value.trim() }, snoozeDays: n }); closeDrawer(); after(`Logged — follow up ${fmtShort(dayPlus(n))}`); }
       catch (err) { $('lMsg').className = 'msg err'; $('lMsg').textContent = err.message; e.currentTarget.disabled = false; }
+    });
+    const aiSync = () => { if ($('aiWa')) $('aiWa').href = waLink(l, $('aiText').value); };
+    $('aiText').addEventListener('input', aiSync); aiSync();
+    if ($('aiCopy')) $('aiCopy').addEventListener('click', () => copyText($('aiText').value));
+    $('aiGo').addEventListener('click', async e => {
+      const b = e.currentTarget, purpose = $('aiPurpose').value; b.disabled = true; b.textContent = 'Writing…';
+      try { const r = await api('POST', '/platform/crm/draft', { id, purpose });
+        $('aiText').hidden = false; $('aiText').value = r.text; $('aiMeta').textContent = `${AI_PURPOSES[r.purpose] || ''} · written just now`;
+        $('aiActs').hidden = r.purpose === 'prep'; aiSync(); l.aiDraft = { text: r.text, purpose: r.purpose, at: Date.now() }; }
+      catch (err) { toast(err.message); }
+      b.disabled = false; b.textContent = 'Write again';
     });
     if ($('lScript')) {
       const sync = () => { const s = SCRIPTS.find(x => x.key === $('lScript').value), t = fillScript(s.text, l); $('lScriptText').textContent = t; $('lScriptGo').href = waLink(l, t); };
@@ -603,7 +625,9 @@ VIEWS.plans = async () => {
     <label class="f"><span>Free trial (days)</span><input id="bTrial" type="number" min="1" max="365" value="${c.trialDays}"></label>
     <label class="f"><span>Grace (days)</span><input id="bGrace" type="number" min="0" max="60" value="${c.graceDays}"></label>
     <label class="f"><span>Business name on invoices</span><input id="bBiz" maxlength="120" value="${esc(c.businessName || '')}"></label>
-    <label class="f"><span>GSTIN</span><input id="bGstin" maxlength="15" value="${esc(c.gstin || '')}"></label></div></div>
+    <label class="f"><span>GSTIN</span><input id="bGstin" maxlength="15" value="${esc(c.gstin || '')}"></label>
+    <label class="f"><span>Self-serve trials a day (max)</span><input id="bOpenDay" type="number" min="1" max="200" value="${c.openSignupPerDay || 10}"></label></div>
+    <label class="feat" style="margin-top:4px"><input type="checkbox" id="bOpen"${c.openSignup !== false ? ' checked' : ''}>Anyone can start a free trial at ${esc(SITE.replace('https://', ''))}/start.html (signed in with Google). Off: sign-up by invite only.</label></div>
     <div class="card"><h2>Revenue planner</h2><p class="hint">Try a customer mix at the prices above (not saved). Annual plans are billed at the "annual = monthly × months" above.</p>
       <div class="fields">${c.plans.map(p => `<label class="f"><span>Villas on ${esc(p.name)}</span><input type="number" min="0" data-sim="${p.key}" value="${ceo ? ((ceo.byPlan.find(x => x.tier === p.key) || {}).villas || 0) : 0}" inputmode="numeric"></label>`).join('')}
       <label class="f"><span>Share on annual (%)</span><input type="number" min="0" max="100" id="simAnnual" value="0" inputmode="numeric"></label></div>
@@ -629,7 +653,7 @@ VIEWS.plans = async () => {
     const changed = c.plans.filter(p => tiers[p.key].monthly !== p.monthly).map(p => `${p.name}: ${rs(p.monthly)} → ${rs(tiers[p.key].monthly)}`);
     if (!confirm(`Save plans? Every villa on a plan gets its new package straight away.${changed.length ? '\n\nPrice changes (new subscribers only):\n' + changed.join('\n') : ''}`)) return;
     const num = id => Number($(id).value); e.currentTarget.disabled = true;
-    try { await api('PUT', '/platform/billing', { tiers, pricesIncludeGst: $('bGstMode').value === 'incl', gstPercent: num('bGstPct'), annualMonths: num('bAnnual'), minTermMonths: num('bMinTerm'), noticeDays: num('bNotice'), trialDays: num('bTrial') || 14, graceDays: num('bGrace'), businessName: $('bBiz').value.trim(), gstin: $('bGstin').value.trim().toUpperCase() });
+    try { await api('PUT', '/platform/billing', { tiers, pricesIncludeGst: $('bGstMode').value === 'incl', gstPercent: num('bGstPct'), annualMonths: num('bAnnual'), minTermMonths: num('bMinTerm'), noticeDays: num('bNotice'), trialDays: num('bTrial') || 14, graceDays: num('bGrace'), openSignup: $('bOpen').checked, openSignupPerDay: num('bOpenDay') || 10, businessName: $('bBiz').value.trim(), gstin: $('bGstin').value.trim().toUpperCase() });
       PLAN_PRICES = null; toast('Plans saved'); go('plans'); } catch (err) { toast(err.message); e.currentTarget.disabled = false; }
   });
 };

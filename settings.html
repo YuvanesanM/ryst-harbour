@@ -640,6 +640,14 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f" style="margin:10px 0 8px"><span>Interakt template name, once Meta approves it</span>
         <input class="t" id="waInteraktQuoteFollowup" placeholder="e.g. quote_followup_v1" pattern="[a-z0-9_]*" maxlength="120"></label>
     </div>
+    <div class="wa-fu" style="margin-bottom:22px">
+      <label class="f"><span>Come back (past guest) — about a year after a stay, for a guest who hasn't booked again, sent from an approved agent draft</span></label>
+      <p class="wa-hint">Placeholders 1 = first name, 2 = villa name, 3 = month of their stay:</p>
+      <pre class="wa-tpl" id="tplReturnGuest">Hi {{1}}, it's almost a year since your stay at {{2}} in {{3}}! 🌊 We'd love to host you again. Reply with your dates and number of guests and we'll check availability and send you the price.</pre>
+      <button type="button" class="rc-add" data-copy="tplReturnGuest">Copy wording</button>
+      <label class="f" style="margin:10px 0 8px"><span>Interakt template name, once Meta approves it</span>
+        <input class="t" id="waInteraktReturnGuest" placeholder="e.g. return_guest_v1" pattern="[a-z0-9_]*" maxlength="120"></label>
+    </div>
 
     <label class="f"><span>Booking confirmed — sent automatically the instant a balance payment clears online (a direct booking's own payment, the quote-review link's pay-to-confirm, or a later remaining-balance payment), no schedule needed</span></label>
     <p class="wa-hint">{{guest}} {{checkin}} {{checkout}} {{guests}} {{walletLink}}</p>
@@ -1564,7 +1572,7 @@ let waTemplatesDraft = Object.assign({}, WA_DEFAULTS);
 // Per-scenario Interakt-approved template name — mirrors
 // INTERAKT_TEMPLATES_DEFAULT in the proxy's server.js. Empty string means
 // "not set up yet", same fallback-to-Telegram-nudge meaning as there.
-const INTERAKT_TEMPLATES_DEFAULT = { checkinRequest: '', reminder: '', feedbackRequest: '', quoteReady: '', bookingConfirmed: '', enquiryFollowup: '', quoteFollowup: '' };
+const INTERAKT_TEMPLATES_DEFAULT = { checkinRequest: '', reminder: '', feedbackRequest: '', quoteReady: '', bookingConfirmed: '', enquiryFollowup: '', quoteFollowup: '', returnGuest: '' };
 let interaktTemplatesDraft = Object.assign({}, INTERAKT_TEMPLATES_DEFAULT);
 // Mirrors WA_AUTOMATION_DEFAULT/mergeWaAutomation in the proxy's server.js —
 // per-scenario day count (before check-in, or after check-out) + a specific
@@ -1606,6 +1614,7 @@ function renderWaTemplates(){
   document.getElementById('waInteraktBookingConfirmed').value = interaktTemplatesDraft.bookingConfirmed || '';
   document.getElementById('waInteraktEnquiryFollowup').value = interaktTemplatesDraft.enquiryFollowup || '';
   document.getElementById('waInteraktQuoteFollowup').value = interaktTemplatesDraft.quoteFollowup || '';
+  document.getElementById('waInteraktReturnGuest').value = interaktTemplatesDraft.returnGuest || '';
   document.getElementById('waCheckinRequestDays').value = waAutomationDraft.checkinRequest.daysBefore;
   document.getElementById('waCheckinRequestTime').value = waAutomationDraft.checkinRequest.sendTime;
   document.getElementById('waReminderDays').value = waAutomationDraft.reminder.daysBefore;
@@ -1644,6 +1653,7 @@ document.getElementById('waSave').addEventListener('click', async ()=>{
     bookingConfirmed: document.getElementById('waInteraktBookingConfirmed').value.trim().toLowerCase(),
     enquiryFollowup: document.getElementById('waInteraktEnquiryFollowup').value.trim().toLowerCase(),
     quoteFollowup: document.getElementById('waInteraktQuoteFollowup').value.trim().toLowerCase(),
+    returnGuest: document.getElementById('waInteraktReturnGuest').value.trim().toLowerCase(),
   });
   btn.disabled = true; btn.textContent = 'Saving…';
   try{
@@ -2380,7 +2390,7 @@ document.addEventListener('click', function (e) { var b = e.target.closest('[dat
 // The follow-up templates' review at Meta (owner only): status per template, and send any not yet sent.
 (function(){
   const box = document.getElementById('waReview'); if (!box || localStorage.getItem('ryst_user_role') !== 'owner') return;
-  const NAMES = { enquiryFollowup: 'Enquiry follow-up', quoteFollowup: 'Quote follow-up', reminderFood: 'Stay reminder (pre-book meals)', foodBreakfast: 'Breakfast final call', foodLunch: 'Lunch final call', foodDinner: 'Dinner final call' };
+  const NAMES = { enquiryFollowup: 'Enquiry follow-up', quoteFollowup: 'Quote follow-up', returnGuest: 'Come back (past guest)', reminderFood: 'Stay reminder (pre-book meals)', foodBreakfast: 'Breakfast final call', foodLunch: 'Lunch final call', foodDinner: 'Dinner final call' };
   const say = it => !it ? 'Not sent for review yet'
     : it.error && !it.status ? 'Not sent — ' + it.error
     : it.status === 'APPROVED' ? 'Approved by Meta — in use as ' + it.name
