@@ -14,7 +14,7 @@ import hashlib, pathlib, re
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FILES = ['assets/app/shell.css', 'assets/app/shell.js', 'assets/app/dashboard.css', 'assets/app/dashboard.js',
          'assets/site/site.css', 'assets/site/site.js', 'assets/app/villa3d.css', 'assets/app/villa3d.js', 'assets/app/photo.js',
-         'assets/app/agents.css', 'assets/app/agents.js']
+         'assets/app/agents.css', 'assets/app/agents.js', 'assets/app/console.css', 'assets/app/console.js']
 tags = {f: hashlib.sha1((ROOT / f).read_bytes()).hexdigest()[:8] for f in FILES}
 changed = []
 for page in sorted(ROOT.glob('*.html')):

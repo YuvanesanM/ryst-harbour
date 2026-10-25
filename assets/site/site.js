@@ -6,7 +6,6 @@
 
   var doc = document;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var WA = 'https://wa.me/918608008608?text=';
 
   function $(sel, ctx) { return (ctx || doc).querySelector(sel); }
   function $$(sel, ctx) { return Array.prototype.slice.call((ctx || doc).querySelectorAll(sel)); }
@@ -256,7 +255,7 @@
           + (cycle === 'annual' && p.monthly ? '<p class="plan__note">≈ ' + inr(p.annual / 12) + ' / month · save ' + inr(p.monthly * 12 - p.annual) + ' a year</p>' : '')
           + '<p class="plan__setup">+ ' + inr(p.setup) + ' one-time setup</p>'
           + '<ul>' + (prev ? '<li>' + tick + 'Everything in ' + esc(prev.name) + '</li>' : '') + feats.map(function (f) { return '<li>' + tick + esc(FEATURES[f] || f) + '</li>'; }).join('') + '</ul>'
-          + '<a class="btn' + (pop ? '' : ' btn--secondary') + '" href="' + WA + encodeURIComponent('Hi, I\'m interested in the RYST Harbour ' + p.name + ' plan for my villa.') + '" target="_blank" rel="noopener">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>'
+          + '<a class="btn' + (pop ? '' : ' btn--secondary') + '" href="#demo" data-plan="' + esc(p.key) + '">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>'
           + '</article>';
       }).join('');
       // Side-by-side comparison, built from the same plan data as the cards.
@@ -299,6 +298,31 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { if (d && Array.isArray(d.plans) && d.plans.length) { data = d; renderPlans(); } })
       .catch(function () {});
+  }
+
+  /* ── Demo request form → Harbour's CRM (the team calls them back) ───── */
+  var form = $('[data-demo-form]');
+  if (form) {
+    var qs = new URLSearchParams(location.search), msg = $('.demo-form__msg', form);
+    var utm = { source: qs.get('utm_source') || '', medium: qs.get('utm_medium') || '', campaign: qs.get('utm_campaign') || '', ref: qs.get('ref') || '' };
+    if (!utm.source && document.referrer && !/harbour\.ryst\.in/.test(document.referrer)) { try { utm.source = new URL(document.referrer).hostname.replace(/^www\./, ''); } catch (e) {} }
+    document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('[data-plan]'); if (a && form.elements.plan.querySelector('option[value="' + a.dataset.plan + '"]')) form.elements.plan.value = a.dataset.plan; });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var f = form.elements, phone = f.phone.value.replace(/\D/g, '');
+      f.name.setAttribute('aria-invalid', String(!f.name.value.trim()));
+      f.phone.setAttribute('aria-invalid', String(phone.length < 10));
+      if (!f.name.value.trim() || phone.length < 10) { msg.className = 'demo-form__msg err'; msg.textContent = 'Please add your name and a 10-digit phone number.'; return; }
+      var btn = $('button[type=submit]', form); btn.disabled = true; msg.className = 'demo-form__msg'; msg.textContent = 'Sending…';
+      fetch('https://data.ryst.in/harbour/lead', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: f.name.value, villaName: f.villaName.value, phone: f.phone.value, city: f.city.value, rooms: f.rooms.value, plan: f.plan.value, website: f.website.value, utm: utm, page: location.pathname }) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok && d.ok, d: d }; }); })
+        .then(function (x) {
+          if (!x.ok) throw new Error(x.d.error || 'Could not send');
+          form.classList.add('done'); msg.textContent = 'Thank you, ' + f.name.value.trim().split(' ')[0] + ' — we have your details and will call you back soon.';
+        })
+        .catch(function (err) { btn.disabled = false; msg.className = 'demo-form__msg err'; msg.innerHTML = ''; msg.appendChild(document.createTextNode((err.message || 'Could not send') + ' ')); var a = document.createElement('a'); a.href = 'https://wa.me/918608008608?text=' + encodeURIComponent('Hi, I\'d like a 20-minute demo of RYST Harbour for my villa.'); a.textContent = 'Message us on WhatsApp'; a.style.color = 'inherit'; msg.appendChild(a); });
+    });
   }
 
   /* ── Testimonials appear only once real quotes are added ─────────────── */
