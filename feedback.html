@@ -95,6 +95,7 @@
     <div id="formView">
       <h1>How was your stay?</h1>
       <p class="lead">We'd love to hear about your time at <span data-prop="name">RYST 109A</span> — it helps us keep improving.</p>
+      <p class="lead" style="font-size:13px;opacity:.85">We read every response and keep it with your booking; you can ask for it to be removed at any time. <a href="https://harbour.ryst.in/privacy.html#roles" data-privacy-link target="_blank" rel="noopener">Privacy notice</a></p>
 
       <form id="fbForm">
         <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
@@ -238,6 +239,10 @@ $('#copyFeedbackBtn').addEventListener('click', async () => {
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
   setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = original; }, 2000);
 });
+</script>
+<script>
+// RYST 109A's own privacy policy; other villas get the Harbour guest notice
+  if (!window.RYST_VILLA || window.RYST_VILLA === 'ryst-109a') document.querySelectorAll('[data-privacy-link]').forEach(function(a){ a.href = 'https://stay.ryst.in/privacy.html'; });
 </script>
 </body>
 </html>
