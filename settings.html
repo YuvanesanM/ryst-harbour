@@ -324,6 +324,7 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f"><span>Holiday hike (%)</span><input class="t" id="stayHolidayHike" type="number" min="0" step="1" placeholder="0"></label>
     </div>
     <label class="f"><span>Minimum guests on weekends &amp; holidays — website bookings only</span><input class="t" id="stayPeakMinGuests" type="number" min="0" step="1" placeholder="No minimum"></label>
+    <label class="f"><span>Keep guests' ID photos for (days after check-out) — the photo from online check-in is deleted automatically after this; the register entry (name, ID type, dates, signature) stays. 30 to 3650; your privacy policy says one year.</span><input class="t" id="stayIdRetentionDays" type="number" min="30" max="3650" step="1" placeholder="365"></label>
     <div class="rc-table-wrap">
       <table class="rc-table">
         <thead><tr>
@@ -1076,6 +1077,7 @@ function renderFromStay(){
   document.getElementById("stayWeekendHike").value=stay.weekendHikePercent!=null?stay.weekendHikePercent:"";
   document.getElementById("stayHolidayHike").value=stay.holidayHikePercent!=null?stay.holidayHikePercent:"";
   document.getElementById("stayPeakMinGuests").value=stay.peakMinGuests>0?stay.peakMinGuests:"";
+  document.getElementById("stayIdRetentionDays").value=stay.idRetentionDays>0?stay.idRetentionDays:"";
   document.getElementById("stayWaAvail").checked=!!stay.waAvailabilityReply;
   document.getElementById("stayIgAuto").checked=!!stay.igAutoReply;
   WA_FAQ_KEYS.forEach(k=>{ const el=document.getElementById('waFaq_'+k); if(el) el.value=(stay.waFaq&&stay.waFaq[k])||''; });
@@ -1958,6 +1960,7 @@ async function saveStay(){
   const hhVal=document.getElementById("stayHolidayHike").value;
   stay.holidayHikePercent = hhVal!=="" ? Math.max(0, parseFloat(hhVal)||0) : 0;
   stay.peakMinGuests = Math.max(0, parseInt(document.getElementById("stayPeakMinGuests").value)||0);
+  { const d = parseInt(document.getElementById("stayIdRetentionDays").value)||0; stay.idRetentionDays = d ? Math.min(3650, Math.max(30, d)) : 0; }
   stay.waAvailabilityReply = document.getElementById("stayWaAvail").checked;
   stay.igAutoReply = document.getElementById("stayIgAuto").checked;
   stay.waFaq = {};
