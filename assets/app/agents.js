@@ -59,7 +59,7 @@
   const STATE = { running: 'Running', awaiting: 'Awaiting your review', idle: 'Idle', failed: 'Failed', paused: 'Paused' };
   const STATE_HINT = { running: 'The server is running this agent right now', awaiting: 'Drafts are waiting for your decision', idle: 'Nothing waiting — it will look again at the next run', failed: 'Its last run failed — see the details', paused: 'Paused by you — it makes no drafts' };
   const VERDICT = { pending: 'Waiting for you', agree: 'Approved', edit: 'Approved (edited)', reject: 'Rejected', resolved: 'Handled before review', expired: 'Lapsed' };
-  const EXEC = { executing: 'Sending…', sent: 'Sent', failed: 'Failed' };
+  const EXEC = { executing: 'Sending…', sent: 'Sent', failed: 'Failed', expired: 'Expired — not sent' };
   const CH = { whatsapp: 'WhatsApp', instagram: 'Instagram DM', telegram: 'Telegram', decision: 'Decision for you', report: 'Report', google: 'Google review reply' };
   const EV = {
     'draft.created': ['New draft', 'file'], 'draft.cleared': ['Handled before review', 'check'], 'draft.lapsed': ['Lapsed', 'clock'],
@@ -205,7 +205,7 @@
     (S.heads || []).forEach(h => h.team.forEach(a => E.push({ f: a, t: h.id, n: ((h.stats || {}).flows || {})[a] || 0, pill: true })));
     (S.heads || []).forEach(h => E.push({ f: h.id, t: 'chief', n: (h.stats || {}).pending || 0 }));
     E.push({ f: 'chief', t: 'you', n: P.length, pill: true });
-    OUTS.forEach(([id]) => E.push({ f: 'you', t: id, n: drafts().filter(d => destOf(d) === id && (d.status === 'agree' || d.status === 'edit') && !(d.exec && d.exec.state === 'sent')).length, gate: true }));
+    OUTS.forEach(([id]) => E.push({ f: 'you', t: id, n: drafts().filter(d => destOf(d) === id && (d.status === 'agree' || d.status === 'edit') && !(d.exec && ['sent', 'expired'].includes(d.exec.state))).length, gate: true }));
     NODES = N; EDGES = E;
   }
   const pos = n => { const c = COLS[n.col]; return { x: c.x, y: n.y, w: c.w }; };
@@ -384,9 +384,9 @@
     renderPreview(d);
   }
   // Send is offered only where the server would accept it: one-tap mode, a real channel, this exact version approved, not sent yet
-  const sendable = d => agent(d.agent).mode === 'approve' && !!d.delivery && d.approvalCurrent && (d.status === 'agree' || d.status === 'edit') && !(d.exec && ['sent', 'executing'].includes(d.exec.state));
+  const sendable = d => agent(d.agent).mode === 'approve' && !!d.delivery && d.approvalCurrent && (d.status === 'agree' || d.status === 'edit') && !(d.exec && ['sent', 'executing', 'expired'].includes(d.exec.state));
   function renderPreview(d) {
-    const p = d.proposal || {}, a = agent(d.agent), mode = a.mode || 'shadow', open = d.status === 'pending' || ((d.status === 'agree' || d.status === 'edit') && !(d.exec && ['sent', 'executing'].includes(d.exec.state)));
+    const p = d.proposal || {}, a = agent(d.agent), mode = a.mode || 'shadow', open = d.status === 'pending' || ((d.status === 'agree' || d.status === 'edit') && !(d.exec && ['sent', 'executing', 'expired'].includes(d.exec.state)));
     const canSend = sendable(d);
     const text = d.better || p.text || '';
     const tabs = `<div class="ptabs"><button type="button" data-ptab="msg" aria-pressed="${PTAB === 'msg'}">${t('Message')}</button><button type="button" data-ptab="why" aria-pressed="${PTAB === 'why'}">${t('Why & source')}</button>${p.template ? `<button type="button" data-ptab="tpl" aria-pressed="${PTAB === 'tpl'}">${t('Template version')}</button>` : ''}</div>`;
