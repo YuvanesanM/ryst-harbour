@@ -169,7 +169,7 @@
           return { no: s.no, block: block, guest: block ? otaName(s.guest) + ' booking' : (s.guest || 'Guest'), guests: s.guests || '', bedrooms: s.bedrooms || '',
             checkin: s.checkin, checkout: s.checkout, channel: block ? otaName(s.guest) : (s.channel || (s.mode === 'Razorpay' ? 'Website' : '')),
             total: total, paid: paid, stayDue: block ? 0 : Math.max(0, total - paid), food: food, due: block ? 0 : Math.max(0, total - paid) + food, checkedIn: !!ci, arrival: ci ? ci.arrivalTime : '',
-            otaGone: !!s.otaHoldGone, otaMoved: s.otaHoldMoved || null };
+            otaGone: !!s.otaHoldGone, otaMoved: s.otaHoldMoved || null, portalToken: block ? '' : (s.portalToken || '') };
         });
     }
     if (D.reg) {
@@ -349,17 +349,32 @@
   }
 
   // ── Owner: Today ──────────────────────────────────────────────────────
+  // The booking number opens it; 🔗 copies the guest's own link (their portal, or the quote to review and pay)
+  function noLink(s) {
+    if (s.block) return esc(t('From calendar sync'));
+    return can('bookings') ? '<a class="trow__no" href="' + esc(stayHref(s)) + '" title="' + esc(t('Open this booking')) + '">' + esc(s.no) + '</a>' : esc(s.no);
+  }
+  function linkBtn(s) {
+    if (s.block || !s.portalToken || !can('bookings') || typeof window.guestSiteUrl !== 'function') return '';
+    var url = window.guestSiteUrl() + '/guest.html?no=' + encodeURIComponent(s.no) + '&t=' + encodeURIComponent(s.portalToken) + (typeof window.villaLinkParam === 'function' ? window.villaLinkParam() : '');
+    return '<button type="button" class="btn btn--sm" data-copy-guest-link="' + esc(url) + '" title="' + esc(t('Copy the guest link')) + '" aria-label="' + esc(t('Copy the guest link')) + '">🔗</button>';
+  }
+  doc.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-copy-guest-link]'); if (!b) return;
+    var url = b.getAttribute('data-copy-guest-link');
+    (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () { toast2(t('Guest link copied')); }, function () { window.prompt(t('Copy the guest link'), url); });
+  });
   function todayRow(s, type) {
     var run = can('checklist') && D.cl ? runForStay(s, type) : null;
     var clLabel = run ? (run.status === 'completed' ? 'Checklist ✓' : 'Continue') : 'Checklist';
     var status = [payPill(s)];
     if (type === 'checkin' && !s.block) status.push(s.checkedIn ? '<span class="pill pill--good">' + esc(t('Checked in online')) + '</span>' : '<span class="pill">' + esc(t('Check-in form pending')) + '</span>');
     return '<div class="trow">'
-      + '<div class="trow__g"><b>' + esc(s.guest) + '</b><small>' + (s.arrival && type === 'checkin' ? esc(t('Arriving')) + ' ' + esc(time12(s.arrival)) + ' · ' : '') + esc(s.block ? t('From calendar sync') : s.no) + '</small></div>'
+      + '<div class="trow__g"><b>' + esc(s.guest) + '</b><small>' + (s.arrival && type === 'checkin' ? esc(t('Arriving')) + ' ' + esc(time12(s.arrival)) + ' · ' : '') + noLink(s) + '</small></div>'
       + '<div class="trow__n">' + guestsTxt(s) + '</div>'
       + '<div class="trow__c">' + chPill(s) + '</div>'
       + '<div class="trow__p">' + status.join(' ') + '</div>'
-      + '<div class="trow__act">'
+      + '<div class="trow__act">' + linkBtn(s)
       + (can('checklist') ? '<a class="btn btn--sm' + (run && run.status === 'completed' ? '' : ' btn--primary') + '" href="' + esc(checklistHref(type, s)) + '">' + esc(t(clLabel)) + '</a>' : '')
       + '<a class="btn btn--sm' + (s.block && can('bookings') ? ' btn--primary' : '') + '" href="' + esc(stayHref(s)) + '">' + esc(t(s.block && can('bookings') ? 'Add guest details' : s.due > 0 && can('bookings') ? 'Collect' : 'Open')) + '</a>'
       + '</div></div>';
@@ -368,11 +383,11 @@
   function stayingRow(s) {
     var left = nightsBetween(TODAY, s.checkout), dueSplit = s.due > 0 && !s.block && s.food > 0 ? '<small class="trow__due">' + esc(t('Stay')) + ' ' + inr(s.stayDue) + ' · ' + esc(t('food')) + ' ' + inr(s.food) + '</small>' : '';
     return '<div class="trow">'
-      + '<div class="trow__g"><b>' + esc(s.guest) + '</b><small>' + esc(fmtDay(s.checkin)) + ' → ' + esc(fmtDay(s.checkout)) + ' · ' + esc(left === 1 ? t('leaves tomorrow') : left + ' ' + t('nights left')) + ' · ' + esc(s.block ? t('From calendar sync') : s.no) + '</small></div>'
+      + '<div class="trow__g"><b>' + esc(s.guest) + '</b><small>' + esc(fmtDay(s.checkin)) + ' → ' + esc(fmtDay(s.checkout)) + ' · ' + esc(left === 1 ? t('leaves tomorrow') : left + ' ' + t('nights left')) + ' · ' + noLink(s) + '</small></div>'
       + '<div class="trow__n">' + guestsTxt(s) + '</div>'
       + '<div class="trow__c">' + chPill(s) + '</div>'
       + '<div class="trow__p">' + payPill(s) + dueSplit + '</div>'
-      + '<div class="trow__act"><a class="btn btn--sm' + (s.due > 0 && !s.block && can('bookings') ? ' btn--primary' : '') + '" href="' + esc(stayHref(s)) + '">' + esc(t(s.due > 0 && !s.block && can('bookings') ? 'Collect' : 'Open')) + '</a></div>'
+      + '<div class="trow__act">' + linkBtn(s) + '<a class="btn btn--sm' + (s.due > 0 && !s.block && can('bookings') ? ' btn--primary' : '') + '" href="' + esc(stayHref(s)) + '">' + esc(t(s.due > 0 && !s.block && can('bookings') ? 'Collect' : 'Open')) + '</a></div>'
       + '</div>';
   }
   function renderToday(list) {

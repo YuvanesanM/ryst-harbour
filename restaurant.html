@@ -81,6 +81,7 @@
   .field label{font-size:12px;font-weight:600;color:var(--muted)}
   .field input,.field select,.field textarea{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:13.5px;color:var(--ink);outline:none;width:100%}
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+  .pay-fixed{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);font-size:13.5px;color:var(--muted,#666)}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
   .merr{color:var(--danger);font-size:12.5px;min-height:16px}
@@ -336,14 +337,8 @@
             <div class="cart-tot"><span id="obGstLbl">GST</span><span id="obGst">₹0</span></div>
             <div class="cart-tot"><span id="obSvcLbl">Service charge</span><span id="obSvc">₹0</span></div>
             <div class="cart-tot grand"><span>Total</span><span id="obTotal">₹0</span></div>
-            <div class="field"><label>Payment mode</label>
-              <select id="obPaymentMode">
-                <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Card">Card</option>
-                <option value="Room Account">Room Account (bill later)</option>
-                <option value="">Save as open tab (settle later)</option>
-              </select>
+            <div class="field"><label>Payment</label>
+              <div class="pay-fixed">Room account (bill later) — added to the guest's room bill</div>
             </div>
             <div class="merr" id="obErr"></div>
             <button class="btn primary" id="btnSaveOrder" style="width:100%;justify-content:center">Save order</button>
@@ -1261,11 +1256,11 @@ async function refreshGuestPicker(){
     ).join('')}</optgroup>`;
   }
   sel.innerHTML = html;
-  // A new order is for the guest staying now, on their room account (pay
-  // later) — staff can still pick someone else, type a walk-in, or change how it's paid.
+  // A new order is for the guest staying now, on their room account (bill
+  // later) — staff can still pick someone else or type a walk-in. Every order goes on the room bill.
   if(!editingOrderNo && activeNo && !$('#obGuest').value.trim()){
     const opt = [...sel.options].find(o => o.dataset.no === activeNo);
-    if(opt){ sel.value = opt.value; $('#obGuest').value = opt.value; obStayNo = activeNo; $('#obPaymentMode').value = 'Room Account'; }
+    if(opt){ sel.value = opt.value; $('#obGuest').value = opt.value; obStayNo = activeNo; }
   }
 }
 $('#obDate').addEventListener('change', refreshGuestPicker);
@@ -1273,7 +1268,6 @@ $('#obGuestPick').addEventListener('change', e=>{
   if(e.target.value){
     $('#obGuest').value = e.target.value;
     obStayNo = e.target.selectedOptions[0]?.dataset.no || '';
-    if(obStayNo && !editingOrderNo) $('#obPaymentMode').value = 'Room Account'; // a guest's order goes on their room account
   } else {
     obStayNo = '';
   }
@@ -1419,7 +1413,6 @@ function resetOrderBuilder(){
   $('#obGuest').value=''; $('#obGuestPick').value=''; $('#obNote').value=''; $('#obDiscount').value='0'; $('#obErr').textContent='';
   obStayNo = '';
   $('#obDate').value = todayISO(); $('#obTime').value = '';
-  $('#obPaymentMode').value = 'Cash';
   $('#btnSaveOrder').textContent = 'Save order';
   // ready for the next order: the current guest and their room account again
   if($('#orderBuilder').classList.contains('show')) refreshGuestPicker();
@@ -1464,7 +1457,6 @@ $('#btnSaveOrder').addEventListener('click', async ()=>{
     guest: $('#obGuest').value, note: $('#obNote').value,
     date: $('#obDate').value || undefined, time: $('#obTime').value || undefined,
     discount: $('#obDiscount').value,
-    paymentMode: $('#obPaymentMode').value || undefined,
     items: cart.map(c=>({ menuItemId: c.menuItemId, qty: c.qty })),
     stayNo: obStayNo || undefined,
   };
@@ -1502,7 +1494,7 @@ function renderOrders(){
         <button class="icon-btn" data-print-order="${esc(o.no)}">Print</button>
         ${hasSourcedItems(o) ? `<button class="icon-btn" data-wa-order="${esc(o.no)}">📲 Partner Kitchen</button>` : ''}
         ${o.status==='open' ? `<button class="icon-btn" data-edit-order="${esc(o.no)}">Edit</button>` : ''}
-        ${o.status==='open' ? `<button class="icon-btn" data-settle-order="${esc(o.no)}">Settle</button>` : ''}
+        ${o.status==='open' ? `<button class="icon-btn owner-only" data-settle-order="${esc(o.no)}" title="The guest has paid their room bill, including this order">Room bill paid</button>` : ''}
         ${o.status==='settled' ? `<button class="icon-btn owner-only" data-edit-status="${esc(o.no)}">Edit status</button>` : ''}
         ${o.status!=='cancelled' ? `<button class="icon-btn del" data-cancel-order="${esc(o.no)}">Cancel</button>` : ''}
         <button class="icon-btn del owner-only" data-del-order="${esc(o.no)}">Delete</button>
@@ -1523,8 +1515,8 @@ function renderOrders(){
     if(o) openOrderForEdit(o);
   }));
   $$('[data-settle-order]').forEach(b=>b.addEventListener('click', ()=>{
-    const mode = prompt('Payment mode (Cash, UPI, Card, Room Account):', 'Cash');
-    if(mode) runCommand({ action:'settle-order', no:b.dataset.settleOrder, paymentMode:mode }, 'Order settled');
+    // food is paid with the room bill only (online payments clear it automatically)
+    if(confirm(`Mark order ${b.dataset.settleOrder} paid with the guest's room bill?`)) runCommand({ action:'settle-order', no:b.dataset.settleOrder }, 'Marked paid with the room bill');
   }));
   // Corrects a settled order's payment mode, or reopens it back to an open
   // tab (e.g. it was marked settled/Room Account by mistake and the guest
@@ -1535,12 +1527,8 @@ function renderOrders(){
     const no = b.dataset.editStatus;
     const o = DOC.orders.find(x=>x.no===no);
     if(!o) return;
-    if(confirm(`Reopen order ${no} back to an open tab?\n\nOK = reopen (removes the payment mode, counts again as outstanding)\nCancel = just correct the payment mode instead`)){
-      runCommand({ action:'edit-order-status', no, status:'open' }, 'Order reopened');
-    } else {
-      const mode = prompt('Correct payment mode (Cash, UPI, Card, Room Account):', o.paymentMode||'Cash');
-      if(mode) runCommand({ action:'edit-order-status', no, status:'settled', paymentMode:mode }, 'Payment mode updated');
-    }
+    // the only correction now: it wasn't paid after all — back on the guest's room bill
+    if(confirm(`Put order ${no} back on the guest's room bill as unpaid?`)) runCommand({ action:'edit-order-status', no, status:'open' }, 'Back on the room bill');
   }));
   $$('[data-cancel-order]').forEach(b=>b.addEventListener('click', ()=>{
     if(confirm('Cancel this order?')) runCommand({ action:'cancel-order', no:b.dataset.cancelOrder }, 'Order cancelled');
@@ -1618,7 +1606,7 @@ function printReceipt(o){
         <div><span class="r-lbl">Order No</span><b>${esc(o.no)}</b></div>
         <div class="r-right"><span class="r-lbl">Guest</span><b>${esc(o.guest||'Walk-in')}</b></div>
         <div><span class="r-lbl">Date${o.meal?' &amp; Meal':''}</span><b>${whenLabel}</b></div>
-        <div class="r-right"><span class="r-lbl">Status</span><b>${o.status==='open'?'Open Tab':esc(o.paymentMode||'')}</b></div>
+        <div class="r-right"><span class="r-lbl">Status</span><b>${o.status==='open'?'On room bill':'Paid with room bill'}</b></div>
       </div>
       <table class="r-items">
         <thead><tr><th>Item</th><th class="num">Rate</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
