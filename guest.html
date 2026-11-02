@@ -610,6 +610,18 @@
   .gp-due-qr img{width:104px;height:104px;flex:none;border-radius:8px}
   .gp-due-qr b{display:block;font-size:13.5px;color:#4a3328}
   .gp-due-qr span{display:block;font-size:12px;color:#7a5a4a;line-height:1.45;margin-top:3px}
+  .gp-due-qr{cursor:zoom-in;position:relative}
+  .gp-due-qr:focus-visible{outline:2px solid #b9572c;outline-offset:2px}
+  .gp-due-qr .qr-tap{color:#b9572c;font-weight:600;font-size:12px;margin-top:5px}
+  /* the QR full screen, for an easy scan */
+  .qr-full{position:fixed;inset:0;z-index:9999;background:rgba(20,14,10,.78);display:flex;align-items:center;justify-content:center;padding:18px;animation:qrIn .15s ease-out}
+  .qr-full__card{background:#fff;border-radius:22px;padding:20px 20px 16px;max-width:min(94vw,520px);width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .qr-full__card img{width:100%;max-width:min(86vw,440px);aspect-ratio:1;height:auto;display:block;margin:0 auto;border-radius:10px;image-rendering:pixelated}
+  .qr-full__amt{font-size:22px;font-weight:700;color:#4a3328;margin:12px 0 2px}
+  .qr-full__hint{font-size:13.5px;color:#7a5a4a;line-height:1.45;margin:0 0 12px}
+  .qr-full__x{width:100%;border:0;border-radius:12px;background:#4a3328;color:#fff;font:inherit;font-weight:600;padding:12px;cursor:pointer}
+  @keyframes qrIn{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){.qr-full{animation:none}}
 
   .gp-nearby{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:14px 0 16px;box-shadow:var(--shadow-sm);min-width:0}
   .gp-nearby-head{display:flex;align-items:center;gap:12px;padding:0 16px;text-decoration:none;color:inherit}
@@ -892,6 +904,27 @@ const PROXY_URL = 'https://data.ryst.in';
 const $ = s => document.querySelector(s);
 const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const money = n => '₹' + Math.round(Number(n)||0).toLocaleString('en-IN');
+// The payment QR full screen: big and plain for scanning. Tap outside, "Close" or Esc to dismiss.
+function showQrFull(amt){
+  if (document.getElementById('qrFull')) return;
+  const prevFocus = document.activeElement;
+  const el = document.createElement('div');
+  el.id = 'qrFull'; el.className = 'qr-full'; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label','Payment QR code');
+  el.innerHTML = `<div class="qr-full__card">
+    <img src="/assets/stay-payment-qr.png" alt="UPI QR code to pay Casa de RYST">
+    <div class="qr-full__amt">${amt ? 'Pay ' + amt : 'Scan to pay'}</div>
+    <p class="qr-full__hint">Open any UPI app and scan this code. After paying, send us the screenshot on WhatsApp so we can update your balance.</p>
+    <button type="button" class="qr-full__x" id="qrFullX">Close</button></div>`;
+  const close = () => { el.remove(); document.removeEventListener('keydown', onKey); document.body.style.overflow = prevBody; try { prevFocus && prevFocus.focus(); } catch (e) {} };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  const prevBody = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+  el.addEventListener('click', e => { if (e.target === el) close(); });
+  document.body.appendChild(el);
+  document.getElementById('qrFullX').addEventListener('click', close);
+  document.getElementById('qrFullX').focus();
+  document.addEventListener('keydown', onKey);
+}
 // Same chef's-special icon as the public food-menu.html page — one shared
 // glyph instead of guest.html's old plain "⭐" emoji.
 const chefStarSvg = '<svg class="item-star" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c.4 3 1 5.5 3 7.5S19.5 12 22 12c-3 .5-5.5 1-7.5 3S12 19.5 12 22c-.5-3-1-5.5-3-7.5S4.5 12 2 12c3-.5 5.5-1 7.5-3S12 4.5 12 2Z"/></svg>';
@@ -1248,14 +1281,19 @@ function renderHome(){
         </div>
         <div class="gp-due-pay">
           <button type="button" class="pay-btn" id="payBalanceBtn">Pay ${money(stayDue + foodDue)} →</button>
-          ${window.RYST_VILLA ? '' : `<div class="gp-due-qr">
+          ${window.RYST_VILLA ? '' : `<div class="gp-due-qr" id="gpQr" role="button" tabindex="0" aria-label="Show the payment QR code full screen" data-amt="${money(stayDue + foodDue)}">
             <img src="/assets/stay-payment-qr.png" alt="UPI QR code to pay Casa de RYST" width="104" height="104" loading="lazy">
-            <div><b>Or scan to pay</b><span>With any UPI app — enter ${money(stayDue + foodDue)}.</span><span>Then send us the payment screenshot on WhatsApp so we can update your balance.</span></div>
+            <div><b>Or scan to pay</b><span>With any UPI app — enter ${money(stayDue + foodDue)}.</span><span>Then send us the payment screenshot on WhatsApp so we can update your balance.</span><span class="qr-tap">Tap the code to enlarge it</span></div>
           </div>`}
         </div>
         <p class="pay-msg" id="payBalanceMsg" role="alert" aria-live="polite"></p>
       </div>`;
     $('#payBalanceBtn').addEventListener('click', () => payLink('total', $('#payBalanceBtn'), $('#payBalanceMsg')));
+    const qr = $('#gpQr'); if (qr) {
+      const open = () => showQrFull(qr.dataset.amt);
+      qr.addEventListener('click', open);
+      qr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    }
   } else {
     dueEl.innerHTML = '';
   }
