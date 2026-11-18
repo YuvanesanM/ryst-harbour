@@ -706,7 +706,14 @@
         <h1 style="text-align:left;margin:0">Choose a guest</h1>
         <button type="button" class="logout-link" id="adminLogoutBtn">⏻ Sign out</button>
       </div>
-      <p class="sub" style="text-align:left">Staff sign-in — pick a guest currently staying to view and act on their behalf.</p>
+      <p class="sub" style="text-align:left">Staff sign-in — pick a guest currently staying to view and act on their behalf, or open the pool-screen games to test them.</p>
+      <div class="admin-guest-list" style="margin-bottom:18px">
+        <a class="menu-item" id="adminPlayLink" href="/play.html">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7 10v4M5 12h4"/><circle cx="15.5" cy="11" r="1"/><circle cx="18" cy="13.5" r="1"/></svg></span>
+          <span class="menu-body"><span class="menu-title">Screen games</span><span class="menu-desc">Open the pool-screen games as staff, no guest needed</span></span>
+          <span class="menu-chevron" aria-hidden="true">›</span>
+        </a>
+      </div>
       <div id="adminPickerList"></div>
       <p class="err" id="adminPickerErr" role="alert" aria-live="polite"></p>
     </section>
@@ -1092,11 +1099,24 @@ function logout(){
   portalToken = ''; isStaff = false;
   localStorage.removeItem('ryst_portal_token');
   localStorage.removeItem('ryst_portal_is_staff');
+  try{ localStorage.removeItem('ryst_play_token'); }catch(e){} // signing out here signs the games page out too
   me = null; cart = {}; adminStays = [];
   showScreen('signin');
 }
 $('#logoutBtn').addEventListener('click', logout);
 $('#adminLogoutBtn').addEventListener('click', logout);
+// The games page (play.html) has its own sign-in; hand it this session so a
+// guest or staff member already signed in here isn't asked to sign in again.
+// Same-origin localStorage only — the token never goes into a URL. Staff
+// always qualify (that's how they test the screen games); a guest only while
+// their stay is on, matching the games tile's own enabled state.
+function handOffPlaySession(){
+  if(portalToken && (isStaff || (me && me.playAvailable))){
+    try{ localStorage.setItem('ryst_play_token', portalToken); }catch(e){}
+  }
+}
+$('#adminPlayLink').addEventListener('click', handOffPlaySession);
+$('#playLink').addEventListener('click', handOffPlaySession);
 
 // Mirrors bookings.html's isConvertedQuote (and the proxy's own copy of the
 // same check) — once a quote has a real invoice for the same checkin/
