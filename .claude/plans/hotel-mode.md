@@ -96,6 +96,23 @@ tape chart with room moves), housekeeping.html (phone, no guest names), proxy ro
 clashes and moves that would overbook a category); sidebar entries shown only for hotels (property.propertyType).
 Remaining in Phase 2: folios (per-room bills, split payments, GST slab per room line), night audit, Form C.
 
+### Folios, night audit, Channex (Nov 2026)
+Done: folios (proxy folio.js; /hotel/folio, /hotel/charge, /hotel/charge-void, /hotel/pay). Extras are booking item
+lines tagged {id, kind, room, gst, date, by, at}; room lines map to rooms in order. Payments use holdManualPayments, so
+staff payments wait for owner approval. Charges close once a tax invoice is issued or the guest checks out. Voids are kept
+in folioVoids; staff can void only their own charge within 15 minutes. Hotel invoices are taxed per line (gst.js
+hotelSlabs): room lines at the slab for amount ÷ nights, extras at their posted rate, `slabs` on the invoice when rates
+mix (rate null). Villas are unchanged. Night audit: /hotel/audit preview, /hotel/audit-close (night-audit.json, one close a
+day, figures and booking numbers only). No-shows get `noShow`, which stayBlocksDates treats as releasing the rooms.
+UI is on frontdesk.html (Folio, Night audit, print).
+Channex (channex.js; /channex/status|setup|settings|preview|sync|pull|webhook, /ops/channex-tick): one room type per
+category and one rate plan per meal plan (per_room); delta ARI from a stored snapshot; a full sync at most once in 24 h;
+the booking-revisions feed is saved to stays first, then acked. A cancelled revision sets `cancelled` and releases the
+rooms. Key: villa secret channexApiKey, else env CHANNEX_API_KEY; CHANNEX_ENV is staging or production. Nothing is sent
+unless an owner presses Set up / Sync now or turns Live sync on. Before going live: staging account and credentials,
+run the 14 certification tests and submit the task IDs, then production keys. MAP/AP meal_type names are unconfirmed
+(sent without meal_type). Webhook HMAC signing is not verified yet (the webhook only triggers a feed read).
+
 ### Phase 2 — Front desk and housekeeping
 - Tape chart: rooms × dates grid, drag to assign / move / extend, unassigned queue.
 - Check-in (assign rooms, ID per guest, advance), room move, early/late, check-out with folio per

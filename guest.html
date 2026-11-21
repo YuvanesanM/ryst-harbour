@@ -1958,7 +1958,7 @@ function viewQuotePdf(b){
   const subtotal = items.reduce((s,it)=> s + (Number(it.rate)||0)*(Number(it.qty)||0), 0);
   const grand = Math.max(0, subtotal - (Number(b.discount)||0));
   const rows = items.length ? items.map(it => `<tr>
-      <td>${esc(it.desc)}</td>
+      <td>${esc(it.desc)}${gi && gi.slabs && it.gstRate != null ? ` (GST ${it.gstRate}%)` : ''}</td>
       <td class="num">${it.qty}</td>
       <td class="amt">${numDoc(it.rate)}</td>
       <td class="amt">${numDoc((Number(it.rate)||0)*(Number(it.qty)||0))}</td></tr>`).join('')
@@ -1967,8 +1967,8 @@ function viewQuotePdf(b){
     <tr class="sub"><td colspan="3">SUBTOTAL</td><td class="amt">${moneyD(gi.subtotal)}</td></tr>
     ${gi.discount>0 ? `<tr><td colspan="3" style="color:#6a7a76;font-weight:500">DISCOUNT</td><td class="amt" style="color:#6a7a76">− ${moneyD(gi.discount)}</td></tr>` : ''}
     <tr><td colspan="3" style="color:#4c5c58;font-weight:500">TAXABLE VALUE</td><td class="amt" style="color:#4c5c58">${moneyD(gi.taxable)}</td></tr>
-    <tr><td colspan="3" style="color:#4c5c58;font-weight:500">CGST @ ${pct(gi.rate/2)}%</td><td class="amt" style="color:#4c5c58">${moneyD(gi.cgst)}</td></tr>
-    <tr><td colspan="3" style="color:#4c5c58;font-weight:500">SGST @ ${pct(gi.rate/2)}%</td><td class="amt" style="color:#4c5c58">${moneyD(gi.sgst)}</td></tr>
+    ${(gi.slabs || [{ rate: gi.rate, cgst: gi.cgst, sgst: gi.sgst }]).map(x => `<tr><td colspan="3" style="color:#4c5c58;font-weight:500">CGST @ ${pct(x.rate/2)}%</td><td class="amt" style="color:#4c5c58">${moneyD(x.cgst)}</td></tr>
+    <tr><td colspan="3" style="color:#4c5c58;font-weight:500">SGST @ ${pct(x.rate/2)}%</td><td class="amt" style="color:#4c5c58">${moneyD(x.sgst)}</td></tr>`).join('')}
     <tr class="grand"><td colspan="3">TOTAL (INCL. GST)</td><td class="amt">${moneyD(gi.total)}</td></tr>` : `
     <tr class="sub"><td colspan="3">SUBTOTAL</td><td class="amt">₹${numDoc(subtotal)}</td></tr>
     ${b.discount>0 ? `<tr><td colspan="3" style="color:#6a7a76;font-weight:500">DISCOUNT</td><td class="amt" style="color:#6a7a76">− ₹${numDoc(b.discount)}</td></tr>` : ''}
@@ -2050,7 +2050,7 @@ function viewQuotePdf(b){
 
       <div class="d-decl">
         <div class="pb-h">DECLARATION</div>
-        <div class="decl">${esc(gi ? `Prices include GST. The taxable value is the total less CGST @ ${pct(gi.rate/2)}% and SGST @ ${pct(gi.rate/2)}%. SAC ${gi.sac} — accommodation services. Place of supply: ${gi.placeOfSupply ? gi.placeOfSupply.name : ''}. Tax payable on reverse charge: No. Original for recipient.` : (biz.declaration||''))}</div>
+        <div class="decl">${esc(gi ? `Prices include GST. The taxable value is the total less ${gi.slabs ? "CGST and SGST at each line's rate (shown on the line)" : `CGST @ ${pct(gi.rate/2)}% and SGST @ ${pct(gi.rate/2)}%`}. SAC ${gi.sac} — accommodation services. Place of supply: ${gi.placeOfSupply ? gi.placeOfSupply.name : ''}. Tax payable on reverse charge: No. Original for recipient.` : (biz.declaration||''))}</div>
       </div>
 
       <div class="d-sign-row">

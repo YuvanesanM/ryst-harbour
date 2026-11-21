@@ -788,6 +788,7 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f" style="margin-bottom:8px"><span>Razorpay Key ID</span><input class="t" id="connRzpId" autocomplete="off" spellcheck="false" autocapitalize="none" placeholder="rzp_live_…"></label>
       <label class="f" style="margin-bottom:8px"><span>Razorpay Key Secret</span><input class="t" id="connRzpSecret" type="password" autocomplete="off" spellcheck="false" placeholder="Razorpay → Account &amp; Settings → API keys"></label>
       <label class="f" style="margin-bottom:8px"><span>Razorpay webhook secret</span><input class="t" id="connRzpWh" type="password" autocomplete="off" spellcheck="false" placeholder="The secret you type when adding the webhook below"></label>
+      <label class="f" id="connCxRow" style="margin-bottom:8px" hidden><span>Channex API key <small id="connCxState" style="font-weight:500;color:#7a8a86"></small></span><input class="t" id="connChannex" type="password" autocomplete="off" spellcheck="false" placeholder="Only if the hotel has its own Channex account"></label>
       <p class="wa-hint" style="margin:0 0 10px">Leave a box empty to keep what's saved.</p>
       <div class="rc-foot" style="margin-top:0;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <button class="btn primary" id="connSave">Save connections</button>
@@ -1477,6 +1478,10 @@ if(location.hash==='#ota'){ setTimeout(()=>{ switchTab('ota'); document.getEleme
 
 // ── Connections (this villa's own Interakt + Razorpay) ──
 function connRender(d){
+  // hotels: the channel manager's key (Harbour's partner account is used when the hotel has none)
+  const cx=d.channex||{}, isH=(()=>{ try{ return (JSON.parse(localStorage.getItem('ryst_property')||'{}').propertyType)==='hotel'; }catch(e){ return false; } })();
+  document.getElementById('connCxRow').hidden=!isH;
+  document.getElementById('connCxState').textContent = cx.own ? `· own key ${cx.keyHint} saved` : cx.connected ? '· using Harbour’s Channex account' : '· not connected';
   if(!d || !d.interakt || !d.razorpay || !d.webhooks) return;
   const st=document.getElementById('connStatus');
   const row=(label,ok,text)=>`<div class="sync-result${ok?'':' err'}"><span>${esc(label)}</span><span>${esc(text)}</span></div>`;
@@ -1532,13 +1537,13 @@ async function connPut(body, btn, busy){
     if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
     const d=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(d.error||('Error '+res.status));
-    ['connInterakt','connRzpId','connRzpSecret','connRzpWh'].forEach(id=>document.getElementById(id).value='');
+    ['connInterakt','connRzpId','connRzpSecret','connRzpWh','connChannex'].forEach(id=>document.getElementById(id).value='');
     connRender(d); connRenderMore(d); toast('Saved');
   }catch(e){ toast(e.message); }
   finally{ btn.disabled=false; btn.textContent=orig; }
 }
 document.getElementById('connSave').addEventListener('click', e=>{
-  const body={}, map={connInterakt:'interaktApiKey',connRzpId:'razorpayKeyId',connRzpSecret:'razorpayKeySecret',connRzpWh:'razorpayWebhookSecret'};
+  const body={}, map={connInterakt:'interaktApiKey',connRzpId:'razorpayKeyId',connRzpSecret:'razorpayKeySecret',connRzpWh:'razorpayWebhookSecret',connChannex:'channexApiKey'};
   Object.keys(map).forEach(id=>{ const v=document.getElementById(id).value.trim(); if(v) body[map[id]]=v; });
   if(!Object.keys(body).length){ toast('Paste at least one key first'); return; }
   connPut(body, e.currentTarget, 'Saving…');

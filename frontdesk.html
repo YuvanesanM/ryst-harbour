@@ -109,6 +109,42 @@
   #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;transition:.25s;z-index:60;pointer-events:none}
   #toast.show{opacity:1;transform:translateX(-50%)} #toast.err{background:var(--danger)}
   .sk{background:linear-gradient(90deg,#eceee9,#f6f7f4,#eceee9);background-size:200% 100%;animation:sk 1.2s infinite;border-radius:14px} @keyframes sk{to{background-position:-200% 0}}
+  /* folio + night audit */
+  .sheet .box.wide{width:min(760px,100%);max-height:92vh;overflow:auto}
+  .fo-hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px} .fo-hd .grow{flex:1;min-width:0}
+  .fo-tot{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 14px}
+  .fo-tot div{background:var(--panel2);border-radius:10px;padding:9px 11px;min-width:0} .fo-tot span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  .fo-tot b{font-size:18px;font-variant-numeric:tabular-nums} .fo-tot .due b{color:var(--danger)} .fo-tot .wait b{color:var(--warn)}
+  .fo-sec{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .fo-sec h4{display:flex;align-items:center;gap:8px;font-size:13px;padding:9px 12px;background:var(--panel2)} .fo-sec h4 small{font-weight:500;color:var(--muted)} .fo-sec h4 b{margin-left:auto;font-variant-numeric:tabular-nums}
+  .fo-ln{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:13px} .fo-ln:first-of-type{border-top:0}
+  .fo-ln .grow{flex:1;min-width:0} .fo-ln .mt{font-size:11.5px;color:var(--muted2)} .fo-ln .am{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .fo-ln .x{border:0;background:none;color:var(--muted2);font-size:18px;line-height:1;padding:2px 6px;border-radius:6px} .fo-ln .x:hover{background:var(--danger-soft);color:var(--danger)}
+  .pill{font-size:10.5px;font-weight:700;letter-spacing:.3px;padding:2px 7px;border-radius:6px;white-space:nowrap;background:var(--accent-soft);color:var(--accent-d)} .pill.wait{background:var(--warn-soft);color:var(--warn)} .pill.no{background:var(--danger-soft);color:var(--danger)}
+  .fo-forms{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .fo-form{border:1px solid var(--line);border-radius:12px;padding:12px} .fo-form h5{font-size:12.5px;margin-bottom:8px}
+  .fo-form .row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px} .fo-form .row.one{grid-template-columns:1fr}
+  .fo-form label{display:block;font-size:11px;font-weight:600;color:var(--muted)} .fo-form input,.fo-form select{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px;font-size:13px;margin-top:2px;background:var(--panel);color:var(--ink);min-width:0}
+  .fo-form button{width:100%;border:1.5px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:9px;font-weight:600;font-size:13px;margin-top:4px}
+  .fo-form .hint{font-size:11.5px;color:var(--muted);margin-top:6px}
+  .fo-acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap} .fo-acts>*{flex:1;text-align:center;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:10px;font-weight:600;font-size:13.5px;text-decoration:none;color:var(--ink)}
+  .na-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+  .na-sec{margin-bottom:12px} .na-sec h4{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:flex;gap:6px;align-items:center}
+  .na-sec h4 em{font-style:normal;background:var(--panel2);border-radius:6px;padding:1px 7px;color:var(--ink)}
+  table.na{width:100%;border-collapse:collapse;font-size:13px} table.na td,table.na th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums} table.na th{font-size:11px;color:var(--muted);font-weight:600}
+  table.na td.n,table.na th.n{text-align:right}
+  .na-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px} .na-row .grow{flex:1;min-width:0} .na-row .mt{font-size:11.5px;color:var(--muted2)}
+  .na-row input{width:18px;height:18px;accent-color:var(--danger)}
+  .na-closed{background:var(--accent-soft);color:var(--accent-d);border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600;margin-bottom:12px}
+  .na-close{width:100%;border:0;background:var(--ink);color:#fff;border-radius:10px;padding:12px;font-weight:700;font-size:14px;margin-top:4px} .na-close:disabled{opacity:.5}
+  @media (max-width:640px){ .fo-tot,.na-grid{grid-template-columns:repeat(2,1fr)} .fo-forms{grid-template-columns:1fr} }
+  .cx-st{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:12px} .cx-st i{width:9px;height:9px;border-radius:50%;background:var(--muted2)} .cx-st.on i{background:var(--good)} .cx-st.off{color:var(--muted)}
+  .cx-btns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0} .cx-btns button{border:1.5px solid var(--line);background:var(--panel);border-radius:9px;padding:9px 12px;font-weight:600;font-size:13px;color:var(--ink)} .cx-btns button.pri{background:var(--accent);border-color:var(--accent);color:#fff} .cx-btns button:disabled{opacity:.5;cursor:default}
+  .cx-sw{display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px} .cx-sw .grow{flex:1} .cx-sw input{width:20px;height:20px;accent-color:var(--accent)}
+  .cx-url{font:500 12px ui-monospace,monospace;background:var(--panel2);border-radius:8px;padding:8px;word-break:break-all;user-select:all}
+  .ok-t{color:var(--good);font-weight:600} .no-t{color:var(--danger);font-weight:600}
+  .print-only{display:none}
+  @media print{ .sheet .box.wide{width:100%} body>*:not(.sheet){display:none!important} .sheet{position:absolute;left:0;top:0;right:0;background:none;display:block} .print-only{display:block;font-size:12px;color:var(--muted);margin-bottom:10px} .sheet .box{box-shadow:none;width:100%;max-height:none;overflow:visible;padding:0} .fo-forms,.fo-acts,.fo-ln .x,.noprint{display:none!important} }
   @media (max-width:980px){ .kpis{grid-template-columns:repeat(2,1fr)} .kpi.occ{grid-column:1/-1} .kpis2{grid-template-columns:repeat(2,1fr)} .grid2,.lists{grid-template-columns:1fr} }
 </style>
 </head>
@@ -123,6 +159,8 @@
       <button type="button" id="dNext" aria-label="Next day">›</button>
       <button type="button" id="dToday">Today</button>
     </div>
+    <button type="button" class="tbtn" id="btnCx">Channels</button>
+    <button type="button" class="tbtn" id="btnAudit">Night audit</button>
     <a class="tbtn primary" href="stay.html?new=invoice">+ New booking</a>
   </header>
 
@@ -227,12 +265,13 @@ function bkRow(s, kind){
   if (kind === 'day') btn = s.checkedOutAt ? '<span class="ok">Done</span>' : s.checkedInAt ? `<button type="button" data-act="checkout" data-no="${esc(s.no)}">Check out</button>` : `<button type="button" data-act="checkin" data-no="${esc(s.no)}">Check in</button>`;
   const when = s.dayUse ? `${s.dayUse.start} · ${s.dayUse.hours} h` : `${dLbl(s.checkin)} → ${dLbl(s.checkout)}`;
   return `<div class="bk"><div class="grow"><a class="nm" href="stay.html?open=${encodeURIComponent(s.no)}">${esc(s.guest || s.no)}</a><div class="mt">${esc(roomsTxt)} · ${when}${s.channel ? ' · ' + esc(s.channel) : ''}${s.checkinDone ? ' · online check-in done' : ''}</div></div>
-    ${due > 0 ? `<span class="due">${inr(due)} due</span>` : '<span class="ok">Paid</span>'}${btn}</div>`;
+    ${due > 0 ? `<span class="due">${inr(due)} due</span>` : '<span class="ok">Paid</span>'}<button type="button" class="ghost" data-folio="${esc(s.no)}">Folio</button>${btn}</div>`;
 }
 function renderLists(){
   const put = (id, list, kind, none) => { $(id).innerHTML = list.length ? list.map(s => bkRow(s, kind)).join('') : `<p class="empty">${none}</p>`; };
   put('#lArr', D.arrivals, 'arr', 'No arrivals.'); put('#lDep', D.departures, 'dep', 'No departures.'); put('#lIn', D.inHouse, 'in', 'Nobody staying over.'); put('#lDay', D.dayUse, 'day', 'No day-use bookings.');
   document.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => act(b.dataset.act, b.dataset.no, b)));
+  document.querySelectorAll('.lists [data-folio]').forEach(b => b.addEventListener('click', () => folioSheet(b.dataset.folio)));
 }
 async function act(kind, no, btn){
   if (kind === 'checkout') { const s = allStays().find(x => x.no === no) || {}, due = Math.max(0, (s.total || 0) - (s.paid || 0)); if (due > 0 && !confirm(`${s.guest || no} still owes ${inr(due)}. Check out anyway?`)) return; }
@@ -247,11 +286,138 @@ function roomSheet(r){
   if (leaving && !leaving.checkedOutAt) acts.push(`<button class="pri" data-a="checkout" data-n="${esc(leaving.no)}">Check out ${esc(leaving.guest)}</button>`);
   if (s && !s.checkedInAt && (r.state === 'arriving' || r.state === 'dayuse')) acts.push(`<button class="pri" data-a="checkin" data-n="${esc(s.no)}">Check in ${esc(s.guest)}</button>`);
   if (s && r.state === 'departing' && !s.checkedOutAt) acts.push(`<button class="pri" data-a="checkout" data-n="${esc(s.no)}">Check out ${esc(s.guest)}</button>`);
-  if (s) acts.push(`<a href="stay.html?open=${encodeURIComponent(s.no)}">Open booking</a>`);
+  if (s) acts.push(`<button data-fo="${esc(s.no)}">Folio · charges and payments</button>`, `<a href="stay.html?open=${encodeURIComponent(s.no)}">Open booking</a>`);
   const el = sheet(`<h3>Room ${esc(r.no)} · ${esc(catName(r.cat))}</h3><p>${STATE[r.state] || 'Vacant'}${s ? ' · ' + esc(s.guest) : ''} · Housekeeping: ${HKN[r.hk]}</p>
     <div class="acts">${acts.join('')}<div class="hk3">${['clean', 'dirty', 'inspected'].map(h => `<button data-hk="${h}"${h === r.hk ? ' disabled' : ''}>${HKN[h]}</button>`).join('')}</div><button data-close>Close</button></div>`);
   el.querySelectorAll('[data-a]').forEach(b => b.addEventListener('click', () => { el.remove(); act(b.dataset.a, b.dataset.n); }));
+  el.querySelectorAll('[data-fo]').forEach(b => b.addEventListener('click', () => { el.remove(); folioSheet(b.dataset.fo); }));
   el.querySelectorAll('[data-hk]').forEach(b => b.addEventListener('click', async () => { try { await api('/hotel/room-status', { room: r.no, hk: b.dataset.hk }); el.remove(); toast(`Room ${r.no}: ${HKN[b.dataset.hk]}`); load(); } catch (e) { toast(e.message, true); } }));
+}
+
+// ── Folio: the bill room by room, extras posted at the desk, payments (staff ones wait for the owner) ──
+const METHODS = ['Cash', 'UPI', 'Card', 'Bank transfer'];
+async function folioSheet(no){
+  let F; try { F = await api('/hotel/folio?no=' + encodeURIComponent(no)); } catch (e) { toast(e.message, true); return; }
+  const el = sheet('<div class="fo-body"></div>'); el.querySelector('.box').classList.add('wide');
+  const draw = () => {
+    const recent = l => F.canApprove || (Date.now() - (l.at || 0) < 15 * 60 * 1000);
+    const line = l => `<div class="fo-ln"><div class="grow"><div>${esc(l.desc)}${l.qty > 1 ? ` <span class="mt">× ${l.qty}</span>` : ''}</div><div class="mt">${l.kind === 'room' ? 'Room charge' : esc(F.kinds[l.kind] || l.kind)}${l.date ? ' · ' + dLbl(l.date) : ''}${l.by ? ' · ' + esc(l.by) : ''}${l.gstRate != null ? ' · GST ' + l.gstRate + '%' : ''}</div></div>
+      <span class="am">${inr(l.amount)}</span>${l.kind !== 'room' && l.id && !F.invoiced && recent(l) ? `<button type="button" class="x" data-void="${esc(l.id)}" aria-label="Remove ${esc(l.desc)}" title="Remove">×</button>` : ''}</div>`;
+    const secs = F.byRoom.map(r => ({ title: r.roomNo ? 'Room ' + r.roomNo : 'Room (no number yet)', sub: catName(r.cat), lines: F.lines.filter(l => r.roomNo && l.room === r.roomNo), total: r.charges, paid: r.paid }));
+    const shared = F.lines.filter(l => !l.room); if (shared.length) secs.push({ title: 'Booking', sub: 'not tied to one room', lines: shared, total: F.shared });
+    const pays = F.payments.map(p => `<div class="fo-ln"><div class="grow"><div>${esc(p.method)}${p.room ? ' · Room ' + esc(p.room) : ''}</div><div class="mt">${p.date ? dLbl(p.date) : ''}${p.by ? ' · ' + esc(p.by) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div>
+      ${p.status === 'pending' ? '<span class="pill wait">Awaiting approval</span>' : p.status === 'rejected' ? '<span class="pill no">Rejected</span>' : '<span class="pill">Received</span>'}<span class="am">${inr(p.amount)}</span></div>`).join('');
+    const roomOpts = `<option value="">Whole booking</option>` + F.byRoom.filter(r => r.roomNo).map(r => `<option value="${esc(r.roomNo)}">Room ${esc(r.roomNo)}</option>`).join('');
+    const closed = F.invoiced ? 'The tax invoice is issued, so the bill is closed. Cancel the invoice on the booking to change charges.' : F.checkedOutAt ? 'Checked out: charges are closed. Payments can still be recorded.' : '';
+    el.querySelector('.fo-body').innerHTML = `
+      <div class="print-only"><b style="font-size:15px;color:var(--ink)">${esc((document.querySelector('[data-prop="name"]') || {}).textContent || '')}</b><br>Guest folio · printed ${new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })} · not a tax invoice</div>
+      <div class="fo-hd"><div class="grow"><h3>Folio · ${esc(F.guest || F.no)}</h3><p style="margin:0">${esc(F.no)} · ${dLbl(F.checkin)} → ${dLbl(F.checkout)} · ${F.rooms.length} room${F.rooms.length === 1 ? '' : 's'}</p></div><button type="button" class="tbtn noprint" data-close>Close</button></div>
+      <div class="fo-tot"><div><span>Bill</span><b>${inr(F.total)}</b></div><div><span>Received</span><b>${inr(F.paid)}</b></div><div class="wait"><span>Awaiting approval</span><b>${inr(F.pending)}</b></div><div class="${F.balance > 0 ? 'due' : ''}"><span>Balance</span><b>${inr(Math.max(0, F.balance))}</b></div></div>
+      ${secs.map(x => `<div class="fo-sec"><h4>${esc(x.title)} <small>${esc(x.sub)}</small><b>${inr(x.total)}</b></h4>${x.lines.length ? x.lines.map(line).join('') : '<div class="fo-ln"><span class="mt">No charges on this room yet</span></div>'}${x.paid ? `<div class="fo-ln"><div class="grow mt">Paid against this room</div><span class="am">− ${inr(x.paid)}</span></div>` : ''}</div>`).join('')}
+      ${F.discount ? `<div class="fo-sec"><div class="fo-ln"><div class="grow">Discount</div><span class="am">− ${inr(F.discount)}</span></div></div>` : ''}
+      <div class="fo-sec"><h4>Payments <small>${F.pending ? 'staff payments count once the owner approves them' : ''}</small><b>${inr(F.paid)}</b></h4>${pays || '<div class="fo-ln"><span class="mt">No payments recorded here yet</span></div>'}</div>
+      ${closed ? `<p class="noprint" style="margin:6px 0 0">${closed}</p>` : ''}
+      <div class="fo-forms">
+        ${F.invoiced || F.checkedOutAt ? '' : `<form class="fo-form" id="foChg"><h5>Add a charge</h5>
+          <div class="row"><label>For<select name="kind">${Object.keys(F.kinds).map(k => `<option value="${k}">${esc(F.kinds[k])}</option>`).join('')}</select></label><label>Room<select name="room">${roomOpts}</select></label></div>
+          <div class="row one"><label>Description (optional)<input name="desc" maxlength="80" placeholder="e.g. 2 soft drinks"></label></div>
+          <div class="row"><label>Amount each, GST incl.<input name="amount" type="number" min="1" step="0.01" inputmode="decimal" required></label><label>Qty<input name="qty" type="number" min="1" max="99" value="1"></label></div>
+          <div class="row one"><label>GST rate<select name="gst"><option value="18">18%</option><option value="5">5%</option><option value="12">12%</option><option value="0">Nil</option></select></label></div>
+          <button type="submit">Add to bill</button></form>`}
+        <form class="fo-form" id="foPay"><h5>Record a payment</h5>
+          <div class="row"><label>Amount<input name="amount" type="number" min="1" step="1" inputmode="numeric" required value="${F.balance - F.pending > 0 ? Math.round(F.balance - F.pending) : ''}"></label><label>How<select name="method">${METHODS.map(m => `<option>${m}</option>`).join('')}</select></label></div>
+          <div class="row one"><label>Against<select name="room">${roomOpts}</select></label></div>
+          <button type="submit">Record payment</button>
+          <p class="hint">${F.canApprove ? 'Counted as received straight away.' : 'It waits for the owner’s approval before it counts as received.'}</p></form>
+      </div>
+      <div class="fo-acts noprint"><button type="button" id="foPrint">Print folio</button><a href="stay.html?open=${encodeURIComponent(F.no)}">Open booking</a></div>`;
+    const reload = async msg => { try { F = await api('/hotel/folio?no=' + encodeURIComponent(no)); draw(); if (msg) toast(msg); load(); } catch (e) { toast(e.message, true); } };
+    const chg = el.querySelector('#foChg');
+    if (chg) chg.addEventListener('submit', async e => { e.preventDefault(); const f = new FormData(chg), b = chg.querySelector('button'); b.disabled = true;
+      try { await api('/hotel/charge', { no, kind: f.get('kind'), room: f.get('room'), desc: f.get('desc'), amount: f.get('amount'), qty: f.get('qty'), gst: f.get('gst') }); reload('Charge added'); } catch (err) { toast(err.message, true); b.disabled = false; } });
+    const pay = el.querySelector('#foPay');
+    pay.addEventListener('submit', async e => { e.preventDefault(); const f = new FormData(pay), b = pay.querySelector('button'); b.disabled = true;
+      try { const r = await api('/hotel/pay', { no, amount: f.get('amount'), method: f.get('method'), room: f.get('room') }); reload(r.status === 'pending' ? 'Payment recorded — waiting for the owner’s approval' : 'Payment received'); } catch (err) { toast(err.message, true); b.disabled = false; } });
+    el.querySelectorAll('[data-void]').forEach(b => b.addEventListener('click', async () => { if (!confirm('Remove this charge from the bill?')) return;
+      try { await api('/hotel/charge-void', { no, id: b.dataset.void }); reload('Charge removed'); } catch (err) { toast(err.message, true); } }));
+    el.querySelector('#foPrint').addEventListener('click', () => window.print());
+  };
+  draw();
+}
+
+// ── Channel manager (Channex): status, set up, send changes, pull OTA bookings ──
+$('#btnCx').addEventListener('click', () => cxSheet());
+async function cxSheet(){
+  let C; try { C = await api('/channex/status'); } catch (e) { toast(e.message, true); return; }
+  const el = sheet('<div class="cx-body"></div>'); el.querySelector('.box').classList.add('wide');
+  const when = t => t ? new Date(t).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '—';
+  const draw = () => {
+    const m = C.mapping, mapped = !!m.propertyId, own = C.canChange;
+    const rows = C.categories.map(c => { const rt = m.roomTypes.find(x => x.cat === c.id); return `<tr><td>${esc(c.name)} <span class="mt" style="color:var(--muted2)">${c.rooms} room${c.rooms === 1 ? '' : 's'}</span></td><td>${rt ? '<span class="ok-t">Linked</span>' : '<span class="no-t">Not linked</span>'}</td><td>${c.plans.map(p => m.ratePlans.some(x => x.cat === c.id && x.plan === p) ? `<span class="pill">${p}</span>` : `<span class="pill no">${p}</span>`).join(' ')}</td></tr>`; }).join('');
+    const missing = C.categories.some(c => !m.roomTypes.some(x => x.cat === c.id) || c.plans.some(p => !m.ratePlans.some(x => x.cat === c.id && x.plan === p)));
+    const lp = C.lastPush, pl = C.lastPull, fullOk = !C.lastFullAt || Date.now() - C.lastFullAt > 24 * 3600e3;
+    el.querySelector('.cx-body').innerHTML = `
+      <div class="fo-hd"><div class="grow"><h3>Channel manager · Channex</h3><p style="margin:0">Rooms and rates go to your OTAs through Channex; their bookings come back here.</p></div><button type="button" class="tbtn" data-close>Close</button></div>
+      <div class="cx-st ${C.configured ? 'on' : 'off'}"><i></i>${C.configured ? `Connected${C.ownKey ? ' with the hotel’s own Channex account' : ' through Harbour'} · ${C.env === 'production' ? 'live' : 'staging (test)'}` : 'Not connected. An admin adds the Channex key in Settings → Connections, or Harbour enables its partner account for you.'}</div>
+      ${C.configured ? `
+      <div class="na-sec"><h4>Room types and rate plans</h4><table class="na"><tr><th>Category</th><th>Room type</th><th>Meal plans</th></tr>${rows}</table>
+        ${missing && own ? `<div class="cx-btns"><button type="button" class="pri" id="cxSetup">${mapped ? 'Add the missing ones at Channex' : 'Set up at Channex'}</button></div><p class="empty">${mapped ? 'Creates the missing room types and rate plans' : 'Creates the property, a room type per category and a rate plan per meal plan'} in your Channex account. Then connect each OTA to them inside Channex.</p>` : ''}</div>
+      ${mapped ? `
+      <label class="cx-sw"><div class="grow"><b>Live sync</b><br><span class="mt" style="color:var(--muted)">Send changes automatically when bookings change, and read OTA bookings on a schedule (at once when the webhook below is set in Channex).</span></div><input type="checkbox" id="cxLive" ${C.live ? 'checked' : ''} ${own ? '' : 'disabled'} aria-label="Live sync"></label>
+      <div class="na-sec"><h4>Updates</h4>
+        <p style="margin:0 0 6px;font-size:13px;color:var(--ink)">${C.unsent && (C.unsent.availability || C.unsent.rates) ? 'Not sent yet: ' + [C.unsent.availability ? `availability on ${C.unsent.availability} day${C.unsent.availability === 1 ? '' : 's'}` : '', C.unsent.rates ? `rates on ${C.unsent.rates} day${C.unsent.rates === 1 ? '' : 's'}` : ''].filter(Boolean).join(' and ') + '.' : 'Channex has everything Harbour knows.'}</p>
+        ${lp ? `<p class="empty">Last sent ${when(lp.at)}: ${lp.ok ? `<span class="ok-t">accepted by Channex</span> (${lp.availability} availability, ${lp.restrictions} rate ranges${lp.full ? ', full' : ''})` : `<span class="no-t">failed: ${esc(lp.error)}</span>`}${lp.warnings && lp.warnings.length ? ` · ${lp.warnings.length} warning${lp.warnings.length === 1 ? '' : 's'}` : ''}. Channex then applies it to each channel.</p>` : '<p class="empty">Nothing sent yet.</p>'}
+        ${own ? `<div class="cx-btns"><button type="button" id="cxPrev">Preview</button><button type="button" class="pri" id="cxSend">Send changes now</button><button type="button" id="cxFull" ${fullOk ? '' : 'disabled title="Once a day"'}>Full sync</button></div>` : ''}
+        <div id="cxOut"></div></div>
+      <div class="na-sec"><h4>OTA bookings</h4>
+        <p class="empty">${pl ? `Last read ${when(pl.at)}: ${pl.error ? `<span class="no-t">${esc(pl.error)}</span>` : `${pl.imported || 0} new or changed`}` : 'Not read yet.'}</p>
+        <div class="cx-btns"><button type="button" id="cxPull">Get bookings now</button></div></div>
+      ${own ? `<div class="na-sec"><h4>Webhook for Channex</h4><p class="empty">Paste this in Channex → Webhooks (event: bookings) so new OTA bookings arrive within seconds.</p><div class="cx-url">${esc(C.webhookUrl)}</div></div>` : ''}` : ''}
+      ${C.log.length ? `<div class="na-sec"><h4>Activity</h4>${C.log.map(l => `<div class="na-row"><div class="grow">${esc(l.what)}<div class="mt">${when(l.at)}${l.by ? ' · ' + esc(String(l.by).split('@')[0]) : ''}</div></div></div>`).join('')}</div>` : ''}` : ''}`;
+    const reload = async msg => { try { C = await api('/channex/status'); draw(); if (msg) toast(msg); } catch (e) { toast(e.message, true); } };
+    const run = (id, fn) => { const b = el.querySelector(id); if (b) b.addEventListener('click', async () => { b.disabled = true; try { await fn(b); } catch (e) { toast(e.message, true); b.disabled = false; } }); };
+    run('#cxSetup', async () => { const r = await api('/channex/setup', {}); reload(`Linked ${r.mapping.roomTypes.length} room types and ${r.mapping.ratePlans.length} rate plans`); });
+    run('#cxPrev', async b => { const r = await api('/channex/preview'); el.querySelector('#cxOut').innerHTML = `<p class="empty">Would send ${r.availability} availability range${r.availability === 1 ? '' : 's'} and ${r.restrictions} rate range${r.restrictions === 1 ? '' : 's'}. Nothing was sent.</p>`; b.disabled = false; });
+    run('#cxSend', async () => { const r = await api('/channex/sync', {}); reload(r.sent ? 'Sent — Channex accepted the update' : 'Nothing to send'); });
+    run('#cxFull', async () => { if (!confirm('Send every date for the next 500 days? Channex allows this once a day.')) throw new Error('Not sent'); const r = await api('/channex/sync', { full: true }); reload(r.sent ? 'Full sync accepted by Channex' : 'Nothing to send'); });
+    run('#cxPull', async () => { const r = await api('/channex/pull', {}); reload(r.imported ? `${r.imported} booking${r.imported === 1 ? '' : 's'} from Channex` : 'No new OTA bookings'); if (r.imported) load(); });
+    const live = el.querySelector('#cxLive');
+    if (live) live.addEventListener('change', async () => { try { const r = await fetch(PROXY_URL + '/channex/settings', { method: 'PUT', headers: { 'X-Token': TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ live: live.checked }) }); const j = await r.json(); if (!r.ok) throw new Error(j.error); reload(j.live ? 'Live sync on' : 'Live sync off'); } catch (e) { live.checked = !live.checked; toast(e.message, true); } });
+  };
+  draw();
+}
+
+// ── Night audit: check the day, mark no-shows, close it (once) ──
+$('#btnAudit').addEventListener('click', () => auditSheet(date > todayIST() ? todayIST() : date));
+async function auditSheet(day){
+  let A; try { A = await api('/hotel/audit?date=' + day); } catch (e) { toast(e.message, true); return; }
+  const el = sheet('<div class="na-body"></div>'); el.querySelector('.box').classList.add('wide');
+  const k = A.kpis, people = (list, none, mark) => list.length ? list.map(x => `<label class="na-row">${mark ? `<input type="checkbox" value="${esc(x.no)}" data-ns>` : ''}<div class="grow"><div>${esc(x.guest || x.no)}</div><div class="mt">${esc(x.no)} · ${x.rooms.length ? 'Room ' + x.rooms.map(esc).join(', ') : x.roomCount + ' room' + (x.roomCount === 1 ? '' : 's') + ', no number yet'} · ${dLbl(x.checkin)} → ${dLbl(x.checkout)}</div></div>${x.balance > 0 ? `<span class="due" style="color:var(--danger);font-weight:700;font-size:12px">${inr(x.balance)} due</span>` : '<span class="pill">Paid</span>'}</label>`).join('') : `<p class="empty">${none}</p>`;
+  const methods = Object.keys(A.payments);
+  el.querySelector('.na-body').innerHTML = `
+    <div class="fo-hd"><div class="grow"><h3>Night audit · ${dLbl(A.date, { weekday: 'short', day: 'numeric', month: 'short' })}</h3><p style="margin:0">Check the day, mark guests who never arrived, then close it. A day closes once.</p></div>
+      <input type="date" id="naDate" max="${A.today}" value="${A.date}" aria-label="Day" style="border:1.5px solid var(--line);border-radius:8px;padding:6px;font:600 13px Outfit,sans-serif"><button type="button" class="tbtn" data-close>Close</button></div>
+    ${A.closed ? `<div class="na-closed">Closed by ${esc(String(A.closed.by || '').split('@')[0])} on ${new Date(A.closed.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}.</div>` : ''}
+    <div class="na-grid"><div class="kpi"><div class="l">Occupancy</div><div class="v">${k.occupancy}%</div><div class="s">${k.sold} / ${k.sellable} rooms</div></div><div class="kpi"><div class="l">Room revenue</div><div class="v">${inr(k.revenueToday)}</div><div class="s">ADR ${inr(k.adr)}</div></div>
+      <div class="kpi"><div class="l">Collected</div><div class="v">${inr(A.collected)}</div><div class="s">${A.awaitingApproval ? inr(A.awaitingApproval) + ' awaiting approval' : 'all approved'}</div></div><div class="kpi"><div class="l">Balance in house</div><div class="v">${inr(A.balanceDue)}</div><div class="s">${(n => n + ' booking' + (n === 1 ? '' : 's') + ' owing')(A.balances.length + A.notCheckedOut.filter(x => x.balance > 0).length)}</div></div></div>
+    <div class="na-sec"><h4>Payments by method</h4>${methods.length ? `<table class="na"><tr><th>Method</th><th class="n">Received</th><th class="n">Awaiting approval</th></tr>${methods.map(m => `<tr><td>${esc(m)}</td><td class="n">${inr(A.payments[m].approved)}</td><td class="n">${A.payments[m].pending ? inr(A.payments[m].pending) : '—'}</td></tr>`).join('')}</table>` : '<p class="empty">No payments recorded for this day.</p>'}</div>
+    ${Object.keys(A.extras).length ? `<div class="na-sec"><h4>Extras posted</h4><table class="na">${Object.keys(A.extras).map(x => `<tr><td>${esc((A.kinds && A.kinds[x]) || x)}</td><td class="n">${inr(A.extras[x])}</td></tr>`).join('')}</table></div>` : ''}
+    <div class="na-sec"><h4>Not arrived <em>${A.noShows.length}</em></h4>${people(A.noShows, 'Every guest due has checked in.', !A.closed)}${A.noShows.length && !A.closed ? '<p class="empty">Tick the guests to mark as no-shows: their rooms are released for sale. Any payment stays on the booking.</p>' : ''}</div>
+    <div class="na-sec"><h4>Due out, not checked out <em>${A.notCheckedOut.length}</em></h4>${people(A.notCheckedOut, 'Nobody overstaying.')}</div>
+    <div class="na-sec"><h4>In house with a balance <em>${A.balances.length}</em></h4>${people(A.balances, 'No balances due.')}</div>
+    ${A.unassigned.length ? `<div class="na-sec"><h4>Arriving this week without room numbers <em>${A.unassigned.length}</em></h4>${people(A.unassigned, '')}</div>` : ''}
+    ${A.pendingPayments.length ? `<div class="na-sec"><h4>Payments awaiting the owner <em>${A.pendingPayments.length}</em></h4><p class="empty">${inr(A.pendingPayments.reduce((a, p) => a + p.amount, 0))} in all, approved from the dashboard.</p></div>` : ''}
+    ${A.closed ? '' : `<button type="button" class="na-close" id="naClose">Close ${dLbl(A.date)}</button>`}
+    ${A.history.length ? `<div class="na-sec" style="margin-top:14px"><h4>Closed days</h4><table class="na"><tr><th>Day</th><th class="n">Occupancy</th><th class="n">Revenue</th><th class="n">Collected</th><th class="n">No-shows</th><th>By</th></tr>${A.history.map(h => `<tr><td>${dLbl(h.date)}</td><td class="n">${h.figures ? h.figures.occupancy + '%' : '—'}</td><td class="n">${h.figures ? inr(h.figures.revenue) : '—'}</td><td class="n">${inr(h.collected)}</td><td class="n">${h.noShows}</td><td>${esc(h.by)}</td></tr>`).join('')}</table></div>` : ''}`;
+  el.querySelector('#naDate').addEventListener('change', e => { el.remove(); auditSheet(e.target.value || A.today); });
+  const btn = el.querySelector('#naClose');
+  if (btn) btn.addEventListener('click', async () => {
+    const ns = [...el.querySelectorAll('[data-ns]:checked')].map(c => c.value);
+    if (!confirm(`Close ${dLbl(A.date)}${ns.length ? ` and mark ${ns.length} no-show${ns.length === 1 ? '' : 's'}` : ''}? This can't be undone.`)) return;
+    btn.disabled = true;
+    try { await api('/hotel/audit-close', { date: A.date, noShows: ns }); el.remove(); toast(`${dLbl(A.date)} closed`); load(); auditSheet(A.date); }
+    catch (e) { toast(e.message, true); btn.disabled = false; }
+  });
 }
 
 function renderTape(){

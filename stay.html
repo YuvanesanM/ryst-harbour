@@ -165,6 +165,7 @@
   table.d-table tfoot tr.grand td{background:var(--sea);color:#fff;font-weight:700;font-size:14.5px}
   table.d-table tfoot tr.tax-row td{color:#4c5c58;font-weight:500;background:#f8faf9}
   .gst-id{font-size:11.5px;color:#2c3633;margin-top:6px;font-weight:600;letter-spacing:.2px}
+  .gst-li{font-size:10.5px;color:#6a7a76;font-weight:600;white-space:nowrap}
   .d-words{font-size:12px;color:#2c3633;margin:8px 0 0;font-weight:600}
   .gst-note{font-size:12px;border-radius:9px;padding:9px 11px;margin-top:10px;background:#eaf4ee;color:#2f7d54;line-height:1.45}
   .gst-note.warn{background:#fbf3e6;color:#9a6a17}
@@ -1520,7 +1521,7 @@ function addDaysISOs(iso, n){ const d = new Date(iso + 'T00:00:00Z'); d.setUTCDa
     try { const res = await fetch(PROXY_URL + '/hotel/quote', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Token': proxyToken }, body: JSON.stringify(body) }); const q = await res.json();
       if (q.error) { toast(q.soldOut && editingKey ? q.error + ' (this booking counts itself; edit the charges by hand)' : q.error); return; }
       const when = q.type === 'day' ? `${q.start}–${q.end}` : `${q.nights} night${q.nights === 1 ? '' : 's'}`;
-      items = q.rooms.map(r => ({ desc: `${r.name} · ${r.planName} · ${when}`, qty: '1', rate: String(r.total) })); renderItems(); render(); toast('Charges filled from the room tariff');
+      items = q.rooms.map(r => ({ desc: `${r.name} · ${r.planName} · ${when}`, qty: '1', rate: String(r.total) })).concat(items.filter(x => x.kind)); renderItems(); // room lines replaced, folio extras kept render(); toast('Charges filled from the room tariff');
     } catch (e) { toast('Could not price the rooms right now'); }
   });
 })();
@@ -1539,7 +1540,8 @@ function collect(){
     ...(curHold && !(existing&&existing.otaHold) && { otaHold: curHold.no, otaFeed: curHold.source || "" }),
     deposit: parseFloat($("#deposit").value)||0, advance: syncedAdvance(existing),
     discount: parseFloat($("#discountInp").value)||0,
-    items: items.map(({desc,qty,rate,_villaRow,_autoLocked})=>({desc,qty,rate,...(_villaRow&&{_villaRow:true}),...(_autoLocked&&{_autoLocked:true})})),
+    // folio charges posted at the front desk keep their room, kind, GST rate and who posted them
+    items: items.map(({desc,qty,rate,_villaRow,_autoLocked,room,kind,gst,id,by,at,date})=>({desc,qty,rate,...(_villaRow&&{_villaRow:true}),...(_autoLocked&&{_autoLocked:true}),...(kind&&{room,kind,gst,id,by,at,date})})),
     ...(isHotel() ? { rooms: roomsForSave(), dayUse: curDayUse || undefined } : {}),
     savedAt: Date.now()
   };
@@ -1635,7 +1637,7 @@ function loadDoc(no){
   $("#discountInp").value=d.discount!=null ? String(d.discount) : "";
   syncCheckoutMin();
   $("#nights").value = nightsBetween(d.checkin,d.checkout)||"";
-  items = (d.items&&d.items.length)? d.items.map(x=>({desc:x.desc||"",qty:(x.qty!=null?x.qty:"1"),rate:x.rate||"",...(x._villaRow&&{_villaRow:true}),...(x._autoLocked&&{_autoLocked:true})})) : [{desc:"",qty:"1",rate:""}];
+  items = (d.items&&d.items.length)? d.items.map(x=>({desc:x.desc||"",qty:(x.qty!=null?x.qty:"1"),rate:x.rate||"",...(x._villaRow&&{_villaRow:true}),...(x._autoLocked&&{_autoLocked:true}),...(x.kind&&{room:x.room,kind:x.kind,gst:x.gst,id:x.id,by:x.by,at:x.at,date:x.date})})) : [{desc:"",qty:"1",rate:""}];
   markVillaRateAuto();
   syncGuestCharges(); renderItems(); render(); toast("Loaded "+d.no);
   loadFood(d.no);
@@ -2063,18 +2065,18 @@ function applyTaxView(){
   if(gi.buyer && gi.buyer.address){ $("#pBuyerAddrRow").hidden=false; $("#pBuyerAddr").textContent = gi.buyer.address; }
   if(gi.placeOfSupply){ $("#pPosRow").hidden=false; $("#pPos").textContent = gi.placeOfSupply.name + " (" + gi.placeOfSupply.code + ")"; }
   $("#pSacRow").hidden=false; $("#pSac").textContent = gi.sac;
-  $("#pRows").innerHTML = gi.lines.map(l=>`<tr><td>${esc(l.desc)}</td><td class="num">${esc(l.qty)}</td><td class="amt">${inr(l.rate)}</td><td class="amt">${inr(l.amount)}</td></tr>`).join("");
+  $("#pRows").innerHTML = gi.lines.map(l=>`<tr><td>${esc(l.desc)}${l.room ? ` · Room ${esc(l.room)}` : ""}${gi.slabs && l.gstRate != null ? ` <span class="gst-li">GST ${l.gstRate}%</span>` : ""}</td><td class="num">${esc(l.qty)}</td><td class="amt">${inr(l.rate)}</td><td class="amt">${inr(l.amount)}</td></tr>`).join("");
   $("#pSub").textContent = money(gi.subtotal);
   const dr = tf.querySelector(".disc-row"); if(dr) dr.remove();
   const grandRow = tf.querySelector("tr.grand");
   const add = (label, val) => { const tr=document.createElement("tr"); tr.className="tax-row"; tr.innerHTML=`<td colspan="3">${label}</td><td class="amt">${val}</td>`; grandRow.before(tr); };
   if(gi.discount > 0) add("DISCOUNT", "− " + money(gi.discount));
   add("TAXABLE VALUE", money(gi.taxable));
-  add(`CGST @ ${pct(gi.rate/2)}%`, money(gi.cgst));
-  add(`SGST @ ${pct(gi.rate/2)}%`, money(gi.sgst));
+  // a hotel bill with rooms in different slabs shows the tax for each rate
+  (gi.slabs || [{ rate: gi.rate, cgst: gi.cgst, sgst: gi.sgst }]).forEach(x => { add(`CGST @ ${pct(x.rate/2)}%`, money(x.cgst)); add(`SGST @ ${pct(x.rate/2)}%`, money(x.sgst)); });
   $("#pGrandLbl").textContent = "TOTAL (INCL. GST)"; $("#pGrand").textContent = money(gi.total);
   $("#pWords").hidden=false; $("#pWords").textContent = "Amount in words: " + rupeesInWords(gi.total);
-  $("#pDecl").textContent = `Prices include GST. The taxable value is the total less CGST @ ${pct(gi.rate/2)}% and SGST @ ${pct(gi.rate/2)}%. SAC ${gi.sac} — accommodation services. Place of supply: ${gi.placeOfSupply ? gi.placeOfSupply.name : ""}. Tax payable on reverse charge: No. Original for recipient.`;
+  $("#pDecl").textContent = `Prices include GST. The taxable value is the total less ${gi.slabs ? "CGST and SGST at each line's rate (shown on the line)" : `CGST @ ${pct(gi.rate/2)}% and SGST @ ${pct(gi.rate/2)}%`}. SAC ${gi.sac} — accommodation services. Place of supply: ${gi.placeOfSupply ? gi.placeOfSupply.name : ""}. Tax payable on reverse charge: No. Original for recipient.`;
   $("#pTerms").innerHTML = settings.terms.filter(t=>!/not (registered|by a GST-registered)|GST has not been charged/i.test(t)).map(t=>`<li>${esc(t)}</li>`).join("");
 }
 function gstGstinValid(g){
@@ -2091,7 +2093,7 @@ function openGstModal(){
   if(gi){
     gstMode='cancel';
     $("#gstMTitle").textContent = "Tax invoice " + gi.no;
-    $("#gstMBody").innerHTML = `<div class="gst-sum">Issued<b>${fmtDate(gi.date)}</b><br>Billed to<b>${esc(gi.buyer.name||'—')}${gi.buyer.gstin?' · '+esc(gi.buyer.gstin):''}</b><br>Taxable value<b>${money(gi.taxable)}</b><br>CGST + SGST @ ${gi.rate}%<b>${money(gi.cgst+gi.sgst)}</b><br>Total<b>${money(gi.total)}</b></div>
+    $("#gstMBody").innerHTML = `<div class="gst-sum">Issued<b>${fmtDate(gi.date)}</b><br>Billed to<b>${esc(gi.buyer.name||'—')}${gi.buyer.gstin?' · '+esc(gi.buyer.gstin):''}</b><br>Taxable value<b>${money(gi.taxable)}</b><br>CGST + SGST @ ${gi.slabs ? gi.slabs.map(x=>x.rate+'%').join(' / ') : gi.rate+'%'}<b>${money(gi.cgst+gi.sgst)}</b><br>Total<b>${money(gi.total)}</b></div>
       <p class="sd" style="margin:12px 0 6px">Use <b>PDF</b> to download or print it. To change the charges, cancel it and issue a new one — the cancelled number stays in your GST register.</p>
       <label class="f"><span>Reason for cancelling</span><input class="t" id="gstReason" maxlength="300" placeholder="e.g. Wrong guest GSTIN"></label>`;
     $("#gstMGo").textContent = "Cancel tax invoice"; $("#gstMGo").className = "btn";
