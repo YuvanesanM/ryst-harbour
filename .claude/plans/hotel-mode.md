@@ -26,6 +26,35 @@ the build environment: the vendor's own site, Capterra, SlideShare deck, Softwar
 - Reviews: praised for easy front office, banquet module, responsive support; criticised for
   report customisation, speed at peak times, thin onboarding material.
 
+### 1b. From the official site (wincloudpms.com, read Nov 2026)
+- Owner: Winsar Infosoft (est. 2001, Chennai), acquired by Romeo Bravo Software (RBS) in Feb 2025; WINCLOUD is
+  the cloud edition of WINHMS. Positioning: "THE Operating System for Hotels"; hotel groups and chains, plus
+  resorts, apartments, guest houses, motels. Claims 2000+ clients, 35+ countries, 100000+ rooms (stat block is
+  inconsistent across copies). No pricing published ("pay for what you use", "Try for free", demo).
+- Modules: Front Office (check-in/out, room chart, reservation management incl. alternatives when full and
+  blacklisted guests, online check-in, tariff patterns, packages, night audit highlighting pending bills, KOTs,
+  room charges and departures); POS (split bills, KOT per product group and printer, per-item tax, auto-post to
+  FO and accounts, table reservations, KOT amendment audit, mobile order taking); Kitchen Display System;
+  Material Management (POs with approvals, multi-store, indents, quotations and rate comparison, physical stock,
+  contracts); Financial Accounting (GL, P&L, balance sheet, cash flow, divisions, income vs expense and ledger
+  graphs, voucher drill-down); Banqueting (venues, wait-list, plans and covers, function prospectus, sales by
+  segment/source/venue); Multi-Property (one guest profile, HO login to every property, consolidated FO/F&B/
+  material/finance, budget vs actual, MIS dashboard on mobile, central reservations).
+- Channel management by integration, not its own: STAAH, AxisRooms, SiteMinder, Aiosell, RateGain, Rate Tiger,
+  D-Edge, Hotel Spider, Hotellink, Maximojo, eZee/others; also IDeaS and Duetto (RMS), Vingcard/Onity/Dorma
+  (locks), PBX and Wi-Fi vendors. Claims 250+ interfaces, 200+ booking channels.
+- Not on their site: housekeeping module, GST/Form C specifics, a named dashboard KPI set (only "room chart",
+  night audit highlights, MIS slice-and-dice). Harbour's edge: WhatsApp-first guest flow, online check-in with ID,
+  direct booking site with UPI, AI agents, simple pricing published openly.
+- Harbour gaps vs WINCLOUD beyond phases 2–5: POS→room folio posting and KOT (restaurant.html is a base),
+  material management (inventory.html is a shopping list today), accounting exports, banqueting (later).
+
+## 1c. Suggested hotel pricing (published on harbour.ryst.in as early access)
+Hotel Essential up to 20 rooms ₹4,999/mo (₹49,990/yr, setup ₹14,999); Hotel Plus 21–50 rooms ₹8,999/mo
+(₹89,990/yr, setup ₹24,999); Hotel Pro 51–100 rooms ₹14,999/mo (₹1,49,990/yr, setup ₹39,999); 100+ rooms or
+groups by quote; channel-manager partner fee at cost. Leads can pick these plans; billing for hotels is manual
+until hotel tiers are added to Razorpay subscriptions.
+
 ## 2. Harbour today (villa-shaped)
 - One tenant = one villa = one sellable unit. `stays.json`: bookings with check-in/out, no room.
 - Availability: "is the whole property free" (`/availability` date ranges).

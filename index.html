@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'none';">
-<title>RYST Harbour — Property Management for Independent Villas</title>
-<meta name="description" content="Manage bookings, guests, staff, payments and direct bookings in one simple platform built for independent villa owners.">
+<title>RYST Harbour — Property Management for Villas and Hotels</title>
+<meta name="description" content="Manage bookings, guests, staff, payments and direct bookings in one simple platform built for independent villas, now with room categories and tariffs for hotels.">
 <link rel="canonical" href="https://harbour.ryst.in/">
 <meta name="theme-color" content="#F6F3ED">
 <link rel="icon" href="/assets/staff-icon-192.png">
@@ -31,7 +31,7 @@
 <link rel="preload" href="/assets/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" as="image" type="image/avif" href="/assets/site/villa-pool-800.avif" imagesrcset="/assets/site/villa-pool-480.avif 480w, /assets/site/villa-pool-800.avif 800w, /assets/site/villa-pool-1200.avif 1200w" imagesizes="(max-width: 980px) 100vw, 56vw" fetchpriority="high">
-<link rel="stylesheet" href="/assets/site/site.css?v=53bc09cc">
+<link rel="stylesheet" href="/assets/site/site.css?v=026393de">
 <script src="/assets/site/site.js?v=b1419e27" defer></script>
 
 <script type="application/ld+json">
@@ -107,6 +107,7 @@
       <a href="#product">Product</a>
       <a href="#how">How it works</a>
       <a href="#owners">For owners</a>
+      <a href="#hotels">Hotels</a>
       <a href="#pricing">Pricing</a>
     </nav>
     <div class="nav__actions">
@@ -121,6 +122,7 @@
     <a href="#product">Product</a>
     <a href="#how">How it works</a>
     <a href="#owners">For owners</a>
+    <a href="#hotels">Hotels</a>
     <a href="#pricing">Pricing</a>
   </nav>
   <div class="drawer__actions">
@@ -998,13 +1000,66 @@
   </div>
 </section>
 
+<!-- ── Hotels ─────────────────────────────────────────────────────────────
+     Hotel mode is in early access: each item says whether it is live or still rolling out.
+     Move an item to "Live" only once it ships in the app. -->
+<section class="section section--white" id="hotels" aria-labelledby="hotels-title">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div class="section-head section-head--flush">
+        <p class="eyebrow">For hotels · Early access</p>
+        <h2 class="h2" id="hotels-title">Running a hotel?<br><em>Harbour does rooms too.</em></h2>
+      </div>
+      <p class="lede">Room categories, every numbered room, a tariff per category and live availability per room type, on the same Harbour villas use. Front desk, housekeeping and a two-way channel manager are rolling out to early-access hotels.</p>
+    </div>
+
+    <div class="hotel-grid">
+      <div class="mock hotel-mock" aria-label="Example: room categories and what is free tonight">
+        <div class="card-head"><h3>Room categories</h3><span>Tonight</span></div>
+        <ul class="hotel-cats">
+          <li><span class="hotel-cats__name"><b>Deluxe Room</b><small>2 guests · breakfast +₹450</small></span><span class="hotel-cats__free"><b class="num">5</b> of 12 free</span><span class="num hotel-cats__rate">₹4,500</span></li>
+          <li><span class="hotel-cats__name"><b>Premium Garden</b><small>3 guests · half board +₹1,100</small></span><span class="hotel-cats__free"><b class="num">2</b> of 8 free</span><span class="num hotel-cats__rate">₹6,200</span></li>
+          <li><span class="hotel-cats__name"><b>Sea View Suite</b><small>4 guests · weekend +20%</small></span><span class="hotel-cats__free is-full">Sold out</span><span class="num hotel-cats__rate">₹11,000</span></li>
+        </ul>
+        <div class="hotel-rooms" aria-hidden="true">
+          <span>101</span><span>102</span><span class="is-sold">103</span><span class="is-sold">104</span><span>105</span><span class="is-ooo">106</span><span class="is-sold">201</span><span>202</span><span class="is-sold">301</span><span class="is-sold">302</span>
+        </div>
+        <p class="fine hotel-legend"><i></i>Free <i class="is-sold"></i>Sold <i class="is-ooo"></i>Out of order</p>
+      </div>
+
+      <div class="hotel-lists">
+        <div>
+          <p class="label">Live now</p>
+          <ul class="hotel-feats">
+            <li><span class="pill pill--good">Live</span><b>Room categories and numbered rooms</b><span>Add rooms in bulk (101–110), by floor, with out-of-order dates.</span></li>
+            <li><span class="pill pill--good">Live</span><b>A tariff per category</b><span>Rack rate, meal plans (EP, CP, MAP, AP), extra adult and child, weekend rates, seasons and date overrides, minimum nights.</span></li>
+            <li><span class="pill pill--good">Live</span><b>Availability per room type</b><span>Rooms free in each category, night by night; the calendar only closes when every room is sold.</span></li>
+            <li><span class="pill pill--good">Live</span><b>GST per room-night</b><span>5% up to ₹7,500 a room a night, 18% above, worked out room by room.</span></li>
+          </ul>
+        </div>
+        <div>
+          <p class="label">Rolling out to early-access hotels</p>
+          <ul class="hotel-feats">
+            <li><span class="pill">Rolling out</span><b>Front desk</b><span>Multi-room bookings with room numbers, a tape chart, check-in and check-out, room moves, folios.</span></li>
+            <li><span class="pill">Rolling out</span><b>Front-desk dashboard</b><span>Today's occupancy and forecast, arrivals, departures, in-house, rooms ready.</span></li>
+            <li><span class="pill">Rolling out</span><b>Housekeeping</b><span>Room status (vacant clean, dirty, occupied, out of order) on the housekeeper's phone.</span></li>
+            <li><span class="pill">Rolling out</span><b>Two-way channel manager</b><span>Rates and rooms per room type to the big OTAs, bookings back into Harbour.</span></li>
+            <li><span class="pill">Rolling out</span><b>Booking website by room type</b><span>Guests pick a category and the number of rooms, pay online, zero commission.</span></li>
+          </ul>
+        </div>
+        <p class="fine">Plus everything villas already use: WhatsApp automation, online guest check-in with ID, GST invoices, reports and staff checklists.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ── Pricing ────────────────────────────────────────────────────────── -->
 <section class="section" id="pricing" aria-labelledby="pricing-title">
   <div class="container">
     <div class="section-head section-head--center">
       <p class="eyebrow">Pricing</p>
       <h2 class="h2" id="pricing-title">Simple pricing.<br><em>One villa, one plan.</em></h2>
-      <p class="lede">Priced per villa. Every plan starts with a <span data-trial>7-day</span> free trial.</p>
+      <p class="lede">Priced per villa. Every plan starts with a <span data-trial>7-day</span> free trial. Running a hotel? <a class="link" href="#hotel-plans">See hotel plans</a>.</p>
     </div>
 
     <div class="pricing__bar">
@@ -1051,6 +1106,42 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+
+    <div class="hotel-plans" id="hotel-plans">
+      <div class="section-head section-head--center section-head--flush">
+        <p class="eyebrow">Hotel plans · Early access</p>
+        <h3 class="h3">Priced by rooms, not by guests.</h3>
+        <p class="fine">Per property, GST extra (18%). Annual billing: pay for 10 months, get 12. Hotel-only features roll out to early-access hotels as they ship (marked below).</p>
+      </div>
+      <div class="plans">
+        <article class="plan">
+          <h3 class="plan__name">Hotel Essential</h3>
+          <p class="plan__rooms">Up to 20 rooms</p>
+          <p class="plan__price"><b>₹4,999</b><span>/ month + GST</span></p>
+          <p class="plan__setup">₹49,990 / year · + ₹14,999 one-time setup</p>
+          <ul><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Room categories, rooms and tariffs</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Availability per room type</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>GST invoices per room-night</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Front desk and dashboard <span class="plan__soon">Rolling out</span></li></ul>
+          <a class="btn btn--secondary" href="#demo" data-plan="hotel-essential">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+        </article>
+        <article class="plan plan--featured">
+          <h3 class="plan__name">Hotel Plus <span class="plan__badge">Popular</span></h3>
+          <p class="plan__rooms">21 to 50 rooms</p>
+          <p class="plan__price"><b>₹8,999</b><span>/ month + GST</span></p>
+          <p class="plan__setup">₹89,990 / year · + ₹24,999 one-time setup</p>
+          <ul><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Everything in Essential</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>WhatsApp automation and online check-in</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Housekeeping app <span class="plan__soon">Rolling out</span></li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Booking website by room type <span class="plan__soon">Rolling out</span></li></ul>
+          <a class="btn" href="#demo" data-plan="hotel-plus">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+        </article>
+        <article class="plan">
+          <h3 class="plan__name">Hotel Pro</h3>
+          <p class="plan__rooms">51 to 100 rooms</p>
+          <p class="plan__price"><b>₹14,999</b><span>/ month + GST</span></p>
+          <p class="plan__setup">₹1,49,990 / year · + ₹39,999 one-time setup</p>
+          <ul><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Everything in Plus</li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Two-way channel manager <span class="plan__soon">Rolling out</span></li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Revenue reports: ADR, RevPAR, pick-up <span class="plan__soon">Rolling out</span></li><li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Priority support</li></ul>
+          <a class="btn btn--secondary" href="#demo" data-plan="hotel-pro">Book a demo <span class="btn__arrow" aria-hidden="true">→</span></a>
+        </article>
+      </div>
+      <p class="fine hotel-plans__more">More than 100 rooms or several properties? <a class="link" href="#demo" data-plan="hotel-pro">Talk to us</a> about group pricing. The channel manager's partner fee is billed at cost when it goes live.</p>
     </div>
 
     <details class="terms">
@@ -1112,11 +1203,11 @@
       <p>Leave your details and we'll call you back to set up a time that suits you.</p>
       <div class="demo-form__grid">
         <label><span>Your name</span><input name="name" autocomplete="name" maxlength="100" required></label>
-        <label><span>Villa name</span><input name="villaName" autocomplete="organization" maxlength="120"></label>
+        <label><span>Villa or hotel name</span><input name="villaName" autocomplete="organization" maxlength="120"></label>
         <label><span>Phone / WhatsApp</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" required></label>
         <label><span>City</span><input name="city" autocomplete="address-level2" maxlength="60" placeholder="e.g. ECR, Pondicherry"></label>
         <label><span>Rooms <em>(optional)</em></span><input name="rooms" type="number" min="1" max="500" inputmode="numeric"></label>
-        <label><span>Plan you're looking at</span><select name="plan"><option value="">Not sure yet</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="pro">Pro</option></select></label>
+        <label><span>Plan you're looking at</span><select name="plan"><option value="">Not sure yet</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="pro">Pro</option><option value="hotel-essential">Hotel Essential</option><option value="hotel-plus">Hotel Plus</option><option value="hotel-pro">Hotel Pro</option></select></label>
       </div>
       <label class="demo-form__hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
       <button class="btn btn--light" type="submit">Request a call back <span class="btn__arrow" aria-hidden="true">→</span></button>
