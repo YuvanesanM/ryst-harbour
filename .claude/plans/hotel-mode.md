@@ -128,6 +128,16 @@ longer count day-use as a night; Channex-cancelled bookings are left out of repo
 Still open: the guest register for hotels shows villa-style rows; ID per guest (only the lead guest's ID is collected);
 occupancy by category in reports (Phase 3/5).
 
+### Phase 3 status (Nov 2026)
+Done: the front desk dashboard now has every tile in the Phase 3 list. On top of the earlier KPIs (occupancy, arrivals,
+departures, in-house, rooms ready, revenue, ADR, RevPAR, room-status counts, 30-day forecast) it adds: booking pick-up for
+the last 24 h and 7 days (bookings, room-nights, revenue, from each booking's creation stamp `_c`); source mix (room-nights
+per channel, next 30 days); a heat table of rooms free per room type for the next 7 nights (OTA holds included);
+"Needs attention" (payments awaiting approval, Form C due, rooms without numbers this week, notes and arrival times on
+today's arrivals); a wall-screen mode, frontdesk.html?wall=1, for a front-desk monitor (no sidebar, buttons or lists, a clock,
+refreshes every minute). The normal view refreshes every 2 minutes. Proxy: Hotel.insights; /hotel/frontdesk also returns
+insights, pendingPayments and formC.
+
 ### Phase 2 — Front desk and housekeeping
 - Tape chart: rooms × dates grid, drag to assign / move / extend, unassigned queue.
 - Check-in (assign rooms, ID per guest, advance), room move, early/late, check-out with folio per
