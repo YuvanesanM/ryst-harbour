@@ -41,6 +41,19 @@
   .tab-btn.active{color:var(--accent-d);border-bottom-color:var(--accent)}
   .wa-hint{font-size:11.5px;color:var(--muted2);margin:0 0 6px;font-family:monospace}
   .gh-mini{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-d);font-weight:700;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+.pt-choice{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
+  .pt-card{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);cursor:pointer}
+  .pt-card input{position:absolute;opacity:0;pointer-events:none} .pt-card b{font-size:15px} .pt-card span{font-size:12.5px;color:var(--muted);line-height:1.45}
+  .pt-card:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+  .pt-card.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+  .hc-card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;margin-bottom:12px}
+  .hc-head{display:flex;gap:10px;align-items:center;margin-bottom:10px} .hc-head .t{font-weight:700;font-size:15px}
+  .hc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .hc-sea{margin-top:10px} .hc-sea table{min-width:380px}
+  .hc-x{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 6px;line-height:1}
+  .hr-bulk{display:grid;grid-template-columns:2fr 1fr 1.4fr auto;gap:10px;margin-bottom:12px}
+  .hr-ooo{display:flex;gap:6px} .hr-ooo .t{padding:6px 8px;font-size:12.5px} .hr-ooo .t[type=date]{max-width:140px}
+  @media (max-width:640px){ .pt-choice,.hr-bulk{grid-template-columns:1fr} }
   .gh-mini::after{content:"";flex:1;height:1px;background:var(--line)}
   .gh-mini:first-of-type{margin-top:0}
   .wa-test{border:1px solid var(--line);border-radius:14px;background:var(--panel2);padding:12px;margin-bottom:22px}
@@ -227,6 +240,7 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
 
   <div class="tabs" id="cfgTabs">
     <button type="button" class="tab-btn active" data-tab="profile">Business profile</button>
+    <button type="button" class="tab-btn" data-tab="rooms">Rooms</button>
     <button type="button" class="tab-btn" data-tab="tariffs">Tariffs</button>
     <button type="button" class="tab-btn" data-tab="invoices">Invoices &amp; GST</button>
     <button type="button" class="tab-btn" data-tab="ota">OTA Sync</button>
@@ -278,6 +292,34 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="chk-toggle"><input type="checkbox" id="stayWalletApple"> Apple Wallet</label>
       <label class="chk-toggle"><input type="checkbox" id="stayWalletGoogle"> Google Wallet</label>
     </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" data-panel="rooms" style="display:none">
+    <p class="gh-mini">Property type</p>
+    <div class="pt-choice" id="ptChoice">
+      <label class="pt-card"><input type="radio" name="ptType" value="villa"><b>Villa</b><span>Rented as a whole: one booking at a time, priced by guest count (Tariffs tab).</span></label>
+      <label class="pt-card"><input type="radio" name="ptType" value="hotel"><b>Hotel</b><span>Rooms sold separately: room categories, many rooms per category, a tariff per category, room numbers on bookings.</span></label>
+    </div>
+    <div id="hotelCfg" hidden>
+      <p class="tf-note" id="hotelSummary"></p>
+      <p class="gh-mini">Room categories</p>
+      <p class="tf-note">Each category is a type of room you sell (Deluxe, Premium, Suite). Rates are per room per night, what the guest pays (GST inclusive, like every Harbour invoice). Meal plans are added per room per night; leave a plan blank if you don't offer it. Weekend hike applies to Friday and Saturday nights; holidays use the holiday hike and dates on the Tariffs tab. A season or a date override replaces the rack rate.</p>
+      <div id="hcCats"></div>
+      <button type="button" class="rc-add" id="hcAddCat">+ Add room category</button>
+      <p class="gh-mini">Rooms</p>
+      <div class="hr-bulk">
+        <label class="f"><span>Room numbers</span><input class="t" id="hrNos" placeholder="101-110, 201, 205"></label>
+        <label class="f"><span>Floor</span><input class="t" id="hrFloor" placeholder="1"></label>
+        <label class="f"><span>Category</span><select class="t" id="hrCat"></select></label>
+        <button type="button" class="rc-add" id="hrAdd" style="align-self:end;margin:0">Add rooms</button>
+      </div>
+      <div class="rc-table-wrap">
+        <table class="rc-table">
+          <thead><tr><th style="width:90px">Room</th><th style="width:80px">Floor</th><th>Category</th><th>Out of order (from · to · reason)</th><th style="width:36px"></th></tr></thead>
+          <tbody id="hrBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -923,7 +965,7 @@ function hasModule(mod){
     if(!res.ok){ if(!hasCache) throw new Error('Server error ('+res.status+')'); return; }
     const d = await res.json().catch(()=>null);
     if(d && typeof d==='object'){
-      if(d.bank||d.rates||d.company||d.property||d.invPrefix) applyStay(d); // a new villa has only its profile + prefixes so far
+      if(d.bank||d.rates||d.company||d.property||d.invPrefix||d.hotel||d.propertyType) applyStay(d); // a new villa has only its profile + prefixes so far
       renderOnboarding(d);
       // icalExportKey is never cached/guessed client-side — always the value
       // the server just computed, shown regardless of whether other fields
@@ -1025,7 +1067,7 @@ function switchTab(tab){
   // they write the same document via the same button — so it isn't its own
   // tab-panel, just shown/hidden alongside whichever of those two is active.
   // One Save for everything in stay-settings.json — the four tabs that edit it.
-  document.getElementById('stayGroupSave').style.display = ['profile','tariffs','invoices','ota'].includes(tab) ? '' : 'none';
+  document.getElementById('stayGroupSave').style.display = ['profile','rooms','tariffs','invoices','ota'].includes(tab) ? '' : 'none';
   document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
   if(tab==='website' && !webLoaded) loadWebsite();
 }
@@ -1069,6 +1111,7 @@ function collectPropertyProfile(){
 }
 function renderFromStay(){
   renderPropertyProfile();
+  loadHotelDraft();
   stayRcDraft=stay.rates.map(r=>({...r}));
   renderStayRates();
   document.getElementById("stayCompany").value=stay.company||"";
@@ -1936,6 +1979,117 @@ function renderStayCoupons(){
 document.getElementById("stayCouponAdd").addEventListener("click",()=>{ stayCouponDraft.push({code:"",discountPercent:""}); renderStayCoupons(); });
 
 /* ---------- SAVE ---------- */
+/* ---------- ROOMS (hotels) ---------- */
+// A hotel sells rooms by category; a villa is rented whole. The proxy's hotel.js holds the rules
+// (availability per category, quotes); this only edits stay.propertyType and stay.hotel.
+var hotelDraft = { type: 'villa', categories: [], rooms: [] }; // var: the page renders from its cache before this script line runs
+function hEsc(v){ return String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function hSlug(v){ return String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40); }
+var H_PLANS = [['CP', 'Breakfast (CP) +₹'], ['MAP', 'Half board (MAP) +₹'], ['AP', 'Full board (AP) +₹']];
+function loadHotelDraft(){
+  const h = stay.hotel || {}; if (!H_PLANS) H_PLANS = [['CP', 'Breakfast (CP) +₹'], ['MAP', 'Half board (MAP) +₹'], ['AP', 'Full board (AP) +₹']];
+  hotelDraft = { type: stay.propertyType === 'hotel' ? 'hotel' : 'villa',
+    categories: (h.categories || []).map(c => JSON.parse(JSON.stringify(c))), rooms: (h.rooms || []).map(r => JSON.parse(JSON.stringify(r))) };
+  hotelDraft.categories.forEach(c => { if (!c.id) c.id = hSlug(c.name); c.seasons = c.seasons || []; c.plans = c.plans || {}; });
+  renderHotel();
+}
+function hNewCatId(name){ let id = hSlug(name) || 'room'; while (hotelDraft.categories.some(c => c.id === id)) id += '-2'; return id; }
+function renderHotel(){
+  document.querySelectorAll('input[name=ptType]').forEach(r => { r.checked = r.value === hotelDraft.type; r.closest('.pt-card').classList.toggle('on', r.checked); });
+  document.getElementById('hotelCfg').hidden = hotelDraft.type !== 'hotel';
+  const cats = hotelDraft.categories;
+  document.getElementById('hcCats').innerHTML = cats.map((c, i) => `<div class="hc-card" data-ci="${i}">
+    <div class="hc-head"><input class="t" data-k="name" value="${hEsc(c.name)}" placeholder="Category name, e.g. Deluxe Room"><button type="button" class="hc-x" data-del-cat="${i}" title="Remove category" aria-label="Remove category">&times;</button></div>
+    <div class="hc-grid">
+      <label class="f"><span>Rack rate ₹ / night</span><input class="t" type="number" min="0" data-k="rack" value="${hEsc(c.rack)}"></label>
+      <label class="f"><span>Guests included</span><input class="t" type="number" min="1" data-k="baseOcc" value="${hEsc(c.baseOcc || 2)}"></label>
+      <label class="f"><span>Max guests</span><input class="t" type="number" min="1" data-k="maxOcc" value="${hEsc(c.maxOcc || 3)}"></label>
+      <label class="f"><span>Extra adult ₹</span><input class="t" type="number" min="0" data-k="extraAdult" value="${hEsc(c.extraAdult)}"></label>
+      <label class="f"><span>Extra child ₹</span><input class="t" type="number" min="0" data-k="extraChild" value="${hEsc(c.extraChild)}"></label>
+      <label class="f"><span>Weekend hike %</span><input class="t" type="number" min="0" data-k="weekendPct" value="${hEsc(c.weekendPct)}"></label>
+      <label class="f"><span>Minimum nights</span><input class="t" type="number" min="1" data-k="minStay" value="${hEsc(c.minStay || 1)}"></label>
+      ${H_PLANS.map(([p, l]) => `<label class="f"><span>${l}</span><input class="t" type="number" min="0" data-plan="${p}" value="${hEsc(c.plans && c.plans[p] != null ? c.plans[p] : '')}" placeholder="Not offered"></label>`).join('')}
+      <label class="f" style="grid-column:1/-1"><span>Amenities (comma separated)</span><input class="t" data-k="amenities" value="${hEsc((c.amenities || []).join(', '))}" placeholder="Sea view, King bed, Balcony"></label>
+    </div>
+    <div class="hc-sea"><p class="tf-note" style="margin:6px 0">Seasons (replace the rack rate between two dates, inclusive)</p>
+      <div class="rc-table-wrap"><table class="rc-table"><thead><tr><th>Season</th><th>From</th><th>To</th><th class="r">Rate ₹</th><th style="width:36px"></th></tr></thead><tbody>
+      ${(c.seasons || []).map((se, j) => `<tr data-si="${j}"><td><input class="t" data-s="name" value="${hEsc(se.name)}" placeholder="Peak"></td><td><input class="t" type="date" data-s="from" value="${hEsc(se.from)}"></td><td><input class="t" type="date" data-s="to" value="${hEsc(se.to)}"></td><td><input class="t" type="number" min="0" data-s="rate" value="${hEsc(se.rate)}"></td><td><button type="button" class="hc-x" data-del-sea="${j}" aria-label="Remove season">&times;</button></td></tr>`).join('')}
+      </tbody></table></div><button type="button" class="rc-add" data-add-sea="${i}">+ Add season</button></div>
+  </div>`).join('') || '<p class="tf-note">No room categories yet. Add your first one, then add its rooms below.</p>';
+  const opts = cats.map(c => `<option value="${hEsc(c.id)}">${hEsc(c.name || c.id)}</option>`).join('');
+  const sel = document.getElementById('hrCat'), keep = sel.value; sel.innerHTML = opts; if (keep) sel.value = keep;
+  const rooms = hotelDraft.rooms.slice().sort((a, b) => String(a.no).localeCompare(String(b.no), undefined, { numeric: true }));
+  hotelDraft.rooms = rooms;
+  document.getElementById('hrBody').innerHTML = rooms.map((r, i) => { const o = (r.ooo && r.ooo[0]) || {};
+    return `<tr data-ri="${i}"><td><input class="t" data-r="no" value="${hEsc(r.no)}"></td><td><input class="t" data-r="floor" value="${hEsc(r.floor)}"></td>
+    <td><select class="t" data-r="cat">${cats.map(c => `<option value="${hEsc(c.id)}"${c.id === r.cat ? ' selected' : ''}>${hEsc(c.name || c.id)}</option>`).join('')}</select></td>
+    <td><div class="hr-ooo"><input class="t" type="date" data-o="from" value="${hEsc(o.from)}"><input class="t" type="date" data-o="to" value="${hEsc(o.to)}"><input class="t" data-o="reason" value="${hEsc(o.reason)}" placeholder="Reason"></div></td>
+    <td><button type="button" class="hc-x" data-del-room="${i}" aria-label="Remove room">&times;</button></td></tr>`; }).join('') || '<tr><td colspan="5" class="tf-note" style="padding:12px">No rooms yet.</td></tr>';
+  const n = rooms.length;
+  document.getElementById('hotelSummary').textContent = n ? `${n} room${n === 1 ? '' : 's'} in ${cats.length} categor${cats.length === 1 ? 'y' : 'ies'}: ` + cats.map(c => `${c.name || c.id} ${rooms.filter(r => r.cat === c.id).length}`).join(', ') + '.' : 'Set up your room categories and rooms, then press Save settings.';
+}
+// keep the draft in step with what's typed (no re-render while typing)
+document.getElementById('hcCats').addEventListener('input', e => {
+  const card = e.target.closest('[data-ci]'); if (!card) return; const c = hotelDraft.categories[+card.dataset.ci];
+  const k = e.target.dataset.k, p = e.target.dataset.plan, sv = e.target.dataset.s;
+  if (k === 'amenities') c.amenities = e.target.value.split(',').map(x => x.trim()).filter(Boolean);
+  else if (k) c[k] = e.target.type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value;
+  else if (p) { if (e.target.value === '') delete c.plans[p]; else c.plans[p] = Number(e.target.value); }
+  else if (sv) { const se = c.seasons[+e.target.closest('[data-si]').dataset.si]; se[sv] = sv === 'rate' ? Number(e.target.value) : e.target.value; }
+  if (k === 'name') { const o = document.querySelector(`#hrCat option[value="${CSS.escape(c.id)}"]`); if (o) o.textContent = c.name || c.id; }
+});
+document.getElementById('hcCats').addEventListener('click', e => {
+  const card = e.target.closest('[data-ci]');
+  if (e.target.dataset.delCat != null) { const c = hotelDraft.categories[+e.target.dataset.delCat], used = hotelDraft.rooms.filter(r => r.cat === c.id).length;
+    if (used && !confirm(`${c.name || 'This category'} has ${used} room${used === 1 ? '' : 's'}. Remove the category and its rooms?`)) return;
+    hotelDraft.rooms = hotelDraft.rooms.filter(r => r.cat !== c.id); hotelDraft.categories.splice(+e.target.dataset.delCat, 1); renderHotel(); }
+  else if (e.target.dataset.addSea != null) { hotelDraft.categories[+e.target.dataset.addSea].seasons.push({ name: '', from: '', to: '', rate: '' }); renderHotel(); }
+  else if (e.target.dataset.delSea != null && card) { hotelDraft.categories[+card.dataset.ci].seasons.splice(+e.target.dataset.delSea, 1); renderHotel(); }
+});
+document.getElementById('hcAddCat').addEventListener('click', () => {
+  const name = hotelDraft.categories.length ? '' : 'Deluxe Room';
+  hotelDraft.categories.push({ id: hNewCatId(name || 'room-' + (hotelDraft.categories.length + 1)), name, rack: '', baseOcc: 2, maxOcc: 3, extraAdult: '', extraChild: '', weekendPct: '', minStay: 1, plans: { EP: 0 }, seasons: [], amenities: [] });
+  renderHotel(); const last = document.querySelector('#hcCats .hc-card:last-child [data-k=name]'); if (last) last.focus();
+});
+document.getElementById('ptChoice').addEventListener('change', e => { if (e.target.name === 'ptType') { hotelDraft.type = e.target.value; renderHotel(); } });
+function hParseNos(text){ // "101-110, 201" → ['101',…,'110','201']
+  const out = []; String(text || '').split(/[,\s]+/).filter(Boolean).forEach(tok => {
+    const m = tok.match(/^([A-Za-z]*)(\d+)-([A-Za-z]*)(\d+)$/);
+    if (m && m[1] === m[3] && +m[4] >= +m[2] && +m[4] - +m[2] < 200) { for (let n = +m[2]; n <= +m[4]; n++) out.push(m[1] + String(n).padStart(m[2].length, '0')); }
+    else out.push(tok.slice(0, 12));
+  }); return out;
+}
+document.getElementById('hrAdd').addEventListener('click', () => {
+  const cat = document.getElementById('hrCat').value; if (!cat) { toast('Add a room category first'); return; }
+  const nos = hParseNos(document.getElementById('hrNos').value), floor = document.getElementById('hrFloor').value.trim().slice(0, 12);
+  if (!nos.length) { toast('Type room numbers, e.g. 101-110'); return; }
+  let added = 0; nos.forEach(no => { if (!hotelDraft.rooms.some(r => r.no === no)) { hotelDraft.rooms.push({ no, floor, cat, ooo: [] }); added++; } });
+  document.getElementById('hrNos').value = ''; renderHotel(); toast(added ? `${added} room${added === 1 ? '' : 's'} added — press Save settings` : 'Those rooms already exist');
+});
+document.getElementById('hrBody').addEventListener('input', e => {
+  const tr = e.target.closest('[data-ri]'); if (!tr) return; const r = hotelDraft.rooms[+tr.dataset.ri];
+  if (e.target.dataset.r) r[e.target.dataset.r] = e.target.value.trim();
+  if (e.target.dataset.o) { r.ooo = r.ooo && r.ooo.length ? r.ooo : [{ from: '', to: '', reason: '' }]; r.ooo[0][e.target.dataset.o] = e.target.value; }
+});
+document.getElementById('hrBody').addEventListener('click', e => { if (e.target.dataset.delRoom != null) { hotelDraft.rooms.splice(+e.target.dataset.delRoom, 1); renderHotel(); } });
+loadHotelDraft(); // again, now that every line above has run
+function collectHotel(){
+  if (hotelDraft.type !== 'hotel') return { type: 'villa' };
+  const cats = hotelDraft.categories.filter(c => String(c.name || '').trim());
+  if (!cats.length) return { error: 'Add at least one room category with a name' };
+  if (cats.some(c => !(Number(c.rack) > 0))) return { error: 'Every room category needs a rack rate' };
+  if (cats.some(c => Number(c.maxOcc) < Number(c.baseOcc))) return { error: 'Max guests can\'t be below guests included' };
+  const ids = new Set(cats.map(c => c.id)), nos = new Set();
+  const rooms = hotelDraft.rooms.filter(r => String(r.no || '').trim() && ids.has(r.cat)).filter(r => !nos.has(r.no) && nos.add(r.no))
+    .map(r => ({ no: String(r.no).trim(), floor: String(r.floor || '').trim(), cat: r.cat, ooo: (r.ooo || []).filter(o => o.from && o.to && o.to >= o.from) }));
+  if (!rooms.length) return { error: 'Add the rooms for your categories (e.g. 101-110)' };
+  return { type: 'hotel', hotel: { categories: cats.map((c, i) => ({ id: c.id, name: String(c.name).trim(), rack: Number(c.rack) || 0, baseOcc: Number(c.baseOcc) || 2, maxOcc: Number(c.maxOcc) || Number(c.baseOcc) || 2,
+    extraAdult: Number(c.extraAdult) || 0, extraChild: Number(c.extraChild) || 0, weekendPct: Number(c.weekendPct) || 0, minStay: Number(c.minStay) || 1,
+    plans: Object.assign({ EP: 0 }, c.plans), amenities: c.amenities || [], order: i,
+    seasons: (c.seasons || []).filter(se => se.from && se.to && se.to >= se.from && Number(se.rate) > 0).map(se => ({ name: String(se.name || '').trim(), from: se.from, to: se.to, rate: Number(se.rate) })),
+    overrides: c.overrides || {} })), rooms } };
+}
+
 async function saveStay(){
   const btn=document.getElementById("staySave");
   const prop = collectPropertyProfile();
@@ -1998,6 +2152,7 @@ async function saveStay(){
   stay.gst = collectGst();
   stay.terms=(document.getElementById("stayTerms").value||"").split("\n").map(t=>t.trim()).filter(Boolean);
   if(!stay.terms.length) stay.terms=STAY_DEFAULTS.terms.slice();
+  { const h = collectHotel(); if (h.error) { toast(h.error); btn.disabled=false; btn.textContent="Save settings"; switchTab('rooms'); return; } stay.propertyType = h.type; if (h.type === 'hotel') stay.hotel = h.hotel; }
   stay.icalFeeds=icalFeedsDraft
     .filter(f=>(f.url||"").trim()!=="")
     .map(f=>({id:f.id, label:(f.label||"").trim()||f.id, url:f.url.trim()}));
