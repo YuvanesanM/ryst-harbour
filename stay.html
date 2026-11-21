@@ -87,6 +87,16 @@
   .li-del{background:transparent;border:1px solid var(--line);color:var(--muted2);border-radius:8px;height:34px;font-size:16px;line-height:1;margin-top:2px}
   .li-del:hover{border-color:var(--danger);color:var(--danger)}
   .li-desc-wrap{display:flex;flex-direction:column;gap:4px}
+  .hr-row{display:grid;grid-template-columns:1fr 1fr 1fr 28px;grid-template-areas:"cat cat no x" "ad ch plan plan";gap:6px 8px;align-items:end;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+  .hr-row .t{padding:8px 9px;font-size:13px}
+  .hr-row .hr-cat{grid-area:cat} .hr-row .hr-no{grid-area:no} .hr-row .x{grid-area:x} .hr-row .hr-ad{grid-area:ad} .hr-row .hr-ch{grid-area:ch} .hr-row .hr-pl{grid-area:plan}
+  .hr-row label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+  .hr-row .x{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0;align-self:start}
+  .hr-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .hr-day{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;margin-bottom:10px}
+  .hr-dayf{display:inline-flex;align-items:center;gap:6px} .hr-dayf[hidden]{display:none} .hr-dayf .t{width:auto;padding:6px 8px}
+  #hrHint.warn{color:#b3261e;font-weight:600}
+  @media (max-width:640px){ .hr-actions{grid-template-columns:1fr} }
   .add-li{margin-top:4px;width:100%;background:transparent;border:1px dashed #c3ccca;color:var(--muted);padding:10px;border-radius:9px;font-size:13px}
   .add-li:hover{border-color:var(--accent);color:var(--accent-d)}
 
@@ -354,6 +364,18 @@
           <label class="f"><span>Bedrooms</span><input class="t" id="bedrooms" type="number" min="0" step="1" inputmode="numeric" placeholder="—"></label>
         </div>
         <p class="hint" id="bedHint" style="margin-top:-4px"></p>
+      </div>
+
+      <div class="group" id="hrGroup" hidden>
+        <p class="gh">Rooms</p>
+        <label class="hr-day"><input type="checkbox" id="hrDayUse"> Day use (hours) <span class="hr-dayf" id="hrDayFields" hidden>from <input class="t" id="hrDayStart" type="time" step="1800" value="12:00"> for <select class="t" id="hrDayHours"></select></span></label>
+        <div id="hrRows"></div>
+        <div class="hr-actions">
+          <button type="button" class="add-li" id="hrAdd">+ Add room</button>
+          <button type="button" class="add-li" id="hrSuggest">Suggest room numbers</button>
+          <button type="button" class="add-li" id="hrPrice">Fill charges from rooms</button>
+        </div>
+        <p class="hint" id="hrHint"></p>
       </div>
 
       <div class="group">
@@ -697,6 +719,10 @@ async function fetchStaySettings(){
       if(!Array.isArray(settings.rates) || !settings.rates.length) settings.rates = DEFAULTS.rates.map(r=>({...r}));
       try{ localStorage.setItem(K_SET, JSON.stringify(settings)); }catch(e){}
       applyGuestCap();
+      // a new booking opened before the settings arrived: give a hotel its first room, not the villa line
+      if(!editingKey && isHotel() && !curRooms.length){ const c0 = hCats()[0]; if(c0) curRooms = [{ cat: c0.id, roomNo: '', adults: Math.min(2, c0.maxOcc || 2), children: 0, plan: 'EP' }];
+        if(typeof items !== "undefined" && items.length === 1 && items[0]._villaRow){ items = [{desc:"",qty:"1",rate:""}]; renderItems(); } }
+      renderRooms();
       // The page may have opened with an older cached copy — re-price a new,
       // unsaved document from the settings just loaded.
       if(!editingKey && typeof items !== "undefined" && items.length){ syncBedrooms(); autoPriceVilla(); syncGuestCharges(); render(); }
@@ -1173,7 +1199,10 @@ function newDoc(){
   $("#channel").value=defaultChannel();
   modeTouched=false; curPayments=[]; curFood={ foodDue:0, orders:[] }; loadedAdv=0; loadedPays=0; $("#moreBox").open=false;
   $("#returnHint").hidden=true; $("#payRow").hidden=true; $("#btnPay").hidden=false; $("#agreedInp").value="";
-  items=[{desc:"Villa Rental Charges",qty:"1",rate:tariffRows().length?"":rateFor("Villa Rental Charges"),_villaRow:true,_rateAuto:true}];
+  curDayUse = null; curRooms = [];
+  if(isHotel()){ const c0 = hCats()[0]; if(c0) curRooms = [{ cat: c0.id, roomNo: '', adults: Math.min(2, c0.maxOcc || 2), children: 0, plan: 'EP' }]; }
+  renderRooms();
+  items = isHotel() ? [{desc:"",qty:"1",rate:""}] : [{desc:"Villa Rental Charges",qty:"1",rate:tariffRows().length?"":rateFor("Villa Rental Charges"),_villaRow:true,_rateAuto:true}];
   if(docType==="invoice"){ populateLoadQuoteSel(); $("#loadQuoteRow").style.display=""; }
   renderItems(); render();
 }
@@ -1432,6 +1461,70 @@ function syncedPayments(existing){
   const saved = existing && Array.isArray(existing.payments) ? existing.payments : [];
   return saved.length === loadedPays ? curPayments.slice() : saved.concat(curPayments.slice(loadedPays));
 }
+/* ---------- HOTEL ROOMS ---------- */
+// A hotel books rooms by category: each booking lists its rooms (category, room number or auto, guests,
+// meal plan). Saved as stay.rooms (and stay.dayUse for an hourly booking); the proxy's hotel rules use them
+// for availability, the OTA calendar and the front desk. A villa never sees this section.
+var curRooms = [], curDayUse = null;
+function isHotel(){ return !!(settings && settings.propertyType === 'hotel' && settings.hotel); }
+function hCats(){ return (isHotel() && settings.hotel.categories) || []; }
+function hEsc(v){ return String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+const H_PLAN_NAMES = { EP: 'Room only', CP: 'Breakfast', MAP: 'Half board', AP: 'Full board' };
+function renderRooms(){
+  const g = $("#hrGroup"); if (!g) return; g.hidden = !isHotel(); if (!isHotel()) return;
+  const cats = hCats(), rooms = (settings.hotel.rooms || []);
+  const hrs = []; cats.forEach(c => (c.dayUse || []).forEach(d => { if (hrs.indexOf(+d.hours) < 0) hrs.push(+d.hours); })); hrs.sort((a, b) => a - b);
+  $("#hrDayUse").closest('label').style.display = hrs.length ? '' : 'none';
+  $("#hrDayHours").innerHTML = hrs.map(h => `<option value="${h}">${h} hours</option>`).join('');
+  $("#hrDayUse").checked = !!curDayUse; $("#hrDayFields").hidden = !curDayUse;
+  if (curDayUse) { $("#hrDayStart").value = curDayUse.start; $("#hrDayHours").value = String(curDayUse.hours); }
+  $("#hrRows").innerHTML = curRooms.map((r, i) => { const cat = cats.find(c => c.id === r.cat) || cats[0] || { plans: {} };
+    const plans = Object.keys(cat.plans || { EP: 0 }); if (plans.indexOf('EP') < 0) plans.unshift('EP');
+    return `<div class="hr-row" data-i="${i}">
+      <label class="hr-cat">Room type<select class="t" data-k="cat">${cats.map(c => `<option value="${hEsc(c.id)}"${c.id === r.cat ? ' selected' : ''}>${hEsc(c.name)}</option>`).join('')}</select></label>
+      <label class="hr-no">Room<select class="t" data-k="roomNo"><option value="">Auto</option>${rooms.filter(x => x.cat === r.cat).map(x => `<option${x.no === r.roomNo ? ' selected' : ''}>${hEsc(x.no)}</option>`).join('')}</select></label>
+      <label class="hr-ad">Adults<input class="t" data-k="adults" type="number" min="1" max="16" value="${hEsc(r.adults || 2)}"></label>
+      <label class="hr-ch">Children<input class="t" data-k="children" type="number" min="0" max="16" value="${hEsc(r.children || 0)}"></label>
+      <label class="hr-pl">Meals<select class="t" data-k="plan"${curDayUse ? ' disabled' : ''}>${plans.map(p => `<option value="${p}"${p === (r.plan || 'EP') ? ' selected' : ''}>${H_PLAN_NAMES[p] || p}</option>`).join('')}</select></label>
+      <button type="button" class="x" data-del="${i}" aria-label="Remove room">&times;</button></div>`; }).join('');
+  syncRoomGuests();
+}
+function syncRoomGuests(){ if (!isHotel() || !curRooms.length) return; const n = curRooms.reduce((a, r) => a + (+r.adults || 0) + (+r.children || 0), 0); if (n) $("#guests").value = n; }
+function roomsForSave(){ return curRooms.map(r => ({ cat: r.cat, roomNo: r.roomNo || '', adults: +r.adults || 1, children: +r.children || 0, plan: curDayUse ? 'EP' : (r.plan || 'EP') })); }
+function readDayUse(){ return $("#hrDayUse").checked ? { start: $("#hrDayStart").value || '12:00', hours: +$("#hrDayHours").value || 3 } : null; }
+async function hotelCheck(stay){
+  try { const r = await fetch(PROXY_URL + '/hotel/check', { method: 'POST', headers: { 'X-Token': proxyToken, 'Content-Type': 'application/json' }, body: JSON.stringify({ stay }) }); return r.ok ? await r.json() : null; } catch (e) { return null; }
+}
+function hrStayDraft(){ const ci = $("#checkin").value; return { no: editingKey || curNo, type: docType, checkin: ci, checkout: curDayUse && ci ? addDaysISOs(ci, 1) : $("#checkout").value, rooms: roomsForSave(), ...(curDayUse ? { dayUse: curDayUse } : {}) }; }
+function addDaysISOs(iso, n){ const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+(function wireRooms(){
+  const rows = $("#hrRows"); if (!rows) return;
+  rows.addEventListener('change', e => { const row = e.target.closest('[data-i]'); if (!row) return; const r = curRooms[+row.dataset.i], k = e.target.dataset.k;
+    r[k] = (k === 'adults' || k === 'children') ? +e.target.value : e.target.value; if (k === 'cat') { r.roomNo = ''; r.plan = 'EP'; renderRooms(); } else syncRoomGuests(); $("#hrHint").textContent = ''; $("#hrHint").className = 'hint'; });
+  rows.addEventListener('click', e => { if (e.target.dataset.del != null) { curRooms.splice(+e.target.dataset.del, 1); renderRooms(); } });
+  $("#hrAdd").addEventListener('click', () => { const c = hCats()[0]; if (!c) { toast('Set up room categories in Settings → Rooms first'); return; } const last = curRooms[curRooms.length - 1];
+    curRooms.push({ cat: last ? last.cat : c.id, roomNo: '', adults: Math.min(2, c.maxOcc || 2), children: 0, plan: last ? last.plan : 'EP' }); renderRooms(); });
+  $("#hrDayUse").addEventListener('change', () => { curDayUse = readDayUse(); if (curDayUse && $("#checkin").value) { $("#checkout").value = addDaysISOs($("#checkin").value, 1); if (typeof syncNights === 'function') syncNights(); } renderRooms(); });
+  ["hrDayStart", "hrDayHours"].forEach(id => $("#" + id).addEventListener('change', () => { curDayUse = readDayUse(); }));
+  $("#hrSuggest").addEventListener('click', async () => {
+    const st = hrStayDraft(); if (!st.checkin || !st.checkout) { toast('Pick the dates first'); return; } if (!st.rooms.length) { toast('Add a room first'); return; }
+    const r = await hotelCheck(Object.assign({}, st, { rooms: st.rooms.map(x => Object.assign({}, x, { roomNo: '' })) }));
+    if (!r || !r.suggested) { toast('Could not check rooms right now'); return; }
+    r.suggested.forEach((x, i) => { if (curRooms[i]) curRooms[i].roomNo = x.roomNo || ''; });
+    renderRooms(); const missing = r.suggested.filter(x => !x.roomNo).length;
+    $("#hrHint").textContent = missing ? `${missing} room${missing === 1 ? '' : 's'} could not be given a number: not enough free rooms of that type.` : 'Free rooms suggested. Change any you like before saving.'; $("#hrHint").className = missing ? 'hint warn' : 'hint';
+  });
+  $("#hrPrice").addEventListener('click', async () => {
+    const st = hrStayDraft(); if (!st.checkin || !st.rooms.length) { toast('Pick the dates and rooms first'); return; }
+    const body = curDayUse ? { type: 'day', date: st.checkin, start: curDayUse.start, hours: curDayUse.hours, rooms: st.rooms } : { checkin: st.checkin, checkout: st.checkout, rooms: st.rooms };
+    try { const res = await fetch(PROXY_URL + '/hotel/quote', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Token': proxyToken }, body: JSON.stringify(body) }); const q = await res.json();
+      if (q.error) { toast(q.soldOut && editingKey ? q.error + ' (this booking counts itself; edit the charges by hand)' : q.error); return; }
+      const when = q.type === 'day' ? `${q.start}–${q.end}` : `${q.nights} night${q.nights === 1 ? '' : 's'}`;
+      items = q.rooms.map(r => ({ desc: `${r.name} · ${r.planName} · ${when}`, qty: '1', rate: String(r.total) })); renderItems(); render(); toast('Charges filled from the room tariff');
+    } catch (e) { toast('Could not price the rooms right now'); }
+  });
+})();
+
 function collect(){
   const existing = currentStay();
   return {
@@ -1447,6 +1540,7 @@ function collect(){
     deposit: parseFloat($("#deposit").value)||0, advance: syncedAdvance(existing),
     discount: parseFloat($("#discountInp").value)||0,
     items: items.map(({desc,qty,rate,_villaRow,_autoLocked})=>({desc,qty,rate,...(_villaRow&&{_villaRow:true}),...(_autoLocked&&{_autoLocked:true})})),
+    ...(isHotel() ? { rooms: roomsForSave(), dayUse: curDayUse || undefined } : {}),
     savedAt: Date.now()
   };
 }
@@ -1471,6 +1565,15 @@ async function saveDoc(){
   if(!doc.channel){ toast("Pick the booking channel"); $("#channel").classList.add("invalid"); $("#channel").focus(); return false; }
   if(doc.otaSettlement!=null && doc.otaSettlement > grandNow()){ toast("The OTA settlement can't be more than the guest's charges"); $("#settleInp").focus(); return false; }
   if(!doc.guest.trim()){ toast("Add a guest name first"); return false; }
+  if(isHotel()){
+    // a hotel booking needs its rooms (a booking without rooms would close the whole hotel)
+    if(!doc.rooms.length){ toast("Add the booking's rooms"); $("#hrAdd").focus(); return false; }
+    if(doc.dayUse && doc.checkin) doc.checkout = addDaysISOs(doc.checkin, 1);
+    const chk = await hotelCheck(doc);
+    if(chk && chk.suggested) doc.rooms = doc.rooms.map((r, i) => r.roomNo ? r : Object.assign({}, r, { roomNo: (chk.suggested[i] || {}).roomNo || '' })); // Auto → a free room
+    if(chk && chk.problems && chk.problems.length && !confirm("Room problems:\n• " + chk.problems.join("\n• ") + "\n\nSave anyway?")) return false;
+    curRooms = doc.rooms.map(r => Object.assign({}, r)); renderRooms();
+  }
   if(!editingKey && getStays().some(x=>x.no===doc.no)){
     doc.no=curNo=nextNo(docType); $("#no").value=curNo; // number taken meanwhile → next free one
   }
@@ -1517,6 +1620,7 @@ function loadDoc(no){
   curNo=d.no; curDateISO=d.date||todayISO();
   $("#no").value=curNo; $("#date").value=curDateISO;
   $("#guest").value=d.guest||""; $("#email").value=d.email||""; $("#phone").value=d.phone||""; $("#guests").value=d.guests||"";
+  curRooms = Array.isArray(d.rooms) ? d.rooms.map(r => Object.assign({}, r)) : []; curDayUse = d.dayUse || null; renderRooms();
   legacyGuestPricing = (d.items||[]).some(it=>/additional.*guest/i.test(it.desc||""));
   $("#bedrooms").value=d.bedrooms||""; bedTouched=!!d.bedrooms; syncBedrooms();
   syncPhoneValidity(); // flags an old record's phone if it predates this format check — doesn't block loading it

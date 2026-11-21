@@ -303,6 +303,14 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
     </div>
     <div id="hotelCfg" hidden>
       <p class="tf-note" id="hotelSummary"></p>
+      <p class="gh-mini">Times</p>
+      <div class="hc-grid" style="margin-bottom:6px">
+        <label class="f"><span>Check-in time</span><input class="t" type="time" id="htIn" value="14:00"></label>
+        <label class="f"><span>Check-out time</span><input class="t" type="time" id="htOut" value="11:00"></label>
+        <label class="f"><span>Day use from</span><input class="t" type="time" id="htDayFrom" value="08:00"></label>
+        <label class="f"><span>Day use until</span><input class="t" type="time" id="htDayTo" value="20:00"></label>
+      </div>
+      <p class="tf-note">Day-use (hourly) stays must start and end inside these hours. A day-use room is free again for the night; overnight guests hold their room from check-in to check-out time.</p>
       <p class="gh-mini">Room categories</p>
       <p class="tf-note">Each category is a type of room you sell (Deluxe, Premium, Suite). Rates are per room per night, what the guest pays (GST inclusive, like every Harbour invoice). Meal plans are added per room per night; leave a plan blank if you don't offer it. Weekend hike applies to Friday and Saturday nights; holidays use the holiday hike and dates on the Tariffs tab. A season or a date override replaces the rack rate.</p>
       <div id="hcCats"></div>
@@ -1990,7 +1998,9 @@ function loadHotelDraft(){
   const h = stay.hotel || {}; if (!H_PLANS) H_PLANS = [['CP', 'Breakfast (CP) +₹'], ['MAP', 'Half board (MAP) +₹'], ['AP', 'Full board (AP) +₹']];
   hotelDraft = { type: stay.propertyType === 'hotel' ? 'hotel' : 'villa',
     categories: (h.categories || []).map(c => JSON.parse(JSON.stringify(c))), rooms: (h.rooms || []).map(r => JSON.parse(JSON.stringify(r))) };
-  hotelDraft.categories.forEach(c => { if (!c.id) c.id = hSlug(c.name); c.seasons = c.seasons || []; c.plans = c.plans || {}; });
+  hotelDraft.categories.forEach(c => { if (!c.id) c.id = hSlug(c.name); c.seasons = c.seasons || []; c.plans = c.plans || {}; c.dayUse = c.dayUse || []; });
+  hotelDraft.times = { checkinTime: h.checkinTime || '14:00', checkoutTime: h.checkoutTime || '11:00', dayUseFrom: h.dayUseFrom || '08:00', dayUseTo: h.dayUseTo || '20:00' };
+  [['htIn', 'checkinTime'], ['htOut', 'checkoutTime'], ['htDayFrom', 'dayUseFrom'], ['htDayTo', 'dayUseTo']].forEach(([id, k]) => { const el = document.getElementById(id); if (el) el.value = hotelDraft.times[k]; });
   renderHotel();
 }
 function hNewCatId(name){ let id = hSlug(name) || 'room'; while (hotelDraft.categories.some(c => c.id === id)) id += '-2'; return id; }
@@ -2011,6 +2021,10 @@ function renderHotel(){
       ${H_PLANS.map(([p, l]) => `<label class="f"><span>${l}</span><input class="t" type="number" min="0" data-plan="${p}" value="${hEsc(c.plans && c.plans[p] != null ? c.plans[p] : '')}" placeholder="Not offered"></label>`).join('')}
       <label class="f" style="grid-column:1/-1"><span>Amenities (comma separated)</span><input class="t" data-k="amenities" value="${hEsc((c.amenities || []).join(', '))}" placeholder="Sea view, King bed, Balcony"></label>
     </div>
+    <div class="hc-sea"><p class="tf-note" style="margin:6px 0">Day use (hourly stays, e.g. 3 hours, 5 hours): price for the room</p>
+      <div class="rc-table-wrap"><table class="rc-table"><thead><tr><th>Hours</th><th class="r">Rate ₹</th><th style="width:36px"></th></tr></thead><tbody>
+      ${(c.dayUse || []).map((d, j) => `<tr data-di="${j}"><td><input class="t" type="number" min="1" max="12" data-d="hours" value="${hEsc(d.hours)}"></td><td><input class="t" type="number" min="0" data-d="rate" value="${hEsc(d.rate)}"></td><td><button type="button" class="hc-x" data-del-du="${j}" aria-label="Remove day-use slot">&times;</button></td></tr>`).join('')}
+      </tbody></table></div><button type="button" class="rc-add" data-add-du="${i}">+ Add day-use slot</button></div>
     <div class="hc-sea"><p class="tf-note" style="margin:6px 0">Seasons (replace the rack rate between two dates, inclusive)</p>
       <div class="rc-table-wrap"><table class="rc-table"><thead><tr><th>Season</th><th>From</th><th>To</th><th class="r">Rate ₹</th><th style="width:36px"></th></tr></thead><tbody>
       ${(c.seasons || []).map((se, j) => `<tr data-si="${j}"><td><input class="t" data-s="name" value="${hEsc(se.name)}" placeholder="Peak"></td><td><input class="t" type="date" data-s="from" value="${hEsc(se.from)}"></td><td><input class="t" type="date" data-s="to" value="${hEsc(se.to)}"></td><td><input class="t" type="number" min="0" data-s="rate" value="${hEsc(se.rate)}"></td><td><button type="button" class="hc-x" data-del-sea="${j}" aria-label="Remove season">&times;</button></td></tr>`).join('')}
@@ -2036,6 +2050,7 @@ document.getElementById('hcCats').addEventListener('input', e => {
   else if (k) c[k] = e.target.type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value;
   else if (p) { if (e.target.value === '') delete c.plans[p]; else c.plans[p] = Number(e.target.value); }
   else if (sv) { const se = c.seasons[+e.target.closest('[data-si]').dataset.si]; se[sv] = sv === 'rate' ? Number(e.target.value) : e.target.value; }
+  else if (e.target.dataset.d) { const du = c.dayUse[+e.target.closest('[data-di]').dataset.di]; du[e.target.dataset.d] = Number(e.target.value); }
   if (k === 'name') { const o = document.querySelector(`#hrCat option[value="${CSS.escape(c.id)}"]`); if (o) o.textContent = c.name || c.id; }
 });
 document.getElementById('hcCats').addEventListener('click', e => {
@@ -2043,12 +2058,14 @@ document.getElementById('hcCats').addEventListener('click', e => {
   if (e.target.dataset.delCat != null) { const c = hotelDraft.categories[+e.target.dataset.delCat], used = hotelDraft.rooms.filter(r => r.cat === c.id).length;
     if (used && !confirm(`${c.name || 'This category'} has ${used} room${used === 1 ? '' : 's'}. Remove the category and its rooms?`)) return;
     hotelDraft.rooms = hotelDraft.rooms.filter(r => r.cat !== c.id); hotelDraft.categories.splice(+e.target.dataset.delCat, 1); renderHotel(); }
+  else if (e.target.dataset.addDu != null) { hotelDraft.categories[+e.target.dataset.addDu].dayUse.push({ hours: 3, rate: '' }); renderHotel(); }
+  else if (e.target.dataset.delDu != null && card) { hotelDraft.categories[+card.dataset.ci].dayUse.splice(+e.target.dataset.delDu, 1); renderHotel(); }
   else if (e.target.dataset.addSea != null) { hotelDraft.categories[+e.target.dataset.addSea].seasons.push({ name: '', from: '', to: '', rate: '' }); renderHotel(); }
   else if (e.target.dataset.delSea != null && card) { hotelDraft.categories[+card.dataset.ci].seasons.splice(+e.target.dataset.delSea, 1); renderHotel(); }
 });
 document.getElementById('hcAddCat').addEventListener('click', () => {
   const name = hotelDraft.categories.length ? '' : 'Deluxe Room';
-  hotelDraft.categories.push({ id: hNewCatId(name || 'room-' + (hotelDraft.categories.length + 1)), name, rack: '', baseOcc: 2, maxOcc: 3, extraAdult: '', extraChild: '', weekendPct: '', minStay: 1, plans: { EP: 0 }, seasons: [], amenities: [] });
+  hotelDraft.categories.push({ id: hNewCatId(name || 'room-' + (hotelDraft.categories.length + 1)), name, rack: '', baseOcc: 2, maxOcc: 3, extraAdult: '', extraChild: '', weekendPct: '', minStay: 1, plans: { EP: 0 }, seasons: [], dayUse: [], amenities: [] });
   renderHotel(); const last = document.querySelector('#hcCats .hc-card:last-child [data-k=name]'); if (last) last.focus();
 });
 document.getElementById('ptChoice').addEventListener('change', e => { if (e.target.name === 'ptType') { hotelDraft.type = e.target.value; renderHotel(); } });
@@ -2083,11 +2100,14 @@ function collectHotel(){
   const rooms = hotelDraft.rooms.filter(r => String(r.no || '').trim() && ids.has(r.cat)).filter(r => !nos.has(r.no) && nos.add(r.no))
     .map(r => ({ no: String(r.no).trim(), floor: String(r.floor || '').trim(), cat: r.cat, ooo: (r.ooo || []).filter(o => o.from && o.to && o.to >= o.from) }));
   if (!rooms.length) return { error: 'Add the rooms for your categories (e.g. 101-110)' };
+  if ((document.getElementById('htDayTo').value || '20:00') <= (document.getElementById('htDayFrom').value || '08:00')) return { error: 'Day use must end after it starts' };
   return { type: 'hotel', hotel: { categories: cats.map((c, i) => ({ id: c.id, name: String(c.name).trim(), rack: Number(c.rack) || 0, baseOcc: Number(c.baseOcc) || 2, maxOcc: Number(c.maxOcc) || Number(c.baseOcc) || 2,
     extraAdult: Number(c.extraAdult) || 0, extraChild: Number(c.extraChild) || 0, weekendPct: Number(c.weekendPct) || 0, minStay: Number(c.minStay) || 1,
     plans: Object.assign({ EP: 0 }, c.plans), amenities: c.amenities || [], order: i,
     seasons: (c.seasons || []).filter(se => se.from && se.to && se.to >= se.from && Number(se.rate) > 0).map(se => ({ name: String(se.name || '').trim(), from: se.from, to: se.to, rate: Number(se.rate) })),
-    overrides: c.overrides || {} })), rooms } };
+    dayUse: (c.dayUse || []).filter(d => Number(d.hours) >= 1 && Number(d.rate) > 0).map(d => ({ hours: Math.round(Number(d.hours)), rate: Number(d.rate) })),
+    overrides: c.overrides || {} })), rooms,
+    checkinTime: document.getElementById('htIn').value || '14:00', checkoutTime: document.getElementById('htOut').value || '11:00', dayUseFrom: document.getElementById('htDayFrom').value || '08:00', dayUseTo: document.getElementById('htDayTo').value || '20:00' } };
 }
 
 async function saveStay(){

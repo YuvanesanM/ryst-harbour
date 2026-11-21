@@ -78,6 +78,15 @@ Villas must not change. Everything below branches on `property.type === 'hotel'`
 - GST computed per room per night (existing 7,500 slab rule applied per room).
 - Booking engine: guests pick dates → see categories with live counts and prices → book N rooms.
 
+### Phase 1 status (Nov 2026)
+Done: categories, rooms, tariffs (incl. day-use slots per category, check-in/out and day-use window), per-category
+availability, quotes, GST per room-night; online booking engine on the hotel's website (overnight and day use,
+rooms by category, meal plans, Razorpay; rooms held while paying, numbers assigned on confirmation); staff booking
+editor with rooms, Auto room numbers, suggestions, clash warnings and charges filled from the tariff; OTA iCal
+export closes only fully sold nights. Day-use bookings are stored with checkout = next day plus dayUse; villa-era
+reports still count them as a night (to fix with Phase 3 reports). Invoices use one GST rate per booking; per-line
+slabs for mixed 5%/18% rooms come with folios in Phase 2.
+
 ### Phase 2 — Front desk and housekeeping
 - Tape chart: rooms × dates grid, drag to assign / move / extend, unassigned queue.
 - Check-in (assign rooms, ID per guest, advance), room move, early/late, check-out with folio per
