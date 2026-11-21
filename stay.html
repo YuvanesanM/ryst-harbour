@@ -8,7 +8,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=96e96d06"></script>
+<script src="/assets/app/shell.js?v=2b6a6fa6"></script>
 <title data-title="{name} — Stay Invoice / Quote">RYST 109A — Stay Invoice / Quote</title>
 <meta name="robots" content="noindex, nofollow">
 
@@ -89,7 +89,8 @@
   .li-desc-wrap{display:flex;flex-direction:column;gap:4px}
   .hr-row{display:grid;grid-template-columns:1fr 1fr 1fr 28px;grid-template-areas:"cat cat no x" "ad ch plan plan";gap:6px 8px;align-items:end;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
   .hr-row .t{padding:8px 9px;font-size:13px}
-  .hr-row .hr-cat{grid-area:cat} .hr-row .hr-no{grid-area:no} .hr-row .x{grid-area:x} .hr-row .hr-ad{grid-area:ad} .hr-row .hr-ch{grid-area:ch} .hr-row .hr-pl{grid-area:plan}
+  .hr-row .hr-cat{grid-area:cat} .hr-row .hr-no{grid-area:no} .hr-row .x{grid-area:x} .hr-row .hr-ad{grid-area:ad} .hr-row .hr-ch{grid-area:ch} .hr-row .hr-pl{grid-area:plan} .hr-row .hr-gn{grid-column:1/-1}
+  .hr-grp{display:flex;flex-direction:column;gap:3px;font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:8px} .hr-grp .t{padding:8px 9px;font-size:13px}
   .hr-row label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
   .hr-row .x{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0;align-self:start}
   .hr-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
@@ -370,6 +371,7 @@
       <div class="group" id="hrGroup" hidden>
         <p class="gh">Rooms</p>
         <label class="hr-day"><input type="checkbox" id="hrDayUse"> Day use (hours) <span class="hr-dayf" id="hrDayFields" hidden>from <input class="t" id="hrDayStart" type="time" step="1800" value="12:00"> for <select class="t" id="hrDayHours"></select></span></label>
+        <label class="hr-grp" id="hrGrpRow" hidden>Group name (optional)<input class="t" id="hrGrpName" maxlength="80" placeholder="e.g. Sharma wedding, Acme offsite"></label>
         <div id="hrRows"></div>
         <div class="hr-actions">
           <button type="button" class="add-li" id="hrAdd">+ Add room</button>
@@ -1200,7 +1202,7 @@ function newDoc(){
   $("#channel").value=defaultChannel();
   modeTouched=false; curPayments=[]; curFood={ foodDue:0, orders:[] }; loadedAdv=0; loadedPays=0; $("#moreBox").open=false;
   $("#returnHint").hidden=true; $("#payRow").hidden=true; $("#btnPay").hidden=false; $("#agreedInp").value="";
-  curDayUse = null; curRooms = [];
+  curDayUse = null; curRooms = []; if ($("#hrGrpName")) $("#hrGrpName").value = '';
   if(isHotel()){ const c0 = hCats()[0]; if(c0) curRooms = [{ cat: c0.id, roomNo: '', adults: Math.min(2, c0.maxOcc || 2), children: 0, plan: 'EP' }]; }
   renderRooms();
   items = isHotel() ? [{desc:"",qty:"1",rate:""}] : [{desc:"Villa Rental Charges",qty:"1",rate:tariffRows().length?"":rateFor("Villa Rental Charges"),_villaRow:true,_rateAuto:true}];
@@ -1487,11 +1489,13 @@ function renderRooms(){
       <label class="hr-ad">Adults<input class="t" data-k="adults" type="number" min="1" max="16" value="${hEsc(r.adults || 2)}"></label>
       <label class="hr-ch">Children<input class="t" data-k="children" type="number" min="0" max="16" value="${hEsc(r.children || 0)}"></label>
       <label class="hr-pl">Meals<select class="t" data-k="plan"${curDayUse ? ' disabled' : ''}>${plans.map(p => `<option value="${p}"${p === (r.plan || 'EP') ? ' selected' : ''}>${H_PLAN_NAMES[p] || p}</option>`).join('')}</select></label>
+      ${curRooms.length > 1 ? `<label class="hr-gn">Guest in this room (rooming list)<input class="t" data-k="guestName" maxlength="80" value="${hEsc(r.guestName || '')}" placeholder="Optional"></label>` : ''}
       <button type="button" class="x" data-del="${i}" aria-label="Remove room">&times;</button></div>`; }).join('');
+  $("#hrGrpRow").hidden = curRooms.length < 2;
   syncRoomGuests();
 }
 function syncRoomGuests(){ if (!isHotel() || !curRooms.length) return; const n = curRooms.reduce((a, r) => a + (+r.adults || 0) + (+r.children || 0), 0); if (n) $("#guests").value = n; }
-function roomsForSave(){ return curRooms.map(r => ({ cat: r.cat, roomNo: r.roomNo || '', adults: +r.adults || 1, children: +r.children || 0, plan: curDayUse ? 'EP' : (r.plan || 'EP') })); }
+function roomsForSave(){ return curRooms.map(r => Object.assign({ cat: r.cat, roomNo: r.roomNo || '', adults: +r.adults || 1, children: +r.children || 0, plan: curDayUse ? 'EP' : (r.plan || 'EP') }, String(r.guestName || '').trim() ? { guestName: String(r.guestName).trim().slice(0, 80) } : {})); }
 function readDayUse(){ return $("#hrDayUse").checked ? { start: $("#hrDayStart").value || '12:00', hours: +$("#hrDayHours").value || 3 } : null; }
 async function hotelCheck(stay){
   try { const r = await fetch(PROXY_URL + '/hotel/check', { method: 'POST', headers: { 'X-Token': proxyToken, 'Content-Type': 'application/json' }, body: JSON.stringify({ stay }) }); return r.ok ? await r.json() : null; } catch (e) { return null; }
@@ -1542,7 +1546,7 @@ function collect(){
     discount: parseFloat($("#discountInp").value)||0,
     // folio charges posted at the front desk keep their room, kind, GST rate and who posted them
     items: items.map(({desc,qty,rate,_villaRow,_autoLocked,room,kind,gst,id,by,at,date})=>({desc,qty,rate,...(_villaRow&&{_villaRow:true}),...(_autoLocked&&{_autoLocked:true}),...(kind&&{room,kind,gst,id,by,at,date})})),
-    ...(isHotel() ? { rooms: roomsForSave(), dayUse: curDayUse || undefined } : {}),
+    ...(isHotel() ? { rooms: roomsForSave(), dayUse: curDayUse || undefined, group: curRooms.length > 1 && $("#hrGrpName").value.trim() ? $("#hrGrpName").value.trim().slice(0, 80) : undefined } : {}),
     savedAt: Date.now()
   };
 }
@@ -1622,7 +1626,7 @@ function loadDoc(no){
   curNo=d.no; curDateISO=d.date||todayISO();
   $("#no").value=curNo; $("#date").value=curDateISO;
   $("#guest").value=d.guest||""; $("#email").value=d.email||""; $("#phone").value=d.phone||""; $("#guests").value=d.guests||"";
-  curRooms = Array.isArray(d.rooms) ? d.rooms.map(r => Object.assign({}, r)) : []; curDayUse = d.dayUse || null; renderRooms();
+  curRooms = Array.isArray(d.rooms) ? d.rooms.map(r => Object.assign({}, r)) : []; curDayUse = d.dayUse || null; if ($("#hrGrpName")) $("#hrGrpName").value = d.group || ''; renderRooms();
   legacyGuestPricing = (d.items||[]).some(it=>/additional.*guest/i.test(it.desc||""));
   $("#bedrooms").value=d.bedrooms||""; bedTouched=!!d.bedrooms; syncBedrooms();
   syncPhoneValidity(); // flags an old record's phone if it predates this format check — doesn't block loading it

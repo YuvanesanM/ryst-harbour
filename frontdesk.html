@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=96e96d06"></script>
+<script src="/assets/app/shell.js?v=2b6a6fa6"></script>
 <title data-title="Front desk · {name}">Front desk · RYST Harbour</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -317,7 +317,7 @@ function bkRow(s, kind){
   if (kind === 'dep') btn = s.checkedOutAt ? '<span class="ok">Checked out</span>' : `<button type="button" data-act="checkout" data-no="${esc(s.no)}">Check out</button>`;
   if (kind === 'day') btn = s.checkedOutAt ? '<span class="ok">Done</span>' : s.checkedInAt ? `<button type="button" data-act="checkout" data-no="${esc(s.no)}">Check out</button>` : `<button type="button" data-act="checkin" data-no="${esc(s.no)}">Check in</button>`;
   const when = s.dayUse ? `${s.dayUse.start} · ${s.dayUse.hours} h` : `${dLbl(s.checkin)} → ${dLbl(s.checkout)}`;
-  return `<div class="bk"><div class="grow"><a class="nm" href="stay.html?open=${encodeURIComponent(s.no)}">${esc(s.guest || s.no)}</a><div class="mt">${esc(roomsTxt)} · ${when}${s.channel ? ' · ' + esc(s.channel) : ''}${s.checkinDone ? ' · online check-in done' : ''}</div></div>
+  return `<div class="bk"><div class="grow"><a class="nm" href="stay.html?open=${encodeURIComponent(s.no)}">${esc(s.guest || s.no)}</a>${s.group ? ` <span class="pill">${esc(s.group)}</span>` : ''}<div class="mt">${esc(roomsTxt)} · ${when}${s.channel ? ' · ' + esc(s.channel) : ''}${s.checkinDone ? ' · online check-in done' : ''}</div></div>
     ${due > 0 ? `<span class="due">${inr(due)} due</span>` : '<span class="ok">Paid</span>'}<button type="button" class="ghost" data-folio="${esc(s.no)}">Folio</button>${btn}</div>`;
 }
 function renderLists(){
@@ -356,7 +356,7 @@ async function folioSheet(no){
     const recent = l => F.canApprove || (Date.now() - (l.at || 0) < 15 * 60 * 1000);
     const line = l => `<div class="fo-ln"><div class="grow"><div>${esc(l.desc)}${l.qty > 1 ? ` <span class="mt">× ${l.qty}</span>` : ''}</div><div class="mt">${l.kind === 'room' ? 'Room charge' : esc(F.kinds[l.kind] || l.kind)}${l.date ? ' · ' + dLbl(l.date) : ''}${l.by ? ' · ' + esc(l.by) : ''}${l.gstRate != null ? ' · GST ' + l.gstRate + '%' : ''}</div></div>
       <span class="am">${inr(l.amount)}</span>${l.kind !== 'room' && l.id && !F.invoiced && recent(l) ? `<button type="button" class="x" data-void="${esc(l.id)}" aria-label="Remove ${esc(l.desc)}" title="Remove">×</button>` : ''}</div>`;
-    const secs = F.byRoom.map(r => ({ room: r.roomNo, title: r.roomNo ? 'Room ' + r.roomNo : 'Room (no number yet)', sub: catName(r.cat), lines: F.lines.filter(l => r.roomNo && l.room === r.roomNo), total: r.charges, paid: r.paid }));
+    const secs = F.byRoom.map(r => ({ room: r.roomNo, title: r.roomNo ? 'Room ' + r.roomNo : 'Room (no number yet)', sub: catName(r.cat) + (r.guestName ? ' · ' + r.guestName : ''), lines: F.lines.filter(l => r.roomNo && l.room === r.roomNo), total: r.charges, paid: r.paid }));
     const shared = F.lines.filter(l => !l.room); if (shared.length) secs.push({ title: 'Booking', sub: 'not tied to one room', lines: shared, total: F.shared });
     const pays = F.payments.map(p => `<div class="fo-ln"><div class="grow"><div>${esc(p.method)}${p.company ? ' · ' + esc(p.company) + (p.settled ? ' (paid by the company)' : ' (owed by the company)') : ''}${p.room ? ' · Room ' + esc(p.room) : ''}</div><div class="mt">${p.date ? dLbl(p.date) : ''}${p.by ? ' · ' + esc(p.by) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div>
       ${p.status === 'pending' ? '<span class="pill wait">Awaiting approval</span>' : p.status === 'rejected' ? '<span class="pill no">Rejected</span>' : '<span class="pill">Received</span>'}<span class="am">${inr(p.amount)}</span></div>`).join('');
@@ -364,11 +364,12 @@ async function folioSheet(no){
     const closed = F.invoiced ? 'The tax invoice is issued, so the bill is closed. Cancel the invoice on the booking to change charges.' : F.checkedOutAt ? 'Checked out: charges are closed. Payments can still be recorded.' : '';
     el.querySelector('.fo-body').innerHTML = `
       <div class="print-only"><b style="font-size:15px;color:var(--ink)">${esc((document.querySelector('[data-prop="name"]') || {}).textContent || '')}</b><br>Guest folio · printed ${new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })} · not a tax invoice</div>
-      <div class="fo-hd"><div class="grow"><h3>Folio · ${esc(F.guest || F.no)}</h3><p style="margin:0">${esc(F.no)} · ${dLbl(F.checkin)} → ${dLbl(F.checkout)} · ${F.rooms.length} room${F.rooms.length === 1 ? '' : 's'}</p></div><button type="button" class="tbtn noprint" data-close>Close</button></div>
+      <div class="fo-hd"><div class="grow"><h3>Folio · ${esc(F.guest || F.no)}${F.group ? ` <small style="font-weight:500;color:var(--muted)">· ${esc(F.group)}</small>` : ''}</h3><p style="margin:0">${esc(F.no)} · ${dLbl(F.checkin)} → ${dLbl(F.checkout)} · ${F.rooms.length} room${F.rooms.length === 1 ? '' : 's'}</p></div><button type="button" class="tbtn noprint" data-close>Close</button></div>
       <div class="fo-bill">${F.billTo ? `<div class="grow"><span class="mt">Billed to</span> <b>${esc(F.billTo.name)}</b>${F.billTo.gstin ? ` · GSTIN ${esc(F.billTo.gstin)}` : ''}${F.billTo.address ? `<div class="mt">${esc(F.billTo.address)}</div>` : ''}</div><button type="button" class="tbtn noprint" id="foBillEdit">Change</button>`
         : `<div class="grow mt">Billed to the guest.</div><button type="button" class="tbtn noprint" id="foBillEdit">Bill to a company</button>`}</div>
-      <div class="fo-tot"><div><span>Bill</span><b>${inr(F.total)}</b></div><div><span>Received</span><b>${inr(F.paid)}</b></div><div class="wait"><span>Awaiting approval</span><b>${inr(F.pending)}</b></div><div class="${F.balance > 0 ? 'due' : ''}"><span>Balance</span><b>${inr(Math.max(0, F.balance))}</b></div></div>
+      <div class="fo-tot"><div><span>Bill</span><b>${inr(F.total)}</b></div><div><span>Received</span><b>${inr(F.paid)}</b></div><div class="wait"><span>Awaiting approval</span><b>${inr(F.pending)}</b></div><div class="${F.balance + (F.foodOpen || 0) > 0 ? 'due' : ''}"><span>Balance${F.foodOpen ? ' incl. food' : ''}</span><b>${inr(Math.max(0, F.balance) + (F.foodOpen || 0))}</b></div></div>
       ${secs.map(x => `<div class="fo-sec" data-sec="${esc(x.room || '')}"><h4>${esc(x.title)} <small>${esc(x.sub)}</small>${x.room && F.byRoom.length > 1 ? `<button type="button" class="fo-pr noprint" data-print-room="${esc(x.room)}">Print this room</button>` : ''}<b>${inr(x.total)}</b></h4>${x.lines.length ? x.lines.map(line).join('') : '<div class="fo-ln"><span class="mt">No charges on this room yet</span></div>'}${x.paid ? `<div class="fo-ln"><div class="grow mt">Paid against this room</div><span class="am">− ${inr(x.paid)}</span></div>` : ''}</div>`).join('')}
+      ${(F.food || []).length ? `<div class="fo-sec" data-sec="food"><h4>Restaurant <small>orders on the room account, paid at the restaurant</small><b>${inr(F.foodOpen)} open</b></h4>${F.food.map(o => `<div class="fo-ln"><div class="grow"><div>${esc(o.no)}${o.room ? ' · Room ' + esc(o.room) : ''}</div><div class="mt">${o.date ? dLbl(o.date) + ' · ' : ''}${esc(o.items)}</div></div>${o.status === 'open' ? '<span class="pill wait">On the bill</span>' : `<span class="pill">Paid${o.paymentMode ? ' · ' + esc(o.paymentMode) : ''}</span>`}<span class="am">${inr(o.total)}</span></div>`).join('')}</div>` : ''}
       ${F.discount ? `<div class="fo-sec"><div class="fo-ln"><div class="grow">Discount</div><span class="am">− ${inr(F.discount)}</span></div></div>` : ''}
       <div class="fo-sec" data-sec="pay"><h4>Payments <small>${F.pending ? 'staff payments count once the owner approves them' : ''}</small><b>${inr(F.paid)}</b></h4>${pays || '<div class="fo-ln"><span class="mt">No payments recorded here yet</span></div>'}</div>
       ${closed ? `<p class="noprint" style="margin:6px 0 0">${closed}</p>` : ''}

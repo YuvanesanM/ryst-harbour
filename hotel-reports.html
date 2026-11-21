@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://data.ryst.in https://harbour.ryst.in https://stay.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
+<script src="/assets/app/shell.js?v=2b6a6fa6"></script>
+<title data-title="Hotel reports · {name}">Hotel reports · RYST Harbour</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/assets/app/fonts.css?v=1">
+<style>
+  :root{ --bg:#f3f4f1; --panel:#fff; --panel2:#f7f8f5; --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee; --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --danger:#c0584b; --grid:#eceee9; }
+  *{box-sizing:border-box;margin:0;padding:0} [hidden]{display:none!important}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  button,input{font-family:inherit} button{cursor:pointer}
+  .wrap{max-width:1240px;margin:0 auto;padding:18px 16px 80px}
+  header.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 2px 14px}
+  .ttl{font-weight:700;font-size:18px} .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px} .spacer{flex:1}
+  .chips{display:flex;gap:6px;flex-wrap:wrap} .chips button{border:1.5px solid var(--line);background:var(--panel);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;color:var(--muted)} .chips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .range{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)} .range input{border:1.5px solid var(--line);border-radius:8px;padding:6px;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink)}
+  .tbtn{border:1.5px solid var(--line);background:var(--panel);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--ink)}
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:12px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;min-width:0}
+  .kpi .l{font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)} .kpi .v{font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap} .kpi .s{font-size:12px;color:var(--muted2);margin-top:2px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;min-width:0}
+  .card h2{font-size:13px;font-weight:700;letter-spacing:.3px;margin-bottom:12px;display:flex;align-items:center;gap:8px} .card h2 small{font-weight:500;color:var(--muted2);font-size:12px}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px} .g3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:12px}
+  .chart{position:relative} .chart svg{display:block;width:100%;height:auto;overflow:visible}
+  .chart .ax{font:500 10px Outfit,sans-serif;fill:var(--muted2)} .chart .gl{stroke:var(--grid);stroke-width:1} .chart .mark{fill:var(--accent)} .chart .mark:hover,.chart .mark:focus{fill:var(--accent-d);outline:none}
+  .tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;font-weight:600;padding:6px 9px;border-radius:7px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .12s} .tip.on{opacity:1}
+  table.t{width:100%;border-collapse:collapse;font-size:13px} table.t th,table.t td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap} table.t th{font-size:11px;font-weight:600;color:var(--muted)} table.t .n{text-align:right}
+  .tw{overflow-x:auto}
+  .bar{display:inline-block;vertical-align:middle;height:8px;border-radius:0 4px 4px 0;background:var(--accent);margin-left:8px}
+  .empty{font-size:13px;color:var(--muted2);padding:6px 0}
+  .pace td.up{color:var(--accent-d);font-weight:700}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);opacity:0;background:var(--danger);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;transition:.25s;z-index:60;pointer-events:none} #toast.show{opacity:1}
+  @media (max-width:1040px){ .kpis{grid-template-columns:repeat(3,1fr)} .g2,.g3{grid-template-columns:1fr} }
+  @media (max-width:560px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="ttl"><span>Hotel reports</span><small><span data-prop="name">Hotel</span> · rooms, rates and where guests come from</small></div>
+    <div class="spacer"></div>
+    <div class="chips" role="group" aria-label="Period"><button type="button" data-p="month" class="on">This month</button><button type="button" data-p="last">Last month</button><button type="button" data-p="30">Last 30 days</button><button type="button" data-p="year">This year</button></div>
+    <span class="range"><input type="date" id="from" aria-label="From"> to <input type="date" id="to" aria-label="To"></span>
+    <button type="button" class="tbtn" id="csv">Download CSV</button>
+  </header>
+  <div id="main"><p class="empty">Loading…</p></div>
+</div>
+<div id="toast"></div>
+<script>
+const PROXY_URL = 'https://data.ryst.in', TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const $ = s => document.querySelector(s), esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const inr = n => '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN'), pct = n => (Math.round((Number(n) || 0) * 10) / 10) + '%', num = n => Math.round(n || 0).toLocaleString('en-IN');
+const todayIST = () => new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
+const addD = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+const lbl = (k, o) => k.length === 7 ? new Date(k + '-01T00:00:00Z').toLocaleDateString('en-IN', { timeZone: 'UTC', month: 'short', year: '2-digit' }) : new Date(k + 'T00:00:00Z').toLocaleDateString('en-IN', Object.assign({ timeZone: 'UTC' }, o || { day: 'numeric', month: 'short' }));
+let R = null;
+function toast(m){ const el = $('#toast'); el.textContent = m; el.className = 'show'; clearTimeout(el._t); el._t = setTimeout(() => el.className = '', 3000); }
+async function api(path){
+  if (!TOKEN) { location.href = 'login.html'; throw new Error('Signed out'); }
+  const r = await fetch(PROXY_URL + path, { headers: { 'X-Token': TOKEN }, cache: 'no-store' });
+  if (r.status === 401) { localStorage.removeItem('ryst_proxy_token'); location.href = 'login.html'; throw new Error('Signed out'); }
+  const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j.error || 'Something went wrong'); e.status = r.status; throw e; } return j;
+}
+function period(p){ const t = todayIST(), m0 = t.slice(0, 8) + '01';
+  if (p === 'last') { const lm = addD(m0, -1); return [lm.slice(0, 8) + '01', lm]; }
+  if (p === '30') return [addD(t, -29), t]; if (p === 'year') return [t.slice(0, 4) + '-01-01', t]; return [m0, t]; }
+// one series of thin bars, value labels on hover (a single measure: no legend, the title names it)
+function bars(rows, key, fmt, max){
+  const W = 760, H = 180, L = 34, B = 22, n = rows.length || 1, bw = (W - L) / n, top = max || Math.max(1, ...rows.map(r => r[key]));
+  const ticks = [0, top / 2, top];
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(key)} by ${R.by}">
+    ${ticks.map(v => { const y = H - B - v / top * (H - B - 8); return `<line class="gl" x1="${L}" x2="${W}" y1="${y}" y2="${y}"/><text class="ax" x="${L - 6}" y="${y + 3}" text-anchor="end">${fmt(v, true)}</text>`; }).join('')}
+    ${rows.map((r, i) => { const h = Math.max(r[key] > 0 ? 2 : 0, r[key] / top * (H - B - 8)), x = L + i * bw + Math.min(2, bw * .15), w = Math.max(1, bw - Math.min(4, bw * .3));
+      return `<rect class="mark" tabindex="0" x="${x}" y="${H - B - h}" width="${w}" height="${h}" rx="${Math.min(4, w / 2)}" data-t="${esc(lbl(r.key))}: ${esc(fmt(r[key]))}"/>`; }).join('')}
+    ${rows.map((r, i) => (n <= 14 || i % Math.ceil(n / 12) === 0) ? `<text class="ax" x="${L + i * bw + bw / 2}" y="${H - 6}" text-anchor="middle">${esc(R.by === 'month' ? lbl(r.key) : lbl(r.key, { day: 'numeric' }))}</text>` : '').join('')}
+  </svg><div class="tip"></div></div>`;
+}
+function render(){
+  const T = R.totals, s = R.series;
+  const maxSrc = Math.max(1, ...R.sources.map(x => x.roomNights)), maxNat = Math.max(1, ...R.nationality.map(x => x.bookings));
+  $('#main').innerHTML = `
+  <div class="kpis">
+    <div class="kpi"><div class="l">Occupancy</div><div class="v">${pct(T.occupancy)}</div><div class="s">${num(T.sold)} of ${num(T.sellable)} room-nights</div></div>
+    <div class="kpi"><div class="l">ADR</div><div class="v">${inr(T.adr)}</div><div class="s">revenue per room sold</div></div>
+    <div class="kpi"><div class="l">RevPAR</div><div class="v">${inr(T.revpar)}</div><div class="s">revenue per available room</div></div>
+    <div class="kpi"><div class="l">Room revenue</div><div class="v">${inr(T.revenue)}</div><div class="s">GST included</div></div>
+    <div class="kpi"><div class="l">Bookings arriving</div><div class="v">${num(T.bookings)}</div><div class="s">${T.dayUse ? T.dayUse + ' day use · ' : ''}${T.noShows} no-show${T.noShows === 1 ? '' : 's'}${T.cancelled ? ' · ' + T.cancelled + ' cancelled' : ''}</div></div>
+    <div class="kpi"><div class="l">Stay and lead time</div><div class="v">${T.avgLos || '–'}<small style="font-size:13px;color:var(--muted)"> nights</small></div><div class="s">${T.avgLead != null ? 'booked ' + T.avgLead + ' days ahead' : 'lead time not known yet'}</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h2>Occupancy <small>by ${R.by}</small></h2>${bars(s, 'occupancy', (v, ax) => Math.round(v) + '%', 100)}</div>
+    <div class="card"><h2>RevPAR <small>by ${R.by}</small></h2>${bars(s, 'revpar', (v, ax) => ax ? (v >= 1000 ? Math.round(v / 1000) + 'k' : Math.round(v)) : inr(v))}</div>
+  </div>
+  <div class="card"><h2>By room type</h2><div class="tw"><table class="t"><tr><th>Room type</th><th class="n">Rooms</th><th class="n">Room-nights sold</th><th class="n">Occupancy</th><th class="n">ADR</th><th class="n">RevPAR</th><th class="n">Revenue</th><th class="n">Day use</th></tr>
+    ${R.byCategory.map(c => `<tr><td>${esc(c.name)}</td><td class="n">${c.rooms}</td><td class="n">${num(c.sold)}</td><td class="n">${pct(c.occupancy)}</td><td class="n">${inr(c.adr)}</td><td class="n">${inr(c.revpar)}</td><td class="n">${inr(c.revenue)}</td><td class="n">${c.dayUse || '–'}</td></tr>`).join('')}</table></div></div>
+  <div class="g3">
+    <div class="card"><h2>Where bookings come from <small>arrivals in the period</small></h2>${R.sources.length ? `<div class="tw"><table class="t"><tr><th>Channel</th><th class="n">Bookings</th><th class="n">Room-nights</th><th class="n">Revenue</th></tr>
+      ${R.sources.map(x => `<tr><td>${esc(x.channel)}<span class="bar" style="width:${Math.round(x.roomNights / maxSrc * 70)}px"></span></td><td class="n">${x.bookings}</td><td class="n">${num(x.roomNights)}</td><td class="n">${inr(x.revenue)}</td></tr>`).join('')}</table></div>` : '<p class="empty">No arrivals in this period.</p>'}</div>
+    <div class="card"><h2>Guest nationality <small>from check-in and Form C</small></h2>${R.nationality.length ? `<table class="t">${R.nationality.map(x => `<tr><td>${esc(x.nationality)}<span class="bar" style="width:${Math.round(x.bookings / maxNat * 60)}px"></span></td><td class="n">${x.bookings}</td></tr>`).join('')}</table>` : '<p class="empty">No arrivals in this period.</p>'}</div>
+    <div class="card"><h2>Pace <small>room-nights on the books for the coming days</small></h2><table class="t pace"><tr><th>Next</th><th class="n">Now</th><th class="n">7 days ago</th><th class="n">30 days ago</th></tr>
+      ${R.pace.map(p => `<tr><td>${p.days} days</td><td class="n${p.now > p.weekAgo ? ' up' : ''}">${num(p.now)}</td><td class="n">${num(p.weekAgo)}</td><td class="n">${num(p.monthAgo)}</td></tr>`).join('')}</table>
+      <p class="empty">Bookings made before Harbour recorded booking dates count as already on the books.</p></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h2>Business on the books <small>next 90 nights</small></h2><table class="t"><tr><th>Month</th><th class="n">Room-nights</th><th class="n">Occupancy</th><th class="n">Revenue</th></tr>
+      ${R.businessOnBooks.map(m => `<tr><td>${esc(lbl(m.month))}</td><td class="n">${num(m.roomNights)}</td><td class="n">${pct(m.occupancy)}</td><td class="n">${inr(m.revenue)}</td></tr>`).join('')}</table></div>
+    <div class="card"><h2>Night audits <small>closed days in the period</small></h2>${R.audits.length ? `<div class="tw"><table class="t"><tr><th>Day</th><th class="n">Occupancy</th><th class="n">Revenue</th><th class="n">Collected</th><th class="n">No-shows</th><th>By</th></tr>
+      ${R.audits.map(a => `<tr><td>${esc(lbl(a.date))}</td><td class="n">${a.figures.occupancy != null ? a.figures.occupancy + '%' : '–'}</td><td class="n">${inr(a.figures.revenue)}</td><td class="n">${inr(a.collected)}</td><td class="n">${a.noShows}</td><td>${esc(a.by)}</td></tr>`).join('')}</table></div>` : '<p class="empty">No days closed in this period. Close each day from Front desk → Night audit.</p>'}</div>
+  </div>
+  <div class="card"><h2>Day by day <small>the table behind the charts</small></h2><div class="tw"><table class="t"><tr><th>${R.by === 'month' ? 'Month' : 'Night'}</th><th class="n">Sold</th><th class="n">Available</th><th class="n">Occupancy</th><th class="n">ADR</th><th class="n">RevPAR</th><th class="n">Revenue</th></tr>
+    ${s.map(r => `<tr><td>${esc(lbl(r.key, { weekday: 'short', day: 'numeric', month: 'short' }))}</td><td class="n">${r.sold}</td><td class="n">${r.sellable}</td><td class="n">${pct(r.occupancy)}</td><td class="n">${inr(r.adr)}</td><td class="n">${inr(r.revpar)}</td><td class="n">${inr(r.revenue)}</td></tr>`).join('')}</table></div></div>`;
+  document.querySelectorAll('.chart').forEach(c => { const tip = c.querySelector('.tip');
+    const show = e => { const m = e.target.closest('.mark'); if (!m) { tip.classList.remove('on'); return; } const r = m.getBoundingClientRect(), cr = c.getBoundingClientRect(); tip.textContent = m.dataset.t; tip.style.left = (r.left - cr.left + r.width / 2) + 'px'; tip.style.top = (r.top - cr.top) + 'px'; tip.classList.add('on'); };
+    c.addEventListener('mouseover', show); c.addEventListener('focusin', show); c.addEventListener('mouseleave', () => tip.classList.remove('on')); });
+}
+async function load(){
+  try { R = await api(`/hotel/reports?from=${$('#from').value}&to=${$('#to').value}`); render(); }
+  catch (e) { if (e.status === 404) $('#main').innerHTML = '<div class="card"><p class="empty">This property isn’t set up as a hotel yet (Settings → Rooms).</p></div>'; else toast(e.message); }
+}
+const setP = p => { const [f, t] = period(p); $('#from').value = f; $('#to').value = t; document.querySelectorAll('.chips button').forEach(b => b.classList.toggle('on', b.dataset.p === p)); load(); };
+document.querySelector('.chips').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) setP(b.dataset.p); });
+['#from', '#to'].forEach(id => $(id).addEventListener('change', () => { document.querySelectorAll('.chips button').forEach(b => b.classList.remove('on')); if ($('#from').value && $('#to').value) load(); }));
+$('#csv').addEventListener('click', () => { if (!R) return;
+  const rows = [['period', 'sold', 'available', 'occupancy_pct', 'adr', 'revpar', 'revenue']].concat(R.series.map(r => [r.key, r.sold, r.sellable, r.occupancy, r.adr, r.revpar, r.revenue]));
+  const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' }), a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `hotel-report-${R.from}-to-${R.to}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
+setP('month');
+</script>
+</body>
+</html>

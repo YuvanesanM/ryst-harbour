@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=96e96d06"></script>
+<script src="/assets/app/shell.js?v=2b6a6fa6"></script>
 <title data-title="{restaurantName} · Restaurant · {name}">Casa de RYST · Restaurant · RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -1212,10 +1212,10 @@ $('#btnToggleBuilder').addEventListener('click', ()=>{
 // longer safe to assume it's still the same booking), on every date change
 // (the picker's options — and whatever was selected — are rebuilt from
 // scratch), and after a successful save.
-let obStayNo = '';
+let obStayNo = '', obRoom = '';
 async function refreshGuestPicker(){
   const sel = $('#obGuestPick');
-  obStayNo = '';
+  obStayNo = ''; obRoom = '';
   const date = $('#obDate').value || todayISO();
 
   const seenStayNos = new Set();
@@ -1249,6 +1249,16 @@ async function refreshGuestPicker(){
     });
   }catch(e){ /* leave just the placeholder — free-text guest field still works */ }
 
+  // a hotel: everyone in house, by room
+  try{
+    if((JSON.parse(localStorage.getItem('ryst_property')||'{}').propertyType) === 'hotel' && date === todayISO()){
+      const r = await fetch(PROXY_URL+'/hotel/in-house', { cache:'no-store', headers:{'X-Token':TOKEN} }), d = await r.json().catch(()=>({}));
+      const opts = [];
+      (d.stays||[]).forEach(st => (st.rooms.length ? st.rooms : ['']).forEach(rm => opts.push({ rm, st })));
+      opts.sort((a,b)=>String(a.rm).localeCompare(String(b.rm), undefined, { numeric:true }));
+      if(opts.length) html += `<optgroup label="In house — by room">${opts.map(x => `<option value="${esc(x.st.guest||'Guest')}" data-no="${esc(x.st.no)}" data-room="${esc(x.rm)}">${x.rm ? 'Room '+esc(x.rm)+' · ' : ''}${esc(x.st.guest||'Guest')}</option>`).join('')}</optgroup>`;
+    }
+  }catch(e){ /* the other options still work */ }
   const recentOptions = recentGuests.filter(g => g.no !== activeNo && !turnoverNos.has(g.no));
   if(recentOptions.length){
     html += `<optgroup label="Recent guests — map another bill to them">${recentOptions.map(g =>
@@ -1268,11 +1278,12 @@ $('#obGuestPick').addEventListener('change', e=>{
   if(e.target.value){
     $('#obGuest').value = e.target.value;
     obStayNo = e.target.selectedOptions[0]?.dataset.no || '';
+    obRoom = e.target.selectedOptions[0]?.dataset.room || '';
   } else {
-    obStayNo = '';
+    obStayNo = ''; obRoom = '';
   }
 });
-$('#obGuest').addEventListener('input', ()=>{ obStayNo = ''; });
+$('#obGuest').addEventListener('input', ()=>{ obStayNo = ''; obRoom = ''; });
 $('#obSearch').addEventListener('input', renderMenuPicker);
 // Builds just the action area for one menu-picker row: "+ Add" if it's not
 // in the cart yet, or a −/qty/+ stepper if it is — so the selection state
@@ -1411,7 +1422,7 @@ function resetOrderBuilder(){
   // resets every row back to "+ Add" and hides the cart bar.
   cart = []; renderCart(); renderMenuPicker(); updateCartBar();
   $('#obGuest').value=''; $('#obGuestPick').value=''; $('#obNote').value=''; $('#obDiscount').value='0'; $('#obErr').textContent='';
-  obStayNo = '';
+  obStayNo = ''; obRoom = '';
   $('#obDate').value = todayISO(); $('#obTime').value = '';
   $('#btnSaveOrder').textContent = 'Save order';
   // ready for the next order: the current guest and their room account again
@@ -1431,7 +1442,7 @@ function openOrderForEdit(o){
   $('#obTime').value = o.time || '';
   $('#obGuest').value = o.guest || '';
   $('#obGuestPick').value = '';
-  obStayNo = o.stayNo || '';
+  obStayNo = o.stayNo || ''; obRoom = o.roomNo || '';
   $('#obNote').value = o.note || '';
   $('#obDiscount').value = o.discount || 0;
   $('#obErr').textContent = '';
@@ -1451,14 +1462,14 @@ $('#btnSaveOrder').addEventListener('click', async ()=>{
     date: $('#obDate').value || undefined, time: $('#obTime').value || undefined,
     discount: $('#obDiscount').value,
     items: cart.map(c=>({ menuItemId: c.menuItemId, qty: c.qty })),
-    stayNo: obStayNo || undefined,
+    stayNo: obStayNo || undefined, roomNo: obStayNo ? (obRoom || undefined) : undefined,
   } : {
     action:'create-order',
     guest: $('#obGuest').value, note: $('#obNote').value,
     date: $('#obDate').value || undefined, time: $('#obTime').value || undefined,
     discount: $('#obDiscount').value,
     items: cart.map(c=>({ menuItemId: c.menuItemId, qty: c.qty })),
-    stayNo: obStayNo || undefined,
+    stayNo: obStayNo || undefined, roomNo: obStayNo ? (obRoom || undefined) : undefined,
   };
   const data = await runCommand(cmd, isEdit ? 'Order updated' : 'Order saved');
   if(data){

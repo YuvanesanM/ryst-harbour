@@ -8,7 +8,7 @@
 <script src="/i18n.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=96e96d06"></script>
+<script src="/assets/app/shell.js?v=2b6a6fa6"></script>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title data-title="Guest Register · {name}">Guest Register · RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
@@ -350,7 +350,7 @@ function render(){
   $('#empty').style.display = visible.length ? 'none' : 'block';
   list.innerHTML = visible.map(s => {
     const nightsStr = s.nights!=null ? (s.nights+' night'+(s.nights===1?'':'s')) : '';
-    const guestsStr = (s.guests ? ' · '+esc(s.guests)+' guest'+(String(s.guests)==='1'?'':'s') : '') + (s.bedrooms ? ' · '+esc(s.bedrooms)+' bedroom'+(String(s.bedrooms)==='1'?'':'s') : '');
+    const guestsStr = (s.guests ? ' · '+esc(s.guests)+' guest'+(String(s.guests)==='1'?'':'s') : '') + (s.bedrooms ? ' · '+esc(s.bedrooms)+' bedroom'+(String(s.bedrooms)==='1'?'':'s') : '') + (s.roomCount ? ' · ' + (s.rooms && s.rooms.length ? 'Room ' + s.rooms.map(esc).join(', ') : s.roomCount + ' room' + (s.roomCount === 1 ? '' : 's') + ', no number yet') : '');
     const checkinBlock = s.type==='ota' ? '' : s.checkedIn
       ? `<div class="g-checkin done">✓ Checked in${s.arrivalTime ? ' · arrived '+esc(s.arrivalTime) : ''}${s.vehicleNumber ? ' · '+esc(s.vehicleNumber) : ''}${s.checkinGuestsCount!=null ? ' · '+s.checkinGuestsCount+' guest'+(s.checkinGuestsCount===1?'':'s')+' on arrival' : ''}${s.checkinNote ? '<div class="note">"'+esc(s.checkinNote)+'"</div>' : ''}</div>`
       : `<div class="g-checkin">Not checked in yet</div>`;

@@ -8,7 +8,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=96e96d06"></script>
+<script src="/assets/app/shell.js?v=2b6a6fa6"></script>
 <title data-title="Booking Calendar · {name}">Booking Calendar · RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -1076,6 +1076,8 @@ function openCheckinDetail(no){
     ${row('Vehicle', c.vehicleNumber)}
     ${row('Expected arrival', c.arrivalTime)}
     ${row('Guests', c.guestsCount != null ? String(c.guestsCount) : '')}
+    ${(c.companions || []).length ? `<div class="ag-dates"><strong>Other adult guests:</strong> ${c.companions.map(x => esc(x.name) + ' (' + esc(x.idType) + ' …' + esc(x.idLast4) + ')').join(', ')}</div>` : ''}
+    ${c.foreign ? `<div class="ag-dates"><strong>Foreign national:</strong> ${esc(c.foreign.nationality)} · passport ${esc(c.foreign.passportNo)} (details under Form C)</div>` : ''}
     ${row('Note to host', c.note)}
     ${row('Submitted', new Date(c.submittedAt).toLocaleString('en-IN'))}
     ${c.idPhotoUrl ? `<div class="ag-dates" style="margin-top:10px"><strong>ID Photo:</strong></div><img src="${esc(c.idPhotoUrl)}" alt="ID photo" style="max-width:100%;border-radius:10px;margin-top:6px;border:1px solid var(--line)">` : ''}

@@ -138,6 +138,18 @@ today's arrivals); a wall-screen mode, frontdesk.html?wall=1, for a front-desk m
 refreshes every minute). The normal view refreshes every 2 minutes. Proxy: Hotel.insights; /hotel/frontdesk also returns
 insights, pendingPayments and formC.
 
+### Phase 5 progress (Nov 2026)
+Done: hotel-reports.html (proxy hotel-reports.js, GET /hotel/reports, reports module). It covers occupancy/ADR/RevPAR by day
+(by month past 92 days) and by room type (revenue shared by room lines), sources and nationality of arrivals, average stay
+and lead time, business on the books for 90 nights, and pace (on the books now vs 7 and 30 days ago, using `_c`). It also shows night
+audits and a CSV of the day table. No guest names appear. Restaurant → room: orders carry roomNo; restaurant.html lists in-house guests
+by room (GET /hotel/in-house, restaurant or bookings module); the folio shows the booking's orders (open = on the bill,
+settled = paid at the restaurant). Groups: a booking-level `group` and a per-room `guestName` (rooming list) in the booking
+editor; the board and folio show the room's guest. Check-in: other adult guests (name, ID type, last 4 characters only).
+The guest register shows room numbers for hotel bookings.
+Not done (needs owner input or a larger build): derived rate plans (non-refundable, corporate) in the booking engine and
+Channex; travel-agent commissions; group allotments with release dates; banquets; multi-property (head-office) view.
+
 ### Phase 2 — Front desk and housekeeping
 - Tape chart: rooms × dates grid, drag to assign / move / extend, unassigned queue.
 - Check-in (assign rooms, ID per guest, advance), room move, early/late, check-out with folio per

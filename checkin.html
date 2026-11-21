@@ -137,6 +137,7 @@
   .ci-section-divider{height:1px;background:var(--line);margin:10px 0 16px;width:100%;clear:both}
 
   [hidden]{display:none!important}
+  .comp-row{border:1px solid var(--line);border-radius:12px;padding:10px 12px 0;margin-bottom:10px}
   .f-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
   .f-group label{font-size:13.5px;font-weight:600;color:var(--ink)}
   .f-group label .req{color:var(--coral);margin-left:2px}
@@ -340,6 +341,14 @@
               <p class="trust-note">🔒 Why we ask: Indian law requires every accommodation to keep a guest register with the lead guest's ID, and to report foreign nationals to the FRRO (Form C). Any valid government photo ID works; if you use Aadhaar you may show a masked Aadhaar or Virtual ID. The photo travels over HTTPS to private storage that only the villa's owner and check-in staff can open, and is deleted automatically after the villa's retention period (a year unless the villa sets otherwise). It is shared only with the authorities when the law requires. <a href="https://harbour.ryst.in/privacy.html#roles" data-privacy-link target="_blank" rel="noopener">Privacy notice</a></p>
             </div>
           </div>
+        </fieldset>
+
+        <fieldset class="ci-section">
+          <legend><span class="ci-section-head"><span class="ci-section-icon" aria-hidden="true">👥</span><span class="ci-section-title">Other Adult Guests</span></span></legend>
+          <div class="ci-section-divider"></div>
+          <p class="trust-note" style="margin:0 0 10px">Adults (18+) staying with you, for the guest register. Their ID is checked at arrival; we only keep the last 4 characters of its number.</p>
+          <div id="compRows"></div>
+          <button type="button" class="sig-clear" id="compAdd" style="margin-top:4px">+ Add a guest</button>
         </fieldset>
 
         <fieldset class="ci-section" id="fcSection" hidden>
@@ -932,6 +941,19 @@ function formatArrivalTime(hhmm){
   return `${h}:${m} ${ampm}`;
 }
 
+// other adult guests: name, ID type, last 4 digits of the ID number
+let compN = 0;
+function addCompanion(){
+  if(document.querySelectorAll('.comp-row').length >= 15) return;
+  const i = ++compN, row = document.createElement('div'); row.className = 'comp-row';
+  row.innerHTML = `<div class="f-row"><div class="f-group"><label for="cp-n${i}">Full name</label><input id="cp-n${i}" maxlength="100" autocomplete="off" data-c="name"></div>
+    <div class="f-group"><label for="cp-t${i}">ID type</label><select id="cp-t${i}" data-c="idType"><option>Aadhaar</option><option>Passport</option><option>Driving License</option><option>Voter ID</option><option>Other</option></select></div></div>
+    <div class="f-row"><div class="f-group"><label for="cp-l${i}">Last 4 characters of the ID</label><input id="cp-l${i}" maxlength="4" inputmode="text" autocomplete="off" data-c="idLast4"></div>
+    <div class="f-group" style="justify-content:flex-end"><button type="button" class="sig-clear" data-rm>Remove</button></div></div>`;
+  row.querySelector('[data-rm]').addEventListener('click', () => row.remove());
+  $('#compRows').appendChild(row);
+}
+$('#compAdd').addEventListener('click', addCompanion);
 // Passport → ask about citizenship; a foreign national fills the Form C details
 document.querySelectorAll('input[name="idType"]').forEach(r => r.addEventListener('change', () => { $('#fcSection').hidden = r.value !== 'Passport' || !r.checked; }));
 document.querySelectorAll('input[name="fcIndian"]').forEach(r => r.addEventListener('change', () => { $('#fcFields').hidden = r.value !== 'no'; }));
@@ -964,6 +986,8 @@ $('#ciForm').addEventListener('submit', async e => {
       if(need.some(k => !foreign[k])){ errEl.textContent = 'Please fill every passport and visa detail marked *.'; return; }
     }
   }
+  const companions = [...document.querySelectorAll('.comp-row')].map(r => { const v = k => (r.querySelector(`[data-c="${k}"]`).value || '').trim(); return { name: v('name'), idType: v('idType'), idLast4: v('idLast4') }; }).filter(c => c.name);
+  if(companions.some(c => !/^[A-Za-z0-9]{4}$/.test(c.idLast4))){ errEl.textContent = 'Enter the last 4 letters or digits of each guest’s ID.'; return; }
   if(!sigHasDrawn){ errEl.textContent = 'Please sign above.'; return; }
   if(!$('#ci-agree').checked){ errEl.textContent = 'Please agree to the House Rules & Terms.'; return; }
 
@@ -982,6 +1006,7 @@ $('#ciForm').addEventListener('submit', async e => {
     website: $('#ci-website').value, // honeypot
     agreed: $('#ci-agree').checked, // the house rules, terms and privacy notice (the server keeps when)
     ...(foreign ? { foreign } : {}),
+    ...(companions.length ? { companions } : {}),
   };
 
   try{
