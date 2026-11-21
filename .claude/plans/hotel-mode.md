@@ -147,8 +147,19 @@ by room (GET /hotel/in-house, restaurant or bookings module); the folio shows th
 settled = paid at the restaurant). Groups: a booking-level `group` and a per-room `guestName` (rooming list) in the booking
 editor; the board and folio show the room's guest. Check-in: other adult guests (name, ID type, last 4 characters only).
 The guest register shows room numbers for hotel bookings.
-Not done (needs owner input or a larger build): derived rate plans (non-refundable, corporate) in the booking engine and
-Channex; travel-agent commissions; group allotments with release dates; banquets; multi-property (head-office) view.
+Then: rate plans (settings hotel.ratePlans: name, adjustPct, nonRefundable, minNights, cats, web, ota, note; none by
+default). Quotes apply them to the room price (not meals or extras); the website quote only sees `web` rates, staff see all;
+holds and stays keep `rate`/`nonRefundable`; Channex gets one rate plan per category × meal plan × OTA rate and pushes it
+priced off the standard rate (mapping ratePlans[].rate). Travel agents (hotel.agents: name, commissionPct, GSTIN, phone);
+stay.agent plus an optional agentCommission override; GET /hotel/agents ledger (due once the stay is over, upcoming, paid);
+POST /hotel/agent-paid (owner) sets agentPaid, which a page save can't change. Group allotments: stay.releaseDate; the front
+desk is prompted once the date passes; POST /hotel/release-unnamed removes rooms without a guest name (and their room lines
+when they match one per room), logged in `released`. Banquets (banquets.js, banquets.json, banquets.html): venues (owner),
+events with set-up, menu, charges, discount, tentative/confirmed/cancelled, clash check per venue (can be overridden),
+over-capacity flag, payments by the owner only, printable function sheet. Portfolio (portfolio.html, POST /portfolio): the
+browser keeps an owner sign-in per property (ryst_portfolio); each is verified and only that property's figures come back
+(tonight, arrivals, revenue MTD, ADR, next 30 days, pending approvals, Form C due).
+Still open: GST rate per banquet line (events use GST-inclusive totals, no tax invoice yet); POS KOTs and a kitchen display.
 
 ### Phase 2 — Front desk and housekeeping
 - Tape chart: rooms × dates grid, drag to assign / move / extend, unassigned queue.

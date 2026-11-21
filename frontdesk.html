@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=2b6a6fa6"></script>
+<script src="/assets/app/shell.js?v=472d530a"></script>
 <title data-title="Front desk · {name}">Front desk · RYST Harbour</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -153,6 +153,7 @@
   .pu b{display:block;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums} .pu span{font-size:12px;color:var(--muted)} .pu em{display:block;font-style:normal;font-size:12px;color:var(--muted2);margin-top:4px;font-variant-numeric:tabular-nums}
   .sm{display:grid;grid-template-columns:96px 1fr 38px;align-items:center;gap:8px;margin-bottom:7px;font-size:12.5px} .sm-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .sm-v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
   .sm-b{height:10px;background:var(--panel2);border-radius:5px;overflow:hidden} .sm-b i{display:block;height:100%;background:var(--accent);border-radius:0 4px 4px 0}
+  button.at{width:100%;text-align:left;border-top:0;border-right:0;border-bottom:0;font:inherit;color:inherit;cursor:pointer}
   .at{display:block;text-decoration:none;font-size:13px;padding:8px 10px;border-radius:9px;background:var(--panel2);margin-bottom:6px;border-left:3px solid var(--muted2)} .at b{font-variant-numeric:tabular-nums}
   .at.warn{border-left-color:var(--warn)} .at.bad{border-left-color:var(--danger)} .at.note{border-left-color:var(--s-occ)} .at span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
   .heat-card{margin-bottom:12px} .heat-wrap{overflow-x:auto}
@@ -182,7 +183,7 @@
       <button type="button" id="dToday">Today</button>
     </div>
     <a class="tbtn" href="frontdesk.html?wall=1" target="_blank" rel="noopener" title="Full-screen view for a front-desk monitor">Wall screen</a>
-    <button type="button" class="tbtn" id="btnCo">Companies</button>
+    <button type="button" class="tbtn" id="btnCo">Companies &amp; agents</button>
     <button type="button" class="tbtn" id="btnCx">Channels</button>
     <button type="button" class="tbtn" id="btnAudit">Night audit</button>
     <a class="tbtn primary" href="stay.html?new=invoice">+ New booking</a>
@@ -275,6 +276,9 @@ function render(){
   </div>
   <div class="card" id="tapeCard"><h2>Tape chart <small>tap a booking to move it to another room</small></h2><div class="tape-wrap" id="tape"></div><p class="tape-note" id="tapeNote"></p></div>`;
   renderBoard(); renderLists(); renderTape();
+  document.querySelectorAll('[data-release]').forEach(b => b.addEventListener('click', async () => {
+    if (!confirm(`Release ${b.dataset.n} room${b.dataset.n === '1' ? '' : 's'} with no guest name from ${b.dataset.g}? Their room charges come off the booking.`)) return;
+    b.disabled = true; try { const r = await api('/hotel/release-unnamed', { no: b.dataset.release }); toast(`${r.released} room${r.released === 1 ? '' : 's'} released`); load(); } catch (e) { toast(e.message, true); b.disabled = false; } }));
 }
 
 // ── Pick-up, source mix, room types, things needing attention ──
@@ -291,6 +295,7 @@ function insightsHtml(){
   if (D.pendingPayments && D.pendingPayments.count) att.push(`<a class="at warn" href="approvals.html"><b>${D.pendingPayments.count}</b> payment${D.pendingPayments.count === 1 ? '' : 's'} awaiting approval · ${inr(D.pendingPayments.amount)}</a>`);
   if (D.formC) att.push(`<a class="at bad" href="formc.html"><b>${D.formC}</b> Form C to file for foreign guests</a>`);
   I.unassigned.slice(0, 4).forEach(u => att.push(`<a class="at" href="stay.html?open=${encodeURIComponent(u.no)}"><b>${u.missing}</b> room${u.missing === 1 ? '' : 's'} to number · ${esc(u.guest || u.no)} · ${dLbl(u.checkin)}</a>`));
+  (I.releases || []).forEach(g => att.push(`<button type="button" class="at warn" data-release="${esc(g.no)}" data-n="${g.unnamed}" data-g="${esc(g.group)}"><b>${g.unnamed}</b> unnamed room${g.unnamed === 1 ? '' : 's'} in ${esc(g.group)} · release date ${dLbl(g.releaseDate)} passed<span>Tap to release them back for sale</span></button>`));
   I.notes.slice(0, 4).forEach(n => att.push(`<a class="at note" href="stay.html?open=${encodeURIComponent(n.no)}">${esc(n.guest || n.no)}${n.arrival ? ' · arriving ' + esc(n.arrival) : ''}${n.note ? `<span>${esc(n.note)}</span>` : ''}</a>`));
   return `<div class="grid3">
     <div class="card"><h2>Pick-up <small>bookings made</small></h2><div class="pus"><div><span class="pl">Last 24 hours</span>${pu(I.pickup.day)}</div><div><span class="pl">Last 7 days</span>${pu(I.pickup.week)}</div></div></div>
@@ -418,16 +423,26 @@ async function folioSheet(no){
 // ── Company accounts (city ledger): what each company owes, and recording its payment ──
 $('#btnCo').addEventListener('click', () => coSheet());
 async function coSheet(){
-  let C; try { C = await api('/hotel/companies'); } catch (e) { toast(e.message, true); return; }
+  let C, AG; try { [C, AG] = await Promise.all([api('/hotel/companies'), api('/hotel/agents')]); } catch (e) { toast(e.message, true); return; }
   const el = sheet('<div class="co-body"></div>'); el.querySelector('.box').classList.add('wide');
   const draw = () => {
-    el.querySelector('.co-body').innerHTML = `<div class="fo-hd"><div class="grow"><h3>Company accounts</h3><p style="margin:0">Balances moved from a folio to the company it's billed to. ${inr(C.outstanding)} owed in all.</p></div><button type="button" class="tbtn" data-close>Close</button></div>
+    el.querySelector('.co-body').innerHTML = `<div class="fo-hd"><div class="grow"><h3>Company accounts &amp; agents</h3><p style="margin:0">Balances moved from a folio to the company it's billed to. ${inr(C.outstanding)} owed in all.</p></div><button type="button" class="tbtn" data-close>Close</button></div>
       ${C.companies.length ? C.companies.map((c, ci) => `<div class="co-card"><h4>${esc(c.name)}${c.gstin ? ` <small style="font-weight:500;color:var(--muted)">${esc(c.gstin)}</small>` : ''}<b>${inr(c.outstanding)} owed</b></h4>
         ${c.entries.map(x => `<label class="fo-ln">${C.canSettle && x.status === 'approved' && !x.settled ? `<input type="checkbox" data-co="${ci}" value="${esc(x.id)}" data-amt="${x.amount}" style="width:18px;height:18px;accent-color:var(--accent)">` : ''}<div class="grow"><div>${esc(x.guest || x.no)} <span class="mt">${esc(x.no)}</span></div><div class="mt">${dLbl(x.checkin)} → ${dLbl(x.checkout)}${x.date ? ' · moved ' + dLbl(x.date) : ''}</div></div>
           ${x.status === 'pending' ? '<span class="pill wait">Awaiting approval</span>' : x.settled ? `<span class="pill">Paid · ${esc(x.settled.method)}${x.settled.ref ? ' ' + esc(x.settled.ref) : ''}</span>` : '<span class="pill no">Owed</span>'}<span class="am">${inr(x.amount)}</span></label>`).join('')}
         ${C.canSettle && c.outstanding ? `<form class="fo-form co-pay" data-ci="${ci}" style="border:0;border-top:1px solid var(--line);border-radius:0"><div class="row"><label>Paid by<select name="method">${['Bank transfer', 'UPI', 'Cheque', 'Card', 'Cash'].map(m => `<option>${m}</option>`).join('')}</select></label><label>Reference<input name="ref" maxlength="60" placeholder="UTR / cheque no."></label></div><button type="submit">Record payment for the ticked bookings</button></form>` : ''}</div>`).join('')
         : '<p class="empty">No company accounts yet. On a folio, choose “Bill to a company”, then record the balance “To the company’s account”.</p>'}
-      ${C.canSettle ? '' : '<p class="empty">Only the owner records payments from companies.</p>'}`;
+      ${C.canSettle ? '' : '<p class="empty">Only the owner records payments from companies.</p>'}
+      <h3 style="margin:18px 0 4px">Travel-agent commissions</h3><p style="margin:0 0 10px">${inr(AG.due)} due for stays that are over.</p>
+      ${AG.agents.length ? AG.agents.map((a, ai) => `<div class="co-card"><h4>${esc(a.name)} <small style="font-weight:500;color:var(--muted)">${a.commissionPct}%${a.gstin ? ' · ' + esc(a.gstin) : ''}</small><b>${inr(a.due)} due</b></h4>
+        ${a.entries.map(x => `<label class="fo-ln">${AG.canPay && x.state === 'due' ? `<input type="checkbox" data-ag="${ai}" value="${esc(x.no)}" style="width:18px;height:18px;accent-color:var(--accent)">` : ''}<div class="grow"><div>${esc(x.guest || x.no)} <span class="mt">${esc(x.no)}</span></div><div class="mt">${dLbl(x.checkin)} → ${dLbl(x.checkout)} · booking ${inr(x.total)}</div></div>
+          ${x.state === 'paid' ? `<span class="pill">Paid · ${esc(x.paid.method)}${x.paid.ref ? ' ' + esc(x.paid.ref) : ''}</span>` : x.state === 'due' ? '<span class="pill no">Due</span>' : '<span class="pill wait">After the stay</span>'}<span class="am">${inr(x.commission)}</span></label>`).join('')}
+        ${AG.canPay && a.due ? `<form class="fo-form ag-pay" data-ai="${ai}" style="border:0;border-top:1px solid var(--line);border-radius:0"><div class="row"><label>Paid by<select name="method">${['Bank transfer', 'UPI', 'Cheque', 'Cash'].map(m => `<option>${m}</option>`).join('')}</select></label><label>Reference<input name="ref" maxlength="60" placeholder="UTR / cheque no."></label></div><button type="submit">Record commission paid for the ticked bookings</button></form>` : ''}</div>`).join('')
+        : '<p class="empty">No agent bookings yet. Add agents in Settings → Rooms, then pick the agent on a booking.</p>'}`;
+    el.querySelectorAll('.ag-pay').forEach(f => f.addEventListener('submit', async e => { e.preventDefault();
+      const nos = [...el.querySelectorAll(`[data-ag="${f.dataset.ai}"]:checked`)].map(x => x.value), fd = new FormData(f);
+      if (!nos.length) { toast('Tick the bookings this payment covers', true); return; }
+      try { const r = await api('/hotel/agent-paid', { nos, method: fd.get('method'), ref: fd.get('ref') }); AG = await api('/hotel/agents'); draw(); toast(`Commission recorded for ${r.paid} booking${r.paid === 1 ? '' : 's'}`); } catch (err) { toast(err.message, true); } }));
     el.querySelectorAll('.co-pay').forEach(f => f.addEventListener('submit', async e => { e.preventDefault();
       const ids = [...el.querySelectorAll(`[data-co="${f.dataset.ci}"]:checked`)].map(x => x.value), fd = new FormData(f);
       if (!ids.length) { toast('Tick the bookings this payment covers', true); return; }
@@ -444,14 +459,14 @@ async function cxSheet(){
   const when = t => t ? new Date(t).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '—';
   const draw = () => {
     const m = C.mapping, mapped = !!m.propertyId, own = C.canChange;
-    const rows = C.categories.map(c => { const rt = m.roomTypes.find(x => x.cat === c.id); return `<tr><td>${esc(c.name)} <span class="mt" style="color:var(--muted2)">${c.rooms} room${c.rooms === 1 ? '' : 's'}</span></td><td>${rt ? '<span class="ok-t">Linked</span>' : '<span class="no-t">Not linked</span>'}</td><td>${c.plans.map(p => m.ratePlans.some(x => x.cat === c.id && x.plan === p) ? `<span class="pill">${p}</span>` : `<span class="pill no">${p}</span>`).join(' ')}</td></tr>`; }).join('');
-    const missing = C.categories.some(c => !m.roomTypes.some(x => x.cat === c.id) || c.plans.some(p => !m.ratePlans.some(x => x.cat === c.id && x.plan === p)));
+    const rows = C.categories.map(c => { const rt = m.roomTypes.find(x => x.cat === c.id); return `<tr><td>${esc(c.name)} <span class="mt" style="color:var(--muted2)">${c.rooms} room${c.rooms === 1 ? '' : 's'}</span></td><td>${rt ? '<span class="ok-t">Linked</span>' : '<span class="no-t">Not linked</span>'}</td><td>${c.plans.map(p => m.ratePlans.some(x => x.cat === c.id && x.plan === p && !x.rate) ? `<span class="pill">${p}</span>` : `<span class="pill no">${p}</span>`).join(' ')}${(c.rates || []).map(rt => c.plans.every(p => m.ratePlans.some(x => x.cat === c.id && x.plan === p && x.rate === rt.id)) ? ` <span class="pill">${esc(rt.name)}</span>` : ` <span class="pill no">${esc(rt.name)}</span>`).join('')}</td></tr>`; }).join('');
+    const missing = C.categories.some(c => !m.roomTypes.some(x => x.cat === c.id) || c.plans.some(p => !m.ratePlans.some(x => x.cat === c.id && x.plan === p && !x.rate) || (c.rates || []).some(rt => !m.ratePlans.some(x => x.cat === c.id && x.plan === p && x.rate === rt.id))));
     const lp = C.lastPush, pl = C.lastPull, fullOk = !C.lastFullAt || Date.now() - C.lastFullAt > 24 * 3600e3;
     el.querySelector('.cx-body').innerHTML = `
       <div class="fo-hd"><div class="grow"><h3>Channel manager · Channex</h3><p style="margin:0">Rooms and rates go to your OTAs through Channex; their bookings come back here.</p></div><button type="button" class="tbtn" data-close>Close</button></div>
       <div class="cx-st ${C.configured ? 'on' : 'off'}"><i></i>${C.configured ? `Connected${C.ownKey ? ' with the hotel’s own Channex account' : ' through Harbour'} · ${C.env === 'production' ? 'live' : 'staging (test)'}` : 'Not connected. An admin adds the Channex key in Settings → Connections, or Harbour enables its partner account for you.'}</div>
       ${C.configured ? `
-      <div class="na-sec"><h4>Room types and rate plans</h4><table class="na"><tr><th>Category</th><th>Room type</th><th>Meal plans</th></tr>${rows}</table>
+      <div class="na-sec"><h4>Room types and rate plans</h4><table class="na"><tr><th>Category</th><th>Room type</th><th>Rate plans</th></tr>${rows}</table>
         ${missing && own ? `<div class="cx-btns"><button type="button" class="pri" id="cxSetup">${mapped ? 'Add the missing ones at Channex' : 'Set up at Channex'}</button></div><p class="empty">${mapped ? 'Creates the missing room types and rate plans' : 'Creates the property, a room type per category and a rate plan per meal plan'} in your Channex account. Then connect each OTA to them inside Channex.</p>` : ''}</div>
       ${mapped ? `
       <label class="cx-sw"><div class="grow"><b>Live sync</b><br><span class="mt" style="color:var(--muted)">Send changes automatically when bookings change, and read OTA bookings on a schedule (at once when the webhook below is set in Channex).</span></div><input type="checkbox" id="cxLive" ${C.live ? 'checked' : ''} ${own ? '' : 'disabled'} aria-label="Live sync"></label>

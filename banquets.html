@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://data.ryst.in https://harbour.ryst.in https://stay.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
+<script src="/assets/app/shell.js?v=472d530a"></script>
+<title data-title="Banquets · {name}">Banquets · RYST Harbour</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/assets/app/fonts.css?v=1">
+<style>
+  :root{ --bg:#f3f4f1; --panel:#fff; --panel2:#f7f8f5; --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee; --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6; }
+  *{box-sizing:border-box;margin:0;padding:0} [hidden]{display:none!important}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font-family:inherit} button{cursor:pointer}
+  .wrap{max-width:960px;margin:0 auto;padding:18px 14px 90px}
+  header.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px} .ttl{font-weight:700;font-size:20px} .ttl small{display:block;font-weight:500;font-size:12px;color:var(--muted)} .spacer{flex:1}
+  .tbtn{border:1.5px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink)} .tbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .day{margin-bottom:16px} .day h2{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:0 2px 8px}
+  .ev{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit}
+  .ev.tentative{border-style:dashed} .ev.cancelled{opacity:.55} .ev .tm{font-weight:700;font-variant-numeric:tabular-nums;min-width:96px} .ev .grow{flex:1;min-width:0} .ev .nm{font-weight:700} .ev .mt{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .pill{font-size:11px;font-weight:700;padding:3px 8px;border-radius:7px;white-space:nowrap;background:var(--panel2);color:var(--muted)} .pill.confirmed{background:var(--accent-soft);color:var(--accent-d)} .pill.tentative{background:var(--warn-soft);color:var(--warn)} .pill.cancelled{background:var(--danger-soft);color:var(--danger)}
+  .amt{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap} .amt small{display:block;font-weight:600;font-size:11.5px;color:var(--danger)}
+  .empty{text-align:center;color:var(--muted);padding:26px 10px;font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:14px}
+  .sheet{position:fixed;inset:0;background:rgba(20,24,20,.35);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+  .sheet .box{background:var(--panel);border-radius:16px 16px 0 0;padding:18px;width:min(700px,100%);max-height:92vh;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+  @media (min-width:760px){ .sheet{align-items:center} .sheet .box{border-radius:16px} }
+  .sheet h3{font-size:16px} .sheet .sub{font-size:13px;color:var(--muted);margin:2px 0 12px}
+  .frm{display:grid;grid-template-columns:1fr 1fr;gap:8px} .frm .wide{grid-column:1/-1} .frm label{display:block;font-size:11.5px;font-weight:600;color:var(--muted)}
+  .frm input,.frm select,.frm textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px;font-size:13.5px;margin-top:2px;background:var(--panel);color:var(--ink);min-width:0}
+  .li{display:grid;grid-template-columns:1fr 70px 100px 28px;gap:6px;margin-top:6px} .li input{border:1.5px solid var(--line);border-radius:8px;padding:7px;font-size:13px;min-width:0}
+  .li button,.x{border:0;background:none;color:var(--muted2);font-size:18px}
+  .bar{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap} .bar>*{flex:1;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:11px;font-weight:600;font-size:14px;color:var(--ink);text-align:center}
+  .bar .pri{background:var(--accent);border-color:var(--accent);color:#fff} .bar .bad{color:var(--danger)}
+  .err{color:var(--danger);font-size:13px;margin-top:8px;min-height:1em}
+  table.d{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px} table.d td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top} table.d td:first-child{color:var(--muted);width:34%} table.d .n{text-align:right;font-variant-numeric:tabular-nums}
+  .sec{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
+  .warn{background:var(--warn-soft);color:#8a5a12;border-radius:9px;padding:8px 10px;font-size:13px;margin-top:8px}
+  #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;transition:.25s;z-index:60;pointer-events:none} #toast.show{opacity:1} #toast.err{background:var(--danger)}
+  .print-only{display:none}
+  @media (max-width:560px){ .frm{grid-template-columns:1fr} .ev{flex-wrap:wrap} .ev .tm{min-width:0} }
+  @media print{ body>*:not(.sheet){display:none!important} .sheet{position:absolute;inset:auto;left:0;top:0;right:0;background:none;display:block} .sheet .box{box-shadow:none;width:100%;max-height:none;padding:0} .noprint{display:none!important} .print-only{display:block} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="ttl">Banquets &amp; events<small><span data-prop="name">Property</span> · functions in your venues</small></div>
+    <div class="spacer"></div>
+    <button type="button" class="tbtn" id="btnVenues">Venues</button>
+    <button type="button" class="tbtn pri" id="btnNew">+ New event</button>
+  </header>
+  <div id="list"><p class="empty">Loading…</p></div>
+</div>
+<div id="toast"></div>
+<script>
+const PROXY_URL = 'https://data.ryst.in', TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const $ = s => document.querySelector(s), esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const inr = n => '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+const dLbl = (d, o) => new Date(d + 'T00:00:00Z').toLocaleDateString('en-IN', Object.assign({ timeZone: 'UTC' }, o || { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }));
+let D = null;
+function toast(m, err){ const el = $('#toast'); el.textContent = m; el.className = err ? 'show err' : 'show'; clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2800); }
+async function api(path, body){
+  if (!TOKEN) { location.href = 'login.html'; throw new Error('Signed out'); }
+  const r = await fetch(PROXY_URL + path, body ? { method: 'POST', headers: { 'X-Token': TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { headers: { 'X-Token': TOKEN }, cache: 'no-store' });
+  if (r.status === 401) { localStorage.removeItem('ryst_proxy_token'); location.href = 'login.html'; throw new Error('Signed out'); }
+  const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j.error || 'Something went wrong'); e.clash = j.clash; throw e; } return j;
+}
+function sheet(html){ const el = document.createElement('div'); el.className = 'sheet'; el.innerHTML = `<div class="box" role="dialog" aria-modal="true">${html}</div>`; el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-close]')) el.remove(); }); document.body.appendChild(el); return el; }
+const STL = { tentative: 'Tentative', confirmed: 'Confirmed', cancelled: 'Cancelled' };
+function render(){
+  if (!D.venues.length) { $('#list').innerHTML = `<p class="empty">${D.canManage ? 'Add your venues first (a hall, a lawn, a terrace…), then book events in them.' : 'The owner hasn’t added any venues yet.'}</p>`; return; }
+  const by = {}; D.events.forEach(ev => { (by[ev.date] = by[ev.date] || []).push(ev); });
+  const days = Object.keys(by).sort();
+  $('#list').innerHTML = days.length ? days.map(d => `<div class="day"><h2>${dLbl(d)}</h2>${by[d].map(ev => `<button type="button" class="ev ${ev.status}" data-ev="${esc(ev.id)}">
+      <span class="tm">${esc(ev.start)}–${esc(ev.end)}</span><span class="grow"><span class="nm">${esc(ev.title)}</span><span class="mt" style="display:block">${esc(ev.venueName)} · ${ev.guests} guests · ${esc(ev.setup)} · ${esc(ev.client)}${ev.overCapacity ? ' · over capacity' : ''}</span></span>
+      <span class="pill ${ev.status}">${STL[ev.status]}</span><span class="amt">${inr(ev.total)}${ev.status !== 'cancelled' && ev.balance > 0 ? `<small>${inr(ev.balance)} due</small>` : ''}</span></button>`).join('')}</div>`).join('')
+    : '<p class="empty">No events booked in the next six months.</p>';
+}
+function editSheet(ev){
+  ev = ev || { date: new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10), start: '19:00', end: '23:00', guests: '', setup: 'Round tables', status: 'tentative', items: [{ desc: 'Per plate', qty: '', rate: '' }], venue: D.venues[0].id };
+  const el = sheet(`<h3>${ev.id ? 'Edit ' + esc(ev.no) : 'New event'}</h3><p class="sub">Prices include GST. The event is checked against other bookings in the venue.</p>
+    <div class="frm">
+      <label class="wide">Event<input id="f_title" maxlength="100" value="${esc(ev.title || '')}" placeholder="e.g. Wedding reception, Annual meet"></label>
+      <label>Client name<input id="f_client" maxlength="100" value="${esc(ev.client || '')}"></label><label>Phone<input id="f_phone" maxlength="20" value="${esc(ev.phone || '')}"></label>
+      <label>Company (optional)<input id="f_company" maxlength="120" value="${esc(ev.company || '')}"></label><label>GSTIN (optional)<input id="f_gstin" maxlength="15" value="${esc(ev.gstin || '')}"></label>
+      <label>Date<input id="f_date" type="date" value="${esc(ev.date)}"></label><label>Venue<select id="f_venue">${D.venues.map(v => `<option value="${esc(v.id)}"${v.id === ev.venue ? ' selected' : ''}>${esc(v.name)}${v.capacity ? ' (up to ' + v.capacity + ')' : ''}</option>`).join('')}</select></label>
+      <label>Starts<input id="f_start" type="time" value="${esc(ev.start)}"></label><label>Ends<input id="f_end" type="time" value="${esc(ev.end)}"></label>
+      <label>Guests<input id="f_guests" type="number" min="1" value="${esc(ev.guests)}"></label><label>Set-up<select id="f_setup">${D.setups.map(x => `<option${x === ev.setup ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></label>
+      <label>Status<select id="f_status"><option value="tentative"${ev.status === 'tentative' ? ' selected' : ''}>Tentative (pencilled in)</option><option value="confirmed"${ev.status === 'confirmed' ? ' selected' : ''}>Confirmed</option></select></label>
+      <label>Room booking (optional)<input id="f_stay" maxlength="40" value="${esc(ev.stayNo || '')}" placeholder="Booking number for the guests' rooms"></label>
+      <label class="wide">Menu<textarea id="f_menu" rows="3" maxlength="1500">${esc(ev.menu || '')}</textarea></label>
+      <label class="wide">Notes (décor, AV, timings)<textarea id="f_notes" rows="2" maxlength="1500">${esc(ev.notes || '')}</textarea></label>
+      <div class="wide"><label>Charges</label><div id="lis"></div><button type="button" class="tbtn" id="addLi" style="margin-top:6px">+ Add a line</button></div>
+      <label>Discount ₹<input id="f_disc" type="number" min="0" value="${esc(ev.discount || '')}"></label><label>Total<input id="f_total" readonly></label>
+    </div><p class="err" id="er"></p>
+    <div class="bar"><button type="button" data-close>Cancel</button><button type="button" class="pri" id="ok">Save event</button></div>`);
+  let items = (ev.items || []).map(x => Object.assign({}, x));
+  const drawLi = () => { el.querySelector('#lis').innerHTML = items.map((it, i) => `<div class="li" data-i="${i}"><input data-k="desc" value="${esc(it.desc)}" placeholder="e.g. Veg buffet per plate"><input data-k="qty" type="number" min="0" value="${esc(it.qty)}" placeholder="Qty"><input data-k="rate" type="number" min="0" value="${esc(it.rate)}" placeholder="Rate ₹"><button type="button" data-del="${i}" aria-label="Remove line">&times;</button></div>`).join(''); tot(); };
+  const tot = () => { el.querySelector('#f_total').value = inr(items.reduce((a, it) => a + (+it.qty || 0) * (+it.rate || 0), 0) - (+el.querySelector('#f_disc').value || 0)); };
+  el.querySelector('#lis').addEventListener('input', e => { const r = e.target.closest('[data-i]'); if (r) { items[+r.dataset.i][e.target.dataset.k] = e.target.value; tot(); } });
+  el.querySelector('#lis').addEventListener('click', e => { if (e.target.dataset.del != null) { items.splice(+e.target.dataset.del, 1); drawLi(); } });
+  el.querySelector('#addLi').addEventListener('click', () => { items.push({ desc: '', qty: '', rate: '' }); drawLi(); });
+  el.querySelector('#f_disc').addEventListener('input', tot); drawLi();
+  const save = async (allowClash) => { const v = id => el.querySelector('#f_' + id).value;
+    try { const r = await api('/banquets/event', { id: ev.id, title: v('title'), client: v('client'), phone: v('phone'), company: v('company'), gstin: v('gstin'), date: v('date'), venue: v('venue'), start: v('start'), end: v('end'), guests: v('guests'), setup: v('setup'), status: v('status'), stayNo: v('stay'), menu: v('menu'), notes: v('notes'), items, discount: v('disc'), allowClash });
+      el.remove(); toast(ev.id ? 'Event updated' : 'Event booked ' + r.event.no); load(); }
+    catch (err) { if (err.clash && confirm(err.message + '. Book it anyway (two events in the venue at once)?')) return save(true); el.querySelector('#er').textContent = err.message; } };
+  el.querySelector('#ok').addEventListener('click', () => save(false));
+}
+function eventSheet(ev){
+  const rows = [['Client', ev.client + (ev.company ? ' · ' + ev.company : '')], ['Phone', ev.phone], ['GSTIN', ev.gstin], ['Date', dLbl(ev.date)], ['Time', ev.start + '–' + ev.end], ['Venue', ev.venueName], ['Guests', ev.guests + (ev.overCapacity ? ' (over the venue’s capacity)' : '')], ['Set-up', ev.setup], ['Room booking', ev.stayNo]].filter(r => r[1]);
+  const el = sheet(`<div class="print-only" style="font-size:12px;color:var(--muted);margin-bottom:8px"><b style="font-size:15px;color:var(--ink)">${esc((document.querySelector('[data-prop="name"]') || {}).textContent || '')}</b> · Function sheet</div>
+    <h3>${esc(ev.title)} <span class="pill ${ev.status}">${STL[ev.status]}</span></h3><p class="sub">${esc(ev.no)}</p>
+    <table class="d">${rows.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table>
+    ${ev.menu ? `<p class="sec">Menu</p><p style="font-size:13.5px;white-space:pre-wrap">${esc(ev.menu)}</p>` : ''}${ev.notes ? `<p class="sec">Notes</p><p style="font-size:13.5px;white-space:pre-wrap">${esc(ev.notes)}</p>` : ''}
+    <p class="sec">Charges</p><table class="d">${(ev.items || []).map(it => `<tr><td>${esc(it.desc)}</td><td class="n">${it.qty} × ${inr(it.rate)}</td><td class="n">${inr(it.qty * it.rate)}</td></tr>`).join('')}${ev.discount ? `<tr><td>Discount</td><td></td><td class="n">− ${inr(ev.discount)}</td></tr>` : ''}<tr><td><b>Total (GST incl.)</b></td><td></td><td class="n"><b>${inr(ev.total)}</b></td></tr><tr><td>Received</td><td></td><td class="n">${inr(ev.paid)}</td></tr><tr><td>Balance</td><td></td><td class="n">${inr(ev.balance)}</td></tr></table>
+    ${(ev.payments || []).length ? `<p class="sec noprint">Payments</p><table class="d noprint">${ev.payments.map(p => `<tr><td>${dLbl(p.date, { day: 'numeric', month: 'short' })}</td><td>${esc(p.method)}${p.note ? ' · ' + esc(p.note) : ''}</td><td class="n">${inr(p.amount)}</td></tr>`).join('')}</table>` : ''}
+    ${D.canManage && ev.status !== 'cancelled' && ev.balance > 0 ? `<div class="frm noprint" style="margin-top:12px"><label>Payment received ₹<input id="p_amt" type="number" min="1" value="${ev.balance}"></label><label>How<select id="p_m"><option>UPI</option><option>Bank transfer</option><option>Cash</option><option>Card</option><option>Cheque</option></select></label></div>` : ''}
+    <p class="err noprint" id="er"></p>
+    <div class="bar noprint"><button type="button" data-close>Close</button><button type="button" id="pr">Print function sheet</button>${ev.status !== 'cancelled' ? '<button type="button" id="ed">Edit</button>' : ''}${D.canManage && ev.status !== 'cancelled' && ev.balance > 0 ? '<button type="button" class="pri" id="pay">Record payment</button>' : ''}${ev.status !== 'cancelled' ? '<button type="button" class="bad" id="cx">Cancel event</button>' : ''}</div>`);
+  el.querySelector('#pr').addEventListener('click', () => window.print());
+  const on = (id, fn) => { const b = el.querySelector(id); if (b) b.addEventListener('click', fn); };
+  on('#ed', () => { el.remove(); editSheet(ev); });
+  on('#pay', async () => { try { await api('/banquets/pay', { id: ev.id, amount: el.querySelector('#p_amt').value, method: el.querySelector('#p_m').value }); el.remove(); toast('Payment recorded'); load(); } catch (e) { el.querySelector('#er').textContent = e.message; } });
+  on('#cx', async () => { const reason = prompt('Cancel this event? Reason (optional):'); if (reason === null) return; try { await api('/banquets/cancel', { id: ev.id, reason }); el.remove(); toast('Event cancelled'); load(); } catch (e) { el.querySelector('#er').textContent = e.message; } });
+}
+function venuesSheet(){
+  if (!D.canManage) { toast('Only the owner can change venues', true); return; }
+  let vs = D.venues.map(v => Object.assign({}, v)); if (!vs.length) vs.push({ name: '', capacity: '' });
+  const el = sheet(`<h3>Venues</h3><p class="sub">The halls, lawns and terraces you host events in.</p><div id="vl"></div><button type="button" class="tbtn" id="va" style="margin-top:6px">+ Add a venue</button><p class="err" id="er"></p>
+    <div class="bar"><button type="button" data-close>Cancel</button><button type="button" class="pri" id="ok">Save venues</button></div>`);
+  const draw = () => { el.querySelector('#vl').innerHTML = vs.map((v, i) => `<div class="li" data-i="${i}" style="grid-template-columns:1fr 110px 28px"><input data-k="name" value="${esc(v.name)}" placeholder="e.g. Banquet hall"><input data-k="capacity" type="number" min="0" value="${esc(v.capacity)}" placeholder="Capacity"><button type="button" data-del="${i}" aria-label="Remove venue">&times;</button></div>`).join(''); };
+  el.querySelector('#vl').addEventListener('input', e => { const r = e.target.closest('[data-i]'); if (r) vs[+r.dataset.i][e.target.dataset.k] = e.target.value; });
+  el.querySelector('#vl').addEventListener('click', e => { if (e.target.dataset.del != null) { vs.splice(+e.target.dataset.del, 1); draw(); } });
+  el.querySelector('#va').addEventListener('click', () => { vs.push({ name: '', capacity: '' }); draw(); }); draw();
+  el.querySelector('#ok').addEventListener('click', async () => { try { await api('/banquets/venues', { venues: vs }); el.remove(); toast('Venues saved'); load(); } catch (e) { el.querySelector('#er').textContent = e.message; } });
+}
+$('#btnNew').addEventListener('click', () => { if (!D || !D.venues.length) return venuesSheet(); editSheet(); });
+$('#btnVenues').addEventListener('click', venuesSheet);
+$('#list').addEventListener('click', e => { const b = e.target.closest('[data-ev]'); if (b) eventSheet(D.events.find(x => x.id === b.dataset.ev)); });
+async function load(){ try { D = await api('/banquets'); render(); } catch (e) { toast(e.message, true); } }
+load();
+</script>
+</body>
+</html>

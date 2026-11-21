@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://data.ryst.in https://harbour.ryst.in https://stay.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
+<script src="/assets/app/shell.js?v=472d530a"></script>
+<title>All properties · RYST Harbour</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/assets/app/fonts.css?v=1">
+<style>
+  :root{ --bg:#f3f4f1; --panel:#fff; --panel2:#f7f8f5; --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee; --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --danger:#c0584b; --warn:#c98a2b; --warn-soft:#fbf3e6; }
+  *{box-sizing:border-box;margin:0;padding:0} [hidden]{display:none!important}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 80px}
+  header.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px} .ttl{font-weight:700;font-size:20px} .ttl small{display:block;font-weight:500;font-size:12px;color:var(--muted)} .spacer{flex:1}
+  .tbtn{border:1.5px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink)} .tbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;min-width:0} .kpi .l{font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)} .kpi .v{font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap} .kpi .s{font-size:12px;color:var(--muted2)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+  .pc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+  .pc h2{font-size:16px;display:flex;align-items:center;gap:8px} .pc h2 .tag{font-size:11px;font-weight:700;background:var(--panel2);color:var(--muted);border-radius:6px;padding:2px 7px;text-transform:uppercase;letter-spacing:.4px}
+  .pc h2 button{margin-left:auto;border:0;background:none;color:var(--muted2);font-size:12px;font-weight:600}
+  .occ{display:flex;align-items:center;gap:12px;margin:12px 0} .occ b{font-size:30px;font-variant-numeric:tabular-nums} .occ .bar{flex:1;height:8px;border-radius:5px;background:var(--panel2);overflow:hidden} .occ .bar i{display:block;height:100%;background:var(--accent);border-radius:0 4px 4px 0}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px} .stats div{background:var(--panel2);border-radius:10px;padding:8px 10px} .stats span{display:block;font-size:11px;color:var(--muted)} .stats b{font-size:16px;font-variant-numeric:tabular-nums}
+  .flags{margin-top:10px;font-size:12.5px} .flags span{display:inline-block;background:var(--warn-soft);color:#8a5a12;border-radius:7px;padding:3px 8px;margin:2px 4px 0 0}
+  .off{opacity:.75} .off p{font-size:13px;color:var(--muted);margin-top:8px}
+  .empty{text-align:center;color:var(--muted);padding:26px 14px;font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:14px;line-height:1.5}
+  .note{font-size:12.5px;color:var(--muted);margin:12px 2px}
+  @media (max-width:900px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="ttl">All properties<small>Every property you own, side by side, today</small></div>
+    <div class="spacer"></div>
+    <button type="button" class="tbtn pri" id="btnAdd" hidden>+ Add this property</button>
+    <button type="button" class="tbtn" id="btnRefresh">Refresh</button>
+  </header>
+  <div class="kpis" id="totals" hidden></div>
+  <div id="list"></div>
+  <p class="note">To add another property: sign in to it in Harbour as its owner, open All properties and press “Add this property”. Sign-ins are kept only in this browser and expire like any Harbour sign-in; each property's figures are checked against its own sign-in.</p>
+</div>
+<script>
+const PROXY_URL = 'https://data.ryst.in', KEY = 'ryst_portfolio', TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const $ = s => document.querySelector(s), esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const inr = n => n == null ? '–' : '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+const tenantOf = t => { try { return JSON.parse(atob(String(t).split('.')[0].replace(/-/g, '+').replace(/_/g, '/'))).tenant || ''; } catch (e) { return ''; } };
+const read = () => { try { const x = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(x) ? x : []; } catch (e) { return []; } };
+const write = list => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} };
+function list(){ // this property's own sign-in is always included
+  const saved = read(), cur = tenantOf(TOKEN);
+  if (cur && TOKEN) { const i = saved.findIndex(x => x.tenant === cur); if (i >= 0) saved[i].token = TOKEN; }
+  return { saved, cur };
+}
+async function load(){
+  const { saved, cur } = list(), toks = saved.map(x => x.token);
+  $('#btnAdd').hidden = !cur || saved.some(x => x.tenant === cur);
+  if (!saved.length) { $('#list').innerHTML = '<p class="empty">No properties added yet. Press “Add this property” to start with the one you’re signed in to.</p>'; $('#totals').hidden = true; return; }
+  let res; try { const r = await fetch(PROXY_URL + '/portfolio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tokens: toks }) }); res = await r.json(); if (!r.ok) throw new Error(res.error); }
+  catch (e) { $('#list').innerHTML = `<p class="empty">${esc(e.message || 'Could not load')}</p>`; return; }
+  const P = res.properties.map((p, i) => Object.assign({ saved: saved[i] }, p)), okP = P.filter(p => p.ok);
+  saved.forEach((x, i) => { if (P[i].ok && P[i].name) x.name = P[i].name; }); write(saved);
+  const sum = k => okP.reduce((a, p) => a + (Number(p[k]) || 0), 0), sold = sum('sold'), sell = sum('sellable');
+  $('#totals').hidden = false;
+  $('#totals').innerHTML = `<div class="kpi"><div class="l">Properties</div><div class="v">${okP.length}</div><div class="s">${sum('rooms')} rooms in all</div></div>
+    <div class="kpi"><div class="l">Occupied tonight</div><div class="v">${sell ? Math.round(sold / sell * 100) : 0}%</div><div class="s">${sold} of ${sell} rooms</div></div>
+    <div class="kpi"><div class="l">Arrivals today</div><div class="v">${sum('arrivals')}</div><div class="s">${sum('departures')} departures</div></div>
+    <div class="kpi"><div class="l">Revenue this month</div><div class="v">${inr(sum('revenueMTD'))}</div><div class="s">GST included</div></div>
+    <div class="kpi"><div class="l">Awaiting approval</div><div class="v">${okP.reduce((a, p) => a + p.pending.count, 0)}</div><div class="s">${inr(okP.reduce((a, p) => a + p.pending.amount, 0))}</div></div>`;
+  $('#list').innerHTML = `<div class="grid">${P.map((p, i) => p.ok ? `<div class="pc"><h2>${esc(p.name)} <span class="tag">${p.type}</span><button type="button" data-rm="${i}">Remove</button></h2>
+      <div class="occ"><b>${p.occupancy}%</b><div class="bar"><i style="width:${p.occupancy}%"></i></div><span style="font-size:12px;color:var(--muted)">${p.type === 'hotel' ? p.sold + '/' + p.sellable + ' rooms tonight' : p.sold ? 'Booked tonight' : 'Free tonight'}</span></div>
+      <div class="stats"><div><span>Arrivals</span><b>${p.arrivals}</b></div><div><span>Departures</span><b>${p.departures}</b></div><div><span>Next 30 days</span><b>${p.next30}%</b></div>
+        <div><span>Revenue month</span><b>${inr(p.revenueMTD)}</b></div><div><span>${p.type === 'hotel' ? 'Revenue tonight' : 'In house'}</span><b>${p.type === 'hotel' ? inr(p.revenueToday) : p.inHouse}</b></div><div><span>${p.type === 'hotel' ? 'ADR month' : 'Rooms'}</span><b>${p.type === 'hotel' ? inr(p.adr) : p.rooms}</b></div></div>
+      ${p.pending.count || p.formC ? `<div class="flags">${p.pending.count ? `<span>${p.pending.count} payment${p.pending.count === 1 ? '' : 's'} to approve · ${inr(p.pending.amount)}</span>` : ''}${p.formC ? `<span>${p.formC} Form C to file</span>` : ''}</div>` : ''}</div>`
+      : `<div class="pc off"><h2>${esc(p.saved.name || p.tenant || 'Property')}<button type="button" data-rm="${i}">Remove</button></h2><p>${esc(p.error)}. Sign in to it again as the owner and press “Add this property”.</p></div>`).join('')}</div>`;
+}
+$('#btnAdd').addEventListener('click', () => { const { saved, cur } = list(); if (!cur) return; saved.push({ tenant: cur, name: (document.querySelector('[data-prop="name"]') || {}).textContent || cur, token: TOKEN }); write(saved); load(); });
+$('#btnRefresh').addEventListener('click', load);
+$('#list').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; const s = read(); s.splice(+b.dataset.rm, 1); write(s); load(); });
+load();
+</script>
+</body>
+</html>

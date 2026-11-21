@@ -122,9 +122,9 @@
   // [href, icon, label, module] — module mirrors MODULES in the proxy's server.js
   // ('owner': owners only, like the proxy's /team).
   var NAV = [
-    { items: [['login.html', 'home', 'Dashboard'], ['bookings.html', 'cal', 'Calendar', 'bookings'],
+    { items: [['login.html', 'home', 'Dashboard'], ['portfolio.html', 'villa', 'All properties', 'owner'], ['bookings.html', 'cal', 'Calendar', 'bookings'],
       ['frontdesk.html', 'bed', 'Front desk', 'bookings', 'hotel'],
-      ['guest-register.html', 'list', 'Bookings', 'guestRegister'], ['guests.html', 'users', 'Guests', 'bookings'], ['formc.html', 'passport', 'Form C (FRRO)', 'bookings']] },
+      ['guest-register.html', 'list', 'Bookings', 'guestRegister'], ['guests.html', 'users', 'Guests', 'bookings'], ['formc.html', 'passport', 'Form C (FRRO)', 'bookings'], ['banquets.html', 'cal', 'Banquets & events', 'bookings']] },
     { label: 'Operations', items: [['housekeeping.html', 'broom', 'Housekeeping', 'checklist', 'hotel'], ['checklist.html', 'check', 'Checklists', 'checklist'], ['issues.html', 'tool', 'Issues & Maintenance', 'checklist'],
       ['inventory.html', 'box', 'Inventory', 'inventory'], ['petty-cash.html', 'wallet', 'Petty Cash', 'petty-cash'],
       ['caretakers.html', 'team', 'Caretakers', 'owner']] },

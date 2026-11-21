@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=2b6a6fa6"></script>
+<script src="/assets/app/shell.js?v=472d530a"></script>
 <title data-title="Settings — {name}">Settings — RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -314,6 +314,14 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <p class="gh-mini">Room categories</p>
       <p class="tf-note">Each category is a type of room you sell (Deluxe, Premium, Suite). Rates are per room per night, what the guest pays (GST inclusive, like every Harbour invoice). Meal plans are added per room per night; leave a plan blank if you don't offer it. Weekend hike applies to Friday and Saturday nights; holidays use the holiday hike and dates on the Tariffs tab. A season or a date override replaces the rack rate.</p>
       <div id="hcCats"></div>
+      <p class="gh-mini">Rate plans</p>
+      <p class="tf-note">Optional rates on top of the tariff: a % off or on each room's price, e.g. a non-refundable rate, a corporate rate or a long-stay rate. Guests choose them on your website (when "Website" is ticked); staff can use any rate in a booking. "OTAs" sends the rate to Channex as its own rate plan. Leave empty to sell the standard rate only.</p>
+      <div id="hrpList"></div>
+      <button type="button" class="btn" id="hrpAdd" style="margin:4px 0 14px">+ Add a rate plan</button>
+      <p class="gh-mini">Travel agents</p>
+      <p class="tf-note">Agents who send you bookings and the commission you pay each (a % of the booking total). Pick the agent on a booking; the front desk shows what's due to each.</p>
+      <div id="hagList"></div>
+      <button type="button" class="btn" id="hagAdd" style="margin:4px 0 14px">+ Add an agent</button>
       <button type="button" class="rc-add" id="hcAddCat">+ Add room category</button>
       <p class="gh-mini">Rooms</p>
       <div class="hr-bulk">
@@ -2006,6 +2014,8 @@ function loadHotelDraft(){
   hotelDraft = { type: stay.propertyType === 'hotel' ? 'hotel' : 'villa',
     categories: (h.categories || []).map(c => JSON.parse(JSON.stringify(c))), rooms: (h.rooms || []).map(r => JSON.parse(JSON.stringify(r))) };
   hotelDraft.categories.forEach(c => { if (!c.id) c.id = hSlug(c.name); c.seasons = c.seasons || []; c.plans = c.plans || {}; c.dayUse = c.dayUse || []; });
+  hotelDraft.ratePlans = (h.ratePlans || []).map(r => JSON.parse(JSON.stringify(r)));
+  hotelDraft.agents = (h.agents || []).map(a => JSON.parse(JSON.stringify(a)));
   hotelDraft.times = { checkinTime: h.checkinTime || '14:00', checkoutTime: h.checkoutTime || '11:00', dayUseFrom: h.dayUseFrom || '08:00', dayUseTo: h.dayUseTo || '20:00' };
   [['htIn', 'checkinTime'], ['htOut', 'checkoutTime'], ['htDayFrom', 'dayUseFrom'], ['htDayTo', 'dayUseTo']].forEach(([id, k]) => { const el = document.getElementById(id); if (el) el.value = hotelDraft.times[k]; });
   renderHotel();
@@ -2046,6 +2056,7 @@ function renderHotel(){
     <td><select class="t" data-r="cat">${cats.map(c => `<option value="${hEsc(c.id)}"${c.id === r.cat ? ' selected' : ''}>${hEsc(c.name || c.id)}</option>`).join('')}</select></td>
     <td><div class="hr-ooo"><input class="t" type="date" data-o="from" value="${hEsc(o.from)}"><input class="t" type="date" data-o="to" value="${hEsc(o.to)}"><input class="t" data-o="reason" value="${hEsc(o.reason)}" placeholder="Reason"></div></td>
     <td><button type="button" class="hc-x" data-del-room="${i}" aria-label="Remove room">&times;</button></td></tr>`; }).join('') || '<tr><td colspan="5" class="tf-note" style="padding:12px">No rooms yet.</td></tr>';
+  renderRatePlans(); renderAgents();
   const n = rooms.length;
   document.getElementById('hotelSummary').textContent = n ? `${n} room${n === 1 ? '' : 's'} in ${cats.length} categor${cats.length === 1 ? 'y' : 'ies'}: ` + cats.map(c => `${c.name || c.id} ${rooms.filter(r => r.cat === c.id).length}`).join(', ') + '.' : 'Set up your room categories and rooms, then press Save settings.';
 }
@@ -2097,6 +2108,39 @@ document.getElementById('hrBody').addEventListener('input', e => {
 });
 document.getElementById('hrBody').addEventListener('click', e => { if (e.target.dataset.delRoom != null) { hotelDraft.rooms.splice(+e.target.dataset.delRoom, 1); renderHotel(); } });
 loadHotelDraft(); // again, now that every line above has run
+function renderRatePlans(){
+  const box = document.getElementById('hrpList'); if (!box) return; const cats = hotelDraft.categories, rps = hotelDraft.ratePlans = hotelDraft.ratePlans || [];
+  box.innerHTML = rps.map((r, i) => `<div class="hc-card" data-rp="${i}" style="padding:12px;margin-bottom:10px">
+    <div class="hc-grid" style="display:grid;grid-template-columns:2fr 1fr 1fr 28px;gap:8px;align-items:end">
+      <label class="f"><span>Name</span><input class="t" data-p="name" maxlength="40" value="${hEsc(r.name)}" placeholder="e.g. Non-refundable"></label>
+      <label class="f"><span>% on price (− for off)</span><input class="t" data-p="adjustPct" type="number" min="-90" max="200" value="${hEsc(r.adjustPct)}" placeholder="-10"></label>
+      <label class="f"><span>Min nights</span><input class="t" data-p="minNights" type="number" min="1" max="30" value="${hEsc(r.minNights || 1)}"></label>
+      <button type="button" class="hc-x" data-del-rp="${i}" aria-label="Remove rate plan">&times;</button></div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:13px">
+      <label><input type="checkbox" data-p="nonRefundable"${r.nonRefundable ? ' checked' : ''}> Non-refundable</label>
+      <label><input type="checkbox" data-p="web"${r.web !== false ? ' checked' : ''}> Website</label>
+      <label><input type="checkbox" data-p="ota"${r.ota ? ' checked' : ''}> OTAs (Channex)</label>
+      <span style="color:#7a8a86">Room types:</span>${cats.map(c => `<label><input type="checkbox" data-cat="${hEsc(c.id)}"${!(r.cats || []).length || r.cats.includes(c.id) ? ' checked' : ''}> ${hEsc(c.name || c.id)}</label>`).join('')}</div>
+    <label class="f" style="margin-top:8px"><span>Terms shown to guests (optional)</span><input class="t" data-p="note" maxlength="160" value="${hEsc(r.note)}" placeholder="e.g. Paid in full at booking; no refund on cancellation"></label></div>`).join('');
+}
+document.getElementById('hrpAdd').addEventListener('click', () => { (hotelDraft.ratePlans = hotelDraft.ratePlans || []).push({ name: '', adjustPct: '', minNights: 1, nonRefundable: false, web: true, ota: false, cats: [], note: '' }); renderRatePlans(); });
+function hrpEdit(e){ const card = e.target.closest('[data-rp]'); if (!card) return; const r = hotelDraft.ratePlans[+card.dataset.rp];
+  if (e.target.dataset.p) r[e.target.dataset.p] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+  if (e.target.dataset.cat) { const all = hotelDraft.categories.map(c => c.id), on = [...card.querySelectorAll('[data-cat]:checked')].map(x => x.dataset.cat); r.cats = on.length === all.length ? [] : on; } }
+document.getElementById('hrpList').addEventListener('input', hrpEdit); document.getElementById('hrpList').addEventListener('change', hrpEdit);
+document.getElementById('hrpList').addEventListener('click', e => { if (e.target.dataset.delRp != null) { hotelDraft.ratePlans.splice(+e.target.dataset.delRp, 1); renderRatePlans(); } });
+function renderAgents(){
+  const box = document.getElementById('hagList'); if (!box) return; const ags = hotelDraft.agents = hotelDraft.agents || [];
+  box.innerHTML = ags.map((a, i) => `<div data-ag="${i}" style="display:grid;grid-template-columns:2fr 1fr 1.3fr 1.2fr 28px;gap:8px;align-items:end;margin-bottom:8px">
+    <label class="f"><span>Agent</span><input class="t" data-a="name" maxlength="80" value="${hEsc(a.name)}" placeholder="Agency name"></label>
+    <label class="f"><span>Commission %</span><input class="t" data-a="commissionPct" type="number" min="0" max="50" step="0.5" value="${hEsc(a.commissionPct)}"></label>
+    <label class="f"><span>GSTIN</span><input class="t" data-a="gstin" maxlength="15" value="${hEsc(a.gstin)}" style="text-transform:uppercase"></label>
+    <label class="f"><span>Phone</span><input class="t" data-a="phone" maxlength="20" value="${hEsc(a.phone)}"></label>
+    <button type="button" class="hc-x" data-del-ag="${i}" aria-label="Remove agent">&times;</button></div>`).join('');
+}
+document.getElementById('hagAdd').addEventListener('click', () => { (hotelDraft.agents = hotelDraft.agents || []).push({ name: '', commissionPct: '', gstin: '', phone: '' }); renderAgents(); });
+document.getElementById('hagList').addEventListener('input', e => { const row = e.target.closest('[data-ag]'); if (row && e.target.dataset.a) hotelDraft.agents[+row.dataset.ag][e.target.dataset.a] = e.target.value; });
+document.getElementById('hagList').addEventListener('click', e => { if (e.target.dataset.delAg != null) { hotelDraft.agents.splice(+e.target.dataset.delAg, 1); renderAgents(); } });
 function collectHotel(){
   if (hotelDraft.type !== 'hotel') return { type: 'villa' };
   const cats = hotelDraft.categories.filter(c => String(c.name || '').trim());
@@ -2114,6 +2158,9 @@ function collectHotel(){
     seasons: (c.seasons || []).filter(se => se.from && se.to && se.to >= se.from && Number(se.rate) > 0).map(se => ({ name: String(se.name || '').trim(), from: se.from, to: se.to, rate: Number(se.rate) })),
     dayUse: (c.dayUse || []).filter(d => Number(d.hours) >= 1 && Number(d.rate) > 0).map(d => ({ hours: Math.round(Number(d.hours)), rate: Number(d.rate) })),
     overrides: c.overrides || {} })), rooms,
+    agents: (hotelDraft.agents || []).filter(a => String(a.name || '').trim()).map(a => ({ id: a.id || hSlug(a.name), name: String(a.name).trim(), commissionPct: Number(a.commissionPct) || 0, gstin: String(a.gstin || '').trim().toUpperCase(), phone: String(a.phone || '').trim() })),
+    ratePlans: (hotelDraft.ratePlans || []).filter(r => String(r.name || '').trim()).map(r => ({ id: r.id || hSlug(r.name), name: String(r.name).trim(), adjustPct: Number(r.adjustPct) || 0, minNights: Number(r.minNights) || 1,
+      nonRefundable: !!r.nonRefundable, web: r.web !== false, ota: !!r.ota, cats: (r.cats || []).filter(c => ids.has(c)), note: String(r.note || '').trim() })),
     checkinTime: document.getElementById('htIn').value || '14:00', checkoutTime: document.getElementById('htOut').value || '11:00', dayUseFrom: document.getElementById('htDayFrom').value || '08:00', dayUseTo: document.getElementById('htDayTo').value || '20:00' } };
 }
 
