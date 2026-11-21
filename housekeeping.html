@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://data.ryst.in https://harbour.ryst.in https://stay.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
+<script src="/assets/app/shell.js?v=e9dfa5ac"></script>
+<title data-title="Housekeeping · {name}">Housekeeping · RYST Harbour</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/assets/app/fonts.css?v=1">
+<style>
+  :root{ --bg:#f3f4f1; --panel:#fff; --panel2:#f7f8f5; --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --occ:#2f6f8f; }
+  *{box-sizing:border-box;margin:0;padding:0} [hidden]{display:none!important}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 90px}
+  .ttl{font-weight:700;font-size:20px;margin:4px 2px 2px} .sub{font-size:13px;color:var(--muted);margin:0 2px 14px}
+  .counts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .counts div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px} .counts b{display:block;font-size:24px;font-variant-numeric:tabular-nums} .counts span{font-size:12px;color:var(--muted)}
+  .counts .dirty b{color:var(--danger)}
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;margin-bottom:12px}
+  .seg button{flex:1;border:0;background:none;border-radius:9px;padding:10px;font-weight:600;font-size:14px;color:var(--muted)} .seg button.on{background:var(--accent);color:#fff}
+  .room{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+  .room.dirty{border-color:var(--danger);background:#fffafa}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:10px} .no{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums} .cat{font-size:12.5px;color:var(--muted)} .grow{flex:1;min-width:0}
+  .tag{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:4px 8px;border-radius:7px;background:var(--panel2);color:var(--muted);white-space:nowrap}
+  .tag.departing,.tag.turnover{background:#fbf3e6;color:var(--warn)} .tag.arriving{background:#eaf4ee;color:var(--accent-d)} .tag.occupied{background:#eaf2f6;color:var(--occ)} .tag.ooo{background:#eceee9}
+  .btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .btns button{border:1.5px solid var(--line);background:var(--panel);border-radius:11px;padding:13px 6px;font-weight:700;font-size:14.5px;color:var(--ink)}
+  .btns button.on.clean{background:var(--accent);border-color:var(--accent);color:#fff} .btns button.on.dirty{background:var(--danger);border-color:var(--danger);color:#fff} .btns button.on.inspected{background:var(--occ);border-color:var(--occ);color:#fff}
+  .empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
+  #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;transition:.25s;z-index:60;pointer-events:none} #toast.show{opacity:1} #toast.err{background:var(--danger)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="ttl">Housekeeping</h1>
+  <p class="sub"><span data-prop="name">Hotel</span> · <span id="when"></span>. Tap a status when a room changes.</p>
+  <div id="notHotel" class="empty" hidden>This property isn't set up as a hotel yet (Settings → Rooms).</div>
+  <div id="main">
+    <div class="counts"><div class="dirty"><b id="cDirty">–</b><span>to clean</span></div><div><b id="cClean">–</b><span>clean</span></div><div><b id="cInsp">–</b><span>inspected</span></div></div>
+    <div class="seg" role="group" aria-label="Show"><button type="button" class="on" data-f="todo">To clean</button><button type="button" data-f="all">All rooms</button></div>
+    <div id="list"><p class="empty">Loading rooms…</p></div>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const PROXY_URL = 'https://data.ryst.in', TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const $ = s => document.querySelector(s), esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const NOTE = { departing: 'Leaving today', turnover: 'Leaving, next guest today', arriving: 'Guest arriving', occupied: 'Occupied', dayuse: 'Day use today', ooo: 'Out of order', vacant: '' };
+const HKN = { clean: 'Clean', dirty: 'Dirty', inspected: 'Inspected' };
+let data = null, filter = 'todo';
+function toast(m, err){ const el = $('#toast'); el.textContent = m; el.className = err ? 'show err' : 'show'; clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2400); }
+async function api(path, body){
+  if (!TOKEN) { location.href = 'login.html'; throw new Error('Signed out'); }
+  const r = await fetch(PROXY_URL + path, body ? { method: 'POST', headers: { 'X-Token': TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { headers: { 'X-Token': TOKEN }, cache: 'no-store' });
+  if (r.status === 401) { localStorage.removeItem('ryst_proxy_token'); location.href = 'login.html'; throw new Error('Signed out'); }
+  const j = await r.json().catch(() => ({})); if (!r.ok) { const e = new Error(j.error || 'Something went wrong'); e.status = r.status; throw e; } return j;
+}
+const catName = id => ((data.categories || []).find(c => c.id === id) || {}).name || id;
+// rooms that need attention first: dirty ones where a guest arrives, then dirty, then the rest
+const rank = r => (r.hk === 'dirty' ? 0 : 3) + (r.state === 'arriving' || r.state === 'turnover' ? 0 : r.state === 'departing' ? 1 : 2);
+function render(){
+  const rooms = data.rooms.filter(r => r.state !== 'ooo' || filter === 'all');
+  $('#cDirty').textContent = data.rooms.filter(r => r.hk === 'dirty' && r.state !== 'ooo').length;
+  $('#cClean').textContent = data.rooms.filter(r => r.hk === 'clean').length; $('#cInsp').textContent = data.rooms.filter(r => r.hk === 'inspected').length;
+  const list = (filter === 'todo' ? rooms.filter(r => r.hk === 'dirty' || r.state === 'departing' || r.state === 'turnover') : rooms).slice().sort((a, b) => rank(a) - rank(b) || a.no.localeCompare(b.no, undefined, { numeric: true }));
+  $('#list').innerHTML = list.length ? list.map(r => `<div class="room ${r.hk}"><div class="top"><span class="no">${esc(r.no)}</span><div class="grow"><div class="cat">${esc(catName(r.cat))}${r.floor ? ' · Floor ' + esc(r.floor) : ''}</div></div>${NOTE[r.state] ? `<span class="tag ${r.state}">${NOTE[r.state]}${r.state === 'ooo' && r.reason ? ': ' + esc(r.reason) : ''}</span>` : ''}</div>
+    <div class="btns">${['dirty', 'clean', 'inspected'].map(h => `<button type="button" class="${h}${r.hk === h ? ' on' : ''}" data-room="${esc(r.no)}" data-hk="${h}" aria-pressed="${r.hk === h}">${HKN[h]}</button>`).join('')}</div></div>`).join('')
+    : `<p class="empty">${filter === 'todo' ? 'Nothing to clean right now.' : 'No rooms yet.'}</p>`;
+}
+document.querySelector('.seg').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b)); render(); });
+$('#list').addEventListener('click', async e => {
+  const b = e.target.closest('[data-hk]'); if (!b || b.classList.contains('on')) return;
+  const room = data.rooms.find(r => r.no === b.dataset.room), was = room.hk; room.hk = b.dataset.hk; render(); // show it at once
+  try { await api('/hotel/room-status', { room: room.no, hk: room.hk }); toast(`Room ${room.no}: ${HKN[room.hk]}`); }
+  catch (err) { room.hk = was; render(); toast(err.message, true); }
+});
+async function load(){
+  try { data = await api('/hotel/housekeeping'); $('#when').textContent = new Date(data.date + 'T00:00:00Z').toLocaleDateString('en-IN', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'short' }); render(); }
+  catch (e) { if (e.status === 404) { $('#notHotel').hidden = false; $('#main').hidden = true; } else toast(e.message, true); }
+}
+load(); setInterval(() => { if (!document.hidden) load(); }, 60000);
+</script>
+</body>
+</html>

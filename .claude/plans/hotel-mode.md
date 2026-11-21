@@ -87,6 +87,15 @@ export closes only fully sold nights. Day-use bookings are stored with checkout 
 reports still count them as a night (to fix with Phase 3 reports). Invoices use one GST rate per booking; per-line
 slabs for mixed 5%/18% rooms come with folios in Phase 2.
 
+### Phase 2/3 status (Nov 2026)
+Done: frontdesk.html (KPIs: occupancy tonight + MTD, arrivals/departures with progress, in-house, day use, rooms
+ready/dirty, room revenue, ADR, RevPAR, revenue MTD; room-status counts; 30-day occupancy forecast; room board by
+floor with check-in/out and housekeeping actions; arrivals/departures/in-house/day-use lists with balance due;
+tape chart with room moves), housekeeping.html (phone, no guest names), proxy routes /hotel/frontdesk,
+/hotel/housekeeping, /hotel/room-status, /hotel/checkin, /hotel/checkout (rooms → dirty), /hotel/move (refuses
+clashes and moves that would overbook a category); sidebar entries shown only for hotels (property.propertyType).
+Remaining in Phase 2: folios (per-room bills, split payments, GST slab per room line), night audit, Form C.
+
 ### Phase 2 — Front desk and housekeeping
 - Tape chart: rooms × dates grid, drag to assign / move / extend, unassigned queue.
 - Check-in (assign rooms, ID per guest, advance), room move, early/late, check-out with folio per

@@ -96,6 +96,8 @@
     lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
     panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15.5 10l-2 2 2 2"/>',
+    bed: '<path d="M3 18V7M21 18v-5a3 3 0 0 0-3-3H10v8"/><path d="M3 14h18"/><circle cx="6.5" cy="10.5" r="1.8"/>',
+    broom: '<path d="M14 3l7 7M11.5 5.5l7 7"/><path d="M10 7l7 7-5.5 6.5C9 22 4 21 3 20s-2-6 .5-8.5z"/><path d="M7 14l3 3"/>',
     cal: '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
     users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
@@ -120,8 +122,9 @@
   // ('owner': owners only, like the proxy's /team).
   var NAV = [
     { items: [['login.html', 'home', 'Dashboard'], ['bookings.html', 'cal', 'Calendar', 'bookings'],
+      ['frontdesk.html', 'bed', 'Front desk', 'bookings', 'hotel'],
       ['guest-register.html', 'list', 'Bookings', 'guestRegister'], ['guests.html', 'users', 'Guests', 'bookings']] },
-    { label: 'Operations', items: [['checklist.html', 'check', 'Checklists', 'checklist'], ['issues.html', 'tool', 'Issues & Maintenance', 'checklist'],
+    { label: 'Operations', items: [['housekeeping.html', 'broom', 'Housekeeping', 'checklist', 'hotel'], ['checklist.html', 'check', 'Checklists', 'checklist'], ['issues.html', 'tool', 'Issues & Maintenance', 'checklist'],
       ['inventory.html', 'box', 'Inventory', 'inventory'], ['petty-cash.html', 'wallet', 'Petty Cash', 'petty-cash'],
       ['caretakers.html', 'team', 'Caretakers', 'owner']] },
     { label: 'Finance', items: [['stay.html', 'doc', 'Quotes & Invoices', 'bookings'], ['guest-register.html?f=unpaid', 'rupee', 'Dues to collect', 'guestRegister'],
@@ -141,7 +144,10 @@
     if (!Array.isArray(mods)) mods = role === 'caretaker' ? ['petty-cash', 'inventory', 'checklist', 'guestRegister'] : [];
     return { role: role, mods: mods };
   }
-  function allowed(mod, acc) {
+  // a hotel-only page (index 4 === 'hotel') shows once the property says it's a hotel
+  function isHotelProp() { return !!(window.PROPERTY && window.PROPERTY.propertyType === 'hotel'); }
+  function allowed(mod, acc, kind) {
+    if (kind === 'hotel' && !isHotelProp()) return false;
     if (!mod) return true;
     if (mod === 'owner') return acc.role === 'owner';
     if (mod === 'checklist' && noCaretakerPlan) return false;
@@ -166,7 +172,7 @@
     var html = NAV.map(function (g) {
       var links = g.items.map(function (i) {
         return '<a class="hsb__link" href="' + i[0] + '" title="' + esc(label(i[2])) + '"' + (i[3] ? ' data-module="' + i[3] + '"' : '') + (i[0] === cur ? ' aria-current="page"' : '')
-          + (allowed(i[3], acc) ? '' : ' hidden') + '>' + svg(i[1]) + '<span' + (i[2] === '{restaurantName}' ? ' data-hsb-rest' : '') + '>' + esc(label(i[2])) + '</span></a>';
+          + (allowed(i[3], acc, i[4]) ? '' : ' hidden') + (i[4] ? ' data-kind="' + i[4] + '"' : '') + '>' + svg(i[1]) + '<span' + (i[2] === '{restaurantName}' ? ' data-hsb-rest' : '') + '>' + esc(label(i[2])) + '</span></a>';
       }).join('');
       if (!g.label) return links;
       var any = g.items.some(function (i) { return allowed(i[3], acc); });
@@ -253,7 +259,7 @@
     var second = allowed('bookings', acc) ? ['bookings.html', 'cal', 'Calendar'] : allowed('checklist', acc) ? ['issues.html', 'tool', 'Issues']
       : allowed('guestRegister', acc) ? ['guest-register.html', 'list', 'Bookings'] : null;
     var tasks = TASKS.filter(function (x) { return allowed(x[3], acc); });
-    var more = []; NAV.forEach(function (g) { g.items.forEach(function (i) { if (i[0] !== 'login.html' && allowed(i[3], acc)) more.push(i); }); });
+    var more = []; NAV.forEach(function (g) { g.items.forEach(function (i) { if (i[0] !== 'login.html' && allowed(i[3], acc, i[4])) more.push(i); }); });
     var news = NEW.filter(function (n) { return allowed(n[3], acc); });
     var inTasks = tasks.some(function (x) { return x[0] === cur; }) && !(second && second[0] === cur);
     var here = function (on) { return on ? ' aria-current="page"' : ''; };
@@ -321,6 +327,7 @@
     var r = doc.querySelector('[data-hsb-rest]'); if (r && p.restaurantName) r.textContent = p.restaurantName;
     var v = doc.querySelector('[data-hsb-villa]'); if (v && p.name) v.textContent = p.name;
     var v2 = doc.querySelector('[data-hsb-villa2]'); if (v2 && p.name) v2.textContent = p.name;
+    var acc = modules(); Array.prototype.forEach.call(doc.querySelectorAll('.hsb__link[data-kind="hotel"]'), function (a) { a.hidden = !allowed(a.getAttribute('data-module'), acc, 'hotel'); });
   }
 
   function mount() {

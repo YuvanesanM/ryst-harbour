@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://data.ryst.in https://harbour.ryst.in https://stay.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
+<script src="/assets/app/shell.js?v=e9dfa5ac"></script>
+<title data-title="Front desk · {name}">Front desk · RYST Harbour</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/assets/app/fonts.css?v=1">
+<style>
+  :root{
+    --bg:#f3f4f1; --panel:#ffffff; --panel2:#f7f8f5;
+    --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee;
+    --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097;
+    --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6; --good:#2f7d54;
+    /* room states */
+    --s-occ:#2f6f8f; --s-arr:#3d9b69; --s-dep:#c98a2b; --s-day:#7a5fb0; --s-ooo:#8a8f87; --s-clean:#eaf4ee; --s-dirty:#fbecea; --s-insp:#dcefe4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  button,input,select{font-family:inherit} button{cursor:pointer} a{color:inherit}
+  .wrap{max-width:1240px;margin:0 auto;padding:18px 16px 80px}
+  header.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 2px 16px}
+  .ttl{font-weight:700;font-size:18px} .ttl small{display:block;font-weight:500;font-size:11.5px;color:var(--muted2);letter-spacing:.4px}
+  .spacer{flex:1}
+  .tbtn{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1.5px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;text-decoration:none}
+  .tbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .datebar{display:inline-flex;align-items:center;gap:4px;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:3px}
+  .datebar button{border:0;background:none;padding:6px 10px;border-radius:7px;font-weight:600;font-size:13px;color:var(--muted)} .datebar button:hover{background:var(--panel2)}
+  .datebar input{border:0;font-weight:600;font-size:13px;padding:4px;background:none;color:var(--ink)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .card h2{font-size:13px;font-weight:700;letter-spacing:.3px;margin-bottom:12px;display:flex;align-items:center;gap:8px} .card h2 small{font-weight:500;color:var(--muted2);font-size:12px}
+  /* KPI row */
+  .kpis{display:grid;grid-template-columns:1.35fr repeat(4,1fr);gap:12px;margin-bottom:12px}
+  .kpis2{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+  .kpi .l{font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+  .kpi .v{font-size:28px;font-weight:700;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi .v small{font-size:14px;color:var(--muted);font-weight:600}
+  .kpi .s{font-size:12px;color:var(--muted2);margin-top:2px;font-variant-numeric:tabular-nums}
+  .kpi.occ{display:flex;align-items:center;gap:16px}
+  .ring{flex:none;width:96px;height:96px} .ring circle{fill:none;stroke-width:10} .ring .bg{stroke:var(--panel2)} .ring .fg{stroke:var(--accent);stroke-linecap:round;transition:stroke-dasharray .6s}
+  .ring text{font:700 22px Outfit,sans-serif;fill:var(--ink)}
+  .bar{height:6px;border-radius:6px;background:var(--panel2);overflow:hidden;margin-top:8px} .bar i{display:block;height:100%;background:var(--accent);border-radius:6px}
+  /* status legend + forecast */
+  .grid2{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;margin-bottom:12px}
+  .legend{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .lg{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:13px} .lg b{margin-left:auto;font-size:16px;font-variant-numeric:tabular-nums}
+  .lg i{width:12px;height:12px;border-radius:4px;flex:none}
+  .fc{display:flex;align-items:flex-end;gap:3px;height:150px;padding-top:10px}
+  .fc .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;cursor:default}
+  .fc .c i{display:block;width:100%;border-radius:4px 4px 0 0;background:var(--accent);min-height:2px;opacity:.85}
+  .fc .c.hi i{background:var(--s-dep)} .fc .c.full i{background:var(--danger)} .fc .c.today i{outline:2px solid var(--ink);outline-offset:1px}
+  .fc .c span{font-size:9.5px;color:var(--muted2);margin-top:4px;font-variant-numeric:tabular-nums}
+  .fc .c em{font-style:normal;font-size:9.5px;color:var(--muted);margin-bottom:2px;font-variant-numeric:tabular-nums}
+  /* room board */
+  .floors{display:grid;gap:14px}
+  .floor h3{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);margin-bottom:8px}
+  .rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:8px}
+  .room{position:relative;text-align:left;border:1.5px solid var(--line);border-radius:12px;padding:10px 10px 8px;background:var(--panel);min-height:84px;display:flex;flex-direction:column;gap:2px}
+  .room .no{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums} .room .cat{font-size:11px;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .room .who{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:auto}
+  .room .rt{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .room .st{font-size:9.5px;white-space:nowrap;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:6px;color:#fff}
+  .room.occupied,.room.turnover{border-color:var(--s-occ);background:#eaf2f6} .room.occupied .st,.room.turnover .st{background:var(--s-occ)}
+  .room.arriving{border-color:var(--s-arr)} .room.arriving .st{background:var(--s-arr)}
+  .room.departing{border-color:var(--s-dep);background:var(--warn-soft)} .room.departing .st{background:var(--s-dep)}
+  .room.dayuse{border-color:var(--s-day)} .room.dayuse .st{background:var(--s-day)}
+  .room.ooo{background:repeating-linear-gradient(135deg,var(--panel2) 0 8px,#eceee9 8px 16px);border-color:var(--s-ooo)} .room.ooo .st{background:var(--s-ooo)}
+  .room .hk{font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;color:var(--muted)} .room .hk i{width:8px;height:8px;border-radius:50%;background:var(--good)}
+  .room .hk.dirty{color:var(--danger)} .room .hk.dirty i{background:var(--danger)} .room .hk.inspected i{background:var(--s-occ)}
+  /* lists */
+  .lists{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:12px 0}
+  .bk{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)} .bk:first-of-type{border-top:0}
+  .bk .nm{font-weight:600;font-size:14px} .bk .mt{font-size:12px;color:var(--muted)} .bk .grow{flex:1;min-width:0}
+  .bk .due{font-size:12px;font-weight:700;color:var(--danger);white-space:nowrap} .bk .ok{font-size:12px;font-weight:600;color:var(--good);white-space:nowrap}
+  .bk button{border:1.5px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;white-space:nowrap}
+  .bk button.ghost{background:var(--panel);color:var(--accent-d)} .bk button:disabled{opacity:.5;cursor:default}
+  .empty{font-size:13px;color:var(--muted2);padding:6px 0}
+  /* tape chart */
+  .tape-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);max-height:560px}
+  table.tape{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100%}
+  .tape th,.tape td{border-bottom:1px solid var(--line);border-right:1px solid #eef0ec;height:34px;padding:0;min-width:56px;text-align:center;font-variant-numeric:tabular-nums}
+  .tape thead th{position:sticky;top:0;background:var(--panel2);z-index:2;font-weight:600;color:var(--muted);height:38px;line-height:1.15}
+  .tape thead th.today{color:var(--accent-d);box-shadow:inset 0 -2px 0 var(--accent)} .tape thead th.wk{background:#eef0ea}
+  .tape th.rm{position:sticky;left:0;background:var(--panel);z-index:1;text-align:left;padding:0 10px;min-width:96px;font-weight:700}
+  .tape thead th.rm{z-index:3;background:var(--panel2)} .tape th.rm small{display:block;font-weight:500;color:var(--muted2);font-size:10.5px}
+  .tape td{position:relative} .tape td.wk{background:#fafbf8}
+  .tape .bar-b{position:absolute;top:4px;bottom:4px;left:2px;z-index:1;border-radius:7px;color:#fff;font-size:11.5px;font-weight:600;text-align:left;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:26px;border:0;cursor:pointer}
+  .tape .bar-b.in{background:var(--s-occ)} .tape .bar-b.fut{background:var(--accent)} .tape .bar-b.past{background:#a7aba4} .tape .bar-b.day{background:var(--s-day)} .tape .bar-b.hold{background:#c8b9a0;color:#3b3326}
+  .tape .bar-b.sel{outline:3px solid var(--ink);outline-offset:1px}
+  .tape td.target{background:#e7f3ec;cursor:pointer}
+  .tape tr.cat th{background:var(--panel2);font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);height:24px}
+  .tape-note{font-size:12px;color:var(--muted);margin:8px 2px 0}
+  /* sheet */
+  .sheet{position:fixed;inset:0;background:rgba(20,24,20,.35);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+  .sheet .box{background:var(--panel);border-radius:16px 16px 0 0;padding:18px;width:min(520px,100%);box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+  @media (min-width:760px){ .sheet{align-items:center} .sheet .box{border-radius:16px} }
+  .sheet h3{font-size:16px;margin-bottom:4px} .sheet p{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .sheet .acts{display:grid;gap:8px}
+  .sheet .acts button,.sheet .acts a{display:block;text-align:center;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:11px;font-weight:600;font-size:14px;text-decoration:none;color:var(--ink)}
+  .sheet .acts .pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .hk3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;transition:.25s;z-index:60;pointer-events:none}
+  #toast.show{opacity:1;transform:translateX(-50%)} #toast.err{background:var(--danger)}
+  .sk{background:linear-gradient(90deg,#eceee9,#f6f7f4,#eceee9);background-size:200% 100%;animation:sk 1.2s infinite;border-radius:14px} @keyframes sk{to{background-position:-200% 0}}
+  @media (max-width:980px){ .kpis{grid-template-columns:repeat(2,1fr)} .kpi.occ{grid-column:1/-1} .kpis2{grid-template-columns:repeat(2,1fr)} .grid2,.lists{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="ttl"><span>Front desk</span><small><span data-prop="name">Hotel</span> · rooms, arrivals and departures</small></div>
+    <div class="spacer"></div>
+    <div class="datebar" role="group" aria-label="Date">
+      <button type="button" id="dPrev" aria-label="Previous day">‹</button>
+      <input type="date" id="dDate" aria-label="Date">
+      <button type="button" id="dNext" aria-label="Next day">›</button>
+      <button type="button" id="dToday">Today</button>
+    </div>
+    <a class="tbtn primary" href="stay.html?new=invoice">+ New booking</a>
+  </header>
+
+  <div id="notHotel" class="card" hidden><h2>This property isn't set up as a hotel</h2><p class="empty">Choose Hotel in Settings → Rooms and add your room categories and rooms to use the front desk.</p></div>
+
+  <div id="main">
+    <div class="kpis"><div class="sk" style="height:126px"></div><div class="sk" style="height:126px"></div><div class="sk" style="height:126px"></div><div class="sk" style="height:126px"></div><div class="sk" style="height:126px"></div></div>
+    <div class="sk" style="height:300px"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const PROXY_URL = 'https://data.ryst.in';
+const TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const $ = s => document.querySelector(s);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const inr = n => '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+const todayIST = () => new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
+const addD = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+const dLbl = (d, o) => new Date(d + 'T00:00:00Z').toLocaleDateString('en-IN', Object.assign({ timeZone: 'UTC' }, o || { day: 'numeric', month: 'short' }));
+function toast(msg, err){ const el = $('#toast'); el.textContent = msg; el.className = err ? 'show err' : 'show'; clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 3000); }
+async function api(path, body){
+  if (!TOKEN) { location.href = 'login.html'; throw new Error('Signed out'); }
+  const res = await fetch(PROXY_URL + path, body ? { method: 'POST', headers: { 'X-Token': TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { headers: { 'X-Token': TOKEN }, cache: 'no-store' });
+  if (res.status === 401) { localStorage.removeItem('ryst_proxy_token'); location.href = 'login.html'; throw new Error('Signed out'); }
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(j.error || 'Something went wrong'); e.status = res.status; throw e; }
+  return j;
+}
+
+const STATE = { occupied: 'In house', turnover: 'Turnover', arriving: 'Arriving', departing: 'Departing', dayuse: 'Day use', vacant: '', ooo: 'Out of order' };
+const HKN = { clean: 'Clean', dirty: 'Dirty', inspected: 'Inspected' };
+let date = new URLSearchParams(location.search).get('date') || todayIST(), D = null, moving = null;
+$('#dDate').value = date;
+$('#dDate').addEventListener('change', () => { date = $('#dDate').value || todayIST(); load(); });
+$('#dPrev').addEventListener('click', () => { date = addD(date, -1); $('#dDate').value = date; load(); });
+$('#dNext').addEventListener('click', () => { date = addD(date, 1); $('#dDate').value = date; load(); });
+$('#dToday').addEventListener('click', () => { date = todayIST(); $('#dDate').value = date; load(); });
+
+async function load(){
+  try { D = await api('/hotel/frontdesk?date=' + date); render(); }
+  catch (e) { if (e.status === 404) { $('#notHotel').hidden = false; $('#main').hidden = true; } else toast(e.message, true); }
+}
+const catName = id => ((D.categories || []).find(c => c.id === id) || {}).name || id;
+
+function ring(p){ const r = 40, c = 2 * Math.PI * r, f = Math.max(0, Math.min(100, p)) / 100 * c;
+  return `<svg class="ring" viewBox="0 0 96 96" aria-hidden="true"><circle class="bg" cx="48" cy="48" r="${r}"/><circle class="fg" cx="48" cy="48" r="${r}" stroke-dasharray="${f} ${c}" transform="rotate(-90 48 48)"/><text x="48" y="55" text-anchor="middle">${p}%</text></svg>`; }
+
+function render(){
+  const k = D.kpis, isToday = date === todayIST();
+  const arrIn = D.arrivals.filter(s => s.checkedInAt).reduce((a, s) => a + s.rooms.length, 0), depOut = D.departures.filter(s => s.checkedOutAt).reduce((a, s) => a + s.rooms.length, 0);
+  const lg = [['Vacant clean', k.status.vacantClean, 'var(--s-clean)', 'var(--good)'], ['Inspected', k.status.vacantInspected, 'var(--s-insp)', 'var(--s-occ)'], ['Vacant dirty', k.status.vacantDirty, 'var(--s-dirty)', 'var(--danger)'],
+    ['In house', k.status.occupied, 'var(--s-occ)'], ['Arriving', k.status.arriving, 'var(--s-arr)'], ['Departing', k.status.departing, 'var(--s-dep)'], ['Day use', k.status.dayuse, 'var(--s-day)'], ['Out of order', k.status.ooo, 'var(--s-ooo)']];
+  const days = D.days, max = 100;
+  $('#main').innerHTML = `
+  <div class="kpis">
+    <div class="kpi occ">${ring(k.occupancy)}<div><div class="l">${isToday ? 'Occupancy tonight' : 'Occupancy ' + dLbl(date)}</div><div class="v">${k.sold}<small> / ${k.sellable} rooms</small></div><div class="s">Month so far ${k.occupancyMTD}%</div></div></div>
+    <div class="kpi"><div class="l">Arrivals</div><div class="v">${k.arrivals}</div><div class="s">${arrIn} checked in</div><div class="bar"><i style="width:${k.arrivals ? arrIn / k.arrivals * 100 : 0}%"></i></div></div>
+    <div class="kpi"><div class="l">Departures</div><div class="v">${k.departures}</div><div class="s">${depOut} checked out</div><div class="bar"><i style="width:${k.departures ? depOut / k.departures * 100 : 0}%;background:var(--s-dep)"></i></div></div>
+    <div class="kpi"><div class="l">In house</div><div class="v">${k.inHouse}</div><div class="s">${k.dayUse ? k.dayUse + ' day-use room' + (k.dayUse === 1 ? '' : 's') : 'rooms occupied'}</div></div>
+    <div class="kpi"><div class="l">Rooms ready</div><div class="v">${k.roomsReady}</div><div class="s">${k.roomsDirty} to clean</div><div class="bar"><i style="width:${(k.roomsReady + k.roomsDirty) ? k.roomsReady / (k.roomsReady + k.roomsDirty) * 100 : 100}%"></i></div></div>
+  </div>
+  <div class="kpis2">
+    <div class="kpi"><div class="l">Room revenue ${isToday ? 'tonight' : dLbl(date)}</div><div class="v">${inr(k.revenueToday)}</div><div class="s">GST included</div></div>
+    <div class="kpi"><div class="l">ADR</div><div class="v">${inr(k.adr)}</div><div class="s">Month ${inr(k.adrMTD)} · revenue per room sold</div></div>
+    <div class="kpi"><div class="l">RevPAR</div><div class="v">${inr(k.revpar)}</div><div class="s">Month ${inr(k.revparMTD)} · revenue per available room</div></div>
+    <div class="kpi"><div class="l">Revenue this month</div><div class="v">${inr(k.revenueMTD)}</div><div class="s">to ${dLbl(date)}</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h2>Room status</h2><div class="legend">${lg.map(x => `<div class="lg"><i style="background:${x[2]};${x[3] ? 'box-shadow:inset 0 0 0 2px ' + x[3] : ''}"></i>${x[0]}<b>${x[1]}</b></div>`).join('')}</div></div>
+    <div class="card"><h2>Occupancy, next 30 days <small>bookings on the books</small></h2>
+      <div class="fc">${days.map((d, i) => `<div class="c${d.occupancy >= 90 ? ' full' : d.occupancy >= 70 ? ' hi' : ''}${i === 0 ? ' today' : ''}" title="${dLbl(d.date, { weekday: 'short', day: 'numeric', month: 'short' })}: ${d.sold}/${d.sellable} rooms, ${d.occupancy}%">${i % 2 === 0 ? `<em>${d.occupancy}</em>` : '<em>&nbsp;</em>'}<i style="height:${Math.max(2, d.occupancy / max * 100)}%"></i><span>${i % 3 === 0 ? dLbl(d.date, { day: 'numeric' }) : '&nbsp;'}</span></div>`).join('')}</div>
+    </div>
+  </div>
+  <div class="card"><h2>Rooms <small>tap a room for check-in, check-out or housekeeping</small></h2><div class="floors" id="board"></div></div>
+  <div class="lists">
+    <div class="card"><h2>Arrivals <small>${dLbl(date)}</small></h2><div id="lArr"></div></div>
+    <div class="card"><h2>Departures <small>${dLbl(date)}</small></h2><div id="lDep"></div></div>
+    <div class="card"><h2>In house</h2><div id="lIn"></div></div>
+    <div class="card"><h2>Day use</h2><div id="lDay"></div></div>
+  </div>
+  <div class="card"><h2>Tape chart <small>tap a booking to move it to another room</small></h2><div class="tape-wrap" id="tape"></div><p class="tape-note" id="tapeNote"></p></div>`;
+  renderBoard(); renderLists(); renderTape();
+}
+
+function renderBoard(){
+  const floors = {}; D.rooms.forEach(r => { (floors[r.floor || '—'] = floors[r.floor || '—'] || []).push(r); });
+  $('#board').innerHTML = Object.keys(floors).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).map(f => `<div class="floor"><h3>${f === '—' ? 'Rooms' : 'Floor ' + esc(f)}</h3><div class="rooms">${floors[f].map(r => `
+    <button type="button" class="room ${r.state}" data-room="${esc(r.no)}">
+      <span class="rt"><span class="no">${esc(r.no)}</span>${STATE[r.state] ? `<span class="st">${STATE[r.state]}</span>` : ''}</span><span class="cat">${esc(catName(r.cat))}</span>
+      ${r.state === 'ooo' ? `<span class="who">${esc(r.reason || 'Out of order')}</span>` : r.guest ? `<span class="who">${esc(r.guest)}</span>` : ''}
+      <span class="hk ${r.hk}"><i></i>${HKN[r.hk]}</span></button>`).join('')}</div></div>`).join('');
+  $('#board').onclick = e => { const b = e.target.closest('[data-room]'); if (b) roomSheet(D.rooms.find(r => r.no === b.dataset.room)); };
+}
+const allStays = () => D.tape.stays;
+function bkRow(s, kind){
+  const due = Math.max(0, s.total - s.paid), roomsTxt = s.rooms.map(r => r.roomNo ? r.roomNo : catName(r.cat) + ' (no room yet)').join(', ');
+  let btn = '';
+  if (kind === 'arr') btn = s.checkedInAt ? '<span class="ok">Checked in</span>' : `<button type="button" data-act="checkin" data-no="${esc(s.no)}">Check in</button>`;
+  if (kind === 'dep') btn = s.checkedOutAt ? '<span class="ok">Checked out</span>' : `<button type="button" data-act="checkout" data-no="${esc(s.no)}">Check out</button>`;
+  if (kind === 'day') btn = s.checkedOutAt ? '<span class="ok">Done</span>' : s.checkedInAt ? `<button type="button" data-act="checkout" data-no="${esc(s.no)}">Check out</button>` : `<button type="button" data-act="checkin" data-no="${esc(s.no)}">Check in</button>`;
+  const when = s.dayUse ? `${s.dayUse.start} · ${s.dayUse.hours} h` : `${dLbl(s.checkin)} → ${dLbl(s.checkout)}`;
+  return `<div class="bk"><div class="grow"><a class="nm" href="stay.html?open=${encodeURIComponent(s.no)}">${esc(s.guest || s.no)}</a><div class="mt">${esc(roomsTxt)} · ${when}${s.channel ? ' · ' + esc(s.channel) : ''}${s.checkinDone ? ' · online check-in done' : ''}</div></div>
+    ${due > 0 ? `<span class="due">${inr(due)} due</span>` : '<span class="ok">Paid</span>'}${btn}</div>`;
+}
+function renderLists(){
+  const put = (id, list, kind, none) => { $(id).innerHTML = list.length ? list.map(s => bkRow(s, kind)).join('') : `<p class="empty">${none}</p>`; };
+  put('#lArr', D.arrivals, 'arr', 'No arrivals.'); put('#lDep', D.departures, 'dep', 'No departures.'); put('#lIn', D.inHouse, 'in', 'Nobody staying over.'); put('#lDay', D.dayUse, 'day', 'No day-use bookings.');
+  document.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => act(b.dataset.act, b.dataset.no, b)));
+}
+async function act(kind, no, btn){
+  if (kind === 'checkout') { const s = allStays().find(x => x.no === no) || {}, due = Math.max(0, (s.total || 0) - (s.paid || 0)); if (due > 0 && !confirm(`${s.guest || no} still owes ${inr(due)}. Check out anyway?`)) return; }
+  if (btn) btn.disabled = true;
+  try { await api('/hotel/' + kind, { no }); toast(kind === 'checkin' ? 'Checked in' : 'Checked out — rooms marked dirty'); await load(); }
+  catch (e) { toast(e.message, true); if (btn) btn.disabled = false; }
+}
+function sheet(html){ const el = document.createElement('div'); el.className = 'sheet'; el.innerHTML = `<div class="box" role="dialog" aria-modal="true">${html}</div>`; el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-close]')) el.remove(); }); document.body.appendChild(el); return el; }
+function roomSheet(r){
+  const s = r.stay ? allStays().find(x => x.no === r.stay) : null, leaving = r.leaving ? allStays().find(x => x.no === r.leaving) : null;
+  const acts = [];
+  if (leaving && !leaving.checkedOutAt) acts.push(`<button class="pri" data-a="checkout" data-n="${esc(leaving.no)}">Check out ${esc(leaving.guest)}</button>`);
+  if (s && !s.checkedInAt && (r.state === 'arriving' || r.state === 'dayuse')) acts.push(`<button class="pri" data-a="checkin" data-n="${esc(s.no)}">Check in ${esc(s.guest)}</button>`);
+  if (s && r.state === 'departing' && !s.checkedOutAt) acts.push(`<button class="pri" data-a="checkout" data-n="${esc(s.no)}">Check out ${esc(s.guest)}</button>`);
+  if (s) acts.push(`<a href="stay.html?open=${encodeURIComponent(s.no)}">Open booking</a>`);
+  const el = sheet(`<h3>Room ${esc(r.no)} · ${esc(catName(r.cat))}</h3><p>${STATE[r.state] || 'Vacant'}${s ? ' · ' + esc(s.guest) : ''} · Housekeeping: ${HKN[r.hk]}</p>
+    <div class="acts">${acts.join('')}<div class="hk3">${['clean', 'dirty', 'inspected'].map(h => `<button data-hk="${h}"${h === r.hk ? ' disabled' : ''}>${HKN[h]}</button>`).join('')}</div><button data-close>Close</button></div>`);
+  el.querySelectorAll('[data-a]').forEach(b => b.addEventListener('click', () => { el.remove(); act(b.dataset.a, b.dataset.n); }));
+  el.querySelectorAll('[data-hk]').forEach(b => b.addEventListener('click', async () => { try { await api('/hotel/room-status', { room: r.no, hk: b.dataset.hk }); el.remove(); toast(`Room ${r.no}: ${HKN[b.dataset.hk]}`); load(); } catch (e) { toast(e.message, true); } }));
+}
+
+function renderTape(){
+  const from = addD(date, -2), n = 16, cols = []; for (let i = 0; i < n; i++) cols.push(addD(from, i));
+  const byCat = {}; D.rooms.forEach(r => { (byCat[r.cat] = byCat[r.cat] || []).push(r); });
+  const wk = d => { const w = new Date(d + 'T00:00:00Z').getUTCDay(); return w === 5 || w === 6; };
+  const staysIn = (no) => allStays().filter(s => s.type !== 'block' && s.rooms.some(r => r.roomNo === no));
+  const bar = (s, no) => {
+    const ci = s.checkin < from ? from : s.checkin, last = s.dayUse ? s.checkin : addD(s.checkout, -1); if (last < from || ci > cols[n - 1]) return null;
+    const startIdx = cols.indexOf(ci), endIdx = Math.min(n - 1, cols.indexOf(last) < 0 ? n - 1 : cols.indexOf(last));
+    const span = endIdx - startIdx + 1, cls = s.dayUse ? 'day' : s.checkedOutAt || s.checkout <= todayIST() ? 'past' : s.checkedInAt ? 'in' : 'fut';
+    const i = s.rooms.findIndex(r => r.roomNo === no);
+    return { startIdx, html: `<button type="button" class="bar-b ${cls}${moving && moving.no === s.no && moving.i === i ? ' sel' : ''}" style="width:calc(${span * 100}% + ${(span - 1)}px - 4px)" data-no="${esc(s.no)}" data-i="${i}" title="${esc(s.guest)} · ${dLbl(s.checkin)} → ${dLbl(s.checkout)}">${esc(s.guest || s.no)}${s.dayUse ? ' · ' + s.dayUse.hours + 'h' : ''}</button>` };
+  };
+  const head = `<thead><tr><th class="rm">Room</th>${cols.map(d => `<th class="${d === date ? 'today' : ''}${wk(d) ? ' wk' : ''}">${dLbl(d, { weekday: 'short' })}<br>${dLbl(d, { day: 'numeric' })}</th>`).join('')}</tr></thead>`;
+  const unassigned = allStays().filter(s => s.type !== 'block' && s.rooms.some(r => !r.roomNo));
+  const body = Object.keys(byCat).map(cat => `<tr class="cat"><th class="rm" colspan="${n + 1}">${esc(catName(cat))}</th></tr>` + byCat[cat].map(r => {
+    const bars = {}; staysIn(r.no).forEach(s => { const b = bar(s, r.no); if (b) bars[b.startIdx] = (bars[b.startIdx] || '') + b.html; });
+    return `<tr><th class="rm">${esc(r.no)}<small>${r.hk === 'dirty' ? 'Dirty' : r.state === 'ooo' ? 'Out of order' : ''}</small></th>${cols.map((d, i) => `<td class="${wk(d) ? 'wk' : ''}${moving && moving.cat === r.cat && moving.room !== r.no ? ' target' : ''}" data-room="${esc(r.no)}" data-d="${d}">${bars[i] || ''}</td>`).join('')}</tr>`;
+  }).join('')).join('');
+  $('#tape').innerHTML = `<table class="tape">${head}<tbody>${body}</tbody></table>`;
+  $('#tapeNote').textContent = moving ? `Moving ${moving.guest} out of room ${moving.room}: tap a highlighted room row, or tap the booking again to cancel.` : (unassigned.length ? `${unassigned.length} booking${unassigned.length === 1 ? ' has' : 's have'} rooms with no number yet: ${unassigned.map(s => s.guest || s.no).slice(0, 4).join(', ')}. Open the booking and use Suggest room numbers.` : 'Today is underlined. Weekend nights are shaded.');
+  $('#tape').onclick = async e => {
+    const b = e.target.closest('.bar-b');
+    if (b) { const s = allStays().find(x => x.no === b.dataset.no), i = +b.dataset.i;
+      if (moving && moving.no === s.no && moving.i === i) { moving = null; renderTape(); return; }
+      if (e.detail === 2) { location.href = 'stay.html?open=' + encodeURIComponent(s.no); return; }
+      moving = { no: s.no, i, room: s.rooms[i].roomNo, cat: s.rooms[i].cat, guest: s.guest }; renderTape(); return; }
+    const td = e.target.closest('td.target'); if (!td || !moving) return;
+    const m = moving; moving = null;
+    try { await api('/hotel/move', { no: m.no, index: m.i, roomNo: td.dataset.room }); toast(`${m.guest} moved to room ${td.dataset.room}`); load(); }
+    catch (err) { toast(err.message, true); renderTape(); }
+  };
+}
+load();
+setInterval(() => { if (!document.hidden && !moving && !document.querySelector('.sheet')) load(); }, 60000); // keep the board fresh at the desk
+</script>
+</body>
+</html>
