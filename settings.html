@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=e9dfa5ac"></script>
+<script src="/assets/app/shell.js?v=96e96d06"></script>
 <title data-title="Settings — {name}">Settings — RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -789,6 +789,7 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <label class="f" style="margin-bottom:8px"><span>Razorpay Key Secret</span><input class="t" id="connRzpSecret" type="password" autocomplete="off" spellcheck="false" placeholder="Razorpay → Account &amp; Settings → API keys"></label>
       <label class="f" style="margin-bottom:8px"><span>Razorpay webhook secret</span><input class="t" id="connRzpWh" type="password" autocomplete="off" spellcheck="false" placeholder="The secret you type when adding the webhook below"></label>
       <label class="f" id="connCxRow" style="margin-bottom:8px" hidden><span>Channex API key <small id="connCxState" style="font-weight:500;color:#7a8a86"></small></span><input class="t" id="connChannex" type="password" autocomplete="off" spellcheck="false" placeholder="Only if the hotel has its own Channex account"></label>
+      <label class="f" id="connCxWhRow" style="margin-bottom:8px" hidden><span>Channex webhook signing secret <small id="connCxWhState" style="font-weight:500;color:#7a8a86"></small></span><input class="t" id="connChannexWh" type="password" autocomplete="off" spellcheck="false" placeholder="Channex → Webhooks → signing key (optional)"></label>
       <p class="wa-hint" style="margin:0 0 10px">Leave a box empty to keep what's saved.</p>
       <div class="rc-foot" style="margin-top:0;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <button class="btn primary" id="connSave">Save connections</button>
@@ -1480,7 +1481,8 @@ if(location.hash==='#ota'){ setTimeout(()=>{ switchTab('ota'); document.getEleme
 function connRender(d){
   // hotels: the channel manager's key (Harbour's partner account is used when the hotel has none)
   const cx=d.channex||{}, isH=(()=>{ try{ return (JSON.parse(localStorage.getItem('ryst_property')||'{}').propertyType)==='hotel'; }catch(e){ return false; } })();
-  document.getElementById('connCxRow').hidden=!isH;
+  document.getElementById('connCxRow').hidden=!isH; document.getElementById('connCxWhRow').hidden=!isH;
+  document.getElementById('connCxWhState').textContent = cx.signed ? '· saved: unsigned webhooks are refused' : '· not set';
   document.getElementById('connCxState').textContent = cx.own ? `· own key ${cx.keyHint} saved` : cx.connected ? '· using Harbour’s Channex account' : '· not connected';
   if(!d || !d.interakt || !d.razorpay || !d.webhooks) return;
   const st=document.getElementById('connStatus');
@@ -1537,13 +1539,13 @@ async function connPut(body, btn, busy){
     if(res.status===401){ localStorage.removeItem('ryst_proxy_token'); window.location.href='login.html'; return; }
     const d=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(d.error||('Error '+res.status));
-    ['connInterakt','connRzpId','connRzpSecret','connRzpWh','connChannex'].forEach(id=>document.getElementById(id).value='');
+    ['connInterakt','connRzpId','connRzpSecret','connRzpWh','connChannex','connChannexWh'].forEach(id=>document.getElementById(id).value='');
     connRender(d); connRenderMore(d); toast('Saved');
   }catch(e){ toast(e.message); }
   finally{ btn.disabled=false; btn.textContent=orig; }
 }
 document.getElementById('connSave').addEventListener('click', e=>{
-  const body={}, map={connInterakt:'interaktApiKey',connRzpId:'razorpayKeyId',connRzpSecret:'razorpayKeySecret',connRzpWh:'razorpayWebhookSecret',connChannex:'channexApiKey'};
+  const body={}, map={connInterakt:'interaktApiKey',connRzpId:'razorpayKeyId',connRzpSecret:'razorpayKeySecret',connRzpWh:'razorpayWebhookSecret',connChannex:'channexApiKey',connChannexWh:'channexWebhookSecret'};
   Object.keys(map).forEach(id=>{ const v=document.getElementById(id).value.trim(); if(v) body[map[id]]=v; });
   if(!Object.keys(body).length){ toast('Paste at least one key first'); return; }
   connPut(body, e.currentTarget, 'Saving…');

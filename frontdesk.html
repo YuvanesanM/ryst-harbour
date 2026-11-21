@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=e9dfa5ac"></script>
+<script src="/assets/app/shell.js?v=96e96d06"></script>
 <title data-title="Front desk · {name}">Front desk · RYST Harbour</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -143,8 +143,11 @@
   .cx-sw{display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px} .cx-sw .grow{flex:1} .cx-sw input{width:20px;height:20px;accent-color:var(--accent)}
   .cx-url{font:500 12px ui-monospace,monospace;background:var(--panel2);border-radius:8px;padding:8px;word-break:break-all;user-select:all}
   .ok-t{color:var(--good);font-weight:600} .no-t{color:var(--danger);font-weight:600}
+  .fo-bill{display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:10px;padding:9px 12px;margin-bottom:10px;font-size:13px} .fo-bill .grow{flex:1;min-width:0}
+  .fo-pr{border:0;background:none;color:var(--accent-d);font-size:11.5px;font-weight:600;padding:2px 4px}
+  .co-card{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden} .co-card h4{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel2);font-size:14px} .co-card h4 b{margin-left:auto;font-variant-numeric:tabular-nums}
   .print-only{display:none}
-  @media print{ .sheet .box.wide{width:100%} body>*:not(.sheet){display:none!important} .sheet{position:absolute;left:0;top:0;right:0;background:none;display:block} .print-only{display:block;font-size:12px;color:var(--muted);margin-bottom:10px} .sheet .box{box-shadow:none;width:100%;max-height:none;overflow:visible;padding:0} .fo-forms,.fo-acts,.fo-ln .x,.noprint{display:none!important} }
+  @media print{ .print-skip{display:none!important} .sheet .box.wide{width:100%} body>*:not(.sheet){display:none!important} .sheet{position:absolute;left:0;top:0;right:0;background:none;display:block} .print-only{display:block;font-size:12px;color:var(--muted);margin-bottom:10px} .sheet .box{box-shadow:none;width:100%;max-height:none;overflow:visible;padding:0} .fo-forms,.fo-acts,.fo-ln .x,.noprint{display:none!important} }
   @media (max-width:980px){ .kpis{grid-template-columns:repeat(2,1fr)} .kpi.occ{grid-column:1/-1} .kpis2{grid-template-columns:repeat(2,1fr)} .grid2,.lists{grid-template-columns:1fr} }
 </style>
 </head>
@@ -159,6 +162,7 @@
       <button type="button" id="dNext" aria-label="Next day">›</button>
       <button type="button" id="dToday">Today</button>
     </div>
+    <button type="button" class="tbtn" id="btnCo">Companies</button>
     <button type="button" class="tbtn" id="btnCx">Channels</button>
     <button type="button" class="tbtn" id="btnAudit">Night audit</button>
     <a class="tbtn primary" href="stay.html?new=invoice">+ New booking</a>
@@ -303,19 +307,21 @@ async function folioSheet(no){
     const recent = l => F.canApprove || (Date.now() - (l.at || 0) < 15 * 60 * 1000);
     const line = l => `<div class="fo-ln"><div class="grow"><div>${esc(l.desc)}${l.qty > 1 ? ` <span class="mt">× ${l.qty}</span>` : ''}</div><div class="mt">${l.kind === 'room' ? 'Room charge' : esc(F.kinds[l.kind] || l.kind)}${l.date ? ' · ' + dLbl(l.date) : ''}${l.by ? ' · ' + esc(l.by) : ''}${l.gstRate != null ? ' · GST ' + l.gstRate + '%' : ''}</div></div>
       <span class="am">${inr(l.amount)}</span>${l.kind !== 'room' && l.id && !F.invoiced && recent(l) ? `<button type="button" class="x" data-void="${esc(l.id)}" aria-label="Remove ${esc(l.desc)}" title="Remove">×</button>` : ''}</div>`;
-    const secs = F.byRoom.map(r => ({ title: r.roomNo ? 'Room ' + r.roomNo : 'Room (no number yet)', sub: catName(r.cat), lines: F.lines.filter(l => r.roomNo && l.room === r.roomNo), total: r.charges, paid: r.paid }));
+    const secs = F.byRoom.map(r => ({ room: r.roomNo, title: r.roomNo ? 'Room ' + r.roomNo : 'Room (no number yet)', sub: catName(r.cat), lines: F.lines.filter(l => r.roomNo && l.room === r.roomNo), total: r.charges, paid: r.paid }));
     const shared = F.lines.filter(l => !l.room); if (shared.length) secs.push({ title: 'Booking', sub: 'not tied to one room', lines: shared, total: F.shared });
-    const pays = F.payments.map(p => `<div class="fo-ln"><div class="grow"><div>${esc(p.method)}${p.room ? ' · Room ' + esc(p.room) : ''}</div><div class="mt">${p.date ? dLbl(p.date) : ''}${p.by ? ' · ' + esc(p.by) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div>
+    const pays = F.payments.map(p => `<div class="fo-ln"><div class="grow"><div>${esc(p.method)}${p.company ? ' · ' + esc(p.company) + (p.settled ? ' (paid by the company)' : ' (owed by the company)') : ''}${p.room ? ' · Room ' + esc(p.room) : ''}</div><div class="mt">${p.date ? dLbl(p.date) : ''}${p.by ? ' · ' + esc(p.by) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div>
       ${p.status === 'pending' ? '<span class="pill wait">Awaiting approval</span>' : p.status === 'rejected' ? '<span class="pill no">Rejected</span>' : '<span class="pill">Received</span>'}<span class="am">${inr(p.amount)}</span></div>`).join('');
     const roomOpts = `<option value="">Whole booking</option>` + F.byRoom.filter(r => r.roomNo).map(r => `<option value="${esc(r.roomNo)}">Room ${esc(r.roomNo)}</option>`).join('');
     const closed = F.invoiced ? 'The tax invoice is issued, so the bill is closed. Cancel the invoice on the booking to change charges.' : F.checkedOutAt ? 'Checked out: charges are closed. Payments can still be recorded.' : '';
     el.querySelector('.fo-body').innerHTML = `
       <div class="print-only"><b style="font-size:15px;color:var(--ink)">${esc((document.querySelector('[data-prop="name"]') || {}).textContent || '')}</b><br>Guest folio · printed ${new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })} · not a tax invoice</div>
       <div class="fo-hd"><div class="grow"><h3>Folio · ${esc(F.guest || F.no)}</h3><p style="margin:0">${esc(F.no)} · ${dLbl(F.checkin)} → ${dLbl(F.checkout)} · ${F.rooms.length} room${F.rooms.length === 1 ? '' : 's'}</p></div><button type="button" class="tbtn noprint" data-close>Close</button></div>
+      <div class="fo-bill">${F.billTo ? `<div class="grow"><span class="mt">Billed to</span> <b>${esc(F.billTo.name)}</b>${F.billTo.gstin ? ` · GSTIN ${esc(F.billTo.gstin)}` : ''}${F.billTo.address ? `<div class="mt">${esc(F.billTo.address)}</div>` : ''}</div><button type="button" class="tbtn noprint" id="foBillEdit">Change</button>`
+        : `<div class="grow mt">Billed to the guest.</div><button type="button" class="tbtn noprint" id="foBillEdit">Bill to a company</button>`}</div>
       <div class="fo-tot"><div><span>Bill</span><b>${inr(F.total)}</b></div><div><span>Received</span><b>${inr(F.paid)}</b></div><div class="wait"><span>Awaiting approval</span><b>${inr(F.pending)}</b></div><div class="${F.balance > 0 ? 'due' : ''}"><span>Balance</span><b>${inr(Math.max(0, F.balance))}</b></div></div>
-      ${secs.map(x => `<div class="fo-sec"><h4>${esc(x.title)} <small>${esc(x.sub)}</small><b>${inr(x.total)}</b></h4>${x.lines.length ? x.lines.map(line).join('') : '<div class="fo-ln"><span class="mt">No charges on this room yet</span></div>'}${x.paid ? `<div class="fo-ln"><div class="grow mt">Paid against this room</div><span class="am">− ${inr(x.paid)}</span></div>` : ''}</div>`).join('')}
+      ${secs.map(x => `<div class="fo-sec" data-sec="${esc(x.room || '')}"><h4>${esc(x.title)} <small>${esc(x.sub)}</small>${x.room && F.byRoom.length > 1 ? `<button type="button" class="fo-pr noprint" data-print-room="${esc(x.room)}">Print this room</button>` : ''}<b>${inr(x.total)}</b></h4>${x.lines.length ? x.lines.map(line).join('') : '<div class="fo-ln"><span class="mt">No charges on this room yet</span></div>'}${x.paid ? `<div class="fo-ln"><div class="grow mt">Paid against this room</div><span class="am">− ${inr(x.paid)}</span></div>` : ''}</div>`).join('')}
       ${F.discount ? `<div class="fo-sec"><div class="fo-ln"><div class="grow">Discount</div><span class="am">− ${inr(F.discount)}</span></div></div>` : ''}
-      <div class="fo-sec"><h4>Payments <small>${F.pending ? 'staff payments count once the owner approves them' : ''}</small><b>${inr(F.paid)}</b></h4>${pays || '<div class="fo-ln"><span class="mt">No payments recorded here yet</span></div>'}</div>
+      <div class="fo-sec" data-sec="pay"><h4>Payments <small>${F.pending ? 'staff payments count once the owner approves them' : ''}</small><b>${inr(F.paid)}</b></h4>${pays || '<div class="fo-ln"><span class="mt">No payments recorded here yet</span></div>'}</div>
       ${closed ? `<p class="noprint" style="margin:6px 0 0">${closed}</p>` : ''}
       <div class="fo-forms">
         ${F.invoiced || F.checkedOutAt ? '' : `<form class="fo-form" id="foChg"><h5>Add a charge</h5>
@@ -325,7 +331,7 @@ async function folioSheet(no){
           <div class="row one"><label>GST rate<select name="gst"><option value="18">18%</option><option value="5">5%</option><option value="12">12%</option><option value="0">Nil</option></select></label></div>
           <button type="submit">Add to bill</button></form>`}
         <form class="fo-form" id="foPay"><h5>Record a payment</h5>
-          <div class="row"><label>Amount<input name="amount" type="number" min="1" step="1" inputmode="numeric" required value="${F.balance - F.pending > 0 ? Math.round(F.balance - F.pending) : ''}"></label><label>How<select name="method">${METHODS.map(m => `<option>${m}</option>`).join('')}</select></label></div>
+          <div class="row"><label>Amount<input name="amount" type="number" min="1" step="1" inputmode="numeric" required value="${F.balance - F.pending > 0 ? Math.round(F.balance - F.pending) : ''}"></label><label>How<select name="method">${METHODS.concat(F.billTo ? ['Company account'] : []).map(m => `<option${m === 'Company account' ? ` value="${m}">To ${esc(F.billTo.name)}’s account` : `>${m}`}</option>`).join('')}</select></label></div>
           <div class="row one"><label>Against<select name="room">${roomOpts}</select></label></div>
           <button type="submit">Record payment</button>
           <p class="hint">${F.canApprove ? 'Counted as received straight away.' : 'It waits for the owner’s approval before it counts as received.'}</p></form>
@@ -341,6 +347,41 @@ async function folioSheet(no){
     el.querySelectorAll('[data-void]').forEach(b => b.addEventListener('click', async () => { if (!confirm('Remove this charge from the bill?')) return;
       try { await api('/hotel/charge-void', { no, id: b.dataset.void }); reload('Charge removed'); } catch (err) { toast(err.message, true); } }));
     el.querySelector('#foPrint').addEventListener('click', () => window.print());
+    // one room's bill on its own (a guest paying for their own room)
+    el.querySelectorAll('[data-print-room]').forEach(b => b.addEventListener('click', () => {
+      el.querySelectorAll('.fo-sec[data-sec]').forEach(x => x.classList.toggle('print-skip', x.dataset.sec !== b.dataset.printRoom)); el.querySelector('.fo-tot').classList.add('print-skip');
+      window.print(); setTimeout(() => el.querySelectorAll('.print-skip').forEach(x => x.classList.remove('print-skip')), 500);
+    }));
+    el.querySelector('#foBillEdit').addEventListener('click', () => {
+      const bt = F.billTo || {}, box = sheet(`<h3>Bill to a company</h3><p>The company is shown on the folio and the tax invoice, and the balance can be moved to its account.</p>
+        <form class="fo-form" id="btF" style="border:0;padding:0"><div class="row one"><label>Company name<input name="name" maxlength="120" required value="${esc(bt.name || '')}"></label></div>
+        <div class="row"><label>GSTIN (optional)<input name="gstin" maxlength="15" value="${esc(bt.gstin || '')}" style="text-transform:uppercase"></label><label>Address (optional)<input name="address" maxlength="300" value="${esc(bt.address || '')}"></label></div>
+        <button type="submit">Save</button>${F.billTo ? '<button type="button" id="btClear" style="background:var(--panel);color:var(--ink);border-color:var(--line)">Bill the guest instead</button>' : ''}</form>`);
+      box.querySelector('#btF').addEventListener('submit', async e => { e.preventDefault(); const f = new FormData(e.target);
+        try { await api('/hotel/bill-to', { no, name: f.get('name'), gstin: f.get('gstin'), address: f.get('address') }); box.remove(); reload('Billing company saved'); } catch (err) { toast(err.message, true); } });
+      const c = box.querySelector('#btClear'); if (c) c.addEventListener('click', async () => { try { await api('/hotel/bill-to', { no, clear: true }); box.remove(); reload('Billed to the guest'); } catch (err) { toast(err.message, true); } });
+    });
+  };
+  draw();
+}
+
+// ── Company accounts (city ledger): what each company owes, and recording its payment ──
+$('#btnCo').addEventListener('click', () => coSheet());
+async function coSheet(){
+  let C; try { C = await api('/hotel/companies'); } catch (e) { toast(e.message, true); return; }
+  const el = sheet('<div class="co-body"></div>'); el.querySelector('.box').classList.add('wide');
+  const draw = () => {
+    el.querySelector('.co-body').innerHTML = `<div class="fo-hd"><div class="grow"><h3>Company accounts</h3><p style="margin:0">Balances moved from a folio to the company it's billed to. ${inr(C.outstanding)} owed in all.</p></div><button type="button" class="tbtn" data-close>Close</button></div>
+      ${C.companies.length ? C.companies.map((c, ci) => `<div class="co-card"><h4>${esc(c.name)}${c.gstin ? ` <small style="font-weight:500;color:var(--muted)">${esc(c.gstin)}</small>` : ''}<b>${inr(c.outstanding)} owed</b></h4>
+        ${c.entries.map(x => `<label class="fo-ln">${C.canSettle && x.status === 'approved' && !x.settled ? `<input type="checkbox" data-co="${ci}" value="${esc(x.id)}" data-amt="${x.amount}" style="width:18px;height:18px;accent-color:var(--accent)">` : ''}<div class="grow"><div>${esc(x.guest || x.no)} <span class="mt">${esc(x.no)}</span></div><div class="mt">${dLbl(x.checkin)} → ${dLbl(x.checkout)}${x.date ? ' · moved ' + dLbl(x.date) : ''}</div></div>
+          ${x.status === 'pending' ? '<span class="pill wait">Awaiting approval</span>' : x.settled ? `<span class="pill">Paid · ${esc(x.settled.method)}${x.settled.ref ? ' ' + esc(x.settled.ref) : ''}</span>` : '<span class="pill no">Owed</span>'}<span class="am">${inr(x.amount)}</span></label>`).join('')}
+        ${C.canSettle && c.outstanding ? `<form class="fo-form co-pay" data-ci="${ci}" style="border:0;border-top:1px solid var(--line);border-radius:0"><div class="row"><label>Paid by<select name="method">${['Bank transfer', 'UPI', 'Cheque', 'Card', 'Cash'].map(m => `<option>${m}</option>`).join('')}</select></label><label>Reference<input name="ref" maxlength="60" placeholder="UTR / cheque no."></label></div><button type="submit">Record payment for the ticked bookings</button></form>` : ''}</div>`).join('')
+        : '<p class="empty">No company accounts yet. On a folio, choose “Bill to a company”, then record the balance “To the company’s account”.</p>'}
+      ${C.canSettle ? '' : '<p class="empty">Only the owner records payments from companies.</p>'}`;
+    el.querySelectorAll('.co-pay').forEach(f => f.addEventListener('submit', async e => { e.preventDefault();
+      const ids = [...el.querySelectorAll(`[data-co="${f.dataset.ci}"]:checked`)].map(x => x.value), fd = new FormData(f);
+      if (!ids.length) { toast('Tick the bookings this payment covers', true); return; }
+      try { const r = await api('/hotel/company-settle', { ids, method: fd.get('method'), ref: fd.get('ref') }); C = await api('/hotel/companies'); draw(); toast(`${inr(r.amount)} recorded from the company`); } catch (err) { toast(err.message, true); } }));
   };
   draw();
 }

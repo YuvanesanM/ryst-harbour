@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=e9dfa5ac"></script>
+<script src="/assets/app/shell.js?v=96e96d06"></script>
 <title data-title="Housekeeping · {name}">Housekeeping · RYST Harbour</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -31,6 +31,8 @@
   .btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .btns button{border:1.5px solid var(--line);background:var(--panel);border-radius:11px;padding:13px 6px;font-weight:700;font-size:14.5px;color:var(--ink)}
   .btns button.on.clean{background:var(--accent);border-color:var(--accent);color:#fff} .btns button.on.dirty{background:var(--danger);border-color:var(--danger);color:#fff} .btns button.on.inspected{background:var(--occ);border-color:var(--occ);color:#fff}
+  .who{font-size:12px;font-weight:600;color:var(--occ);margin-top:2px} .who.me{color:var(--accent-d)}
+  .take{width:100%;margin-top:8px;border:1.5px dashed var(--line);background:none;border-radius:11px;padding:10px;font-weight:600;font-size:13.5px;color:var(--muted)} .take.pri{border-style:solid;border-color:var(--accent);color:var(--accent-d)}
   .empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
   #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;transition:.25s;z-index:60;pointer-events:none} #toast.show{opacity:1} #toast.err{background:var(--danger)}
 </style>
@@ -42,7 +44,7 @@
   <div id="notHotel" class="empty" hidden>This property isn't set up as a hotel yet (Settings → Rooms).</div>
   <div id="main">
     <div class="counts"><div class="dirty"><b id="cDirty">–</b><span>to clean</span></div><div><b id="cClean">–</b><span>clean</span></div><div><b id="cInsp">–</b><span>inspected</span></div></div>
-    <div class="seg" role="group" aria-label="Show"><button type="button" class="on" data-f="todo">To clean</button><button type="button" data-f="all">All rooms</button></div>
+    <div class="seg" role="group" aria-label="Show"><button type="button" class="on" data-f="todo">To clean</button><button type="button" data-f="mine">My rooms</button><button type="button" data-f="all">All rooms</button></div>
     <div id="list"><p class="empty">Loading rooms…</p></div>
   </div>
 </div>
@@ -67,13 +69,16 @@ function render(){
   const rooms = data.rooms.filter(r => r.state !== 'ooo' || filter === 'all');
   $('#cDirty').textContent = data.rooms.filter(r => r.hk === 'dirty' && r.state !== 'ooo').length;
   $('#cClean').textContent = data.rooms.filter(r => r.hk === 'clean').length; $('#cInsp').textContent = data.rooms.filter(r => r.hk === 'inspected').length;
-  const list = (filter === 'todo' ? rooms.filter(r => r.hk === 'dirty' || r.state === 'departing' || r.state === 'turnover') : rooms).slice().sort((a, b) => rank(a) - rank(b) || a.no.localeCompare(b.no, undefined, { numeric: true }));
-  $('#list').innerHTML = list.length ? list.map(r => `<div class="room ${r.hk}"><div class="top"><span class="no">${esc(r.no)}</span><div class="grow"><div class="cat">${esc(catName(r.cat))}${r.floor ? ' · Floor ' + esc(r.floor) : ''}</div></div>${NOTE[r.state] ? `<span class="tag ${r.state}">${NOTE[r.state]}${r.state === 'ooo' && r.reason ? ': ' + esc(r.reason) : ''}</span>` : ''}</div>
-    <div class="btns">${['dirty', 'clean', 'inspected'].map(h => `<button type="button" class="${h}${r.hk === h ? ' on' : ''}" data-room="${esc(r.no)}" data-hk="${h}" aria-pressed="${r.hk === h}">${HKN[h]}</button>`).join('')}</div></div>`).join('')
-    : `<p class="empty">${filter === 'todo' ? 'Nothing to clean right now.' : 'No rooms yet.'}</p>`;
+  const list = (filter === 'todo' ? rooms.filter(r => r.hk === 'dirty' || r.state === 'departing' || r.state === 'turnover') : filter === 'mine' ? rooms.filter(r => r.mine) : rooms).slice().sort((a, b) => rank(a) - rank(b) || a.no.localeCompare(b.no, undefined, { numeric: true }));
+  $('#list').innerHTML = list.length ? list.map(r => `<div class="room ${r.hk}"><div class="top"><span class="no">${esc(r.no)}</span><div class="grow"><div class="cat">${esc(catName(r.cat))}${r.floor ? ' · Floor ' + esc(r.floor) : ''}</div>${r.taken ? `<div class="who${r.mine ? ' me' : ''}">${r.mine ? 'You’re on it' : 'Taken by ' + esc(r.taken)}</div>` : ''}</div>${NOTE[r.state] ? `<span class="tag ${r.state}">${NOTE[r.state]}${r.state === 'ooo' && r.reason ? ': ' + esc(r.reason) : ''}</span>` : ''}</div>
+    <div class="btns">${['dirty', 'clean', 'inspected'].map(h => `<button type="button" class="${h}${r.hk === h ? ' on' : ''}" data-room="${esc(r.no)}" data-hk="${h}" aria-pressed="${r.hk === h}">${HKN[h]}</button>`).join('')}</div>
+    ${r.state === 'ooo' ? '' : r.mine ? `<button type="button" class="take" data-take="0" data-room="${esc(r.no)}">Let this room go</button>` : !r.taken ? `<button type="button" class="take pri" data-take="1" data-room="${esc(r.no)}">I’ll do this room</button>` : data.canAssign ? `<button type="button" class="take" data-take="0" data-room="${esc(r.no)}">Release from ${esc(r.taken)}</button>` : ''}</div>`).join('')
+    : `<p class="empty">${filter === 'todo' ? 'Nothing to clean right now.' : filter === 'mine' ? 'You haven’t taken any rooms. Tap “I’ll do this room” on one.' : 'No rooms yet.'}</p>`;
 }
 document.querySelector('.seg').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b)); render(); });
 $('#list').addEventListener('click', async e => {
+  const t = e.target.closest('[data-take]');
+  if (t) { t.disabled = true; try { await api('/hotel/room-assign', { room: t.dataset.room, take: t.dataset.take === '1' }); toast(t.dataset.take === '1' ? `Room ${t.dataset.room} is yours` : `Room ${t.dataset.room} released`); load(); } catch (err) { toast(err.message, true); t.disabled = false; } return; }
   const b = e.target.closest('[data-hk]'); if (!b || b.classList.contains('on')) return;
   const room = data.rooms.find(r => r.no === b.dataset.room), was = room.hk; room.hk = b.dataset.hk; render(); // show it at once
   try { await api('/hotel/room-status', { room: room.no, hk: room.hk }); toast(`Room ${room.no}: ${HKN[room.hk]}`); }

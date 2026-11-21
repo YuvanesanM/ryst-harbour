@@ -113,6 +113,21 @@ unless an owner presses Set up / Sync now or turns Live sync on. Before going li
 run the 14 certification tests and submit the task IDs, then production keys. MAP/AP meal_type names are unconfirmed
 (sent without meal_type). Webhook HMAC signing is not verified yet (the webhook only triggers a feed read).
 
+### Rest of Phase 2 (Nov 2026)
+Done: Form C (proxy formc.js; /formc, /formc/save, /formc/filed). The guest's online check-in asks passport holders
+whether they are Indian citizens; foreign nationals fill in passport, visa or OCI, arrival and purpose. The desk can
+enter details for walk-ins. Form C is due 24 h after arrival (check-in time, or the check-in date at the hotel's
+check-in time). The FRRO acknowledgement is recorded by hand: there is no FRRO API and Harbour never files. Night audit
+lists Form C that is due or overdue. Company billing (city ledger): /hotel/bill-to (name, GSTIN, address; prefilled on the
+tax invoice); a "Company account" payment (staff → pending approval) with the company on the entry; /hotel/companies
+ledger; /hotel/company-settle (owner) marks entries paid by the company with method and reference. Night-audit
+"collected" leaves out company-account moves. Per-room folio print. Housekeeping: take/release a room
+(/hotel/room-assign; "My rooms"; the desk can release anyone's; check-out clears it). Channex webhook HMAC (villa
+secret channexWebhookSecret): when set, unsigned or older than 5-minute webhooks are refused. Reports and the owner report no
+longer count day-use as a night; Channex-cancelled bookings are left out of reports.
+Still open: the guest register for hotels shows villa-style rows; ID per guest (only the lead guest's ID is collected);
+occupancy by category in reports (Phase 3/5).
+
 ### Phase 2 — Front desk and housekeeping
 - Tape chart: rooms × dates grid, drag to assign / move / extend, unassigned queue.
 - Check-in (assign rooms, ID per guest, advance), room move, early/late, check-out with folio per

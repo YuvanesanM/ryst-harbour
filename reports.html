@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=e9dfa5ac"></script>
+<script src="/assets/app/shell.js?v=96e96d06"></script>
 <title data-title="Reports · {name}">Reports · RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -567,7 +567,8 @@ const settlementMissing = r => r.type==='invoice' && OTA_CHANNELS.includes(r.cha
 function buildRows(){
   ROWS = STAYS.map(s=>{
     const type = s.type||'invoice';
-    const nights = nightsBetween(s.checkin, s.checkout);
+    // a hotel's day-use (hourly) booking holds no night: stored with checkout = next day plus dayUse
+    const nights = s.dayUse ? 0 : nightsBetween(s.checkin, s.checkout);
     const total = type==='block' ? 0 : grandTotal(s);
     const advance = toNum(s.advance);
     return {
@@ -1494,7 +1495,8 @@ async function load(){
     const staysData = await staysRes.json().catch(()=>({}));
     const pcData = await pcRes.json().catch(()=>({}));
     const rsData = (rsRes && rsRes.ok) ? await rsRes.json().catch(()=>({})) : {};
-    STAYS = Array.isArray(staysData.stays) ? staysData.stays.filter(s=>s.checkin && s.checkout) : [];
+    // OTA bookings cancelled through the channel manager are kept for the record, not counted
+    STAYS = Array.isArray(staysData.stays) ? staysData.stays.filter(s=>s.checkin && s.checkout && !s.cancelled) : [];
     EXPENSES = Array.isArray(pcData.entries) ? pcData.entries.filter(e=>e.date) : [];
     ORDERS = Array.isArray(rsData.orders) ? rsData.orders.filter(o=>o.date) : [];
     buildRows();

@@ -8,7 +8,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=e9dfa5ac"></script>
+<script src="/assets/app/shell.js?v=96e96d06"></script>
 <title data-title="{name} — Stay Invoice / Quote">RYST 109A — Stay Invoice / Quote</title>
 <meta name="robots" content="noindex, nofollow">
 
@@ -2102,10 +2102,10 @@ function openGstModal(){
     const c = gstCfg(), rateTxt = c.rateMode==='fixed' ? c.rate+'%' : 'automatic (5% up to ₹7,500 a night, 18% above)';
     $("#gstMTitle").textContent = "Issue GST tax invoice";
     $("#gstMBody").innerHTML = `<p class="sd" style="margin:0 0 10px">For ${esc(s.no)} · total ${money(Math.max(0,(s.items||[]).reduce((a,it)=>a+lineAmt(it),0)-(parseFloat(s.discount)||0)))} including GST · rate ${esc(rateTxt)}. Save any changes first — the tax invoice is made from the saved booking.</p>
-      <label class="f"><span>Bill to (name)</span><input class="t" id="gstBName" maxlength="120" value="${esc(s.guest||'')}"></label>
+      <label class="f"><span>Bill to (name)</span><input class="t" id="gstBName" maxlength="120" value="${esc((s.billTo&&s.billTo.name)||s.guest||'')}"></label>
       <div class="gst-grid">
-        <label class="f"><span>Guest's GSTIN (for a business, optional)</span><input class="t" id="gstBGstin" maxlength="15" autocapitalize="characters" spellcheck="false"></label>
-        <label class="f"><span>Guest's address (optional)</span><input class="t" id="gstBAddr" maxlength="300"></label>
+        <label class="f"><span>Guest's GSTIN (for a business, optional)</span><input class="t" id="gstBGstin" maxlength="15" autocapitalize="characters" spellcheck="false" value="${esc((s.billTo&&s.billTo.gstin)||'')}"></label>
+        <label class="f"><span>Guest's address (optional)</span><input class="t" id="gstBAddr" maxlength="300" value="${esc((s.billTo&&s.billTo.address)||'')}"></label>
       </div>`;
     $("#gstMGo").textContent = "Issue tax invoice"; $("#gstMGo").className = "btn primary";
   }

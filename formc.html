@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://data.ryst.in https://harbour.ryst.in https://stay.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
+<script src="/assets/app/shell.js?v=96e96d06"></script>
+<title data-title="Form C · {name}">Form C · RYST Harbour</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/assets/app/fonts.css?v=1">
+<style>
+  :root{ --bg:#f3f4f1; --panel:#fff; --panel2:#f7f8f5; --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee; --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --danger:#c0584b; --danger-soft:#fbecea; --warn:#c98a2b; --warn-soft:#fbf3e6; }
+  *{box-sizing:border-box;margin:0;padding:0} [hidden]{display:none!important}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font-family:inherit} button{cursor:pointer}
+  .wrap{max-width:860px;margin:0 auto;padding:18px 14px 90px}
+  .ttl{font-weight:700;font-size:20px;margin:4px 2px 2px} .sub{font-size:13px;color:var(--muted);margin:0 2px 14px;line-height:1.5} .sub a{color:var(--accent-d)}
+  .counts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .counts div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px} .counts b{display:block;font-size:24px;font-variant-numeric:tabular-nums} .counts span{font-size:12px;color:var(--muted)}
+  .counts .od b{color:var(--danger)} .counts .du b{color:var(--warn)}
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;margin-bottom:12px}
+  .seg button{flex:1;border:0;background:none;border-radius:9px;padding:9px;font-weight:600;font-size:14px;color:var(--muted)} .seg button.on{background:var(--accent);color:#fff}
+  .card{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+  .card.overdue{border-color:var(--danger)} .card.due{border-color:var(--warn)}
+  .top{display:flex;align-items:flex-start;gap:10px} .grow{flex:1;min-width:0}
+  .nm{font-weight:700;font-size:15.5px} .mt{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .pill{font-size:11px;font-weight:700;letter-spacing:.3px;padding:4px 8px;border-radius:7px;white-space:nowrap;background:var(--panel2);color:var(--muted)}
+  .pill.overdue{background:var(--danger-soft);color:var(--danger)} .pill.due{background:var(--warn-soft);color:var(--warn)} .pill.filed{background:var(--accent-soft);color:var(--accent-d)}
+  .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .acts button{border:1.5px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 12px;font-weight:600;font-size:13px;color:var(--ink)} .acts .pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  h2{font-size:13px;font-weight:700;letter-spacing:.3px;margin:18px 2px 8px}
+  .empty{text-align:center;color:var(--muted);padding:22px 10px;font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:14px}
+  .sheet{position:fixed;inset:0;background:rgba(20,24,20,.35);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+  .sheet .box{background:var(--panel);border-radius:16px 16px 0 0;padding:18px;width:min(640px,100%);max-height:92vh;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+  @media (min-width:760px){ .sheet{align-items:center} .sheet .box{border-radius:16px} }
+  .sheet h3{font-size:16px;margin-bottom:2px} .sheet p.mt{margin-bottom:12px}
+  table.fc{width:100%;border-collapse:collapse;font-size:13.5px} table.fc td{padding:7px 4px;border-bottom:1px solid var(--line);vertical-align:top} table.fc td:first-child{color:var(--muted);width:44%}
+  table.fc button{border:0;background:var(--panel2);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600;color:var(--muted);margin-left:6px}
+  .frm{display:grid;grid-template-columns:1fr 1fr;gap:8px} .frm label{display:block;font-size:11.5px;font-weight:600;color:var(--muted)} .frm .wide{grid-column:1/-1}
+  .frm input,.frm select,.frm textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px;font-size:13.5px;margin-top:2px;background:var(--panel);color:var(--ink);min-width:0}
+  .bar{display:flex;gap:8px;margin-top:14px} .bar>*{flex:1;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:11px;font-weight:600;font-size:14px;color:var(--ink)} .bar .pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .err{color:var(--danger);font-size:13px;margin-top:8px;min-height:1em}
+  #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;transition:.25s;z-index:60;pointer-events:none} #toast.show{opacity:1} #toast.err{background:var(--danger)}
+  .print-only{display:none}
+  @media (max-width:560px){ .frm{grid-template-columns:1fr} }
+  @media print{ body>*:not(.sheet){display:none!important} .sheet{position:absolute;inset:auto;left:0;top:0;right:0;background:none;display:block} .sheet .box{box-shadow:none;width:100%;max-height:none;padding:0} .noprint,table.fc button{display:none!important} .print-only{display:block;font-size:12px;color:var(--muted);margin-bottom:8px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="ttl">Form C · foreign guests</h1>
+  <p class="sub">Every foreign guest must be reported on the FRRO portal (<a href="https://indianfrro.gov.in/frro/FormC" target="_blank" rel="noopener">indianfrro.gov.in</a>) within 24 hours of arrival. Harbour lists who is due and the details to type in; once you have filed, record the acknowledgement number here. Harbour does not file for you.</p>
+  <div class="counts"><div class="od"><b id="cOver">–</b><span>overdue</span></div><div class="du"><b id="cDue">–</b><span>due soon</span></div><div><b id="cFiled">–</b><span>filed (30 days)</span></div></div>
+  <div class="seg" role="group" aria-label="Show"><button type="button" class="on" data-f="todo">To file</button><button type="button" data-f="all">All</button></div>
+  <div id="list"><p class="empty">Loading…</p></div>
+  <h2 id="missHd" hidden>Arrivals without passport details</h2>
+  <div id="miss"></div>
+</div>
+<div id="toast"></div>
+<script>
+const PROXY_URL = 'https://data.ryst.in', TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const $ = s => document.querySelector(s), esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dLbl = d => d ? new Date(d + 'T00:00:00Z').toLocaleDateString('en-IN', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' }) : '';
+let D = null, filter = 'todo';
+function toast(m, err){ const el = $('#toast'); el.textContent = m; el.className = err ? 'show err' : 'show'; clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2600); }
+async function api(path, body){
+  if (!TOKEN) { location.href = 'login.html'; throw new Error('Signed out'); }
+  const r = await fetch(PROXY_URL + path, body ? { method: 'POST', headers: { 'X-Token': TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { headers: { 'X-Token': TOKEN }, cache: 'no-store' });
+  if (r.status === 401) { localStorage.removeItem('ryst_proxy_token'); location.href = 'login.html'; throw new Error('Signed out'); }
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Something went wrong'); return j;
+}
+const hrs = ms => { const h = Math.round(Math.abs(ms) / 3600e3); return h < 1 ? 'under an hour' : h + ' h'; };
+function statusTxt(e){
+  if (e.status === 'filed') return `Filed · ${esc(e.filed.ref)}`;
+  if (e.status === 'overdue') return `Overdue by ${hrs(D.now - e.dueAt)}`;
+  if (e.status === 'due') return `Due in ${hrs(e.dueAt - D.now)}`;
+  return 'Arriving ' + dLbl(e.checkin);
+}
+function render(){
+  const e = D.entries, month = D.now - 30 * 864e5;
+  $('#cOver').textContent = e.filter(x => x.status === 'overdue').length; $('#cDue').textContent = e.filter(x => x.status === 'due').length;
+  $('#cFiled').textContent = e.filter(x => x.status === 'filed' && x.filed.at >= month).length;
+  const list = filter === 'todo' ? e.filter(x => x.status !== 'filed') : e;
+  $('#list').innerHTML = list.length ? list.map(x => `<div class="card ${x.status}"><div class="top"><div class="grow"><div class="nm">${esc(x.name)}</div>
+      <div class="mt">${esc(x.foreign.nationality)} · passport ${esc(x.foreign.passportNo)} · ${esc(x.no)}${x.rooms.length ? ' · Room ' + x.rooms.map(esc).join(', ') : ''} · ${dLbl(x.checkin)} → ${dLbl(x.checkout)}</div>
+      <div class="mt">${x.source === 'desk' ? 'Entered at the desk' : 'From the guest’s online check-in'}</div></div><span class="pill ${x.status}">${statusTxt(x)}</span></div>
+    <div class="acts"><button type="button" class="${x.status === 'filed' ? '' : 'pri'}" data-show="${esc(x.no)}">Details to file</button>${x.status === 'filed' ? '' : `<button type="button" data-file="${esc(x.no)}">Record as filed</button>`}<button type="button" data-edit="${esc(x.no)}">Edit</button></div></div>`).join('')
+    : `<p class="empty">${filter === 'todo' ? 'No foreign guests waiting to be reported.' : 'No foreign guests in the last 30 days or the next two weeks.'}</p>`;
+  $('#missHd').hidden = !D.missing.length;
+  $('#miss').innerHTML = D.missing.map(m => `<div class="card"><div class="top"><div class="grow"><div class="nm">${esc(m.guest || m.no)}</div><div class="mt">${esc(m.no)} · ${dLbl(m.checkin)} → ${dLbl(m.checkout)}${m.idType ? ' · ID: ' + esc(m.idType) : ''}</div></div></div>
+    <div class="acts"><button type="button" data-add="${esc(m.no)}">Foreign guest? Enter passport details</button></div></div>`).join('');
+}
+function sheet(html){ const el = document.createElement('div'); el.className = 'sheet'; el.innerHTML = `<div class="box" role="dialog" aria-modal="true">${html}</div>`; el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-close]')) el.remove(); }); document.body.appendChild(el); return el; }
+function showDetails(x){
+  const rows = D.fields.filter(f => x.foreign[f.key]).map(f => `<tr><td>${esc(f.label)}</td><td>${esc(f.type === 'date' ? dLbl(x.foreign[f.key]) : x.foreign[f.key])}<button type="button" data-copy="${esc(f.type === 'date' ? x.foreign[f.key].split('-').reverse().join('/') : x.foreign[f.key])}">Copy</button></td></tr>`).join('');
+  const stay = [['Name (as on passport)', x.name], ['Date of arrival at the property', dLbl(x.checkin)], ['Expected departure', dLbl(x.checkout)], ['Booking', x.no + (x.rooms.length ? ' · Room ' + x.rooms.join(', ') : '')]];
+  const el = sheet(`<div class="print-only"><b style="font-size:15px;color:var(--ink)">${esc((document.querySelector('[data-prop="name"]') || {}).textContent || document.title.split('·').pop())}</b> · Form C details · for the FRRO portal</div>
+    <h3>${esc(x.name)}</h3><p class="mt">Everything the FRRO Form C asks for. Dates copy as DD/MM/YYYY.</p>
+    <table class="fc">${stay.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}<button type="button" data-copy="${esc(r[1])}">Copy</button></td></tr>`).join('')}${rows}</table>
+    ${x.filed ? `<p class="mt" style="margin-top:10px">Filed ${new Date(x.filed.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })} by ${esc(String(x.filed.by).split('@')[0])} · acknowledgement ${esc(x.filed.ref)}</p>` : ''}
+    <div class="bar noprint"><button type="button" data-close>Close</button><button type="button" id="pr">Print</button>${x.filed ? '' : '<button type="button" class="pri" id="fl">Record as filed</button>'}</div>`);
+  el.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', async () => { try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy'; }, 1200); } catch (e) { toast('Copy is not available here', true); } }));
+  el.querySelector('#pr').addEventListener('click', () => window.print());
+  const fl = el.querySelector('#fl'); if (fl) fl.addEventListener('click', () => { el.remove(); fileSheet(x); });
+}
+function fileSheet(x){
+  const el = sheet(`<h3>Record Form C as filed</h3><p class="mt">${esc(x.name)} · ${esc(x.no)}. Enter the acknowledgement number the FRRO portal gave you after submitting.</p>
+    <div class="frm"><label class="wide">FRRO acknowledgement number<input id="ref" maxlength="60" autocomplete="off"></label></div><p class="err" id="er"></p>
+    <div class="bar"><button type="button" data-close>Cancel</button><button type="button" class="pri" id="ok">Save</button></div>`);
+  el.querySelector('#ref').focus();
+  el.querySelector('#ok').addEventListener('click', async e => { const ref = el.querySelector('#ref').value.trim(); if (!ref) { el.querySelector('#er').textContent = 'Enter the acknowledgement number.'; return; }
+    e.target.disabled = true; try { await api('/formc/filed', { no: x.no, ref }); el.remove(); toast('Recorded as filed'); load(); } catch (err) { el.querySelector('#er').textContent = err.message; e.target.disabled = false; } });
+}
+function editSheet(no, name, f){
+  f = f || {};
+  const opts = (k, list) => `<select id="f_${k}"><option value="">Choose</option>${list.map(o => `<option${f[k] === o ? ' selected' : ''}>${o}</option>`).join('')}</select>`;
+  const special = { gender: opts('gender', ['Female', 'Male', 'Other']), visaType: opts('visaType', ['e-Tourist', 'Tourist', 'e-Business', 'Business', 'Employment', 'Student', 'Medical', 'Conference', D.oci, 'Other']),
+    purpose: opts('purpose', ['Tourism', 'Business', 'Visiting family or friends', 'Medical', 'Conference', 'Employment', 'Study', 'Other']) };
+  const el = sheet(`<h3>Passport and visa details</h3><p class="mt">${esc(no)} · as they appear on the passport and visa.</p>
+    <div class="frm"><label class="wide">Name (as on passport)<input id="f__name" maxlength="100" value="${esc(name || '')}"></label>
+    ${D.fields.map(x => `<label class="${x.key === 'homeAddress' ? 'wide' : ''}">${esc(x.label)}${x.required ? ' *' : ''}${special[x.key] || (x.key === 'homeAddress' ? `<textarea id="f_${x.key}" rows="2" maxlength="300">${esc(f[x.key] || '')}</textarea>` : `<input id="f_${x.key}" type="${x.type === 'date' ? 'date' : 'text'}" value="${esc(f[x.key] || '')}">`)}</label>`).join('')}</div>
+    <p class="err" id="er"></p><div class="bar"><button type="button" data-close>Cancel</button><button type="button" class="pri" id="ok">Save details</button></div>`);
+  el.querySelector('#ok').addEventListener('click', async e => {
+    const foreign = {}; D.fields.forEach(x => { foreign[x.key] = el.querySelector('#f_' + x.key).value; });
+    e.target.disabled = true; try { await api('/formc/save', { no, name: el.querySelector('#f__name').value, foreign }); el.remove(); toast('Details saved'); load(); } catch (err) { el.querySelector('#er').textContent = err.message; e.target.disabled = false; }
+  });
+}
+document.querySelector('.seg').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; filter = b.dataset.f; document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b)); render(); });
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-show],[data-file],[data-edit],[data-add]'); if (!b || b.closest('.sheet')) return;
+  const x = D.entries.find(y => y.no === (b.dataset.show || b.dataset.file || b.dataset.edit));
+  if (b.dataset.show) showDetails(x); else if (b.dataset.file) fileSheet(x); else if (b.dataset.edit) editSheet(x.no, x.name, x.foreign);
+  else { const m = D.missing.find(y => y.no === b.dataset.add); editSheet(m.no, m.guest, {}); }
+});
+async function load(){ try { D = await api('/formc'); render(); } catch (e) { toast(e.message, true); } }
+load(); setInterval(() => { if (!document.hidden && !document.querySelector('.sheet')) load(); }, 120000);
+</script>
+</body>
+</html>

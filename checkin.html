@@ -136,6 +136,7 @@
   .ci-section-title{font-family:var(--serif);font-weight:600;font-size:19px;color:var(--sea)}
   .ci-section-divider{height:1px;background:var(--line);margin:10px 0 16px;width:100%;clear:both}
 
+  [hidden]{display:none!important}
   .f-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
   .f-group label{font-size:13.5px;font-weight:600;color:var(--ink)}
   .f-group label .req{color:var(--coral);margin-left:2px}
@@ -338,6 +339,40 @@
               <div class="photo-box" id="photoBox" role="group" aria-labelledby="photoBoxLabel"></div>
               <p class="trust-note">🔒 Why we ask: Indian law requires every accommodation to keep a guest register with the lead guest's ID, and to report foreign nationals to the FRRO (Form C). Any valid government photo ID works; if you use Aadhaar you may show a masked Aadhaar or Virtual ID. The photo travels over HTTPS to private storage that only the villa's owner and check-in staff can open, and is deleted automatically after the villa's retention period (a year unless the villa sets otherwise). It is shared only with the authorities when the law requires. <a href="https://harbour.ryst.in/privacy.html#roles" data-privacy-link target="_blank" rel="noopener">Privacy notice</a></p>
             </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="ci-section" id="fcSection" hidden>
+          <legend><span class="ci-section-head"><span class="ci-section-icon" aria-hidden="true">🛂</span><span class="ci-section-title">Passport &amp; Visa</span></span></legend>
+          <div class="ci-section-divider"></div>
+          <div class="f-group">
+            <p class="chip-group-label" id="fcCitLabel">Are you an Indian citizen? <span class="req" aria-hidden="true">*</span></p>
+            <div class="id-chips" role="radiogroup" aria-labelledby="fcCitLabel">
+              <input type="radio" name="fcIndian" id="fc-in-yes" value="yes" class="id-chip-input"><label for="fc-in-yes" class="id-chip">Yes</label>
+              <input type="radio" name="fcIndian" id="fc-in-no" value="no" class="id-chip-input"><label for="fc-in-no" class="id-chip">No, foreign national</label>
+            </div>
+          </div>
+          <div id="fcFields" hidden>
+            <p class="trust-note" style="margin:-4px 0 12px">The law requires us to report foreign guests to the Foreigners Regional Registration Office (Form C) within 24 hours of arrival. Please fill these as they appear on your passport and visa.</p>
+            <div class="f-row"><div class="f-group"><label for="fc-nat">Nationality <span class="req" aria-hidden="true">*</span></label><input id="fc-nat" maxlength="60" autocomplete="country-name"></div>
+              <div class="f-group"><label for="fc-dob">Date of birth <span class="req" aria-hidden="true">*</span></label><input id="fc-dob" type="date"></div></div>
+            <div class="f-row"><div class="f-group"><label for="fc-gender">Gender <span class="req" aria-hidden="true">*</span></label><select id="fc-gender"><option value="">Choose</option><option>Female</option><option>Male</option><option>Other</option></select></div>
+              <div class="f-group"><label for="fc-pp">Passport number <span class="req" aria-hidden="true">*</span></label><input id="fc-pp" maxlength="20" autocomplete="off" autocapitalize="characters"></div></div>
+            <div class="f-row"><div class="f-group"><label for="fc-ppplace">Passport place of issue <span class="req" aria-hidden="true">*</span></label><input id="fc-ppplace" maxlength="60"></div>
+              <div class="f-group"><label for="fc-ppissue">Passport date of issue <span class="req" aria-hidden="true">*</span></label><input id="fc-ppissue" type="date"></div></div>
+            <div class="f-row"><div class="f-group"><label for="fc-ppexp">Passport valid until <span class="req" aria-hidden="true">*</span></label><input id="fc-ppexp" type="date"></div>
+              <div class="f-group"><label for="fc-vtype">Visa type <span class="req" aria-hidden="true">*</span></label><select id="fc-vtype"><option value="">Choose</option><option>e-Tourist</option><option>Tourist</option><option>e-Business</option><option>Business</option><option>Employment</option><option>Student</option><option>Medical</option><option>Conference</option><option>OCI card (no visa)</option><option>Other</option></select></div></div>
+            <div class="f-row"><div class="f-group"><label for="fc-visa" id="fcVisaLbl">Visa number <span class="req" aria-hidden="true">*</span></label><input id="fc-visa" maxlength="30" autocomplete="off" autocapitalize="characters"></div>
+              <div class="f-group fc-visa-only"><label for="fc-vplace">Visa place of issue <span class="req" aria-hidden="true">*</span></label><input id="fc-vplace" maxlength="60"></div></div>
+            <div class="f-row fc-visa-only"><div class="f-group"><label for="fc-vissue">Visa date of issue <span class="req" aria-hidden="true">*</span></label><input id="fc-vissue" type="date"></div>
+              <div class="f-group"><label for="fc-vexp">Visa valid until <span class="req" aria-hidden="true">*</span></label><input id="fc-vexp" type="date"></div></div>
+            <div class="f-row"><div class="f-group"><label for="fc-arrin">Date of arrival in India <span class="req" aria-hidden="true">*</span></label><input id="fc-arrin" type="date"></div>
+              <div class="f-group"><label for="fc-port">Port of arrival in India <span class="req" aria-hidden="true">*</span></label><input id="fc-port" maxlength="60" placeholder="e.g. Chennai airport"></div></div>
+            <div class="f-row"><div class="f-group"><label for="fc-from">Arrived here from (city, country) <span class="req" aria-hidden="true">*</span></label><input id="fc-from" maxlength="80"></div>
+              <div class="f-group"><label for="fc-next">Next destination <span class="req" aria-hidden="true">*</span></label><input id="fc-next" maxlength="80" placeholder="City, country"></div></div>
+            <div class="f-row"><div class="f-group"><label for="fc-purpose">Purpose of visit <span class="req" aria-hidden="true">*</span></label><select id="fc-purpose"><option value="">Choose</option><option>Tourism</option><option>Business</option><option>Visiting family or friends</option><option>Medical</option><option>Conference</option><option>Employment</option><option>Study</option><option>Other</option></select></div>
+              <div class="f-group"><label for="fc-phone">Phone in India</label><input id="fc-phone" type="tel" maxlength="20" autocomplete="tel"></div></div>
+            <div class="f-group"><label for="fc-home">Address in your home country <span class="req" aria-hidden="true">*</span></label><textarea id="fc-home" maxlength="300" rows="2"></textarea></div>
           </div>
         </fieldset>
 
@@ -897,6 +932,11 @@ function formatArrivalTime(hhmm){
   return `${h}:${m} ${ampm}`;
 }
 
+// Passport → ask about citizenship; a foreign national fills the Form C details
+document.querySelectorAll('input[name="idType"]').forEach(r => r.addEventListener('change', () => { $('#fcSection').hidden = r.value !== 'Passport' || !r.checked; }));
+document.querySelectorAll('input[name="fcIndian"]').forEach(r => r.addEventListener('change', () => { $('#fcFields').hidden = r.value !== 'no'; }));
+$('#fc-vtype').addEventListener('change', () => { const oci = $('#fc-vtype').value === 'OCI card (no visa)';
+  document.querySelectorAll('.fc-visa-only').forEach(x => x.hidden = oci); $('#fcVisaLbl').firstChild.textContent = oci ? 'OCI card number ' : 'Visa number '; });
 $('#ciForm').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = $('#ciSubmitBtn');
@@ -910,6 +950,20 @@ $('#ciForm').addEventListener('submit', async e => {
   if(!name){ errEl.textContent = 'Please enter your name.'; return; }
   if(!idType){ errEl.textContent = 'Please select your ID type.'; return; }
   if(!idPhotoDataUrl){ errEl.textContent = 'Please add a photo of your ID.'; return; }
+  // foreign nationals: the Form C details the villa must file with the FRRO
+  let foreign = null;
+  if(idType === 'Passport'){
+    const ind = (document.querySelector('input[name="fcIndian"]:checked') || {}).value;
+    if(!ind){ errEl.textContent = 'Please say whether you are an Indian citizen.'; return; }
+    if(ind === 'no'){
+      const v = id => ($('#'+id).value || '').trim(), oci = v('fc-vtype') === 'OCI card (no visa)';
+      foreign = { nationality: v('fc-nat'), dob: v('fc-dob'), gender: v('fc-gender'), passportNo: v('fc-pp'), passportPlace: v('fc-ppplace'), passportIssued: v('fc-ppissue'), passportExpiry: v('fc-ppexp'),
+        visaType: v('fc-vtype'), visaNo: v('fc-visa'), visaPlace: oci ? '' : v('fc-vplace'), visaIssued: oci ? '' : v('fc-vissue'), visaExpiry: oci ? '' : v('fc-vexp'),
+        arrivedIndia: v('fc-arrin'), port: v('fc-port'), arrivedFrom: v('fc-from'), nextDestination: v('fc-next'), purpose: v('fc-purpose'), phoneIndia: v('fc-phone'), homeAddress: v('fc-home') };
+      const need = ['nationality','dob','gender','passportNo','passportPlace','passportIssued','passportExpiry','visaType','visaNo','arrivedIndia','port','arrivedFrom','nextDestination','purpose','homeAddress'].concat(oci ? [] : ['visaPlace','visaIssued','visaExpiry']);
+      if(need.some(k => !foreign[k])){ errEl.textContent = 'Please fill every passport and visa detail marked *.'; return; }
+    }
+  }
   if(!sigHasDrawn){ errEl.textContent = 'Please sign above.'; return; }
   if(!$('#ci-agree').checked){ errEl.textContent = 'Please agree to the House Rules & Terms.'; return; }
 
@@ -927,6 +981,7 @@ $('#ciForm').addEventListener('submit', async e => {
     note: $('#ci-note').value.trim(),
     website: $('#ci-website').value, // honeypot
     agreed: $('#ci-agree').checked, // the house rules, terms and privacy notice (the server keeps when)
+    ...(foreign ? { foreign } : {}),
   };
 
   try{
