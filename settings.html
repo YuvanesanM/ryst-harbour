@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=472d530a"></script>
+<script src="/assets/app/shell.js?v=abf67ded"></script>
 <title data-title="Settings — {name}">Settings — RYST 109A</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -314,14 +314,6 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
       <p class="gh-mini">Room categories</p>
       <p class="tf-note">Each category is a type of room you sell (Deluxe, Premium, Suite). Rates are per room per night, what the guest pays (GST inclusive, like every Harbour invoice). Meal plans are added per room per night; leave a plan blank if you don't offer it. Weekend hike applies to Friday and Saturday nights; holidays use the holiday hike and dates on the Tariffs tab. A season or a date override replaces the rack rate.</p>
       <div id="hcCats"></div>
-      <p class="gh-mini">Rate plans</p>
-      <p class="tf-note">Optional rates on top of the tariff: a % off or on each room's price, e.g. a non-refundable rate, a corporate rate or a long-stay rate. Guests choose them on your website (when "Website" is ticked); staff can use any rate in a booking. "OTAs" sends the rate to Channex as its own rate plan. Leave empty to sell the standard rate only.</p>
-      <div id="hrpList"></div>
-      <button type="button" class="btn" id="hrpAdd" style="margin:4px 0 14px">+ Add a rate plan</button>
-      <p class="gh-mini">Travel agents</p>
-      <p class="tf-note">Agents who send you bookings and the commission you pay each (a % of the booking total). Pick the agent on a booking; the front desk shows what's due to each.</p>
-      <div id="hagList"></div>
-      <button type="button" class="btn" id="hagAdd" style="margin:4px 0 14px">+ Add an agent</button>
       <button type="button" class="rc-add" id="hcAddCat">+ Add room category</button>
       <p class="gh-mini">Rooms</p>
       <div class="hr-bulk">
@@ -336,6 +328,14 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.se
           <tbody id="hrBody"></tbody>
         </table>
       </div>
+      <p class="gh-mini">Rate plans</p>
+      <p class="tf-note">Optional rates on top of the tariff: a % off or on each room's price, e.g. a non-refundable rate, a corporate rate or a long-stay rate. Guests choose them on your website (when "Website" is ticked); staff can use any rate in a booking. "OTAs" sends the rate to Channex as its own rate plan. Leave empty to sell the standard rate only.</p>
+      <div id="hrpList"></div>
+      <button type="button" class="btn" id="hrpAdd" style="margin:4px 0 14px">+ Add a rate plan</button>
+      <p class="gh-mini">Travel agents</p>
+      <p class="tf-note">Agents who send you bookings and the commission you pay each (a % of the booking total). Pick the agent on a booking; the front desk shows what's due to each.</p>
+      <div id="hagList"></div>
+      <button type="button" class="btn" id="hagAdd" style="margin:4px 0 14px">+ Add an agent</button>
     </div>
   </div>
 
@@ -2481,7 +2481,7 @@ gEl('gstRegBtn').addEventListener('click', async ()=>{
     const q=v=>{ v=(typeof v==='string' && /^[=+\-@\t\r]/.test(v) && !/^-?\d+(\.\d+)?$/.test(v)) ? "'"+v : v; // a typed name must never run as a spreadsheet formula
       const s=String(v==null?'':v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
     const head=['Invoice no','Invoice date','Status','Booking no','Guest / buyer','Buyer GSTIN','Buyer state','Place of supply','SAC','Rate %','Taxable value','CGST','SGST','IGST','Invoice value','Cancelled on','Cancel reason'];
-    const rows=(d.invoices||[]).map(g=>[g.no,g.date,g.status,g.bookingNo,g.buyer&&g.buyer.name,g.buyer&&g.buyer.gstin,g.buyer&&g.buyer.state&&g.buyer.state.name,g.placeOfSupply&&(g.placeOfSupply.code+'-'+g.placeOfSupply.name),g.sac,g.rate,g.taxable,g.cgst,g.sgst,g.igst,g.total,(g.cancelledAt||'').slice(0,10),g.cancelReason||'']);
+    const rows=(d.invoices||[]).map(g=>[g.no,g.date,g.status,g.bookingNo||g.eventNo,g.buyer&&g.buyer.name,g.buyer&&g.buyer.gstin,g.buyer&&g.buyer.state&&g.buyer.state.name,g.placeOfSupply&&(g.placeOfSupply.code+'-'+g.placeOfSupply.name),g.sac,g.rate!=null?g.rate:(g.slabs||[]).map(x=>x.rate+'%').join(' / '),g.taxable,g.cgst,g.sgst,g.igst,g.total,(g.cancelledAt||'').slice(0,10),g.cancelReason||'']);
     const csv=[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n');
     const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'})); a.download=`gst-register-${m}.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
     const live=(d.invoices||[]).filter(g=>g.status!=='cancelled');

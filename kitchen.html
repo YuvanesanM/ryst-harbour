@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://data.ryst.in https://harbour.ryst.in https://stay.ryst.in; connect-src 'self' https://data.ryst.in; object-src 'none'; base-uri 'self'; form-action 'self';">
+<script src="/staff-demo.js"></script>
+<script src="/property.js" data-staff></script>
+<link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
+<script src="/assets/app/shell.js?v=abf67ded"></script>
+<title data-title="Kitchen · {name}">Kitchen · RYST Harbour</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/assets/app/fonts.css?v=1">
+<style>
+  :root{ --bg:#f3f4f1; --panel:#fff; --panel2:#f7f8f5; --line:#e3e5e0; --accent:#3d9b69; --accent-d:#2f7d54; --accent-soft:#eaf4ee; --ink:#1d211c; --muted:#5f655d; --muted2:#9aa097; --danger:#c0584b; --warn:#c98a2b; --warn-soft:#fbf3e6; --occ:#2f6f8f; }
+  *{box-sizing:border-box;margin:0;padding:0} [hidden]{display:none!important}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  .wrap{max-width:1500px;margin:0 auto;padding:16px 16px 80px}
+  header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px} .ttl{font-weight:700;font-size:20px} .ttl small{display:block;font-size:12px;font-weight:500;color:var(--muted)} .spacer{flex:1}
+  .counts{display:flex;gap:8px} .counts span{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 11px;font-size:13px;font-weight:600} .counts b{font-variant-numeric:tabular-nums}
+  .tbtn{border:1.5px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--ink)}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
+  .col h2{font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin:0 4px 8px;display:flex;gap:6px} .col h2 em{font-style:normal;background:var(--panel);border-radius:6px;padding:0 7px;color:var(--ink)}
+  .t{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;border-left:6px solid var(--muted2)}
+  .t.new{border-left-color:var(--danger)} .t.preparing{border-left-color:var(--warn)} .t.ready{border-left-color:var(--accent)}
+  .t .hd{display:flex;align-items:baseline;gap:8px} .t .no{font-weight:700;font-size:16px;font-variant-numeric:tabular-nums} .t .who{font-size:13px;color:var(--muted);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .t .age{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)} .t .age.late{color:var(--danger)}
+  .t ul{list-style:none;margin:10px 0 6px} .t li{font-size:17px;font-weight:600;padding:3px 0;display:flex;gap:10px} .t li b{min-width:30px;font-variant-numeric:tabular-nums;color:var(--accent-d)}
+  .t .note{font-size:13px;background:var(--warn-soft);color:#8a5a12;border-radius:8px;padding:6px 8px;margin-top:4px}
+  .t .when{font-size:12px;color:var(--muted);margin-top:4px}
+  .t .acts{display:flex;gap:8px;margin-top:10px} .t .acts button{flex:1;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:11px;font-weight:700;font-size:14px;color:var(--ink)} .t .acts .go{background:var(--ink);border-color:var(--ink);color:#fff}
+  .empty{font-size:13px;color:var(--muted2);padding:14px 6px;text-align:center;border:1px dashed var(--line);border-radius:12px}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);opacity:0;background:var(--danger);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;transition:.25s;z-index:60;pointer-events:none} #toast.show{opacity:1}
+  .kot{display:none}
+  @media (max-width:900px){ .cols{grid-template-columns:1fr} }
+  @media print{ body>*:not(.kot){display:none!important} .kot{display:block;font:14px/1.4 monospace;color:#000;width:72mm} .kot h1{font-size:18px} .kot li{list-style:none;font-size:16px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="ttl">Kitchen<small><span data-prop="name">Property</span> · orders to cook, live</small></div>
+    <div class="counts"><span>New <b id="cN">–</b></span><span>Cooking <b id="cP">–</b></span><span>Ready <b id="cR">–</b></span></div>
+    <div class="spacer"></div>
+    <button type="button" class="tbtn" id="snd" aria-pressed="false">Sound off</button>
+  </header>
+  <div class="cols">
+    <div class="col"><h2>New <em id="hN">0</em></h2><div id="lN"></div></div>
+    <div class="col"><h2>Cooking <em id="hP">0</em></h2><div id="lP"></div></div>
+    <div class="col"><h2>Ready to serve <em id="hR">0</em></h2><div id="lR"></div></div>
+  </div>
+</div>
+<div class="kot" id="kot"></div>
+<div id="toast"></div>
+<script>
+const PROXY_URL = 'https://data.ryst.in', TOKEN = localStorage.getItem('ryst_proxy_token') || '';
+const $ = s => document.querySelector(s), esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const todayIST = () => new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
+let orders = [], seen = null, sound = false, ac = null;
+function toast(m){ const el = $('#toast'); el.textContent = m; el.className = 'show'; clearTimeout(el._t); el._t = setTimeout(() => el.className = '', 3000); }
+async function api(body){
+  if (!TOKEN) { location.href = 'login.html'; throw new Error('Signed out'); }
+  const r = await fetch(PROXY_URL + '/restaurant', body ? { method: 'POST', headers: { 'X-Token': TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { headers: { 'X-Token': TOKEN }, cache: 'no-store' });
+  if (r.status === 401) { localStorage.removeItem('ryst_proxy_token'); location.href = 'login.html'; throw new Error('Signed out'); }
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Something went wrong'); return j;
+}
+// a short two-note chime when a new order arrives (sound is off until someone turns it on: browsers need a tap first)
+function chime(){ if (!sound) return; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); [660, 880].forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f; o.type = 'sine'; g.gain.setValueAtTime(0.0001, ac.currentTime + i * .18); g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + i * .18 + .02); g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + i * .18 + .35); o.connect(g).connect(ac.destination); o.start(ac.currentTime + i * .18); o.stop(ac.currentTime + i * .18 + .4); }); } catch (e) {} }
+const mins = o => Math.max(0, Math.round((Date.now() - (o.createdAt || Date.now())) / 60000));
+const who = o => o.roomNo ? 'Room ' + o.roomNo + ' · ' + String(o.guest || '').split(' ')[0] : String(o.guest || 'Walk-in').slice(0, 40); // a room's guest by first name; a walk-in as typed (table no.)
+function card(o){
+  const st = o.kot || 'new', next = { new: ['preparing', 'Start cooking'], preparing: ['ready', 'Ready'], ready: ['served', 'Served'] }[st];
+  return `<div class="t ${st}"><div class="hd"><span class="no">${esc(o.no)}</span><span class="who">${esc(who(o))}</span><span class="age${mins(o) >= 30 && st !== 'ready' ? ' late' : ''}">${mins(o)} min</span></div>
+    <ul>${(o.items || []).map(it => `<li><b>${esc(it.qty || 1)}×</b>${esc(it.name || '')}</li>`).join('')}</ul>
+    ${o.note ? `<div class="note">${esc(o.note)}</div>` : ''}${o.time ? `<div class="when">For ${esc(o.time)}${o.date !== todayIST() ? ' · ' + esc(o.date) : ''}</div>` : ''}
+    <div class="acts"><button type="button" data-kot="${esc(o.no)}" data-print>Print ticket</button>${st !== 'new' ? `<button type="button" data-kot="${esc(o.no)}" data-to="${st === 'ready' ? 'preparing' : 'new'}">Back</button>` : ''}<button type="button" class="go" data-kot="${esc(o.no)}" data-to="${next[0]}">${next[1]}</button></div></div>`;
+}
+function render(){
+  const by = s => orders.filter(o => (o.kot || 'new') === s), put = (id, h, list, none) => { $(id).innerHTML = list.length ? list.map(card).join('') : `<p class="empty">${none}</p>`; $(h).textContent = list.length; };
+  const N = by('new'), P = by('preparing'), R = by('ready');
+  put('#lN', '#hN', N, 'No new orders.'); put('#lP', '#hP', P, 'Nothing cooking.'); put('#lR', '#hR', R, 'Nothing waiting to go out.');
+  $('#cN').textContent = N.length; $('#cP').textContent = P.length; $('#cR').textContent = R.length;
+}
+async function load(){
+  try {
+    const d = await api(), t = todayIST(), y = new Date(Date.now() + 5.5 * 3600e3 - 864e5).toISOString().slice(0, 10);
+    orders = (d.orders || []).filter(o => o.status !== 'cancelled' && o.kot !== 'served' && (o.date === t || o.date === y || (o.createdAt && Date.now() - o.createdAt < 12 * 3600e3)))
+      .sort((a, b) => (a.time || '99') .localeCompare(b.time || '99') || (a.createdAt || 0) - (b.createdAt || 0));
+    const ids = new Set(orders.map(o => o.no)); if (seen && [...ids].some(n => !seen.has(n))) chime(); seen = ids;
+    render();
+  } catch (e) { toast(e.message); }
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-kot]'); if (!b) return; const o = orders.find(x => x.no === b.dataset.kot); if (!o) return;
+  if (b.hasAttribute('data-print')) { $('#kot').innerHTML = `<h1>KOT ${esc(o.no)}</h1><p>${esc(who(o))}${o.time ? ' · for ' + esc(o.time) : ''}<br>${new Date().toLocaleString('en-IN', { hour: 'numeric', minute: '2-digit', day: 'numeric', month: 'short' })}</p><hr><ul>${(o.items || []).map(it => `<li>${esc(it.qty || 1)} × ${esc(it.name || '')}</li>`).join('')}</ul>${o.note ? `<hr><p>${esc(o.note)}</p>` : ''}`; window.print(); return; }
+  b.disabled = true; const was = o.kot; o.kot = b.dataset.to; render();
+  try { await api({ action: 'kot-status', no: o.no, kot: b.dataset.to }); } catch (err) { o.kot = was; render(); toast(err.message); }
+});
+$('#snd').addEventListener('click', () => { sound = !sound; $('#snd').textContent = sound ? 'Sound on' : 'Sound off'; $('#snd').setAttribute('aria-pressed', String(sound)); if (sound) chime(); });
+load(); setInterval(() => { if (!document.hidden) load(); }, 15000); setInterval(render, 60000);
+</script>
+</body>
+</html>

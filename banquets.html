@@ -7,7 +7,7 @@
 <script src="/staff-demo.js"></script>
 <script src="/property.js" data-staff></script>
 <link rel="stylesheet" href="/assets/app/shell.css?v=df069d75">
-<script src="/assets/app/shell.js?v=472d530a"></script>
+<script src="/assets/app/shell.js?v=abf67ded"></script>
 <title data-title="Banquets · {name}">Banquets · RYST Harbour</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/assets/app/fonts.css?v=1">
@@ -31,7 +31,8 @@
   .sheet h3{font-size:16px} .sheet .sub{font-size:13px;color:var(--muted);margin:2px 0 12px}
   .frm{display:grid;grid-template-columns:1fr 1fr;gap:8px} .frm .wide{grid-column:1/-1} .frm label{display:block;font-size:11.5px;font-weight:600;color:var(--muted)}
   .frm input,.frm select,.frm textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px;font-size:13.5px;margin-top:2px;background:var(--panel);color:var(--ink);min-width:0}
-  .li{display:grid;grid-template-columns:1fr 70px 100px 28px;gap:6px;margin-top:6px} .li input{border:1.5px solid var(--line);border-radius:8px;padding:7px;font-size:13px;min-width:0}
+  .li{display:grid;grid-template-columns:1fr 64px 92px 74px 28px;gap:6px;margin-top:6px} .li input,.li select{border:1.5px solid var(--line);border-radius:8px;padding:7px;font-size:13px;min-width:0;background:var(--panel)}
+  @media (max-width:560px){ .li{grid-template-columns:1fr 1fr 28px} .li [data-k=desc]{grid-column:1/-1} }
   .li button,.x{border:0;background:none;color:var(--muted2);font-size:18px}
   .bar{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap} .bar>*{flex:1;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:11px;font-weight:600;font-size:14px;color:var(--ink);text-align:center}
   .bar .pri{background:var(--accent);border-color:var(--accent);color:#fff} .bar .bad{color:var(--danger)}
@@ -82,7 +83,7 @@ function render(){
 }
 function editSheet(ev){
   ev = ev || { date: new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10), start: '19:00', end: '23:00', guests: '', setup: 'Round tables', status: 'tentative', items: [{ desc: 'Per plate', qty: '', rate: '' }], venue: D.venues[0].id };
-  const el = sheet(`<h3>${ev.id ? 'Edit ' + esc(ev.no) : 'New event'}</h3><p class="sub">Prices include GST. The event is checked against other bookings in the venue.</p>
+  const el = sheet(`<h3>${ev.id ? 'Edit ' + esc(ev.no) : 'New event'}</h3><p class="sub">Prices include GST; pick each line's GST rate for the tax invoice. The event is checked against other bookings in the venue.</p>
     <div class="frm">
       <label class="wide">Event<input id="f_title" maxlength="100" value="${esc(ev.title || '')}" placeholder="e.g. Wedding reception, Annual meet"></label>
       <label>Client name<input id="f_client" maxlength="100" value="${esc(ev.client || '')}"></label><label>Phone<input id="f_phone" maxlength="20" value="${esc(ev.phone || '')}"></label>
@@ -99,9 +100,10 @@ function editSheet(ev){
     </div><p class="err" id="er"></p>
     <div class="bar"><button type="button" data-close>Cancel</button><button type="button" class="pri" id="ok">Save event</button></div>`);
   let items = (ev.items || []).map(x => Object.assign({}, x));
-  const drawLi = () => { el.querySelector('#lis').innerHTML = items.map((it, i) => `<div class="li" data-i="${i}"><input data-k="desc" value="${esc(it.desc)}" placeholder="e.g. Veg buffet per plate"><input data-k="qty" type="number" min="0" value="${esc(it.qty)}" placeholder="Qty"><input data-k="rate" type="number" min="0" value="${esc(it.rate)}" placeholder="Rate ₹"><button type="button" data-del="${i}" aria-label="Remove line">&times;</button></div>`).join(''); tot(); };
+  const drawLi = () => { el.querySelector('#lis').innerHTML = items.map((it, i) => `<div class="li" data-i="${i}"><input data-k="desc" value="${esc(it.desc)}" placeholder="e.g. Veg buffet per plate"><input data-k="qty" type="number" min="0" value="${esc(it.qty)}" placeholder="Qty"><input data-k="rate" type="number" min="0" value="${esc(it.rate)}" placeholder="Rate ₹"><select data-k="gst" aria-label="GST rate"><option value="">GST</option>${[0, 5, 12, 18, 28].map(g => `<option value="${g}"${String(it.gst) === String(g) && it.gst !== '' && it.gst != null ? ' selected' : ''}>${g ? g + '%' : 'Nil'}</option>`).join('')}</select><button type="button" data-del="${i}" aria-label="Remove line">&times;</button></div>`).join(''); tot(); };
   const tot = () => { el.querySelector('#f_total').value = inr(items.reduce((a, it) => a + (+it.qty || 0) * (+it.rate || 0), 0) - (+el.querySelector('#f_disc').value || 0)); };
-  el.querySelector('#lis').addEventListener('input', e => { const r = e.target.closest('[data-i]'); if (r) { items[+r.dataset.i][e.target.dataset.k] = e.target.value; tot(); } });
+  const liEdit = e => { const r = e.target.closest('[data-i]'); if (r && e.target.dataset.k) { items[+r.dataset.i][e.target.dataset.k] = e.target.value; tot(); } };
+  el.querySelector('#lis').addEventListener('input', liEdit); el.querySelector('#lis').addEventListener('change', liEdit);
   el.querySelector('#lis').addEventListener('click', e => { if (e.target.dataset.del != null) { items.splice(+e.target.dataset.del, 1); drawLi(); } });
   el.querySelector('#addLi').addEventListener('click', () => { items.push({ desc: '', qty: '', rate: '' }); drawLi(); });
   el.querySelector('#f_disc').addEventListener('input', tot); drawLi();
@@ -120,13 +122,45 @@ function eventSheet(ev){
     <p class="sec">Charges</p><table class="d">${(ev.items || []).map(it => `<tr><td>${esc(it.desc)}</td><td class="n">${it.qty} × ${inr(it.rate)}</td><td class="n">${inr(it.qty * it.rate)}</td></tr>`).join('')}${ev.discount ? `<tr><td>Discount</td><td></td><td class="n">− ${inr(ev.discount)}</td></tr>` : ''}<tr><td><b>Total (GST incl.)</b></td><td></td><td class="n"><b>${inr(ev.total)}</b></td></tr><tr><td>Received</td><td></td><td class="n">${inr(ev.paid)}</td></tr><tr><td>Balance</td><td></td><td class="n">${inr(ev.balance)}</td></tr></table>
     ${(ev.payments || []).length ? `<p class="sec noprint">Payments</p><table class="d noprint">${ev.payments.map(p => `<tr><td>${dLbl(p.date, { day: 'numeric', month: 'short' })}</td><td>${esc(p.method)}${p.note ? ' · ' + esc(p.note) : ''}</td><td class="n">${inr(p.amount)}</td></tr>`).join('')}</table>` : ''}
     ${D.canManage && ev.status !== 'cancelled' && ev.balance > 0 ? `<div class="frm noprint" style="margin-top:12px"><label>Payment received ₹<input id="p_amt" type="number" min="1" value="${ev.balance}"></label><label>How<select id="p_m"><option>UPI</option><option>Bank transfer</option><option>Cash</option><option>Card</option><option>Cheque</option></select></label></div>` : ''}
+    ${ev.gstInvoice ? `<p class="sec">Tax invoice</p><p style="font-size:13.5px">${esc(ev.gstInvoice.no)} · ${dLbl(ev.gstInvoice.date, { day: 'numeric', month: 'short', year: 'numeric' })} · billed to ${esc(ev.gstInvoice.buyer.name)}${ev.gstInvoice.buyer.gstin ? ' (' + esc(ev.gstInvoice.buyer.gstin) + ')' : ''}</p>` : ''}
     <p class="err noprint" id="er"></p>
+    <div class="bar noprint">${ev.gstInvoice ? '<button type="button" id="ti">Tax invoice</button>' : ev.status !== 'cancelled' ? '<button type="button" id="tiNew">Issue tax invoice</button>' : ''}</div>
     <div class="bar noprint"><button type="button" data-close>Close</button><button type="button" id="pr">Print function sheet</button>${ev.status !== 'cancelled' ? '<button type="button" id="ed">Edit</button>' : ''}${D.canManage && ev.status !== 'cancelled' && ev.balance > 0 ? '<button type="button" class="pri" id="pay">Record payment</button>' : ''}${ev.status !== 'cancelled' ? '<button type="button" class="bad" id="cx">Cancel event</button>' : ''}</div>`);
   el.querySelector('#pr').addEventListener('click', () => window.print());
   const on = (id, fn) => { const b = el.querySelector(id); if (b) b.addEventListener('click', fn); };
   on('#ed', () => { el.remove(); editSheet(ev); });
+  on('#tiNew', () => { el.remove(); issueSheet(ev); });
+  on('#ti', () => { el.remove(); invoiceSheet(ev); });
   on('#pay', async () => { try { await api('/banquets/pay', { id: ev.id, amount: el.querySelector('#p_amt').value, method: el.querySelector('#p_m').value }); el.remove(); toast('Payment recorded'); load(); } catch (e) { el.querySelector('#er').textContent = e.message; } });
   on('#cx', async () => { const reason = prompt('Cancel this event? Reason (optional):'); if (reason === null) return; try { await api('/banquets/cancel', { id: ev.id, reason }); el.remove(); toast('Event cancelled'); load(); } catch (e) { el.querySelector('#er').textContent = e.message; } });
+}
+function issueSheet(ev){
+  const el = sheet(`<h3>Issue GST tax invoice · ${esc(ev.no)}</h3><p class="sub">${esc(ev.title)} · total ${inr(ev.total)} including GST. It takes the next number in your invoice series and can't be edited afterwards (cancel it to issue a new one).</p>
+    <div class="frm"><label class="wide">Bill to<input id="b_name" maxlength="120" value="${esc(ev.company || ev.client)}"></label>
+      <label>Client's GSTIN (optional)<input id="b_gstin" maxlength="15" value="${esc(ev.gstin || '')}"></label><label>SAC code<input id="b_sac" maxlength="8" inputmode="numeric" value="${esc(D.sac || '')}" placeholder="from your accountant"></label>
+      <label class="wide">Client's address (optional)<input id="b_addr" maxlength="300"></label></div><p class="err" id="er"></p>
+    <div class="bar"><button type="button" data-close>Cancel</button><button type="button" class="pri" id="ok">Issue tax invoice</button></div>`);
+  el.querySelector('#ok').addEventListener('click', async e => { e.target.disabled = true;
+    try { const r = await api('/banquets/invoice', { id: ev.id, action: 'issue', sac: el.querySelector('#b_sac').value.trim(), buyer: { name: el.querySelector('#b_name').value, gstin: el.querySelector('#b_gstin').value, address: el.querySelector('#b_addr').value } });
+      el.remove(); toast('Tax invoice ' + r.event.gstInvoice.no + ' issued'); await load(); invoiceSheet(r.event); }
+    catch (err) { el.querySelector('#er').textContent = err.message; e.target.disabled = false; } });
+}
+function invoiceSheet(ev){
+  const g = ev.gstInvoice, pct = r => Math.round(r / 2 * 100) / 100;
+  const el = sheet(`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><h3>Tax invoice</h3><p class="sub" style="margin:0">${esc(g.no)} · ${dLbl(g.date, { day: 'numeric', month: 'short', year: 'numeric' })}</p></div>
+      <div style="text-align:right;font-size:12.5px"><b>${esc(g.supplier.legalName || '')}</b><br>GSTIN ${esc(g.supplier.gstin)}<br>${esc(g.supplier.address)}</div></div>
+    <table class="d" style="margin-top:12px"><tr><td>Billed to</td><td>${esc(g.buyer.name)}${g.buyer.gstin ? '<br>GSTIN ' + esc(g.buyer.gstin) : ''}${g.buyer.address ? '<br>' + esc(g.buyer.address) : ''}</td></tr>
+      <tr><td>Event</td><td>${esc(g.title)} · ${dLbl(g.eventDate, { day: 'numeric', month: 'short', year: 'numeric' })} (${esc(g.eventNo)})</td></tr><tr><td>Place of supply</td><td>${esc(g.placeOfSupply ? g.placeOfSupply.name + ' (' + g.placeOfSupply.code + ')' : '')}</td></tr><tr><td>SAC</td><td>${esc(g.sac)}</td></tr></table>
+    <table class="d" style="margin-top:10px">${g.lines.map(l => `<tr><td>${esc(l.desc)} <span style="color:var(--muted2)">GST ${l.gstRate}%</span></td><td class="n">${l.qty} × ${inr(l.rate)}</td><td class="n">${inr(l.amount)}</td></tr>`).join('')}
+      ${g.discount ? `<tr><td>Discount</td><td></td><td class="n">− ${inr(g.discount)}</td></tr>` : ''}<tr><td>Taxable value</td><td></td><td class="n">₹${g.taxable.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td></tr>
+      ${(g.slabs || [{ rate: g.rate, cgst: g.cgst, sgst: g.sgst }]).map(x => `<tr><td>CGST @ ${pct(x.rate)}%</td><td></td><td class="n">₹${x.cgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td></tr><tr><td>SGST @ ${pct(x.rate)}%</td><td></td><td class="n">₹${x.sgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td></tr>`).join('')}
+      <tr><td><b>Total (incl. GST)</b></td><td></td><td class="n"><b>${inr(g.total)}</b></td></tr></table>
+    <p style="font-size:11.5px;color:var(--muted);margin-top:10px">Prices include GST. The taxable value is the total less CGST and SGST at each line's rate. Tax payable on reverse charge: No.</p>
+    <p class="err noprint" id="er"></p>
+    <div class="bar noprint"><button type="button" data-close>Close</button><button type="button" id="pr">Print</button><button type="button" class="bad" id="cxi">Cancel tax invoice</button></div>`);
+  el.querySelector('#pr').addEventListener('click', () => window.print());
+  el.querySelector('#cxi').addEventListener('click', async () => { const reason = prompt('Why is this tax invoice being cancelled? (kept in your GST register)'); if (!reason) return;
+    try { await api('/banquets/invoice', { id: ev.id, action: 'cancel', reason }); el.remove(); toast('Tax invoice cancelled'); load(); } catch (e) { el.querySelector('#er').textContent = e.message; } });
 }
 function venuesSheet(){
   if (!D.canManage) { toast('Only the owner can change venues', true); return; }

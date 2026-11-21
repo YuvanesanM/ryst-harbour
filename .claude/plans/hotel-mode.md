@@ -159,7 +159,11 @@ events with set-up, menu, charges, discount, tentative/confirmed/cancelled, clas
 over-capacity flag, payments by the owner only, printable function sheet. Portfolio (portfolio.html, POST /portfolio): the
 browser keeps an owner sign-in per property (ryst_portfolio); each is verified and only that property's figures come back
 (tonight, arrivals, revenue MTD, ADR, next 30 days, pending approvals, Form C due).
-Still open: GST rate per banquet line (events use GST-inclusive totals, no tax invoice yet); POS KOTs and a kitchen display.
+Then: banquet tax invoices (each charge line carries its GST rate; POST /banquets/invoice issue/cancel with buyer and SAC;
+numbered in the same series as room invoices; room invoices now count event invoices too, and /gst/register lists both).
+Kitchen display (kitchen.html): restaurant orders move new → preparing → ready → served (`kot`, `kotAt`; command
+kot-status), separate from payment; printable ticket; optional chime. Settings rate plans and agents moved below Rooms.
+Still open: Channex go-live (staging account, certification).
 
 ### Phase 2 — Front desk and housekeeping
 - Tape chart: rooms × dates grid, drag to assign / move / extend, unassigned queue.
